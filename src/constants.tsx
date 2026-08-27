@@ -136,3 +136,61 @@ export const getHoursUntilMidnight = () => {
   midnight.setHours(24, 0, 0, 0);
   return Math.max(1, Math.round((midnight.getTime() - now.getTime()) / 3600000));
 };
+
+export interface AvatarPreset {
+  id: string;
+  name: string;
+  url: string;
+  category: string;
+}
+
+export const DEFAULT_AVATARS: AvatarPreset[] = [
+  {
+    id: 'avatar-popcorn',
+    name: 'Popcorn VIP',
+    url: 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?auto=format&fit=crop&w=200&q=80',
+    category: 'Cinema'
+  },
+  {
+    id: 'avatar-director',
+    name: 'Cinéaste / Director',
+    url: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=200&q=80',
+    category: 'Cinema'
+  },
+  {
+    id: 'avatar-cyberpunk',
+    name: 'Neon Cyberpunk',
+    url: 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=200&q=80',
+    category: 'Sci-Fi'
+  },
+  {
+    id: 'avatar-galaxy',
+    name: 'Cosmic Voyager',
+    url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=200&q=80',
+    category: 'Sci-Fi'
+  },
+  {
+    id: 'avatar-synthwave',
+    name: 'Retro Sunset',
+    url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=200&q=80',
+    category: 'Retro'
+  },
+  {
+    id: 'avatar-hero',
+    name: 'Dark Hero',
+    url: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=200&q=80',
+    category: 'Hero'
+  },
+  {
+    id: 'avatar-anime',
+    name: 'Anime Shinobi',
+    url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=200&q=80',
+    category: 'Anime'
+  },
+  {
+    id: 'avatar-gold',
+    name: 'Gold Star VIP',
+    url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=200&q=80',
+    category: 'VIP'
+  }
+];

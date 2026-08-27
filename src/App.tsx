@@ -228,6 +228,101 @@ export default function App() {
   }, [joinPartyByCode]);
 
   useEffect(() => {
+    // Si la fenêtre courante est un popup d'authentification OAuth ouvert par l'application
+    if (window.opener && window.opener !== window) {
+      setTimeout(() => {
+        try {
+          window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
+          window.close();
+        } catch (e) {
+          // ignore
+        }
+      }, 600);
+    }
+
+    // Check URL hash & search params for OAuth error or success returns
+    const hashStr = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
+    const hashParams = new URLSearchParams(hashStr);
+    const searchParams = new URLSearchParams(window.location.search);
+
+    const oauthError = hashParams.get('error') || searchParams.get('error');
+    const oauthErrorDesc = hashParams.get('error_description') || searchParams.get('error_description');
+    const oauthErrorCode = hashParams.get('error_code') || searchParams.get('error_code');
+
+    if (oauthError || oauthErrorCode) {
+      console.group('⚠️ [LEVELMOVIE AUTH] Erreur retour OAuth détectée dans l’URL');
+      console.error('Code d’erreur :', oauthErrorCode || oauthError);
+      console.error('Description :', oauthErrorDesc || 'Non spécifiée');
+      console.log('Paramètres bruts Hash :', hashStr);
+      console.log('Paramètres bruts Search :', window.location.search);
+      
+      if (oauthErrorCode === '403' || oauthError === 'access_denied' || (oauthErrorDesc && oauthErrorDesc.includes('403'))) {
+        console.warn('💡 ================== DIAGNOSTIC COMPLET ERREUR 403 GOOGLE ==================');
+        console.warn('1. STATUT GOOGLE CLOUD : Votre application Google Cloud est probablement en mode "En cours de test" (Testing).');
+        console.warn('   -> Rendez-vous sur : https://console.cloud.google.com/apis/credentials/consent');
+        console.warn('   -> Cliquez sur le bouton "PUBLIER L’APPLICATION" pour autoriser tout le monde sans blocage 403.');
+        console.warn('   -> Ou ajoutez votre email sous la section "Utilisateurs test".');
+        console.warn('2. URIs DE REDIRECTION DANS GOOGLE CLOUD :');
+        console.warn('   -> URI de redirection autorisée : https://epprgkolsywdfouffpmj.supabase.co/auth/v1/callback');
+        console.warn('3. TYPE D’UTILISATEUR GOOGLE : Assurez-vous que le type d’utilisateur est "Externe" (External).');
+        console.warn('=============================================================================');
+      }
+      console.groupEnd();
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.auth.getSession().then(({ data: { session }, error }) => {
+        if (error) {
+          console.error('❌ [Supabase Auth] Erreur lors de la récupération de session :', error);
+        } else if (session?.user) {
+          console.log('✅ [Supabase Auth] Utilisateur connecté :', session.user.email, session.user.id);
+          setUser({ uid: session.user.id });
+          const name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || t.defaultUser;
+          setUserName(name);
+          if (session.user.email) setUserEmail(session.user.email);
+          const photo = session.user.user_metadata?.avatar_url || null;
+          if (photo) setUserPhoto(photo);
+        } else {
+          console.log('ℹ️ [Supabase Auth] Prêt (Aucune session active enregistrée).');
+        }
+      });
+
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+        console.log('🔄 [Supabase Auth Event] :', event, session?.user?.email || '(aucun)');
+        if (session?.user) {
+          setUser({ uid: session.user.id });
+          const name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || t.defaultUser;
+          setUserName(name);
+          if (session.user.email) setUserEmail(session.user.email);
+          const photo = session.user.user_metadata?.avatar_url || null;
+          if (photo) setUserPhoto(photo);
+        }
+      });
+
+      const handleWindowMessage = (e: MessageEvent) => {
+        if (e.data?.type === 'OAUTH_AUTH_SUCCESS') {
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) {
+              setUser({ uid: session.user.id });
+              const name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || t.defaultUser;
+              setUserName(name);
+              if (session.user.email) setUserEmail(session.user.email);
+              const photo = session.user.user_metadata?.avatar_url || null;
+              if (photo) setUserPhoto(photo);
+            }
+          });
+        }
+      };
+      window.addEventListener('message', handleWindowMessage);
+
+      return () => {
+        authListener.subscription.unsubscribe();
+        window.removeEventListener('message', handleWindowMessage);
+      };
+    }
+  }, [t.defaultUser]);
+
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUserResult) => {
       setFbUser(fbUserResult);
       if (fbUserResult) {
@@ -437,32 +532,100 @@ export default function App() {
   const handleDeepLink = useCallback(async (url: string) => {
     try {
       const target = new URL(url, window.location.origin);
-      if (target.origin !== window.location.origin) { window.location.href = url; return; }
-
       const params = target.searchParams;
-      const partyCode = params.get('party') || (target.pathname.startsWith('/salon/') ? target.pathname.replace('/salon/', '') : null);
+      const hash = target.hash.toLowerCase();
+      const path = target.pathname.toLowerCase();
+
+      // POCKET 1: Watch Party / Salon (code from query, path, or hash)
+      let partyCode = params.get('party') || params.get('salon') || params.get('room') || params.get('code');
+      if (!partyCode && path.startsWith('/salon/')) partyCode = path.replace('/salon/', '');
+      if (!partyCode && path.startsWith('/party/')) partyCode = path.replace('/party/', '');
+      if (!partyCode && hash.startsWith('#party-')) partyCode = hash.replace('#party-', '');
+      if (!partyCode && hash.startsWith('#salon-')) partyCode = hash.replace('#salon-', '');
       if (partyCode) {
-        joinPartyByCode(partyCode);
+        joinPartyByCode(partyCode.trim().toUpperCase());
         return;
       }
-      const watchId = params.get('watch');
+
+      // POCKET 2: Direct Watch / Stream / Movie Modal
+      const watchId = params.get('watch') || params.get('movie') || params.get('film') || params.get('series') || params.get('play') || params.get('id');
       if (watchId) {
-        const type = params.get('type') || 'movie';
-        const res = await fetch(`${BASE_URL}/${type}/${watchId}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
-        const movieData = await res.json();
-        if (movieData && movieData.id) {
-          if (type === 'tv') {
-            movieData.resumeSeason = params.get('s') ? parseInt(params.get('s')!) : 1;
-            movieData.resumeEpisode = params.get('e') ? parseInt(params.get('e')!) : 1;
+        let type = params.get('type') || (params.get('series') ? 'tv' : 'movie');
+        try {
+          const res = await fetch(`${BASE_URL}/${type}/${watchId}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
+          const movieData = await res.json();
+          if (movieData && movieData.id) {
+            if (type === 'tv' || movieData.first_air_date) {
+              movieData.resumeSeason = params.get('season') ? parseInt(params.get('season')!) : (params.get('s') ? parseInt(params.get('s')!) : 1);
+              movieData.resumeEpisode = params.get('episode') ? parseInt(params.get('episode')!) : (params.get('e') ? parseInt(params.get('e')!) : 1);
+            }
+            const targetMode = params.get('mode') || (params.get('play') || params.get('watch') ? 'play' : 'info');
+            openModal(movieData, targetMode);
+            return;
           }
-          setCurrentCategory('home');
-          openModal(movieData, 'play');
+        } catch (err) {
+          console.warn("Deep link movie fetch error:", err);
         }
+      }
+
+      // POCKET 3: Support & FAQ Full-screen Center
+      const isSupportReq = params.get('support') === 'true' || params.get('help') === 'true' || params.get('faq') === 'true' || path === '/support' || hash === '#support' || hash === '#help';
+      if (isSupportReq) {
+        setShowSupport(true);
         return;
       }
-      if (target.pathname !== window.location.pathname) window.location.href = url;
-    } catch (e) {}
+
+      // POCKET 4: Auth / Login / Signup
+      const authAction = params.get('auth') || (params.get('login') === 'true' ? 'login' : null);
+      if (authAction) {
+        setShowLoginModal(true);
+        return;
+      }
+
+      // POCKET 5: Search Query
+      const queryParam = params.get('search') || params.get('q');
+      if (queryParam) {
+        setCurrentCategory('search');
+        setSearchQuery(queryParam);
+        return;
+      }
+
+      // POCKET 6: Navigation Category / Tabs
+      const tabParam = params.get('tab') || params.get('category') || params.get('cat');
+      if (tabParam) {
+        const validTabs = ['home', 'movies', 'series', 'parties', 'favorites', 'history', 'top', 'search'];
+        const targetTab = tabParam.toLowerCase();
+        if (validTabs.includes(targetTab)) {
+          setCurrentCategory(targetTab);
+          return;
+        }
+      }
+
+      // POCKET 7: Settings
+      const settingsParam = params.get('settings');
+      if (settingsParam) {
+        if (['account', 'servers', 'parental', 'data', 'interface'].includes(settingsParam)) {
+          setSettingsTab(settingsParam);
+        }
+        setShowSettings(true);
+        return;
+      }
+
+    } catch (e) {
+      console.warn("Deep link routing warning:", e);
+    }
   }, [lang, openModal, joinPartyByCode]);
+
+  useEffect(() => {
+    // Run deep link on initial mount
+    handleDeepLink(window.location.href);
+
+    const handlePopState = () => {
+      handleDeepLink(window.location.href);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [handleDeepLink]);
 
   useEffect(() => {
     if (!user || !fbUser) return;
@@ -510,7 +673,7 @@ export default function App() {
   }, [partyId, selectedMovie, isPartyMinimized]);
 
   useEffect(() => {
-    if (!partyId || !fbUser) { setPartyData(null); return; }
+    if (!partyId) { setPartyData(null); return; }
     const unsubscribe = onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), (docSnap) => {
       if (docSnap.exists() && docSnap.data().status !== 'ended') {
         const data = docSnap.data();
@@ -526,10 +689,8 @@ export default function App() {
           return;
         }
         setPartyData(data);
-      } else {
-        if (docSnap.exists() && docSnap.data().status === 'ended') {
-          setRoomEndedInfo({ roomName: docSnap.data().roomName || docSnap.data().title, title: docSnap.data().title });
-        }
+      } else if (docSnap.exists() && docSnap.data().status === 'ended') {
+        setRoomEndedInfo({ roomName: docSnap.data().roomName || docSnap.data().title, title: docSnap.data().title });
         setPartyId(null);
         setPartyData(null);
         setSelectedMovie(null);
@@ -538,9 +699,11 @@ export default function App() {
         document.body.classList.remove('party-mode');
         setCurrentCategory('home');
       }
+    }, (err) => {
+      console.warn("Party snapshot listener warning:", err);
     });
     return () => unsubscribe();
-  }, [partyId, user, fbUser, syncPreferencesToDb]);
+  }, [partyId, user, syncPreferencesToDb]);
 
   const toggleWatchlist = async (movie: any) => {
     if (!user || !fbUser) { setShowLoginModal(true); return; }
@@ -573,40 +736,47 @@ export default function App() {
   };
 
   const handleCreateParty = async (movie: any, roomName: string) => {
+    if (!movie) return;
     const hostUid = user?.uid || fbUser?.uid || ('guest_' + Math.random().toString(36).substring(2, 9));
     const hostName = userName || (user ? defaultUserName : (lang === 'fr' ? 'Hôte' : 'Host'));
     const newPartyId = 'LVL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
     const cleanRoomName = censorText((roomName || "").trim() || `Salon de ${hostName}`);
+    const isTvShow = movie.first_air_date !== undefined;
+
+    const initialPartyData = {
+      hostUid: hostUid,
+      mods: [],
+      modInvites: [],
+      banned: [],
+      muted: [],
+      movieId: movie.id,
+      mediaType: isTvShow ? 'tv' : 'movie',
+      season: isTvShow ? (movie.resumeSeason || 1) : null,
+      episode: isTvShow ? (movie.resumeEpisode || 1) : null,
+      title: movie.title || movie.name || movie.original_name || 'Watch Party',
+      roomName: cleanRoomName,
+      status: 'idle',
+      syncTime: Date.now(),
+      currentOffset: 0,
+      members: [{ uid: hostUid, name: hostName, photo: userPhoto || "" }],
+      messages: []
+    };
+
+    // Instant local state update for zero lag
+    setPartyData(initialPartyData);
+    setPartyId(newPartyId);
+    setSelectedMovie(movie);
+    setModalMode('play');
+    setIsPartyMinimized(false);
+    localStorage.setItem('active_party_id', newPartyId);
+    window.history.pushState({}, '', `?party=${newPartyId}`);
+    showToast(t.partyCreated, 'success');
 
     try {
-      const isTvShow = movie.first_air_date !== undefined;
-      await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', newPartyId), {
-        hostUid: hostUid,
-        mods: [],
-        modInvites: [],
-        banned: [],
-        muted: [],
-        movieId: movie.id,
-        mediaType: isTvShow ? 'tv' : 'movie',
-        season: isTvShow ? (movie.resumeSeason || 1) : null,
-        episode: isTvShow ? (movie.resumeEpisode || 1) : null,
-        title: movie.title || movie.name,
-        roomName: cleanRoomName,
-        status: 'idle',
-        syncTime: Date.now(),
-        currentOffset: 0,
-        members: [{ uid: hostUid, name: hostName, photo: userPhoto || "" }],
-        messages: []
-      });
-      localStorage.setItem('active_party_id', newPartyId);
+      await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', newPartyId), initialPartyData);
       await syncPreferencesToDb({ activePartyId: newPartyId });
-      showToast(t.partyCreated, 'success');
-      setSelectedMovie(movie);
-      setPartyId(newPartyId);
-      setModalMode('play');
-      window.history.pushState({}, '', `?party=${newPartyId}`);
     } catch (e) {
-      showToast(lang === 'fr' ? "Impossible de créer le salon." : "Could not create the room.", "error");
+      console.warn("Firestore sync warning on party creation, continuing with local state:", e);
     }
   };
 
@@ -657,12 +827,20 @@ export default function App() {
     localStorage.removeItem('levelmovie_user_name');
     localStorage.removeItem('levelmovie_user_email');
     localStorage.removeItem('lm_photo');
+    localStorage.removeItem('lm_now_playing');
+    localStorage.removeItem('active_party_id');
     setUser(null);
     setUserName('');
     setUserEmail('');
     setUserPhoto(null);
+    setSelectedMovie(null);
+    setPartyId(null);
+    setPartyData(null);
     setShowSettings(false);
+    setShowSidebar(false);
     setShowLogoutConfirm(false);
+    setCurrentCategory('home');
+    setShowLoginModal(true);
     showToast(lang === 'fr' ? 'Déconnexion réussie' : 'Logged out', 'success');
   };
 
@@ -1140,6 +1318,100 @@ export default function App() {
             <div className="flex gap-3">
               <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white/70 rounded-xl text-[10px] font-bold uppercase cursor-pointer">{t.cancel}</button>
               <button onClick={handleLogout} className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-bold uppercase cursor-pointer">{t.confirm}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CRÉATION DE SALON WATCH PARTY */}
+      {showCreatePartyPrompt && createPartyMovie && (
+        <div className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#121218] border border-[#a855f7]/40 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#a855f7]/20 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex items-center gap-4 mb-6 relative z-10">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#a855f7]/30 to-[#ec4899]/30 border border-[#a855f7]/40 flex items-center justify-center shadow-lg shrink-0">
+                <WatchPartySVG className="w-8 h-8 text-[#a855f7]" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-white uppercase tracking-wider">
+                  {t.createPartyTitle || (lang === 'fr' ? 'Créer un Salon' : 'Create Watch Party')}
+                </h3>
+                <p className="text-white/50 text-xs mt-0.5">
+                  {t.createPartyDesc || (lang === 'fr' ? 'Regarder ensemble en temps réel avec chat' : 'Watch together in sync with live chat')}
+                </p>
+              </div>
+            </div>
+
+            {/* Movie preview chip */}
+            <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-2xl mb-6 relative z-10">
+              {createPartyMovie.poster_path ? (
+                <img
+                  src={`${IMAGE_BASE_URL}${createPartyMovie.poster_path}`}
+                  alt=""
+                  className="w-12 h-16 object-cover rounded-xl shrink-0"
+                />
+              ) : (
+                <div className="w-12 h-16 bg-[#2a2a35] rounded-xl flex items-center justify-center text-xs text-white/40 shrink-0">
+                  🎬
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <h4 className="text-sm font-bold text-white truncate">
+                  {createPartyMovie.title || createPartyMovie.name}
+                </h4>
+                <p className="text-[11px] text-white/50 truncate">
+                  {createPartyMovie.first_air_date ? (lang === 'fr' ? 'Série TV' : 'TV Show') : (lang === 'fr' ? 'Film' : 'Movie')}
+                  {createPartyMovie.release_date || createPartyMovie.first_air_date ? ` • ${new Date(createPartyMovie.release_date || createPartyMovie.first_air_date).getFullYear()}` : ''}
+                </p>
+              </div>
+            </div>
+
+            {/* Room Name Input */}
+            <div className="mb-6 relative z-10">
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-xs font-semibold text-white/70">
+                  {t.createPartyRoomName || (lang === 'fr' ? 'Nom du salon (optionnel)' : 'Room Name (optional)')}
+                </label>
+                <span className={`text-[10px] font-mono ${customRoomName.length >= 35 ? 'text-red-400 font-bold' : 'text-white/40'}`}>
+                  {customRoomName.length}/35
+                </span>
+              </div>
+              <input
+                type="text"
+                value={customRoomName}
+                onChange={(e) => setCustomRoomName(e.target.value)}
+                placeholder={`Salon de ${userName || defaultUserName}`}
+                maxLength={35}
+                className="w-full bg-[#1b1b24] border border-white/15 focus:border-[#a855f7] rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition-colors"
+              />
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-3 relative z-10">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreatePartyPrompt(false);
+                  setCreatePartyMovie(null);
+                }}
+                className="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 text-white/70 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                {t.createPartyCancel || (lang === 'fr' ? 'Annuler' : 'Cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const movieToCreate = createPartyMovie;
+                  const roomNameToCreate = customRoomName;
+                  setShowCreatePartyPrompt(false);
+                  setCreatePartyMovie(null);
+                  handleCreateParty(movieToCreate, roomNameToCreate);
+                }}
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] hover:opacity-95 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-[0_0_20px_rgba(139,92,246,0.4)] active:scale-95 transition-all cursor-pointer"
+              >
+                {t.createPartySubmit || (lang === 'fr' ? 'Lancer le salon' : 'Start Party')}
+              </button>
             </div>
           </div>
         </div>

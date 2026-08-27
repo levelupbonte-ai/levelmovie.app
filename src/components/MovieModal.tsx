@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Play, Info, X, ChevronDown, Star, Film, AlertTriangle, CheckCircle,
   Server, Users, Tv, Clapperboard, Share2, Bookmark, Plus,
-  Copy, Eye, EyeOff, Send, UserPlus, Power, Pause, ShieldCheck, UserMinus, ShieldAlert, Minimize2, ChevronUp, Reply, Lock, ExternalLink
+  Copy, Send, UserPlus, Power, Pause, ShieldCheck, UserMinus, ShieldAlert,
+  Minimize2, ChevronUp, Reply, Lock, ExternalLink, ArrowUp, Mail, GripHorizontal,
+  MessageSquare, MessageSquareOff
 } from 'lucide-react';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, collectionGroup, getDocs, setDoc } from 'firebase/firestore';
 import {
@@ -34,27 +36,27 @@ export function MovieModal({
   const [iframeLoading, setIframeLoading] = useState(true);
   const [kbOffset, setKbOffset] = useState(0);
 
-  const isTV = movie.first_air_date !== undefined;
+  const isTV = movie?.first_air_date !== undefined;
   const typeStr = isTV ? 'tv' : 'movie';
-  const isAddedToWatchlist = watchlist.includes(movie.id);
+  const isAddedToWatchlist = Boolean(watchlist && Array.isArray(watchlist) && movie?.id && watchlist.includes(movie.id));
   const iAmHost = !!(partyId && partyData && user?.uid === partyData.hostUid);
   const iAmMod = !!(partyId && partyData && partyData.mods?.includes(user?.uid));
-  const releaseDateStr = details?.release_date || details?.first_air_date || movie.release_date || movie.first_air_date || null;
+  const releaseDateStr = details?.release_date || details?.first_air_date || movie?.release_date || movie?.first_air_date || null;
   const isUpcomingRelease = !!(releaseDateStr && new Date(releaseDateStr) > new Date());
 
   const [selectedSeason, setSelectedSeason] = useState<number>(() => {
-    if (movie.resumeSeason) return movie.resumeSeason;
+    if (movie?.resumeSeason) return movie.resumeSeason;
     try {
       const saved = JSON.parse(localStorage.getItem('lm_now_playing') || 'null');
-      if (saved && saved.id === movie.id && saved.mediaType === typeStr && saved.season) return saved.season;
+      if (saved && movie?.id && saved.id === movie.id && saved.mediaType === typeStr && saved.season) return saved.season;
     } catch (e) {}
     return 1;
   });
   const [selectedEpisode, setSelectedEpisode] = useState<number>(() => {
-    if (movie.resumeEpisode) return movie.resumeEpisode;
+    if (movie?.resumeEpisode) return movie.resumeEpisode;
     try {
       const saved = JSON.parse(localStorage.getItem('lm_now_playing') || 'null');
-      if (saved && saved.id === movie.id && saved.mediaType === typeStr && saved.episode) return saved.episode;
+      if (saved && movie?.id && saved.id === movie.id && saved.mediaType === typeStr && saved.episode) return saved.episode;
     } catch (e) {}
     return 1;
   });
@@ -121,14 +123,112 @@ export function MovieModal({
   const [showLeavePartyConfirm, setShowLeavePartyConfirm] = useState(false);
   const [showHostLeaveWarning, setShowHostLeaveWarning] = useState(false);
   const [showModForceCloseConfirm, setShowModForceCloseConfirm] = useState(false);
-  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [isTitleCollapsed, setIsTitleCollapsed] = useState(false);
+  const [targetShareInput, setTargetShareInput] = useState('');
+
+  // Watch party chat hidden state for PC / Fullscreen cinema mode
+  const [isChatHidden, setIsChatHidden] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [floatingNotif, setFloatingNotif] = useState<{ id: string; sender: string; text: string; photo?: string } | null>(null);
+  const prevMessagesLength = useRef(partyData?.messages?.length || 0);
+
+  useEffect(() => {
+    const currentLen = partyData?.messages?.length || 0;
+    if (isChatHidden && currentLen > prevMessagesLength.current) {
+      const newMsgs = partyData.messages.slice(prevMessagesLength.current);
+      const latestMsg = newMsgs[newMsgs.length - 1];
+      const myName = defaultUserName || (lang === 'fr' ? 'Moi' : 'Me');
+      if (latestMsg && latestMsg.sender !== myName) {
+        setUnreadChatCount(prev => prev + newMsgs.length);
+        setFloatingNotif({
+          id: latestMsg.id || Date.now().toString(),
+          sender: latestMsg.sender || (lang === 'fr' ? 'Participant' : 'Participant'),
+          text: latestMsg.text || '',
+          photo: latestMsg.photo
+        });
+        const timer = setTimeout(() => {
+          setFloatingNotif(null);
+        }, 4500);
+        return () => clearTimeout(timer);
+      }
+    }
+    prevMessagesLength.current = currentLen;
+  }, [partyData?.messages, isChatHidden, defaultUserName, lang, user]);
+
+  const toggleChatVisibility = () => {
+    setIsChatHidden(prev => {
+      const next = !prev;
+      if (!next) {
+        setUnreadChatCount(0);
+        setFloatingNotif(null);
+      }
+      return next;
+    });
+  };
 
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [friendSearchQuery, setFriendSearchQuery] = useState('');
   const [friendResults, setFriendResults] = useState<any[]>([]);
 
   const [memberMenu, setMemberMenu] = useState<any>(null);
-  const [hideControls, setHideControls] = useState(false);
+
+  // PIP (Minimized Room) draggable state
+  const [pipPos, setPipPos] = useState<{ x: number; y: number } | null>(null);
+  const pipDragRef = useRef<{ isDragging: boolean; startX: number; startY: number; initLeft: number; initTop: number } | null>(null);
+  const pipContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const handlePipPointerDown = (e: React.PointerEvent) => {
+    if (!isMinimized || !pipContainerRef.current) return;
+    if ((e.target as HTMLElement).closest('button')) return;
+
+    const rect = pipContainerRef.current.getBoundingClientRect();
+    pipDragRef.current = {
+      isDragging: true,
+      startX: e.clientX,
+      startY: e.clientY,
+      initLeft: rect.left,
+      initTop: rect.top,
+    };
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch (_) {}
+  };
+
+  const handlePipPointerMove = (e: React.PointerEvent) => {
+    if (!pipDragRef.current?.isDragging || !pipContainerRef.current) return;
+    const dx = e.clientX - pipDragRef.current.startX;
+    const dy = e.clientY - pipDragRef.current.startY;
+    const pipWidth = pipContainerRef.current.offsetWidth || 280;
+    const pipHeight = pipContainerRef.current.offsetHeight || 180;
+
+    const maxLeft = Math.max(10, window.innerWidth - pipWidth - 10);
+    const maxTop = Math.max(10, window.innerHeight - pipHeight - 10);
+
+    const newLeft = Math.min(Math.max(10, pipDragRef.current.initLeft + dx), maxLeft);
+    const newTop = Math.min(Math.max(10, pipDragRef.current.initTop + dy), maxTop);
+
+    setPipPos({ x: newLeft, y: newTop });
+  };
+
+  const handlePipPointerUp = (e: React.PointerEvent) => {
+    if (pipDragRef.current?.isDragging) {
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch (_) {}
+      pipDragRef.current = null;
+    }
+  };
+
+  const handleSendViaGmail = (recipient?: string) => {
+    const roomTitle = partyData?.roomName || partyData?.title || (movie?.title || movie?.name) || 'Salon Privé';
+    const shareUrl = `${window.location.origin}/?party=${partyId}`;
+    const subject = `Rejoins mon salon cinéma LevelMovie : ${roomTitle}`;
+    const body = `Salut !\n\nJe t'invite à me rejoindre sur LevelMovie pour regarder "${roomTitle}" ensemble en direct avec chat synchronisé.\n\n🎬 Film : ${roomTitle}\n🔗 Lien direct : ${shareUrl}\n🔑 Code du salon : ${partyId}\n\nÀ tout de suite !`;
+    const emailTarget = recipient || (targetShareInput.includes('@') ? targetShareInput.trim() : '');
+    const mailtoUrl = `mailto:${encodeURIComponent(emailTarget)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoUrl, '_blank');
+  };
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -667,7 +767,28 @@ export function MovieModal({
     }
 
     return (
-      <div className={isMinimized ? "fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[8000] w-[220px] md:w-[320px] rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.7)] border border-white/10 bg-black animate-in fade-in zoom-in duration-300" : "fixed inset-0 z-[8000] bg-[#060608] flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden"} style={isMinimized ? {} : {paddingTop: 'env(safe-area-inset-top, 0px)'}}>
+      <div
+        ref={pipContainerRef}
+        onPointerDown={handlePipPointerDown}
+        onPointerMove={handlePipPointerMove}
+        onPointerUp={handlePipPointerUp}
+        onPointerCancel={handlePipPointerUp}
+        style={
+          isMinimized
+            ? {
+                position: 'fixed',
+                left: pipPos ? `${pipPos.x}px` : undefined,
+                top: pipPos ? `${pipPos.y}px` : undefined,
+                touchAction: 'none',
+              }
+            : { paddingTop: 'env(safe-area-inset-top, 0px)' }
+        }
+        className={
+          isMinimized
+            ? `${pipPos ? '' : 'bottom-24 md:bottom-6 right-4 md:right-6'} fixed z-[8000] w-[240px] md:w-[320px] rounded-2xl overflow-hidden shadow-[0_15px_50px_rgba(0,0,0,0.85)] border border-[#a855f7]/40 bg-[#0c0c12] animate-in fade-in zoom-in duration-200 select-none cursor-grab active:cursor-grabbing`
+            : "fixed inset-0 z-[8000] bg-[#060608] flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden"
+        }
+      >
 
         {/* Modal de Modération */}
         {memberMenu && (
@@ -747,49 +868,167 @@ export function MovieModal({
           </div>
         )}
 
-        {/* Modal Code d'invitation */}
-        {showInviteModal && (
-          <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="bg-[#0a0a0f] border border-[#a855f7]/30 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-in zoom-in duration-300">
-              <div className="w-16 h-16 bg-[#a855f7]/10 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-[#a855f7]/20">
-                <Share2 className="w-8 h-8 text-[#a855f7]" />
-              </div>
-              <h3 className="text-lg md:text-xl font-black text-white mb-3 uppercase tracking-widest">{t.inviteModalTitle}</h3>
-              <p className="text-white/60 text-[11px] md:text-xs mb-6 leading-relaxed bg-white/5 p-4 rounded-xl border border-white/5 text-justify shadow-inner">
-                {t.inviteModalDesc}
-              </p>
-
-              <div className="bg-black/50 border border-white/10 px-4 py-3 rounded-xl mb-3 shadow-inner overflow-hidden">
-                <span className="text-white/70 font-mono text-[10px] md:text-[11px] break-all">{`${window.location.origin}/salon?party=${partyId}`}</span>
-              </div>
-              <div className="flex gap-2 mb-4">
-                <button onClick={() => {
-                  const shareUrl = `${window.location.origin}/salon?party=${partyId}`;
-                  copyToClipboardFallback(shareUrl);
-                  showToast(t.linkCopied, 'success');
-                }} className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[10px] font-bold uppercase shadow-sm transition-all outline-none flex items-center justify-center gap-2 cursor-pointer">
-                  <Copy className="w-3.5 h-3.5" /> {t.copyLinkBtnRoom}
-                </button>
-                <button onClick={() => {
-                  const shareUrl = `${window.location.origin}/salon?party=${partyId}`;
-                  if (navigator.share) {
-                    navigator.share({ title: 'LevelMovie', text: t.inviteModalDesc, url: shareUrl }).catch(() => {});
-                  } else {
-                    copyToClipboardFallback(shareUrl);
-                    showToast(t.linkCopied, 'success');
-                  }
-                }} className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white rounded-xl text-[10px] font-bold uppercase shadow-[0_0_15px_rgba(168,85,247,0.4)] transition-all outline-none flex items-center justify-center gap-2 cursor-pointer">
-                  <Send className="w-3.5 h-3.5" /> {t.sendLinkBtn}
+        {/* Modal de Partage Professionnel (Lien, Code, ID/Gmail) */}
+        {showShareModal && (
+          <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowShareModal(false)}>
+            <div className="bg-[#0c0c14] border border-[#a855f7]/40 rounded-3xl p-5 md:p-7 max-w-md w-full shadow-[0_0_60px_rgba(168,85,247,0.25)] animate-in zoom-in duration-200 max-h-[90vh] overflow-y-auto no-scrollbar" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#a855f7]/20 border border-[#a855f7]/40 flex items-center justify-center">
+                    <Share2 className="w-5 h-5 text-[#c084fc]" />
+                  </div>
+                  <div>
+                    <h3 className="text-base md:text-lg font-black text-white uppercase tracking-wider">Partager le Salon</h3>
+                    <p className="text-white/50 text-[11px]">Invite tes amis à regarder ensemble en direct</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowShareModal(false)}
+                  className="text-white/40 hover:text-white bg-white/5 p-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="bg-black/50 border border-white/10 px-4 py-3.5 rounded-xl mb-6 shadow-inner flex items-center justify-center">
-                <span className="text-[#a855f7] font-mono font-black tracking-widest text-lg md:text-xl">{partyId}</span>
+              {/* 1. LIEN DU SALON */}
+              <div className="mb-5 bg-white/5 p-4 rounded-2xl border border-white/10">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#a855f7] block mb-2">
+                  1. Lien direct de la salle
+                </label>
+                <div className="bg-black/60 border border-white/10 px-3 py-2.5 rounded-xl mb-3 overflow-hidden">
+                  <span className="text-white/80 font-mono text-[11px] break-all select-all">
+                    {`${window.location.origin}/?party=${partyId}`}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const shareUrl = `${window.location.origin}/?party=${partyId}`;
+                      copyToClipboardFallback(shareUrl);
+                      showToast(t.linkCopied || 'Lien copié dans le presse-papier !', 'success');
+                    }}
+                    className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                  >
+                    <Copy className="w-3.5 h-3.5" /> Copier le lien
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const shareUrl = `${window.location.origin}/?party=${partyId}`;
+                      if (navigator.share) {
+                        navigator.share({
+                          title: `Rejoins le salon cinéma : ${partyData.roomName || partyData.title}`,
+                          text: `Rejoins-moi sur LevelMovie pour regarder ensemble en streaming synchronisé !`,
+                          url: shareUrl
+                        }).catch(() => {});
+                      } else {
+                        copyToClipboardFallback(shareUrl);
+                        showToast(t.linkCopied || 'Lien copié !', 'success');
+                      }
+                    }}
+                    className="flex-1 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white rounded-xl text-[10px] font-black uppercase transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)] flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                  >
+                    <Share2 className="w-3.5 h-3.5" /> Partager
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-3 flex-col sm:flex-row">
-                <button onClick={() => setShowInviteModal(false)} className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white/70 rounded-xl text-[10px] font-bold uppercase transition-colors outline-none cursor-pointer">{t.cancel}</button>
-                <button onClick={() => { copyToClipboardFallback(partyId); showToast(t.linkCopied, 'success'); setShowInviteModal(false); }} className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[10px] font-bold uppercase shadow-sm transition-all outline-none cursor-pointer">
-                  {t.copyCodeBtn}
+
+              {/* 2. CODE D'ACCÈS DU SALON */}
+              <div className="mb-5 bg-white/5 p-4 rounded-2xl border border-white/10">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#a855f7] block mb-2">
+                  2. Code de la salle (rejoindre direct dans l'app)
+                </label>
+                <div className="flex items-center justify-between bg-black/60 border border-white/10 px-4 py-3 rounded-xl">
+                  <span className="text-[#a855f7] font-mono font-black tracking-widest text-lg md:text-xl select-all">
+                    {partyId}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      copyToClipboardFallback(partyId);
+                      showToast('Code de salon copié !', 'success');
+                    }}
+                    className="py-1.5 px-3 bg-[#a855f7]/20 hover:bg-[#a855f7]/40 text-[#c084fc] border border-[#a855f7]/30 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer"
+                  >
+                    <Copy className="w-3 h-3" /> Copier le code
+                  </button>
+                </div>
+              </div>
+
+              {/* 3. PARTAGER À UN USER VIA ID OU GMAIL */}
+              <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#a855f7] block mb-2">
+                  3. Partager à un utilisateur (ID ou Gmail)
+                </label>
+                <div className="flex gap-2 mb-3">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={targetShareInput}
+                      onChange={(e) => {
+                        setTargetShareInput(e.target.value);
+                        setFriendSearchQuery(e.target.value);
+                        setShowUserSearch(true);
+                      }}
+                      placeholder="Entrer un ID ou email (ex: user@gmail.com)..."
+                      className="w-full bg-black/60 border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-[#a855f7] transition-colors"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleSendViaGmail()}
+                    className="bg-gradient-to-r from-red-600/80 to-pink-600/80 hover:from-red-600 hover:to-pink-600 text-white px-3.5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
+                    title="Envoyer une invitation par Gmail"
+                  >
+                    <Mail className="w-3.5 h-3.5" /> Gmail
+                  </button>
+                </div>
+
+                {friendResults.length > 0 && (
+                  <div className="mt-2 flex flex-col gap-1.5 max-h-32 overflow-y-auto no-scrollbar bg-black/40 p-2 rounded-xl border border-white/5">
+                    <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider px-1">Utilisateurs trouvés :</span>
+                    {friendResults.map((friend: any) => (
+                      <div key={friend.uid} className="flex items-center justify-between bg-white/5 p-2 rounded-lg">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-6 h-6 rounded-full bg-[#151520] flex items-center justify-center font-black text-[#a855f7] text-[10px] shrink-0 border border-[#a855f7]/30">
+                            {friend.name?.charAt(0).toUpperCase() || '?'}
+                          </div>
+                          <span className="text-xs text-white font-bold truncate">{friend.name}</span>
+                        </div>
+                        {friend.uid !== user?.uid && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleSendViaGmail(friend.email)}
+                              className="bg-red-500/20 hover:bg-red-500/40 text-red-300 px-2 py-1 rounded text-[9px] font-bold uppercase transition-colors cursor-pointer"
+                              title="Inviter par Gmail"
+                            >
+                              Gmail
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleInviteUser(friend)}
+                              className="bg-[#a855f7] hover:bg-purple-600 text-white px-2.5 py-1 rounded text-[9px] font-black uppercase transition-colors cursor-pointer"
+                            >
+                              Inviter
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 pt-3 border-t border-white/10 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowShareModal(false)}
+                  className="w-full py-3 bg-white/10 hover:bg-white/20 text-white font-bold uppercase text-[10px] tracking-widest rounded-xl transition-colors cursor-pointer"
+                >
+                  Fermer
                 </button>
               </div>
             </div>
@@ -844,8 +1083,14 @@ export function MovieModal({
         )}
 
         {/* Colonne Gauche: Vidéo + Contrôles */}
-        <div className={isMinimized ? "w-full flex flex-col relative bg-black" : "w-full lg:flex-1 flex flex-col shrink-0 lg:shrink relative z-[60] bg-black shadow-2xl h-auto max-h-[60vh] lg:max-h-full"}>
-          <div className={isMinimized ? "w-full aspect-video bg-black relative flex items-center justify-center group" : "w-full aspect-video lg:aspect-auto lg:flex-1 bg-black relative border-b border-white/5 z-40 flex items-center justify-center group"}>
+        <div className={
+          isMinimized 
+            ? "w-full flex flex-col relative bg-black" 
+            : isChatHidden
+              ? "w-full flex-1 flex flex-col shrink-0 relative z-[60] bg-black shadow-2xl h-full min-h-[100dvh]"
+              : "w-full lg:flex-1 flex flex-col shrink-0 lg:shrink relative z-[60] bg-black shadow-2xl h-auto max-h-[60vh] lg:max-h-full"
+        }>
+          <div className={isMinimized ? "w-full aspect-video bg-black relative flex items-center justify-center group" : isChatHidden ? "w-full flex-1 bg-black relative border-b border-white/5 z-40 flex items-center justify-center group" : "w-full aspect-video lg:aspect-auto lg:flex-1 bg-black relative border-b border-white/5 z-40 flex items-center justify-center group"}>
             <iframe key={iframeSrc} className={`absolute inset-0 w-full h-full bg-transparent z-10 transition-opacity duration-500 ${iframeLoading ? 'opacity-0' : 'opacity-100'}`} src={iframeSrc} onLoad={() => setIframeLoading(false)} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
 
             {iframeLoading && (
@@ -857,6 +1102,41 @@ export function MovieModal({
               </div>
             )}
 
+            {/* Notification flottante lorsqu'un nouveau commentaire arrive et que le chat est masqué */}
+            {isChatHidden && floatingNotif && !isMinimized && (
+              <div 
+                onClick={toggleChatVisibility}
+                className="absolute top-4 right-4 z-[120] max-w-[280px] sm:max-w-sm bg-[#12131d]/95 hover:bg-[#1a1b29] border border-[#a855f7]/50 shadow-[0_10px_35px_rgba(0,0,0,0.85),0_0_25px_rgba(168,85,247,0.35)] rounded-2xl p-3 flex items-start gap-3 backdrop-blur-xl cursor-pointer transition-all animate-in fade-in slide-in-from-top-3 duration-300 hover:scale-[1.02] active:scale-95 group"
+              >
+                <div className="w-8 h-8 rounded-xl bg-[#a855f7]/20 border border-[#a855f7]/40 flex items-center justify-center text-[#c084fc] font-black text-xs shrink-0 overflow-hidden">
+                  {floatingNotif.photo ? (
+                    <img src={floatingNotif.photo} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{floatingNotif.sender?.charAt(0)?.toUpperCase() || 'P'}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                    <span className="text-[11px] font-black text-[#c084fc] truncate">{floatingNotif.sender}</span>
+                    <span className="text-[8px] text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded font-mono font-bold uppercase tracking-wider">Nouveau</span>
+                  </div>
+                  <p className="text-xs text-white/90 font-medium line-clamp-2 leading-tight">{floatingNotif.text}</p>
+                  <div className="mt-1 flex items-center gap-1 text-[9px] font-bold text-[#a855f7] group-hover:text-purple-300 transition-colors">
+                    <MessageSquare className="w-3 h-3" />
+                    <span>{lang === 'fr' ? 'Afficher le chat pour répondre' : 'Show chat to reply'}</span>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setFloatingNotif(null); }} 
+                  className="text-white/40 hover:text-white p-1 -mr-1 -mt-1 cursor-pointer transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Controles de la vidéo en mode PIP */}
             {isMinimized && (
               <div className="absolute inset-0 z-[110] bg-black/0 group-hover:bg-black/50 active:bg-black/50 transition-colors flex items-start justify-end p-1.5 opacity-0 group-hover:opacity-100 group-active:opacity-100">
                 <div className="flex gap-1.5">
@@ -871,12 +1151,6 @@ export function MovieModal({
             )}
             {isMinimized && (
               <div onClick={() => setIsMinimized(false)} className="absolute inset-0 z-[105] cursor-pointer"></div>
-            )}
-
-            {!isMinimized && (
-              <button onClick={() => setHideControls(!hideControls)} className={`absolute top-3 right-3 z-[110] w-8 h-8 rounded-lg flex items-center justify-center text-white/70 hover:text-white transition-all outline-none shadow-sm cursor-pointer ${hideControls ? 'bg-[#a855f7]/80 hover:bg-[#a855f7]' : 'bg-black/50 hover:bg-black/70'}`} title={hideControls ? t.showControls : t.hideControls}>
-                {hideControls ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              </button>
             )}
 
             {localPauseState.show && !iAmHost && !iAmMod && !isMinimized && (
@@ -914,24 +1188,47 @@ export function MovieModal({
             )}
           </div>
 
-          {!isMinimized && !hideControls && (
-            <div className="w-full bg-[#0a0a0f] p-3 md:p-4 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-30 flex flex-col md:flex-row items-center justify-between gap-3 relative border-t border-white/10">
-              <div className="flex items-center justify-between w-full md:w-auto gap-3 shrink-0 min-w-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 bg-[#a855f7]/20 rounded-xl flex items-center justify-center border border-[#a855f7]/30 shrink-0">
-                    <WatchPartySVG className="w-5 h-5 text-[#a855f7]" />
+          {!isMinimized && (
+            <div className="w-full bg-[#0a0a0f] p-2.5 md:p-3.5 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-30 flex flex-col md:flex-row items-center justify-between gap-2 md:gap-3 relative border-t border-white/10">
+              <div className="flex items-center justify-between w-full md:w-auto gap-2 md:gap-3 shrink-0 min-w-0">
+                <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                  <div className="w-8 h-8 md:w-9 md:h-9 bg-[#a855f7]/20 rounded-xl flex items-center justify-center border border-[#a855f7]/30 shrink-0">
+                    <WatchPartySVG className="w-4 h-4 md:w-4.5 md:h-4.5 text-[#a855f7]" />
                   </div>
-                  <div className="flex flex-col min-w-0 max-w-[150px] sm:max-w-[200px] md:max-w-[250px]">
-                    <h2 className="font-black text-[11px] md:text-sm text-white uppercase tracking-widest truncate">{partyData.roomName || partyData.title}</h2>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0"></span>
-                      <span className="text-[8px] md:text-[9px] text-white/50 uppercase font-bold tracking-widest truncate">{partyData.members?.length || 1} spectateurs</span>
+                  {!isTitleCollapsed ? (
+                    <div className="flex flex-col min-w-0 max-w-[140px] sm:max-w-[200px] md:max-w-[260px] animate-in fade-in duration-200">
+                      <h2 className="font-black text-[11px] md:text-xs text-white uppercase tracking-wider truncate" title={partyData.roomName || partyData.title}>
+                        {partyData.roomName || partyData.title}
+                      </h2>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0"></span>
+                        <span className="text-[8px] md:text-[9px] text-white/50 uppercase font-bold tracking-wider truncate">
+                          {partyData.members?.length || 1} spectateurs
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-1 rounded-lg animate-in fade-in duration-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0"></span>
+                      <span className="text-[9px] font-mono text-[#a855f7] font-bold">
+                        {partyData.members?.length || 1} live
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Bouton pour cacher/afficher le titre pour gagner de l'espace */}
+                  <button
+                    type="button"
+                    onClick={() => setIsTitleCollapsed(!isTitleCollapsed)}
+                    className="p-1.5 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white rounded-lg border border-white/5 transition-all text-[9px] cursor-pointer"
+                    title={isTitleCollapsed ? "Afficher les infos de la salle" : "Réduire les infos de la salle pour gagner de la place"}
+                  >
+                    {isTitleCollapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+                  </button>
                 </div>
               </div>
 
-              <div className="flex flex-row flex-wrap gap-2 md:gap-3 w-full md:w-auto shrink-0 justify-between md:justify-end items-center min-w-0">
+              <div className="flex flex-row flex-wrap gap-1.5 md:gap-2 w-full md:w-auto shrink-0 justify-between md:justify-end items-center min-w-0">
                 <div className="flex gap-1.5 shrink-0 items-center">
                   {(iAmHost || iAmMod) && (
                     <>
@@ -996,17 +1293,50 @@ export function MovieModal({
                   <ChevronDown className="w-3 h-3 text-white/40 absolute right-2 pointer-events-none" />
                 </div>
 
-                <button onClick={() => setIsMinimized(true)} className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors outline-none shadow-sm shrink-0 whitespace-nowrap cursor-pointer">
+                {/* BOUTON MASQUER / AFFICHER LE CHAT (Mode Plein Écran PC / Mobile) */}
+                <button
+                  type="button"
+                  onClick={toggleChatVisibility}
+                  className={`relative px-2.5 md:px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all outline-none shrink-0 whitespace-nowrap cursor-pointer active:scale-95 ${
+                    isChatHidden
+                      ? 'bg-purple-600/30 hover:bg-purple-600/50 text-[#c084fc] hover:text-white border border-[#a855f7]/50 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
+                      : 'bg-white/5 hover:bg-white/15 text-white/80 hover:text-white border border-white/10'
+                  }`}
+                  title={isChatHidden ? (lang === 'fr' ? "Afficher le chat" : "Show chat") : (lang === 'fr' ? "Masquer le chat pour profiter du plein écran" : "Hide chat for fullscreen")}
+                >
+                  {isChatHidden ? <MessageSquare className="w-3.5 h-3.5 text-[#c084fc]" /> : <MessageSquareOff className="w-3.5 h-3.5 text-white/70" />}
+                  <span className="hidden sm:inline">
+                    {isChatHidden ? (lang === 'fr' ? 'Afficher chat' : 'Show chat') : (lang === 'fr' ? 'Masquer chat' : 'Hide chat')}
+                  </span>
+                  {isChatHidden && unreadChatCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-[9px] font-black min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-lg animate-bounce border border-white/20">
+                      {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* BOUTON PARTAGE DANS LE HEADER AVEC FLÈCHE / MODALE */}
+                <button
+                  type="button"
+                  onClick={() => setShowShareModal(true)}
+                  className="bg-gradient-to-r from-purple-600/30 to-pink-600/30 hover:from-purple-600 hover:to-pink-600 text-purple-300 hover:text-white border border-[#a855f7]/40 px-2.5 md:px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(168,85,247,0.2)] shrink-0 whitespace-nowrap cursor-pointer active:scale-95"
+                  title="Partager le salon (Lien, Code, Gmail)"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Partager</span>
+                </button>
+
+                <button onClick={() => setIsMinimized(true)} className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-2.5 md:px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors outline-none shadow-sm shrink-0 whitespace-nowrap cursor-pointer">
                   <Minimize2 className="w-3.5 h-3.5" /> <span className="hidden xl:inline">{t.minimizeRoom}</span>
                 </button>
 
                 {iAmMod && !iAmHost && (
-                  <button onClick={() => setShowModForceCloseConfirm(true)} className="bg-orange-500/10 hover:bg-orange-500 border border-orange-500/30 hover:border-orange-500 text-orange-400 hover:text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors outline-none shadow-sm shrink-0 whitespace-nowrap cursor-pointer">
+                  <button onClick={() => setShowModForceCloseConfirm(true)} className="bg-orange-500/10 hover:bg-orange-500 border border-orange-500/30 hover:border-orange-500 text-orange-400 hover:text-white px-2.5 md:px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors outline-none shadow-sm shrink-0 whitespace-nowrap cursor-pointer">
                     <ShieldAlert className="w-3.5 h-3.5" /> <span className="hidden xl:inline">{t.modForceCloseBtn}</span>
                   </button>
                 )}
 
-                <button onClick={() => setShowLeavePartyConfirm(true)} className="bg-red-500/10 hover:bg-red-500 border border-red-500/30 hover:border-red-500 text-red-400 hover:text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors outline-none shadow-sm shrink-0 whitespace-nowrap cursor-pointer">
+                <button onClick={() => setShowLeavePartyConfirm(true)} className="bg-red-500/10 hover:bg-red-500 border border-red-500/30 hover:border-red-500 text-red-400 hover:text-white px-2.5 md:px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors outline-none shadow-sm shrink-0 whitespace-nowrap cursor-pointer">
                   <Power className="w-3.5 h-3.5" /> <span className="hidden xl:inline">{iAmHost ? t.closeLive : t.quitLive}</span>
                 </button>
               </div>
@@ -1015,18 +1345,17 @@ export function MovieModal({
         </div>
 
         {/* Colonne Droite: Chat */}
-        {!isMinimized && (
+        {!isMinimized && !isChatHidden && (
           <div className="flex-1 lg:w-[350px] xl:w-[400px] flex flex-col bg-[#0c0c10] border-t lg:border-t-0 lg:border-l border-white/5 relative z-40 min-h-0 shadow-[-20px_0_40px_rgba(0,0,0,0.8)]">
-            <div className="p-3 bg-black/60 border-b border-white/5 backdrop-blur-md relative z-20 shrink-0">
-              <div className="flex items-center gap-2 w-full bg-white/5 p-1.5 rounded-2xl border border-white/10">
-                <button onClick={() => setShowInviteModal(true)} className="flex-1 bg-black/40 hover:bg-white/10 text-white text-[9px] font-bold uppercase tracking-widest py-2.5 rounded-xl transition-colors flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-1.5 outline-none shadow-sm border border-white/5 cursor-pointer">
-                  <Share2 className="w-3.5 h-3.5 text-[#a855f7]" /> <span className="text-center leading-tight whitespace-nowrap">{t.shareLinkBtn}</span>
-                </button>
-                <div className="flex flex-col items-center px-1">
-                  <span className="text-[7px] text-white/30 font-black tracking-widest">OU</span>
-                </div>
-                <button onClick={() => setShowUserSearch(true)} className="flex-1 bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-600 hover:to-pink-600 text-white text-[9px] font-black uppercase tracking-widest py-2.5 rounded-xl transition-all active:scale-95 flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-1.5 outline-none shadow-inner border border-white/10 cursor-pointer">
-                  <UserPlus className="w-3.5 h-3.5" /> <span className="text-center leading-tight whitespace-nowrap">{t.inviteFriendBtn}</span>
+            <div className="p-2.5 bg-black/60 border-b border-white/5 backdrop-blur-md relative z-20 shrink-0">
+              <div className="flex items-center gap-2 w-full">
+                <button
+                  type="button"
+                  onClick={() => setShowShareModal(true)}
+                  className="flex-1 bg-white/5 hover:bg-[#a855f7]/20 hover:border-[#a855f7]/40 border border-white/10 text-white text-[10px] font-black uppercase tracking-wider py-2 rounded-xl transition-all flex items-center justify-center gap-2 outline-none shadow-sm cursor-pointer active:scale-95"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-[#c084fc]" />
+                  <span>Partager / Inviter</span>
                 </button>
               </div>
             </div>
@@ -1108,37 +1437,52 @@ export function MovieModal({
               <div ref={chatEndRef} className="h-2 shrink-0" />
             </div>
 
-            <div className="p-3 border-t border-white/5 bg-[#0c0c10] shrink-0 z-20" style={{ paddingBottom: kbOffset > 0 ? `${kbOffset + 12}px` : '' }}>
+            {/* Barre de saisie de message professionnelle */}
+            <div className="p-2.5 md:p-3 border-t border-white/10 bg-[#0c0c12]/95 backdrop-blur-md shrink-0 z-20" style={{ paddingBottom: kbOffset > 0 ? `${kbOffset + 10}px` : '' }}>
               {replyingTo && (
-                <div className="flex items-center justify-between bg-white/5 px-3 py-2 rounded-t-xl border-x border-t border-white/10 -mt-8 mb-2">
-                  <div className="text-[9px] md:text-[11px] text-white/60 truncate flex-1 flex items-center gap-1.5">
-                    <Reply className="w-3.5 h-3.5 text-[#a855f7]" /> <span className="font-bold">{t.replyTo} {replyingTo.name}:</span> <span className="italic">{replyingTo.text}</span>
+                <div className="flex items-center justify-between bg-white/5 px-3 py-1.5 rounded-t-xl border-x border-t border-[#a855f7]/30 -mt-7 mb-1.5 backdrop-blur-sm">
+                  <div className="text-[10px] text-white/70 truncate flex-1 flex items-center gap-1.5">
+                    <Reply className="w-3 h-3 text-[#c084fc]" /> <span className="font-bold text-white">{t.replyTo} {replyingTo.name}:</span> <span className="italic truncate">{replyingTo.text}</span>
                   </div>
-                  <button onClick={() => setReplyingTo(null)} className="text-white/40 hover:text-white p-1 outline-none cursor-pointer"><X className="w-3.5 h-3.5" /></button>
+                  <button type="button" onClick={() => setReplyingTo(null)} className="text-white/40 hover:text-white p-1 outline-none cursor-pointer"><X className="w-3.5 h-3.5" /></button>
                 </div>
               )}
-              <div className={`relative flex items-center bg-[#1a1a24] border border-white/10 ${replyingTo ? 'rounded-b-xl rounded-tr-xl' : 'rounded-full'} p-1 transition-all focus-within:border-[#a855f7] shadow-inner`}>
+              <div className={`relative flex items-center bg-[#13131c] border border-white/15 focus-within:border-[#a855f7] ${replyingTo ? 'rounded-b-2xl rounded-tr-2xl' : 'rounded-2xl'} p-1.5 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)] focus-within:shadow-[0_0_20px_rgba(168,85,247,0.25)]`}>
                 <input 
                   type="text" 
                   maxLength={150}
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { handleSendPartyMessage(chatInput, replyingTo); setChatInput(''); setReplyingTo(null); } }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && chatInput.trim()) {
+                      handleSendPartyMessage(chatInput, replyingTo);
+                      setChatInput('');
+                      setReplyingTo(null);
+                    }
+                  }}
                   onFocus={(e) => {
                     setTimeout(() => {
                       e.target.scrollIntoView({ behavior: 'smooth', block: 'end' });
                       chatEndRef.current?.scrollIntoView();
                     }, 300);
                   }}
-                  placeholder={t.chatPlaceholder}
-                  className="w-full bg-transparent pl-4 pr-2 py-2.5 text-[12px] md:text-[13px] text-white outline-none"
+                  placeholder="Écrire un message en direct..."
+                  className="w-full bg-transparent pl-3 pr-2 py-2 text-xs md:text-sm text-white placeholder-white/40 outline-none font-medium"
                 />
                 <button 
-                  onClick={() => { handleSendPartyMessage(chatInput, replyingTo); setChatInput(''); setReplyingTo(null); }} 
+                  type="button"
+                  onClick={() => {
+                    if (chatInput.trim()) {
+                      handleSendPartyMessage(chatInput, replyingTo);
+                      setChatInput('');
+                      setReplyingTo(null);
+                    }
+                  }} 
                   disabled={!chatInput.trim()}
-                  className="w-8 h-8 shrink-0 rounded-full bg-[#a855f7] flex items-center justify-center text-white hover:bg-purple-500 disabled:opacity-50 disabled:bg-white/10 transition-colors outline-none cursor-pointer"
+                  className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 disabled:from-white/5 disabled:to-white/5 disabled:text-white/20 text-white flex items-center justify-center transition-all shadow-[0_0_12px_rgba(168,85,247,0.3)] disabled:shadow-none active:scale-90 cursor-pointer disabled:cursor-not-allowed"
+                  title="Envoyer le message"
                 >
-                  <Send className="w-3.5 h-3.5 ml-0.5" />
+                  <ArrowUp className="w-4 h-4 stroke-[2.5]" />
                 </button>
               </div>
             </div>
