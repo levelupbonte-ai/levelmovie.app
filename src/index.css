@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+input, textarea {
+  user-select: auto;
+  -webkit-user-select: auto;
+}
+
+body.party-mode {
+  overflow: hidden !important;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: #060608;
+  color: white;
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: env(safe-area-inset-top);
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+.bg-main {
+  background: radial-gradient(circle at 50% 0%, #15092a 0%, #060608 80%);
+  min-height: 100vh;
+}
+
+.holo-card {
+  background: linear-gradient(135deg, rgba(30,20,45,0.6) 0%, rgba(10,10,15,0.8) 100%);
+  border: 1px solid rgba(168,85,247,0.2);
+  box-shadow: inset 0 0 30px rgba(168,85,247,0.05), 0 30px 60px rgba(0,0,0,0.8);
+  backdrop-filter: blur(30px);
+}
+
+.markdown-pro {
+  font-size: 14px;
+  line-height: 1.8;
+  color: rgba(255,255,255,0.75);
+  text-align: justify;
+}
+
+.markdown-pro strong {
+  color: #fff;
+  font-weight: 700;
+}
+
+.splash-text {
+  opacity: 0;
+  position: absolute;
+  transform: scale(0.85);
+  filter: blur(15px);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+}
+
+.splash-text.active {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0px);
+}
+
+.splash-text.exit {
+  opacity: 0;
+  transform: scale(1.2);
+  filter: blur(30px);
+}
+
+@keyframes fadeInChat {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-msg {
+  animation: fadeInChat 0.3s ease-out forwards;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.safe-top-header {
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px)) !important;
+}
+
+.safe-bottom-nav {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important;
+}

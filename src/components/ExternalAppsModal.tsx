@@ -242,17 +242,17 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
   const getAppIcon = (type: string) => {
     switch (type) {
       case 'bot':
-        return <Bot className="w-5 h-5 text-indigo-400" />;
+        return <Bot className="w-7 h-7 text-indigo-400" />;
       case 'music':
-        return <Music className="w-5 h-5 text-pink-400" />;
+        return <Music className="w-7 h-7 text-pink-400" />;
       case 'ai':
-        return <Sparkles className="w-5 h-5 text-blue-400" />;
+        return <Sparkles className="w-7 h-7 text-blue-400" />;
       case 'pwa':
-        return <Smartphone className="w-5 h-5 text-teal-400" />;
+        return <Smartphone className="w-7 h-7 text-teal-400" />;
       case 'tv':
-        return <Tv className="w-5 h-5 text-amber-400" />;
+        return <Tv className="w-7 h-7 text-amber-400" />;
       default:
-        return <Layers className="w-5 h-5 text-[#a855f7]" />;
+        return <Layers className="w-7 h-7 text-[#a855f7]" />;
     }
   };
 
@@ -264,22 +264,13 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
       {/* ========================================================================= */}
       <header className="h-16 px-4 sm:px-6 bg-[#080911] border-b border-white/10 flex items-center justify-between gap-3 shrink-0 z-30">
         
-        {/* Left: Titre épuré "LevelUp App" (sans logo levelmovie) */}
+        {/* Left: Titre épuré "LevelUp App" (sans logo levelmovie et sans affichage d'URL) */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="text-base sm:text-lg font-black tracking-wider text-white">
               Level<span className="text-[#a855f7]">Up</span>
               <span className="text-white/60 ml-1 font-semibold text-sm sm:text-base">App</span>
             </span>
-          </div>
-
-          {/* Badge statut URL active */}
-          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-xs text-white/60">
-            <Lock className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="font-mono text-[11px] text-white/80">
-              {currentApp ? `levelup://${currentApp.id}` : 'levelup://apps.home'}
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </div>
         </div>
 
@@ -304,7 +295,7 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
           </div>
         )}
 
-        {/* Right: 4 Boutons de Navigation épurés et design */}
+        {/* Right: Boutons de Navigation épurés et design */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           
           {/* Bouton 1 : Rafraîchir / Recharger */}
@@ -361,14 +352,13 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
             <span className="hidden sm:inline">{isFr ? 'Catalogue' : 'Catalog'}</span>
           </button>
 
-          {/* Bouton 4 : Sortir / Quitter le Store */}
+          {/* Bouton 4 : Sortir (icône seule sans texte) */}
           <button
             onClick={onClose}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-rose-500/20 hover:text-rose-200 hover:border-rose-500/40 text-white text-xs font-bold transition-all cursor-pointer border border-white/15 shadow-sm active:scale-95 ml-1"
-            title={isFr ? 'Quitter LevelUp App' : 'Exit LevelUp App'}
+            className="flex items-center justify-center p-2 sm:p-2.5 rounded-xl bg-white/10 hover:bg-rose-500/20 hover:text-rose-200 hover:border-rose-500/40 text-white transition-all cursor-pointer border border-white/15 shadow-sm active:scale-95 ml-1"
+            title={isFr ? 'Sortir' : 'Exit'}
           >
-            <LogOut className="w-3.5 h-3.5 rotate-180 text-white/80" />
-            <span>{isFr ? 'Sortir' : 'Exit'}</span>
+            <LogOut className="w-4 h-4 rotate-180 text-white/80" />
           </button>
 
         </div>
@@ -383,33 +373,15 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
         /* --------------------------------------------------------- */
         /* MODE A : NAVIGATEUR IN-APP SANDBOX POUR L'APP ACTIVE      */
         /* --------------------------------------------------------- */
-        <div className="flex-1 relative w-full h-full bg-[#05060a] overflow-hidden flex flex-col">
+        <div className="flex-1 relative w-full h-full bg-[#020306] overflow-hidden flex flex-col">
           
-          {/* Top In-App Breadcrumb Header */}
-          <div className="px-4 py-2 bg-[#090a12] border-b border-white/5 flex items-center justify-between text-xs text-white/60 shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-md bg-white/5 flex items-center justify-center">
-                {getAppIcon(currentApp.iconType)}
-              </div>
-              <span className="font-bold text-white text-xs sm:text-sm">{currentApp.name}</span>
-              <span className="text-[10px] font-mono text-[#c084fc] px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20">
-                {currentApp.category}
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-2 text-[11px] font-mono text-emerald-400">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Sandbox Certifiée</span>
-            </div>
-          </div>
-
-          {/* Iframe Viewer */}
+          {/* Iframe Viewer (Plein écran sans deuxième header redondant) */}
           <div className="flex-1 relative w-full h-full bg-[#020306]">
             {iframeLoading && (
               <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#07080e]/95 gap-3">
-                <div className="w-10 h-10 rounded-full border-2 border-[#a855f7] border-t-transparent animate-spin" />
-                <span className="text-xs font-mono text-white/70">
-                  {isFr ? 'Exécution sécurisée dans l’écosystème LevelUp...' : 'Secure sandbox execution in progress...'}
+                <div className="w-8 h-8 rounded-full border-2 border-[#a855f7] border-t-transparent animate-spin" />
+                <span className="text-[11px] font-mono text-white/70">
+                  {isFr ? 'Chargement sécurisé...' : 'Secure sandbox loading...'}
                 </span>
               </div>
             )}
@@ -501,7 +473,7 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
                 <div className="space-y-4">
                   
                   <div className="flex items-start justify-between gap-3">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/15 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+                    <div className="flex items-center justify-center group-hover:scale-110 transition-transform pt-1">
                       {getAppIcon(app.iconType)}
                     </div>
 

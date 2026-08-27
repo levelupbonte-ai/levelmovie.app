@@ -295,15 +295,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       {/* ======================================================== */}
       {/* GAUCHE: INTERFACE DÉDIÉE (PLEIN ÉCRAN MOBILE & PC)         */}
       {/* ======================================================== */}
-      <div className="w-full md:w-1/2 h-full flex flex-col justify-start items-center p-4 sm:p-8 lg:p-10 pt-6 sm:pt-10 overflow-y-auto custom-scrollbar bg-[#14141a] relative z-20">
+      <div className="w-full md:w-1/2 h-full flex flex-col justify-start items-center p-4 sm:p-6 lg:p-8 pt-4 sm:pt-6 overflow-y-auto custom-scrollbar bg-[#14141a] relative z-20">
         
         {/* Séparateur vertical à dégradé fluide entre les deux panneaux (gauche et droite) */}
         <div className="hidden md:block absolute right-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-[#8b5cf6]/40 via-[#ec4899]/30 to-transparent z-30 pointer-events-none" />
 
-        {/* Conteneur de Vue Principale (Positionné plus haut avec espacement optimal) */}
-        <div className="w-full max-w-md my-auto sm:my-2">
+        {/* Conteneur de Vue Principale (Compact et bien calé vers le haut sans zone vide / blanc inutile) */}
+        <div className="w-full max-w-md my-2 sm:my-4">
           
-          <div className="bg-[#1e1e24] border border-[#2a2a35] rounded-2xl shadow-2xl w-full p-6 sm:p-8 relative">
+          <div className="bg-[#1e1e24] border border-[#2a2a35] rounded-2xl shadow-2xl w-full p-5 sm:p-7 relative">
             
             {/* VUE 1 : CHOIX DE CONNEXION PRINCIPAL */}
             {currentView === 'view-main' && (
@@ -747,7 +747,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       {/* ======================================================== */}
       {/* DROITE: VITRINE CINÉMATOGRAPHIQUE DYNAMIQUE                */}
       {/* ======================================================== */}
-      <div className="hidden md:flex md:w-1/2 h-full relative bg-gradient-to-br from-[#120a22] to-[#080911] border-l border-white/10 overflow-hidden flex-col justify-between p-10 lg:p-14">
+      <div className="hidden md:flex md:w-1/2 h-full relative bg-gradient-to-br from-[#120a22] to-[#080911] overflow-hidden flex-col justify-between p-10 lg:p-14">
         
         {/* Animated Background poster art */}
         <div 
