@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Star, Clapperboard, Play } from 'lucide-react';
 import { BASE_URL, IMAGE_BASE_URL, API_KEY, filterMatureContent, seededShuffle } from '../constants';
 
-export function AlgoRow({
+export const AlgoRow = React.memo(function AlgoRow({
   title,
   fetchUrl,
   seed,
@@ -100,9 +100,9 @@ export function AlgoRow({
       </div>
     </div>
   );
-}
+});
 
-export function TrailerRow({
+export const TrailerRow = React.memo(function TrailerRow({
   title,
   fetchUrl,
   seed,
@@ -182,4 +182,4 @@ export function TrailerRow({
       </div>
     </div>
   );
-}
+});

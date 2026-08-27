@@ -3,6 +3,31 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
+export const DonaStar = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    className={className} 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <linearGradient id="donaSolidPurpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#e9d5ff" />
+        <stop offset="35%" stopColor="#c084fc" />
+        <stop offset="70%" stopColor="#a855f7" />
+        <stop offset="100%" stopColor="#7e22ce" />
+      </linearGradient>
+    </defs>
+    <path 
+      d="M12 2L14.85 8.35L21.8 9.15L16.65 13.95L18.05 20.85L12 17.45L5.95 20.85L7.35 13.95L2.2 9.15L9.15 8.35L12 2Z" 
+      fill="url(#donaSolidPurpleGrad)" 
+      stroke="#e9d5ff"
+      strokeWidth="0.6"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 export const LevelMovieLogo = ({ className = "w-6 h-6", color = "currentColor" }: { className?: string; color?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M5 4V17C5 19.2091 6.79086 21 9 21H20" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>

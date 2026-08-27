@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { BASE_URL, IMAGE_BASE_URL, filterMatureContent } from '../constants';
 
-export function Row({
+export const Row = React.memo(function Row({
   title,
   fetchUrl,
   isLarge,
@@ -147,4 +147,4 @@ export function Row({
       </div>
     </div>
   );
-}
+});

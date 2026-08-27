@@ -3,7 +3,7 @@ import {
   X, Settings, Bookmark, Clapperboard, LayoutGrid, HelpCircle,
   Film, Tv, Users, Home, LogOut, User, ChevronRight, ExternalLink
 } from 'lucide-react';
-import { LevelMovieLogo } from '../constants';
+import { LevelMovieLogo, DonaStar } from '../constants';
 
 interface AppSidebarProps {
   isOpen: boolean;
@@ -13,6 +13,7 @@ interface AppSidebarProps {
   onOpenTrailers: () => void;
   onOpenExternalApps: () => void;
   onOpenSupport: () => void;
+  onOpenDona?: () => void;
   onNavigateCategory: (cat: string) => void;
   onOpenLogin: () => void;
   onOpenLogout: () => void;
@@ -34,6 +35,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   onOpenTrailers,
   onOpenExternalApps,
   onOpenSupport,
+  onOpenDona,
   onNavigateCategory,
   onOpenLogin,
   onOpenLogout,
@@ -119,6 +121,28 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             <div className="text-[10px] font-bold uppercase tracking-wider text-white/30 px-2 pb-2">
               {lang === 'fr' ? 'Menu Principal' : 'Main Menu'}
             </div>
+
+            {/* 0. DONA IA CINÉMA */}
+            {onOpenDona && (
+              <button
+                onClick={() => { onClose(); onOpenDona(); }}
+                className="w-full py-2.5 px-3 rounded-xl bg-[#a855f7]/10 border border-[#a855f7]/30 hover:bg-[#a855f7]/20 transition-all text-left flex items-center justify-between group cursor-pointer shadow-[0_0_15px_rgba(168,85,247,0.15)] mb-1"
+              >
+                <div className="flex items-center gap-3.5">
+                  <DonaStar className="w-5 h-5 group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] shrink-0" />
+                  <div>
+                    <div className="text-xs font-black text-white group-hover:text-[#c084fc] transition-colors flex items-center gap-1.5">
+                      <span>Dona</span>
+                      <span className="text-[9px] px-1.5 py-0.2 bg-[#a855f7] text-white rounded-full font-extrabold uppercase">IA</span>
+                    </div>
+                    <div className="text-[10px] text-white/60">
+                      {lang === 'fr' ? 'Recommandations & Assistant' : 'Movie & Series Advisor'}
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-[#c084fc] group-hover:translate-x-0.5 transition-all" />
+              </button>
+            )}
 
             {/* 1. PARAMÈTRES */}
             <button

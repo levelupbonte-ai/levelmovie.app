@@ -18,9 +18,9 @@ export const supabaseAnonKey =
   env.VITE_SUPABASE_KEY || 
   DEFAULT_SUPABASE_ANON_KEY;
 
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+export const isSupabaseConfigured = () => Boolean(supabaseUrl && supabaseAnonKey && supabase);
 
-export const supabase: SupabaseClient | null = isSupabaseConfigured
+export const supabase: SupabaseClient | null = (supabaseUrl && supabaseAnonKey)
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,

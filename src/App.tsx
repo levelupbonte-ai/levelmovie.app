@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Play, Info, Search as SearchIcon, X, ChevronLeft, ChevronRight,
   Star, User as UserIcon, LogOut, Film, Globe, Shield, HardDrive, Filter,
   Home, Tv, Clapperboard, History, AlertOctagon, Bookmark,
   ArrowDown, ArrowUp, Plus, Users, Mail, AlertTriangle, CheckCircle, XCircle,
-  Building, Lock, Menu, Sparkles, Compass, ShieldCheck, Zap
+  Building, Lock, Menu, Sparkles, Compass, ShieldCheck, Zap,
+  Clock, SquarePen
 } from 'lucide-react';
 import {
   onAuthStateChanged, signInAnonymously, signInWithPopup, signInWithRedirect, signOut
@@ -16,7 +17,7 @@ import { getMessaging, getToken, onMessage, isSupported as isMessagingSupported 
 
 import {
   app, auth, db, APP_ID, googleProvider, facebookProvider, VAPID_KEY, NOTIF_PATH, FCM_TOKEN_PATH,
-  API_KEY, BASE_URL, IMAGE_BASE_URL, LevelMovieLogo, WatchPartySVG,
+  API_KEY, BASE_URL, IMAGE_BASE_URL, LevelMovieLogo, DonaStar, WatchPartySVG,
   censorText, filterMatureContent, getDailySeed, getWeekSeed, getHoursUntilMidnight
 } from './constants';
 import { i18n, globalStyles } from './i18n';
@@ -30,6 +31,7 @@ import { ExternalAppsModal } from './components/ExternalAppsModal';
 import { SupportModal } from './components/SupportModal';
 import { SearchModal } from './components/SearchModal';
 import { AuthModal } from './components/AuthModal';
+import { DonaModal } from './components/DonaModal';
 import { CinematicPosterWall } from './components/CinematicPosterWall';
 import { FooterDisclaimer } from './components/FooterDisclaimer';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
@@ -119,6 +121,9 @@ export default function App() {
   const [isNearBottom, setIsNearBottom] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showDona, setShowDona] = useState(false);
+  const [donaHistoryTrigger, setDonaHistoryTrigger] = useState(0);
+  const [donaNewChatTrigger, setDonaNewChatTrigger] = useState(0);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [loginBackdrops, setLoginBackdrops] = useState<string[]>([]);
 
@@ -505,8 +510,17 @@ export default function App() {
       });
     }
 
-    const handleScroll = () => setIsScrolled(window.scrollY > 30);
-    window.addEventListener('scroll', handleScroll);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 30);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
@@ -840,7 +854,7 @@ export default function App() {
     setShowSidebar(false);
     setShowLogoutConfirm(false);
     setCurrentCategory('home');
-    setShowLoginModal(true);
+    setShowLoginModal(false);
     showToast(lang === 'fr' ? 'Déconnexion réussie' : 'Logged out', 'success');
   };
 
@@ -850,38 +864,41 @@ export default function App() {
   const buildUrl = (base: string) => `${base}?api_key=${API_KEY}&language=${langCode}${langFilter}${adultFilterParams}`;
   const buildUrlNoFilter = (base: string) => `${base}?api_key=${API_KEY}&language=${langCode}${adultFilterParams}`;
 
-  const rowsConfig: any[] = [];
-  if (currentCategory === 'home' || currentCategory === 'movie' || currentCategory === 'party') {
-    rowsConfig.push(
-      { title: t.trending, url: buildUrlNoFilter('/trending/movie/week'), large: true, shuffle: false },
-      { title: t.frenchCinema, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&with_spoken_languages=fr&sort_by=popularity.desc${adultFilterParams}`, large: false, shuffle: true },
-      { title: t.upcoming, url: buildUrl('/movie/upcoming'), large: false, shuffle: false },
-      { title: t.nowPlaying, url: buildUrl('/movie/now_playing'), large: false, shuffle: false },
-      { title: t.topRated, url: buildUrl('/movie/top_rated'), large: false, shuffle: false },
-      { title: t.freeVOD, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&with_watch_monetization_types=free&watch_region=FR&sort_by=popularity.desc${langFilter}${adultFilterParams}`, large: false, shuffle: true },
-      { title: t.asianDrama, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_original_language=ko${adultFilterParams}`, large: false, shuffle: true },
-      { title: t.animeManga, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_genres=16&with_original_language=ja${adultFilterParams}`, large: false, shuffle: true },
-      { title: t.action, url: buildUrl('/discover/movie') + '&with_genres=28', large: false, shuffle: true },
-      { title: t.scifi, url: buildUrl('/discover/movie') + '&with_genres=878', large: false, shuffle: true },
-      { title: t.comedy, url: buildUrl('/discover/movie') + '&with_genres=35', large: false, shuffle: true },
-      { title: t.horror, url: buildUrl('/discover/movie') + '&with_genres=27', large: false, shuffle: true },
-      { title: t.romance, url: buildUrl('/discover/movie') + '&with_genres=10749', large: false, shuffle: true },
-      { title: t.docs, url: buildUrl('/discover/movie') + '&with_genres=99', large: false, shuffle: true }
-    );
-  } else if (currentCategory === 'tv') {
-    rowsConfig.push(
-      { title: t.trending, url: buildUrlNoFilter('/trending/tv/week'), large: true, shuffle: false },
-      { title: t.frenchSeries, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_spoken_languages=fr&sort_by=popularity.desc${adultFilterParams}`, large: false, shuffle: true },
-      { title: t.asianDrama, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_original_language=ko${adultFilterParams}`, large: false, shuffle: true },
-      { title: t.animeJp, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_genres=16&with_original_language=ja${adultFilterParams}`, large: false, shuffle: true },
-      { title: t.topRated, url: buildUrl('/tv/top_rated'), large: false, shuffle: false },
-      { title: t.action, url: buildUrl('/discover/tv') + '&with_genres=10759', large: false, shuffle: true },
-      { title: t.comedy, url: buildUrl('/discover/tv') + '&with_genres=35', large: false, shuffle: true },
-      { title: t.crime, url: buildUrl('/discover/tv') + '&with_genres=80', large: false, shuffle: true },
-      { title: t.dramaPassion, url: buildUrl('/discover/tv') + '&with_genres=18', large: false, shuffle: true },
-      { title: t.mystery, url: buildUrl('/discover/tv') + '&with_genres=9648', large: false, shuffle: true }
-    );
-  }
+  const rowsConfig: any[] = useMemo(() => {
+    const list: any[] = [];
+    if (currentCategory === 'home' || currentCategory === 'movie' || currentCategory === 'party') {
+      list.push(
+        { title: t.trending, url: buildUrlNoFilter('/trending/movie/week'), large: true, shuffle: false },
+        { title: t.frenchCinema, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&with_spoken_languages=fr&sort_by=popularity.desc${adultFilterParams}`, large: false, shuffle: true },
+        { title: t.upcoming, url: buildUrl('/movie/upcoming'), large: false, shuffle: false },
+        { title: t.nowPlaying, url: buildUrl('/movie/now_playing'), large: false, shuffle: false },
+        { title: t.topRated, url: buildUrl('/movie/top_rated'), large: false, shuffle: false },
+        { title: t.freeVOD, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&with_watch_monetization_types=free&watch_region=FR&sort_by=popularity.desc${langFilter}${adultFilterParams}`, large: false, shuffle: true },
+        { title: t.asianDrama, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_original_language=ko${adultFilterParams}`, large: false, shuffle: true },
+        { title: t.animeManga, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_genres=16&with_original_language=ja${adultFilterParams}`, large: false, shuffle: true },
+        { title: t.action, url: buildUrl('/discover/movie') + '&with_genres=28', large: false, shuffle: true },
+        { title: t.scifi, url: buildUrl('/discover/movie') + '&with_genres=878', large: false, shuffle: true },
+        { title: t.comedy, url: buildUrl('/discover/movie') + '&with_genres=35', large: false, shuffle: true },
+        { title: t.horror, url: buildUrl('/discover/movie') + '&with_genres=27', large: false, shuffle: true },
+        { title: t.romance, url: buildUrl('/discover/movie') + '&with_genres=10749', large: false, shuffle: true },
+        { title: t.docs, url: buildUrl('/discover/movie') + '&with_genres=99', large: false, shuffle: true }
+      );
+    } else if (currentCategory === 'tv') {
+      list.push(
+        { title: t.trending, url: buildUrlNoFilter('/trending/tv/week'), large: true, shuffle: false },
+        { title: t.frenchSeries, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_spoken_languages=fr&sort_by=popularity.desc${adultFilterParams}`, large: false, shuffle: true },
+        { title: t.asianDrama, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_original_language=ko${adultFilterParams}`, large: false, shuffle: true },
+        { title: t.animeJp, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_genres=16&with_original_language=ja${adultFilterParams}`, large: false, shuffle: true },
+        { title: t.topRated, url: buildUrl('/tv/top_rated'), large: false, shuffle: false },
+        { title: t.action, url: buildUrl('/discover/tv') + '&with_genres=10759', large: false, shuffle: true },
+        { title: t.comedy, url: buildUrl('/discover/tv') + '&with_genres=35', large: false, shuffle: true },
+        { title: t.crime, url: buildUrl('/discover/tv') + '&with_genres=80', large: false, shuffle: true },
+        { title: t.dramaPassion, url: buildUrl('/discover/tv') + '&with_genres=18', large: false, shuffle: true },
+        { title: t.mystery, url: buildUrl('/discover/tv') + '&with_genres=9648', large: false, shuffle: true }
+      );
+    }
+    return list;
+  }, [currentCategory, langCode, langFilter, adultFilterParams, t]);
 
   if (isMaintenance && !showSplash) {
     return (
@@ -953,20 +970,6 @@ export default function App() {
     <div className="bg-main text-white min-h-screen">
       <style>{globalStyles}</style>
 
-      {/* MODAL CONNEXION & INSCRIPTION MULTI-ÉTAPES SUPABASE */}
-      <AuthModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLoginSuccess={(usr, name, email, photo) => {
-          setUser({ uid: usr.id || usr.uid || 'usr_' + Date.now(), ...usr });
-          setUserName(name);
-          setUserEmail(email);
-          if (photo) setUserPhoto(photo);
-        }}
-        lang={lang}
-        showToast={showToast}
-      />
-
       {/* HEADER */}
       <header className={`safe-top-header fixed top-0 w-full z-50 transition-all duration-500 ease-in-out flex items-center justify-between px-4 md:px-10 pb-3 md:pb-4 ${isScrolled ? 'bg-black/80 backdrop-blur-2xl border-b border-white/5 shadow-xl' : 'bg-gradient-to-b from-[#060608] via-[#060608]/90 to-transparent'}`}>
         <div className="flex items-center space-x-3 md:space-x-8">
@@ -993,7 +996,14 @@ export default function App() {
 
           <nav className="hidden lg:flex space-x-6 text-[12px] font-bold uppercase tracking-widest text-white/60">
             <button onClick={() => setCurrentCategory('home')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'home' ? 'text-[#a855f7]' : ''}`}>{t.home}</button>
-            <button onClick={() => setCurrentCategory('tv')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'tv' ? 'text-[#a855f7]' : ''}`}>{t.series}</button>
+            <button 
+              onClick={() => setCurrentCategory('dona')} 
+              className={`flex items-center gap-1.5 transition-all outline-none cursor-pointer group ${currentCategory === 'dona' ? 'text-[#c084fc] font-black' : 'text-white/60 hover:text-white'}`}
+              title="Dona - IA Cinéma LevelMovie"
+            >
+              <DonaStar className="w-4 h-4 group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+              <span className="font-bold tracking-wide">Dona</span>
+            </button>
             <button onClick={() => setCurrentCategory('movie')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'movie' ? 'text-[#a855f7]' : ''}`}>{t.movies}</button>
             <button onClick={() => setCurrentCategory('trailers')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'trailers' ? 'text-[#a855f7]' : ''}`}>{t.trailers || 'Bandes-Annonces'}</button>
             <button onClick={() => setCurrentCategory('party')} className={`transition-colors hover:text-white outline-none flex items-center gap-1.5 relative cursor-pointer ${currentCategory === 'party' ? 'text-[#a855f7]' : ''}`}>
@@ -1006,66 +1016,166 @@ export default function App() {
         </div>
 
         <div className="flex items-center space-x-3 md:space-x-4">
-          <button onClick={() => setShowSearchModal(true)} className="flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 md:px-4 py-2 rounded-full outline-none w-10 md:w-72 justify-center md:justify-start transition-colors shadow-inner cursor-pointer">
-            <SearchIcon className="w-4 h-4 shrink-0 text-[#a855f7]" />
-            <span className="hidden md:inline truncate text-white/50">{t.searchPlaceholder}</span>
-          </button>
+          {currentCategory === 'dona' ? (
+            <>
+              {/* BOUTONS DONA MOBILE (SANS BULLE / SANS CONTOUR BUBBLE) */}
+              <div className="flex items-center gap-4 sm:gap-5 md:hidden">
+                {/* 1. Montre / Horloge (Historique) */}
+                <button
+                  type="button"
+                  onClick={() => setDonaHistoryTrigger(prev => prev + 1)}
+                  className="text-white/75 hover:text-[#c084fc] active:text-[#c084fc] transition-colors p-1 outline-none cursor-pointer active:scale-95"
+                  title={lang === 'fr' ? 'Historique des discussions' : 'Chat History'}
+                >
+                  <Clock className="w-5 h-5 text-[#c084fc]" />
+                </button>
 
-          {/* Profil / Connexion Button (PC & Tablette) */}
-          <div 
-            className="flex items-center gap-2.5 p-1.5 pr-3 md:pr-4 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-md outline-none active:scale-95" 
-            onClick={() => {
-              if (user) {
-                setShowSidebar(true);
-              } else {
-                setShowLoginModal(true);
-              }
-            }}
-            title={user ? defaultUserName : (lang === 'fr' ? 'Connexion' : 'Log In')}
-          >
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#151520] flex items-center justify-center overflow-hidden border border-[#a855f7]/40 shadow-inner shrink-0">
-              {user ? (
-                userPhoto ? (
-                  <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" />
-                ) : (
-                  <span className="text-[12px] md:text-[13px] font-black text-[#a855f7]">
-                    {defaultUserName.charAt(0).toUpperCase()}
-                  </span>
-                )
-              ) : (
-                <UserIcon className="w-4 h-4 text-[#a855f7]" />
-              )}
-            </div>
-            <div className="hidden md:block min-w-0">
-              <p className="text-[12px] font-bold uppercase truncate tracking-wide text-white/90">
-                {user ? defaultUserName : (lang === 'fr' ? 'Connexion' : 'Log In')}
-              </p>
-            </div>
-          </div>
+                {/* 2. Ardoise et Bic / New Chat (Style ChatGPT) */}
+                <button
+                  type="button"
+                  onClick={() => setDonaNewChatTrigger(prev => prev + 1)}
+                  className="text-white/75 hover:text-white active:text-[#c084fc] transition-colors p-1 outline-none cursor-pointer active:scale-95"
+                  title={lang === 'fr' ? 'Nouvelle discussion' : 'New Chat'}
+                >
+                  <SquarePen className="w-5 h-5 text-white/80 hover:text-white" />
+                </button>
+
+                {/* 3. Bouton X Croix (Sortir sans bulle) */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentCategory('home')}
+                  className="text-white/60 hover:text-white active:text-rose-400 transition-colors p-1 outline-none cursor-pointer active:scale-95"
+                  title={lang === 'fr' ? 'Fermer Dona' : 'Close Dona'}
+                >
+                  <X className="w-5 h-5 text-white/70 hover:text-white" />
+                </button>
+              </div>
+
+              {/* Boutons Search & Profil visibles sur tablette / PC */}
+              <div className="hidden md:flex items-center space-x-3 md:space-x-4">
+                <button onClick={() => setShowSearchModal(true)} className="flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 md:px-4 py-2 rounded-full outline-none w-10 md:w-72 justify-center md:justify-start transition-colors shadow-inner cursor-pointer">
+                  <SearchIcon className="w-4 h-4 shrink-0 text-[#a855f7]" />
+                  <span className="hidden md:inline truncate text-white/50">{t.searchPlaceholder}</span>
+                </button>
+
+                <div 
+                  className="flex items-center gap-2.5 p-1.5 pr-3 md:pr-4 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-md outline-none active:scale-95" 
+                  onClick={() => {
+                    if (user) {
+                      setShowSidebar(true);
+                    } else {
+                      setShowLoginModal(true);
+                    }
+                  }}
+                  title={user ? defaultUserName : (lang === 'fr' ? 'Connexion' : 'Log In')}
+                >
+                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#151520] flex items-center justify-center overflow-hidden border border-[#a855f7]/40 shadow-inner shrink-0">
+                    {user ? (
+                      userPhoto ? (
+                        <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" />
+                      ) : (
+                        <span className="text-[12px] md:text-[13px] font-black text-[#a855f7]">
+                          {defaultUserName.charAt(0).toUpperCase()}
+                        </span>
+                      )
+                    ) : (
+                      <UserIcon className="w-4 h-4 text-[#a855f7]" />
+                    )}
+                  </div>
+                  <div className="hidden md:block min-w-0">
+                    <p className="text-[12px] font-bold uppercase truncate tracking-wide text-white/90">
+                      {user ? defaultUserName : (lang === 'fr' ? 'Connexion' : 'Log In')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setShowSearchModal(true)} className="flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 md:px-4 py-2 rounded-full outline-none w-10 md:w-72 justify-center md:justify-start transition-colors shadow-inner cursor-pointer">
+                <SearchIcon className="w-4 h-4 shrink-0 text-[#a855f7]" />
+                <span className="hidden md:inline truncate text-white/50">{t.searchPlaceholder}</span>
+              </button>
+
+              {/* Profil / Connexion Button (PC & Tablette) */}
+              <div 
+                className="flex items-center gap-2.5 p-1.5 pr-3 md:pr-4 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-md outline-none active:scale-95" 
+                onClick={() => {
+                  if (user) {
+                    setShowSidebar(true);
+                  } else {
+                    setShowLoginModal(true);
+                  }
+                }}
+                title={user ? defaultUserName : (lang === 'fr' ? 'Connexion' : 'Log In')}
+              >
+                <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#151520] flex items-center justify-center overflow-hidden border border-[#a855f7]/40 shadow-inner shrink-0">
+                  {user ? (
+                    userPhoto ? (
+                      <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" />
+                    ) : (
+                      <span className="text-[12px] md:text-[13px] font-black text-[#a855f7]">
+                        {defaultUserName.charAt(0).toUpperCase()}
+                      </span>
+                    )
+                  ) : (
+                    <UserIcon className="w-4 h-4 text-[#a855f7]" />
+                  )}
+                </div>
+                <div className="hidden md:block min-w-0">
+                  <p className="text-[12px] font-bold uppercase truncate tracking-wide text-white/90">
+                    {user ? defaultUserName : (lang === 'fr' ? 'Connexion' : 'Log In')}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </header>
 
-      {/* NAVBAR MOBILE */}
-      <nav className="safe-bottom-nav lg:hidden fixed bottom-0 w-full z-50 bg-[#060608]/95 backdrop-blur-xl border-t border-white/5 flex justify-around items-center pt-3 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
-        <button onClick={() => setCurrentCategory('home')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'home' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-          <Home className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.home}</span>
-        </button>
-        <button onClick={() => setCurrentCategory('tv')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'tv' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-          <Tv className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.series}</span>
-        </button>
-        <button onClick={() => setCurrentCategory('party')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'party' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-          <Users className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.partyTab}</span>
-        </button>
-        <button onClick={() => setCurrentCategory('movie')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'movie' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-          <Clapperboard className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.movies}</span>
-        </button>
-        <button onClick={() => setShowSidebar(true)} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-          <Menu className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.menu || 'Menu'}</span>
-        </button>
-      </nav>
+      {/* NAVBAR MOBILE (Masquée sur Dona pour laisser la place complète au chat) */}
+      {currentCategory !== 'dona' && (
+        <nav className="safe-bottom-nav lg:hidden fixed bottom-0 w-full z-50 bg-[#060608]/95 backdrop-blur-xl border-t border-white/5 flex justify-around items-center pt-3 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+          <button onClick={() => setCurrentCategory('home')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'home' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
+            <Home className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.home}</span>
+          </button>
+          <button 
+            onClick={() => setCurrentCategory('dona')} 
+            className={`flex flex-col items-center justify-center gap-1 transition-all outline-none cursor-pointer active:scale-95 group ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/50 hover:text-white'}`}
+            title="Dona - IA Cinéma"
+          >
+            <div className="relative flex items-center justify-center w-6 h-6">
+              <DonaStar className="w-5 h-5 relative z-10 transition-transform group-hover:scale-105" />
+            </div>
+            <span className={`text-[9px] font-black uppercase tracking-wider ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/50'}`}>Dona</span>
+          </button>
+          <button onClick={() => setCurrentCategory('party')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'party' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
+            <Users className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.partyTab}</span>
+          </button>
+          <button onClick={() => setCurrentCategory('movie')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'movie' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
+            <Clapperboard className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.movies}</span>
+          </button>
+          <button onClick={() => setShowSidebar(true)} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
+            <Menu className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.menu || 'Menu'}</span>
+          </button>
+        </nav>
+      )}
 
       {/* CONTENU PRINCIPAL */}
-      {currentCategory === 'party' ? (
+      {currentCategory === 'dona' ? (
+        <div className="fixed inset-x-0 top-14 md:top-16 bottom-0 z-30 flex flex-col bg-[#020202] animate-in fade-in duration-200 overflow-hidden">
+          <div className="w-full h-full flex flex-col flex-1 overflow-hidden">
+            <DonaModal
+              isOpen={true}
+              onClose={() => setCurrentCategory('home')}
+              onSelectMovie={(movie) => openModal(movie, 'info')}
+              lang={lang}
+              historyTrigger={donaHistoryTrigger}
+              newChatTrigger={donaNewChatTrigger}
+            />
+          </div>
+        </div>
+      ) : currentCategory === 'party' ? (
         <div className="pt-24 px-4 md:px-14 pb-24 min-h-screen relative z-30 w-full max-w-[2000px] mx-auto">
           <div className="w-full bg-gradient-to-br from-[#a855f7]/10 via-transparent to-transparent border border-white/10 rounded-[2rem] p-6 md:p-10 backdrop-blur-md shadow-2xl mb-8">
             <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
@@ -1203,11 +1313,13 @@ export default function App() {
       )}
 
       {/* PIED DE PAGE & AVERTISSEMENT LÉGAL AGRÉGATEUR PRO */}
-      <FooterDisclaimer
-        lang={lang}
-        onOpenSupport={() => setShowSupport(true)}
-        onOpenSettings={() => setShowSettings(true)}
-      />
+      {currentCategory !== 'dona' && (
+        <FooterDisclaimer
+          lang={lang}
+          onOpenSupport={() => setShowSupport(true)}
+          onOpenSettings={() => setShowSettings(true)}
+        />
+      )}
 
       {/* MODAL RECHERCHE AVANCÉE MULTI-SERVEURS */}
       <SearchModal
@@ -1229,6 +1341,7 @@ export default function App() {
         onOpenTrailers={() => setCurrentCategory('trailers')}
         onOpenExternalApps={() => setShowExternalApps(true)}
         onOpenSupport={() => setShowSupport(true)}
+        onOpenDona={() => { setShowSidebar(false); setCurrentCategory('dona'); }}
         onNavigateCategory={(cat) => setCurrentCategory(cat)}
         onOpenLogin={() => setShowLoginModal(true)}
         onOpenLogout={() => setShowLogoutConfirm(true)}
@@ -1287,6 +1400,7 @@ export default function App() {
         }}
         onOpenLogin={() => setShowLoginModal(true)}
         onOpenLogout={() => setShowLogoutConfirm(true)}
+        onOpenDona={() => { setShowSettings(false); setCurrentCategory('dona'); }}
         watchlistCount={watchlistData.length}
         historyCount={recentlyViewed.length}
         onNavigateCategory={(cat) => setCurrentCategory(cat)}
@@ -1298,7 +1412,7 @@ export default function App() {
       <AuthModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
-        onLoginSuccess={(loggedUser, name, email, photo) => {
+        onLoginSuccess={(loggedUser, name, email, photo, handle) => {
           setUser(loggedUser);
           setUserName(name);
           setUserEmail(email);
@@ -1424,6 +1538,17 @@ export default function App() {
           mode={modalMode}
           onClose={() => {
             localStorage.removeItem('lm_now_playing');
+            try {
+              const url = new URL(window.location.href);
+              url.searchParams.delete('watch');
+              url.searchParams.delete('movie');
+              url.searchParams.delete('film');
+              url.searchParams.delete('series');
+              url.searchParams.delete('play');
+              url.searchParams.delete('id');
+              url.searchParams.delete('mode');
+              window.history.replaceState({}, '', url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash);
+            } catch (_) {}
             setSelectedMovie(null);
           }}
           onSelectSimilar={(m: any) => { setSelectedMovie(m); setModalMode('info'); }}
