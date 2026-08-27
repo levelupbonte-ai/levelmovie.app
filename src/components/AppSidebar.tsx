@@ -230,59 +230,6 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             </button>
           </div>
 
-          {/* Quick Catalogue Navigation (Clean Rows) */}
-          <div className="pt-3 border-t border-white/10 space-y-1">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-white/30 px-2 pb-1">
-              {lang === 'fr' ? 'Accès Direct Catalogue' : 'Direct Navigation'}
-            </div>
-            <div className="grid grid-cols-2 gap-1">
-              <button
-                onClick={() => { onClose(); onNavigateCategory('home'); }}
-                className={`py-2 px-2.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                  currentCategory === 'home'
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Home className="w-3.5 h-3.5" />
-                <span>{t.home}</span>
-              </button>
-              <button
-                onClick={() => { onClose(); onNavigateCategory('movie'); }}
-                className={`py-2 px-2.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                  currentCategory === 'movie'
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Film className="w-3.5 h-3.5" />
-                <span>{t.movies}</span>
-              </button>
-              <button
-                onClick={() => { onClose(); onNavigateCategory('tv'); }}
-                className={`py-2 px-2.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                  currentCategory === 'tv'
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Tv className="w-3.5 h-3.5" />
-                <span>{t.series}</span>
-              </button>
-              <button
-                onClick={() => { onClose(); onNavigateCategory('party'); }}
-                className={`py-2 px-2.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                  currentCategory === 'party'
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Users className="w-3.5 h-3.5" />
-                <span>{t.partyTab}</span>
-              </button>
-            </div>
-          </div>
-
         </div>
 
         {/* Footer Area: Clean Version Display & Connect / Disconnect Action */}

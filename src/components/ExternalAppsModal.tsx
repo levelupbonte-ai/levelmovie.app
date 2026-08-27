@@ -296,7 +296,7 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
         )}
 
         {/* Right: Boutons de Navigation épurés et design */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           
           {/* Bouton 1 : Rafraîchir / Recharger */}
           <button
@@ -312,8 +312,8 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
                 showToast(isFr ? 'Actualisation...' : 'Refreshing...', 'info');
               }
             }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer border border-white/10 active:scale-95 text-xs font-semibold"
-            title={isFr ? 'Rafraîchir la vue' : 'Refresh view'}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-all cursor-pointer text-xs font-semibold"
+            title={isFr ? 'Actualiser la vue' : 'Refresh view'}
           >
             <RotateCw className={`w-3.5 h-3.5 ${iframeLoading ? 'animate-spin text-[#a855f7]' : ''}`} />
             <span className="hidden sm:inline">{isFr ? 'Actualiser' : 'Refresh'}</span>
@@ -323,10 +323,10 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
           <button
             onClick={handleBackToStore}
             disabled={!currentApp}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all border active:scale-95 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               currentApp 
-                ? 'bg-white/10 hover:bg-white/20 text-white border-white/15 cursor-pointer shadow-sm' 
-                : 'bg-white/[0.02] text-white/30 border-white/5 cursor-not-allowed'
+                ? 'text-white hover:text-[#c084fc] hover:bg-white/5 cursor-pointer' 
+                : 'text-white/30 cursor-not-allowed opacity-40'
             }`}
             title={isFr ? "Retour à l'accueil du store" : 'Back to Store Hub'}
           >
@@ -334,31 +334,13 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
             <span className="hidden sm:inline">{isFr ? 'Accueil' : 'Home'}</span>
           </button>
 
-          {/* Bouton 3 : Changer / Explorer les Apps */}
-          <button
-            onClick={() => {
-              if (currentApp) {
-                handleBackToStore();
-              }
-            }}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all border active:scale-95 ${
-              !currentApp
-                ? 'bg-purple-600/30 text-purple-200 border-purple-500/40 cursor-default'
-                : 'bg-white/5 hover:bg-white/15 text-white/80 hover:text-white border-white/10 cursor-pointer'
-            }`}
-            title={isFr ? 'Catalogue d’applications' : 'App Catalog'}
-          >
-            <Grid className="w-3.5 h-3.5 text-[#c084fc]" />
-            <span className="hidden sm:inline">{isFr ? 'Catalogue' : 'Catalog'}</span>
-          </button>
-
-          {/* Bouton 4 : Sortir (icône seule sans texte) */}
+          {/* Bouton 3 : Sortir (icône seule sans texte) */}
           <button
             onClick={onClose}
-            className="flex items-center justify-center p-2 sm:p-2.5 rounded-xl bg-white/10 hover:bg-rose-500/20 hover:text-rose-200 hover:border-rose-500/40 text-white transition-all cursor-pointer border border-white/15 shadow-sm active:scale-95 ml-1"
+            className="flex items-center justify-center p-2 rounded-lg text-white/70 hover:text-rose-400 hover:bg-white/5 transition-all cursor-pointer ml-1"
             title={isFr ? 'Sortir' : 'Exit'}
           >
-            <LogOut className="w-4 h-4 rotate-180 text-white/80" />
+            <LogOut className="w-4 h-4 rotate-180" />
           </button>
 
         </div>
@@ -378,10 +360,32 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
           {/* Iframe Viewer (Plein écran sans deuxième header redondant) */}
           <div className="flex-1 relative w-full h-full bg-[#020306]">
             {iframeLoading && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#07080e]/95 gap-3">
-                <div className="w-8 h-8 rounded-full border-2 border-[#a855f7] border-t-transparent animate-spin" />
-                <span className="text-[11px] font-mono text-white/70">
-                  {isFr ? 'Chargement sécurisé...' : 'Secure sandbox loading...'}
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#020202]/95 gap-3.5">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center animate-pulse">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="w-full h-full drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]">
+                    <defs>
+                      <radialGradient id="bgGradModal" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                        <stop offset="0%" stopColor="#1a0b2e" />
+                        <stop offset="100%" stopColor="#020202" />
+                      </radialGradient>
+                      <linearGradient id="starGradModal" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#d8b4fe" />
+                        <stop offset="50%" stopColor="#a855f7" />
+                        <stop offset="100%" stopColor="#6b21a8" />
+                      </linearGradient>
+                      <filter id="glowModal" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="15" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                      </filter>
+                    </defs>
+                    <rect width="512" height="512" rx="128" fill="url(#bgGradModal)" />
+                    <g transform="translate(256, 265) scale(1.4)" filter="url(#glowModal)">
+                      <path d="M 0 -110 L 31 -35 L 105 -35 L 45 12 L 68 85 L 0 40 L -68 85 L -45 12 L -105 -35 L -31 -35 Z" fill="url(#starGradModal)" />
+                    </g>
+                  </svg>
+                </div>
+                <span className="text-xs font-mono tracking-widest uppercase text-white/70">
+                  {isFr ? 'Chargement' : 'Loading'}
                 </span>
               </div>
             )}
@@ -446,15 +450,15 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
           </div>
 
           {/* Categories Tab Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-2">
+          <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-2 border-b border-white/5">
             {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   selectedCategory === cat.id
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-900/30'
-                    : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/5'
+                    ? 'text-white bg-white/10 shadow-sm border border-white/15'
+                    : 'text-white/50 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {cat.label}
@@ -516,7 +520,7 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
                 {/* Launch Button */}
                 <button
                   onClick={() => handleLaunchApp(app)}
-                  className="w-full py-3 rounded-2xl bg-white/10 hover:bg-[#a855f7] text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95 group-hover:bg-[#a855f7]"
+                  className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-[#a855f7] border border-white/10 hover:border-[#a855f7] text-white text-xs font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>{isFr ? 'Ouvrir dans le Navigateur' : 'Launch In Ecosystem'}</span>

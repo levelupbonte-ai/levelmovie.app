@@ -9,7 +9,7 @@ export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({ lang }) => {
   const isFr = lang === 'fr';
 
   return (
-    <footer className="w-full mt-16 pt-10 pb-24 md:pb-12 border-t border-white/5 bg-[#05060a] relative z-20 text-white/50">
+    <footer className="w-full mt-16 pt-10 pb-28 md:pb-12 border-t border-white/5 bg-[#05060a] relative z-20 text-white/50">
       <div className="max-w-6xl mx-auto px-4 text-center space-y-3">
         {/* Logo & Nom */}
         <div className="flex items-center justify-center gap-2.5">
@@ -27,10 +27,21 @@ export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({ lang }) => {
             : "Decentralized Cinema Aggregator & Indexing Engine"}
         </p>
 
-        {/* Aucun droit réservé */}
-        <p className="text-[11px] text-white/30 font-mono">
-          {isFr ? "Aucun droit réservé" : "No rights reserved"}
-        </p>
+        {/* Liens Écosystème & Mentions */}
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2 text-[11px] text-white/40">
+          <a
+            href="https://levelup-ecosystem.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-[#c084fc] transition-colors"
+          >
+            Powered by LevelUp Ecosystem
+          </a>
+          <span>•</span>
+          <span className="font-mono">
+            {isFr ? "Aucun droit réservé" : "No rights reserved"}
+          </span>
+        </div>
       </div>
     </footer>
   );

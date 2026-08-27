@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Play, Info, X, ChevronDown, Star, Film, AlertTriangle, CheckCircle,
   Server, Users, Tv, Clapperboard, Share2, Bookmark, Plus,
-  Copy, Eye, EyeOff, Send, UserPlus, Power, Pause, ShieldCheck, UserMinus, ShieldAlert, Minimize2, ChevronUp, Reply, Lock
+  Copy, Eye, EyeOff, Send, UserPlus, Power, Pause, ShieldCheck, UserMinus, ShieldAlert, Minimize2, ChevronUp, Reply, Lock, ExternalLink
 } from 'lucide-react';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, collectionGroup, getDocs, setDoc } from 'firebase/firestore';
 import {
@@ -91,6 +91,26 @@ export function MovieModal({
     { id: 'moviesapi', name: '9. ETA' },
     { id: 'twoembed', name: '10. THETA' }
   ];
+
+  const getDynamicLoadingText = () => {
+    const isFr = lang === 'fr' || lang === 'fr-FR';
+    if (modalMode === 'trailer') {
+      return isFr ? 'Chargement de la bande-annonce...' : 'Loading trailer...';
+    }
+    const isAnimation = movie.genre_ids?.includes(16) || details?.genres?.some((g: any) => g.id === 16 || g.name?.toLowerCase().includes('anim'));
+    const isAnime = isAnimation && (movie.original_language === 'ja' || details?.original_language === 'ja' || movie.origin_country?.includes('JP'));
+
+    if (isAnime) {
+      return isFr ? 'Chargement de l’anime...' : 'Loading anime...';
+    }
+    if (isAnimation) {
+      return isFr ? 'Chargement de l’animation...' : 'Loading animation...';
+    }
+    if (isTV) {
+      return isFr ? `Chargement de la série (S${selectedSeason} E${selectedEpisode})...` : `Loading TV show (S${selectedSeason} E${selectedEpisode})...`;
+    }
+    return isFr ? 'Chargement du film...' : 'Loading movie...';
+  };
 
   const [chatInput, setChatInput] = useState('');
   const [replyingTo, setReplyingTo] = useState<{ name: string; text: string } | null>(null);
@@ -536,6 +556,16 @@ export function MovieModal({
     return directors.length > 0 ? directors.join(', ') : t.notSpecified;
   };
 
+  const getWatchProviders = () => {
+    if (!details) return null;
+    const providersObj = details['watch/providers'] || details.watch_providers;
+    if (!providersObj || !providersObj.results) return null;
+    const results = providersObj.results;
+    const isFrench = lang === 'fr' || lang === 'fr-FR';
+    const country = isFrench ? 'FR' : 'US';
+    return results[country] || results['FR'] || results['US'] || results['CA'] || results['GB'] || Object.values(results)[0] || null;
+  };
+
   let iframeSrc = '';
   if (selectedServer === 'vidsrc_me') {
     iframeSrc = isTV ? `https://vidsrc.me/embed/tv?tmdb=${movie.id}&season=${selectedSeason}&episode=${selectedEpisode}` : `https://vidsrc.me/embed/movie?tmdb=${movie.id}`;
@@ -595,9 +625,17 @@ export function MovieModal({
       if (tKey) {
         return (
           <>
-            <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-0">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#a855f7]"></div>
-            </div>
+            {iframeLoading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-0 gap-3">
+                <div className="relative flex items-center justify-center">
+                  <div className="absolute inset-0 bg-[#a855f7]/20 blur-xl rounded-full animate-pulse scale-150" />
+                  <LevelMovieLogo className="w-10 h-10 text-[#c084fc] relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
+                </div>
+                <span className="text-xs font-mono tracking-wide text-white/70">
+                  {getDynamicLoadingText()}
+                </span>
+              </div>
+            )}
             <iframe key={`trailer-${tKey}`} className={`absolute inset-0 w-full h-full bg-black z-10 transition-opacity duration-500 ${iframeLoading ? 'opacity-0' : 'opacity-100'}`} src={`https://www.youtube-nocookie.com/embed/${tKey}?autoplay=1&controls=1&modestbranding=1&rel=0&playsinline=1&showinfo=0&fs=1`} onLoad={() => setIframeLoading(false)} allow="autoplay; encrypted-media; picture-in-picture" frameBorder="0" allowFullScreen></iframe>
           </>
         );
@@ -607,9 +645,17 @@ export function MovieModal({
 
     return (
       <>
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-0">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#a855f7]"></div>
-        </div>
+        {iframeLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-0 gap-3">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute inset-0 bg-[#a855f7]/20 blur-xl rounded-full animate-pulse scale-150" />
+              <LevelMovieLogo className="w-10 h-10 text-[#c084fc] relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
+            </div>
+            <span className="text-xs font-mono tracking-wide text-white/70">
+              {getDynamicLoadingText()}
+            </span>
+          </div>
+        )}
         <iframe key={iframeSrc} className={`absolute inset-0 w-full h-full bg-transparent z-10 transition-opacity duration-500 ${iframeLoading ? 'opacity-0' : 'opacity-100'}`} src={iframeSrc} onLoad={() => setIframeLoading(false)} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
       </>
     );
@@ -809,8 +855,14 @@ export function MovieModal({
             <iframe key={iframeSrc} className={`absolute inset-0 w-full h-full bg-transparent z-10 transition-opacity duration-500 ${iframeLoading ? 'opacity-0' : 'opacity-100'}`} src={iframeSrc} onLoad={() => setIframeLoading(false)} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
 
             {iframeLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-0">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#a855f7]"></div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-0 gap-3">
+                <div className="relative flex items-center justify-center">
+                  <div className="absolute inset-0 bg-[#a855f7]/20 blur-xl rounded-full animate-pulse scale-150" />
+                  <LevelMovieLogo className="w-10 h-10 text-[#c084fc] relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
+                </div>
+                <span className="text-xs font-mono tracking-wide text-white/70">
+                  {lang === 'fr' || lang === 'fr-FR' ? 'Connexion au salon...' : 'Connecting to room...'}
+                </span>
               </div>
             )}
 
@@ -1144,8 +1196,14 @@ export function MovieModal({
 
         <div className="relative pt-[56.25%] md:h-[70vh] md:pt-0 w-full bg-black shrink-0 overflow-hidden border-b border-white/10 shadow-lg flex items-center justify-center">
           {loading ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#a855f7]"></div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#060608] z-10 gap-3">
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#a855f7]/20 blur-xl rounded-full animate-pulse scale-150" />
+                <LevelMovieLogo className="w-10 h-10 text-[#c084fc] relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
+              </div>
+              <span className="text-xs font-mono tracking-wide text-white/70">
+                {lang === 'fr' || lang === 'fr-FR' ? 'Chargement des détails...' : 'Loading details...'}
+              </span>
             </div>
           ) : error ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#060608] text-center p-6 border-b border-[#a855f7]/30">
@@ -1348,6 +1406,99 @@ export function MovieModal({
                   <span className="text-white/40 font-bold block mb-2 uppercase tracking-widest text-xs flex items-center gap-2"><Film className="w-5 h-5 text-[#a855f7]" /> <span>{t.director}</span></span>
                   <span className="text-white/90 font-medium text-sm block mt-2">{getDirector()}</span>
                 </div>
+
+                {/* Sources Légales & Plateformes Officielles (Netflix, Prime, Disney+, etc.) */}
+                {(() => {
+                  const wp = getWatchProviders();
+                  const isFr = lang === 'fr' || lang === 'fr-FR';
+                  const flatrate: any[] = wp?.flatrate || [];
+                  const rent: any[] = wp?.rent || [];
+                  const buy: any[] = wp?.buy || [];
+                  const hasAny = flatrate.length > 0 || rent.length > 0 || buy.length > 0;
+
+                  return (
+                    <>
+                      <div className="w-full h-px bg-white/10"></div>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/40 font-bold block uppercase tracking-widest text-xs flex items-center gap-2">
+                            <Tv className="w-4 h-4 text-[#a855f7]" />
+                            <span>{isFr ? 'Disponibilité Légale (VOD)' : 'Official Platforms (VOD)'}</span>
+                          </span>
+                          {wp?.link && (
+                            <a
+                              href={wp.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] font-mono text-[#a855f7] hover:text-[#c084fc] flex items-center gap-1 hover:underline cursor-pointer"
+                            >
+                              <span>JustWatch</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
+
+                        {hasAny ? (
+                          <div className="space-y-3.5">
+                            {/* SVOD / Streaming par Abonnement */}
+                            {flatrate.length > 0 && (
+                              <div>
+                                <span className="text-[10px] font-mono text-white/50 uppercase tracking-wider block mb-2">
+                                  {isFr ? 'Streaming (Abonnement)' : 'Streaming'}
+                                </span>
+                                <div className="flex flex-wrap gap-2">
+                                  {flatrate.map((p: any) => (
+                                    <div
+                                      key={p.provider_id}
+                                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-[#a855f7]/40 transition-all shadow-sm"
+                                      title={p.provider_name}
+                                    >
+                                      <img
+                                        src={`https://image.tmdb.org/t/p/w92${p.logo_path}`}
+                                        alt={p.provider_name}
+                                        className="w-5 h-5 rounded-md object-cover shadow"
+                                      />
+                                      <span className="text-xs font-semibold text-white/90">{p.provider_name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Achat & Location */}
+                            {(rent.length > 0 || buy.length > 0) && (
+                              <div>
+                                <span className="text-[10px] font-mono text-white/50 uppercase tracking-wider block mb-2">
+                                  {isFr ? 'Achat & Location' : 'Rent & Buy'}
+                                </span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {[...rent, ...buy.filter((b: any) => !rent.some((r: any) => r.provider_id === b.provider_id))].slice(0, 6).map((p: any) => (
+                                    <div
+                                      key={p.provider_id}
+                                      className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/[0.03] border border-white/5"
+                                      title={p.provider_name}
+                                    >
+                                      <img
+                                        src={`https://image.tmdb.org/t/p/w92${p.logo_path}`}
+                                        alt={p.provider_name}
+                                        className="w-4 h-4 rounded object-cover"
+                                      />
+                                      <span className="text-[11px] text-white/70">{p.provider_name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-xs text-white/40 italic py-1">
+                            {isFr ? 'Aucun diffuseur SVOD listé pour ce titre actuellement.' : 'No direct SVOD provider listed for this title currently.'}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           )}

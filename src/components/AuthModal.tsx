@@ -52,13 +52,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [legalModal, setLegalModal] = useState<'terms' | 'privacy' | null>(null);
 
   // Right side dynamic posters showcase (PC view)
   const showcasePosters = [
-    { title: 'Dune: Part Two', bg: 'https://image.tmdb.org/t/p/w780/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg', rating: '8.6', tag: 'Ultra HD 4K' },
-    { title: 'Oppenheimer', bg: 'https://image.tmdb.org/t/p/w780/ptpr0kGAckfQkJeJIt8st5dglvd.jpg', rating: '8.9', tag: 'Masterclass' },
-    { title: 'Spider-Man: Across the Spider-Verse', bg: 'https://image.tmdb.org/t/p/w780/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg', rating: '8.7', tag: 'Top Animation' },
-    { title: 'Stranger Things', bg: 'https://image.tmdb.org/t/p/w780/49WJfeN0moxb9IPfGn8AIqMGskD.jpg', rating: '8.8', tag: 'Série Culte' }
+    { title: 'Dune: Part Two', bg: 'https://image.tmdb.org/t/p/w780/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg', rating: '8.6' },
+    { title: 'Oppenheimer', bg: 'https://image.tmdb.org/t/p/w780/ptpr0kGAckfQkJeJIt8st5dglvd.jpg', rating: '8.9' },
+    { title: 'Spider-Man: Across the Spider-Verse', bg: 'https://image.tmdb.org/t/p/w780/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg', rating: '8.7' },
+    { title: 'Stranger Things', bg: 'https://image.tmdb.org/t/p/w780/49WJfeN0moxb9IPfGn8AIqMGskD.jpg', rating: '8.8' }
   ];
 
   const [posterIndex, setPosterIndex] = useState(0);
@@ -290,12 +291,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[9600] w-screen h-screen bg-[#0f0f13] text-[#e2e2e8] flex flex-col md:flex-row overflow-hidden animate-in fade-in duration-300 font-sans">
+    <div className="fixed inset-0 z-[9600] w-full h-full bg-[#0f0f13] text-[#e2e2e8] flex flex-col md:flex-row overflow-hidden animate-in fade-in duration-300 font-sans overscroll-contain">
       
       {/* ======================================================== */}
       {/* GAUCHE: INTERFACE DÉDIÉE (PLEIN ÉCRAN MOBILE & PC)         */}
       {/* ======================================================== */}
-      <div className="w-full md:w-1/2 h-full flex flex-col justify-start items-center p-4 sm:p-6 lg:p-8 pt-4 sm:pt-6 overflow-y-auto custom-scrollbar bg-[#14141a] relative z-20">
+      <div className="w-full md:w-1/2 h-full flex flex-col justify-start items-center p-4 sm:p-6 lg:p-8 pt-4 sm:pt-6 overflow-y-auto overscroll-contain touch-pan-y bg-[#14141a] relative z-20">
         
         {/* Séparateur vertical à dégradé fluide entre les deux panneaux (gauche et droite) */}
         <div className="hidden md:block absolute right-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-[#8b5cf6]/40 via-[#ec4899]/30 to-transparent z-30 pointer-events-none" />
@@ -730,7 +731,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
 
           {/* Bouton SORTIR sous forme de lien épuré */}
-          <div className="mt-4 text-center">
+          <div className="mt-3 text-center">
             <button
               onClick={handleClose}
               className="text-xs text-[#9ca3af] hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1.5 py-1 px-3"
@@ -740,9 +741,93 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </button>
           </div>
 
+          {/* Règles d'utilisation, Confidentialité & Mention Powered by LevelUp */}
+          <div className="mt-5 pt-3 border-t border-white/5 text-center space-y-2">
+            <div className="flex items-center justify-center gap-3 text-[11px] text-[#9ca3af]">
+              <button
+                type="button"
+                onClick={() => setLegalModal('terms')}
+                className="hover:text-white transition-colors underline underline-offset-4 cursor-pointer"
+              >
+                {isFr ? "Conditions d'utilisation" : "Terms of Service"}
+              </button>
+              <span className="text-white/20">•</span>
+              <button
+                type="button"
+                onClick={() => setLegalModal('privacy')}
+                className="hover:text-white transition-colors underline underline-offset-4 cursor-pointer"
+              >
+                {isFr ? "Politique de confidentialité" : "Privacy Policy"}
+              </button>
+            </div>
+
+            <div className="text-[10px] font-mono tracking-wider uppercase text-white/30">
+              Powered by LevelUp
+            </div>
+          </div>
+
         </div>
 
       </div>
+
+      {/* MODAL POPUP RÈGLES / POLITIQUES DE CONFIDENTIALITÉ */}
+      {legalModal && (
+        <div className="fixed inset-0 z-[9800] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-[#14141a] border border-[#2a2a35] rounded-2xl shadow-2xl p-6 overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <h3 className="text-base font-bold text-white">
+                {legalModal === 'terms'
+                  ? (isFr ? "Conditions d'utilisation" : 'Terms of Service')
+                  : (isFr ? 'Politique de confidentialité' : 'Privacy Policy')}
+              </h3>
+              <button
+                onClick={() => setLegalModal(null)}
+                className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="py-4 text-xs text-white/70 space-y-3 overflow-y-auto custom-scrollbar leading-relaxed">
+              {legalModal === 'terms' ? (
+                <>
+                  <p>
+                    {isFr
+                      ? "Bienvenue sur LevelMovie, propulsé par l'écosystème LevelUp. En accédant à nos services, vous acceptez de respecter ces règles d'utilisation :"
+                      : "Welcome to LevelMovie, powered by the LevelUp ecosystem. By accessing our services, you agree to comply with these terms:"}
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1.5 text-white/80">
+                    <li>{isFr ? "LevelMovie est un agrégateur et indexeur décentralisé de flux multimédia." : "LevelMovie operates as a decentralized multimedia stream aggregator and indexer."}</li>
+                    <li>{isFr ? "L'accès aux salons Watch Party nécessite une clé de compte valide et respectueuse de la communauté." : "Access to Watch Parties requires a valid account key and adherence to community guidelines."}</li>
+                    <li>{isFr ? "Aucune donnée personnelle sensible n'est vendue ni transférée à des tiers publicitaires." : "No sensitive personal information is sold or transferred to advertising networks."}</li>
+                  </ul>
+                </>
+              ) : (
+                <>
+                  <p>
+                    {isFr
+                      ? "Protection de vos données et respect de votre vie privée au sein de LevelMovie :"
+                      : "Protection of your personal data and privacy within LevelMovie:"}
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1.5 text-white/80">
+                    <li>{isFr ? "Vos préférences et listes de favoris sont sauvegardées de façon sécurisée." : "Your preferences and watchlists are securely synchronized."}</li>
+                    <li>{isFr ? "Les sessions de visionnage partagées sont chiffrées de bout en bout." : "Shared watch sessions are end-to-end encrypted."}</li>
+                    <li>{isFr ? "Vous pouvez supprimer vos informations ou vous déconnecter à tout moment." : "You can delete your synchronized profile data at any time."}</li>
+                  </ul>
+                </>
+              )}
+            </div>
+            <div className="pt-3 border-t border-white/10 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setLegalModal(null)}
+                className="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all cursor-pointer"
+              >
+                {isFr ? 'Fermer' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ======================================================== */}
       {/* DROITE: VITRINE CINÉMATOGRAPHIQUE DYNAMIQUE                */}
@@ -758,12 +843,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="absolute inset-0 bg-gradient-to-r from-[#14141a] via-transparent to-[#0f0f13]/40" />
 
         {/* Top badge */}
-        <div className="relative z-10 flex items-center justify-between">
-          <span className="px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-mono font-bold text-white/90 flex items-center gap-2 shadow-sm">
-            <Flame className="w-4 h-4 text-amber-400" />
-            <span>{showcasePosters[posterIndex].tag}</span>
-          </span>
-
+        <div className="relative z-10 flex items-center justify-end">
           <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-amber-400 text-xs font-black">
             <Star className="w-4 h-4 fill-amber-400" />
             <span>{showcasePosters[posterIndex].rating}</span>
@@ -772,9 +852,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Center Poster Title & Highlight */}
         <div className="relative z-10 space-y-3">
-          <span className="text-xs font-mono uppercase tracking-widest text-[#8b5cf6] font-bold">
-            {isFr ? 'ÉCOSYSTÈME LEVELMOVIE' : 'LEVELMOVIE ECOSYSTEM'}
-          </span>
           <h3 className="text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight drop-shadow-md">
             {showcasePosters[posterIndex].title}
           </h3>

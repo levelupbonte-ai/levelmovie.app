@@ -546,13 +546,18 @@ roomResumeHost: "Active session detected. Auto-reconnecting to your room..."
 export const globalStyles = `
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
 
-* { user-select: none; -webkit-user-select: none; -ms-overflow-style: none; scrollbar-width: none; }
-input, textarea { user-select: auto; -webkit-user-select: auto; }
+* { user-select: none; -webkit-user-select: none; -ms-overflow-style: none !important; scrollbar-width: none !important; }
+*::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+html, body { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+input, textarea, select { user-select: auto; -webkit-user-select: auto; font-size: 16px !important; touch-action: manipulation; }
+@media (min-width: 640px) { input, textarea, select { font-size: 14px !important; } }
+html, body { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; overscroll-behavior-y: none; }
 
 body.party-mode { overflow: hidden !important; position: fixed; width: 100%; height: 100%; }
 
 body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #060608; color: white; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); padding-top: env(safe-area-inset-top); overflow-x: hidden; }
-::-webkit-scrollbar { display: none; }
+::-webkit-scrollbar { display: none !important; }
 .bg-main { background: radial-gradient(circle at 50% 0%, #15092a 0%, #060608 80%); min-height: 100vh; }
 .holo-card { background: linear-gradient(135deg, rgba(30,20,45,0.6) 0%, rgba(10,10,15,0.8) 100%); border: 1px solid rgba(168,85,247,0.2); box-shadow: inset 0 0 30px rgba(168,85,247,0.05), 0 30px 60px rgba(0,0,0,0.8); backdrop-filter: blur(30px); }
 .markdown-pro { font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.75); text-align: justify; }

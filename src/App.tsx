@@ -4,7 +4,7 @@ import {
   Star, User as UserIcon, LogOut, Film, Globe, Shield, HardDrive, Filter,
   Home, Tv, Clapperboard, History, AlertOctagon, Bookmark,
   ArrowDown, ArrowUp, Plus, Users, Mail, AlertTriangle, CheckCircle, XCircle,
-  Building, Lock, Menu
+  Building, Lock, Menu, Sparkles, Compass, ShieldCheck, Zap
 } from 'lucide-react';
 import {
   onAuthStateChanged, signInAnonymously, signInWithPopup, signInWithRedirect, signOut
@@ -185,17 +185,39 @@ export default function App() {
   }, [user, fbUser]);
 
   const joinPartyByCode = useCallback(async (codeStr: string) => {
-    const uid = user?.uid;
-    if (!codeStr || !uid) return;
+    if (!codeStr) return;
     const cleanCode = codeStr.trim().toUpperCase();
     const inputEl = document.getElementById('partyCodeInput') as HTMLInputElement | null;
     if (inputEl) { inputEl.value = ''; inputEl.blur(); }
     localStorage.removeItem('pending_party_join');
-    window.location.href = `/salon?party=${cleanCode}`;
-  }, [user]);
+
+    try {
+      const pRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', cleanCode);
+      const pSnap = await getDoc(pRef);
+
+      if (!pSnap.exists() || pSnap.data().status === 'ended') {
+        showToast(t.eventEnded || 'Salon introuvable ou terminé', 'error');
+        return;
+      }
+      const d = pSnap.data();
+
+      const res = await fetch(`${BASE_URL}/${d.mediaType || 'movie'}/${d.movieId}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
+      const movieData = await res.json();
+      if (d.mediaType === 'tv') {
+        movieData.resumeSeason = d.season || 1;
+        movieData.resumeEpisode = d.episode || 1;
+      }
+
+      setSelectedMovie(movieData);
+      setPartyId(cleanCode);
+      setModalMode('play');
+      window.history.pushState({}, '', `?party=${cleanCode}`);
+    } catch (e) {
+      showToast(t.invalidPartyCode || 'Code invalide', 'error');
+    }
+  }, [lang, t, showToast]);
 
   const triggerJoinParty = useCallback((code: string) => {
-    if (!user) { setShowLoginModal(true); return; }
     const seen = localStorage.getItem('lm_party_tutorial_seen');
     if (!seen) {
       setPendingPartyAction({ type: 'join', code });
@@ -203,7 +225,7 @@ export default function App() {
     } else {
       joinPartyByCode(code);
     }
-  }, [user, joinPartyByCode]);
+  }, [joinPartyByCode]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUserResult) => {
@@ -223,7 +245,19 @@ export default function App() {
           localStorage.setItem('levelmovie_user_email', email);
           if (photo) localStorage.setItem('lm_photo', photo);
         } else {
-          setUser(null);
+          // Restore existing saved session if available so anonymous Firebase doesn't wipe the logged-in user
+          const savedUid = localStorage.getItem('levelmovie_user_uid');
+          const savedName = localStorage.getItem('levelmovie_user_name');
+          const savedEmail = localStorage.getItem('levelmovie_user_email');
+          const savedPhoto = localStorage.getItem('lm_photo');
+          if (savedUid) {
+            setUser({ uid: savedUid });
+            if (savedName) setUserName(savedName);
+            if (savedEmail) setUserEmail(savedEmail);
+            if (savedPhoto) setUserPhoto(savedPhoto);
+          } else {
+            setUser(null);
+          }
         }
         setIsLoadingAuth(false);
         const pendingParty = localStorage.getItem('pending_party_join');
@@ -267,12 +301,12 @@ export default function App() {
     const savedEmail = localStorage.getItem('levelmovie_user_email');
     const savedPhoto = localStorage.getItem('lm_photo');
 
-    // Multi-stage real verification pipeline during splash (at least 5.5 seconds)
+    // Multi-stage real verification pipeline during splash (Snappy ~2.6s)
     const t1 = setTimeout(() => setSplashStep(1), 100);
 
     const isFr = lang === 'fr';
 
-    // STEP 1: Browser Analysis (0ms -> 1500ms)
+    // STEP 1: Browser Analysis (0ms -> 700ms)
     const tBrowser = setTimeout(() => {
       const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
       const isOpera = /OPR\/|Opera|Opera GX/i.test(ua);
@@ -280,19 +314,19 @@ export default function App() {
         status: 'done',
         isOpera,
         text: isOpera
-          ? (isFr ? 'Navigateur Opera / Opera GX détecté (Flux optimisés)' : 'Opera / Opera GX browser detected (Optimized stream)')
-          : (isFr ? 'Navigateur standard détecté (Opera recommandé)' : 'Standard browser detected (Opera recommended)')
+          ? (isFr ? 'Opera / Opera GX (Flux optimisés)' : 'Opera / Opera GX (Optimized)')
+          : (isFr ? 'Navigateur standard détecté' : 'Standard browser detected')
       });
       // Start server ping check
       setServerCheck({
         status: 'checking',
         ok: false,
         latency: 0,
-        text: isFr ? 'Test de latence des serveurs miroirs...' : 'Testing mirror server latency...'
+        text: isFr ? 'Test de latence des serveurs...' : 'Testing server latency...'
       });
-    }, 1500);
+    }, 700);
 
-    // STEP 2: Server ping check (1500ms -> 3400ms)
+    // STEP 2: Server ping check (700ms -> 1600ms)
     const tServer = setTimeout(async () => {
       let latency = 24;
       try {
@@ -306,33 +340,33 @@ export default function App() {
         status: 'done',
         ok: true,
         latency,
-        text: isFr ? `Serveurs miroirs HD connectés (${latency}ms)` : `HD mirror servers connected (${latency}ms)`
+        text: isFr ? `Serveurs miroirs connectés (${latency}ms)` : `Mirror servers connected (${latency}ms)`
       });
       // Start catalog classification
       setCatalogCheck({
         status: 'checking',
         ok: false,
-        text: isFr ? 'Indexation et classification des catalogues...' : 'Indexing & classifying catalog...'
+        text: isFr ? 'Indexation des catalogues...' : 'Syncing title catalog...'
       });
-    }, 3400);
+    }, 1600);
 
-    // STEP 3: Catalog classification check (3400ms -> 5100ms)
+    // STEP 3: Catalog classification check (1600ms -> 2400ms)
     const tCatalog = setTimeout(() => {
       setCatalogCheck({
         status: 'done',
         ok: true,
-        text: isFr ? 'Catalogue synchronisé & indexé (12 000+ titres)' : 'Catalog synchronized & indexed (12,000+ titles)'
+        text: isFr ? '12 000+ titres indexés' : '12,000+ titles indexed'
       });
-    }, 5100);
+    }, 2400);
 
-    // Fade out splash after all 3 verifications pass (~5.4s)
-    const t2 = setTimeout(() => setSplashStep(2), 5400);
+    // Fade out splash after all 3 verifications pass (~2.6s)
+    const t2 = setTimeout(() => setSplashStep(2), 2600);
 
-    // Complete splash screen (~5.9s)
+    // Complete splash screen (~2.9s)
     const t3 = setTimeout(() => {
       setSplashStep(3);
       setShowSplash(false);
-    }, 5900);
+    }, 2900);
 
     if (savedUid) {
       setUser({ uid: savedUid });
@@ -406,8 +440,9 @@ export default function App() {
       if (target.origin !== window.location.origin) { window.location.href = url; return; }
 
       const params = target.searchParams;
-      if (target.pathname.startsWith('/salon') || params.get('party')) {
-        window.location.href = target.pathname + target.search;
+      const partyCode = params.get('party') || (target.pathname.startsWith('/salon/') ? target.pathname.replace('/salon/', '') : null);
+      if (partyCode) {
+        joinPartyByCode(partyCode);
         return;
       }
       const watchId = params.get('watch');
@@ -427,7 +462,7 @@ export default function App() {
       }
       if (target.pathname !== window.location.pathname) window.location.href = url;
     } catch (e) {}
-  }, [lang, openModal]);
+  }, [lang, openModal, joinPartyByCode]);
 
   useEffect(() => {
     if (!user || !fbUser) return;
@@ -538,7 +573,10 @@ export default function App() {
   };
 
   const handleCreateParty = async (movie: any, roomName: string) => {
-    if (!user || !fbUser) return;
+    if (!user || !fbUser) {
+      setShowLoginModal(true);
+      return;
+    }
     const newPartyId = 'LVL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
     const cleanRoomName = censorText((roomName || "").trim() || `Salon de ${defaultUserName}`);
 
@@ -565,7 +603,10 @@ export default function App() {
       localStorage.setItem('active_party_id', newPartyId);
       await syncPreferencesToDb({ activePartyId: newPartyId });
       showToast(t.partyCreated, 'success');
-      window.location.href = `/salon?party=${newPartyId}`;
+      setSelectedMovie(movie);
+      setPartyId(newPartyId);
+      setModalMode('play');
+      window.history.pushState({}, '', `?party=${newPartyId}`);
     } catch (e) {
       showToast(lang === 'fr' ? "Impossible de créer le salon." : "Could not create the room.", "error");
     }
@@ -705,88 +746,28 @@ export default function App() {
             <span className="text-white">Level</span><span className="bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] bg-clip-text text-transparent">Movie</span>
           </div>
 
-          {/* Real-time Verification Checklist (Clean layout without card wrapper) */}
-          <div className="w-full max-w-md mt-8 space-y-4 px-2">
-            {/* Step 1: Browser Verification */}
-            <div className="flex items-center justify-between gap-3 text-left">
-              <div className="flex items-center gap-3">
-                {browserCheck.status === 'checking' ? (
-                  <div className="w-4 h-4 rounded-full border-2 border-[#a855f7] border-t-transparent animate-spin shrink-0" />
-                ) : browserCheck.isOpera ? (
-                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                ) : (
-                  <XCircle className="w-4 h-4 text-rose-500 shrink-0 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
-                )}
-                <div>
-                  <p className="text-[11px] sm:text-xs font-semibold text-white/90">
-                    {lang === 'fr' ? 'Vérification du navigateur' : 'Browser verification'}
-                  </p>
-                  <p className={`text-[10px] sm:text-[11px] font-mono ${browserCheck.status === 'checking' ? 'text-purple-300 animate-pulse' : browserCheck.isOpera ? 'text-emerald-400 font-medium' : 'text-rose-400 font-medium'}`}>
-                    {browserCheck.text}
-                  </p>
-                </div>
-              </div>
-              {browserCheck.status === 'done' && (
-                <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full shrink-0 ${browserCheck.isOpera ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}`}>
-                  {browserCheck.isOpera ? (lang === 'fr' ? 'OPÉRA OK' : 'OPERA OK') : (lang === 'fr' ? 'NON-OPERA' : 'NON-OPERA')}
-                </span>
-              )}
+          {/* Discreet Single-Line Status (No heavy boxes/bubbles) */}
+          <div className="w-full max-w-xs mt-6 flex flex-col items-center gap-3 px-2">
+            <div className="flex items-center gap-2 text-white/70">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#a855f7] animate-ping" />
+              <span className="text-xs font-mono tracking-wide">
+                {catalogCheck.status === 'done'
+                  ? (lang === 'fr' ? 'Expérience Cinéma Prête' : 'Ready')
+                  : serverCheck.status === 'done'
+                  ? (lang === 'fr' ? 'Indexation du catalogue...' : 'Syncing catalog...')
+                  : browserCheck.status === 'done'
+                  ? (lang === 'fr' ? 'Connexion aux serveurs...' : 'Connecting servers...')
+                  : (lang === 'fr' ? 'Initialisation...' : 'Initializing...')}
+              </span>
             </div>
-
-            <div className="h-[1px] bg-white/5" />
-
-            {/* Step 2: Mirror server ping check */}
-            <div className="flex items-center justify-between gap-3 text-left">
-              <div className="flex items-center gap-3">
-                {serverCheck.status === 'idle' ? (
-                  <div className="w-4 h-4 rounded-full border border-white/20 shrink-0" />
-                ) : serverCheck.status === 'checking' ? (
-                  <div className="w-4 h-4 rounded-full border-2 border-[#a855f7] border-t-transparent animate-spin shrink-0" />
-                ) : (
-                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                )}
-                <div>
-                  <p className="text-[11px] sm:text-xs font-semibold text-white/90">
-                    {lang === 'fr' ? 'Connexion aux serveurs miroirs' : 'Mirror server connection'}
-                  </p>
-                  <p className={`text-[10px] sm:text-[11px] font-mono ${serverCheck.status === 'checking' ? 'text-purple-300 animate-pulse' : serverCheck.status === 'done' ? 'text-emerald-400 font-medium' : 'text-white/40'}`}>
-                    {serverCheck.text}
-                  </p>
-                </div>
-              </div>
-              {serverCheck.status === 'done' && (
-                <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
-                  {lang === 'fr' ? 'SERVEURS OK' : 'SERVERS OK'}
-                </span>
-              )}
-            </div>
-
-            <div className="h-[1px] bg-white/5" />
-
-            {/* Step 3: Catalog Classification check */}
-            <div className="flex items-center justify-between gap-3 text-left">
-              <div className="flex items-center gap-3">
-                {catalogCheck.status === 'idle' ? (
-                  <div className="w-4 h-4 rounded-full border border-white/20 shrink-0" />
-                ) : catalogCheck.status === 'checking' ? (
-                  <div className="w-4 h-4 rounded-full border-2 border-[#a855f7] border-t-transparent animate-spin shrink-0" />
-                ) : (
-                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                )}
-                <div>
-                  <p className="text-[11px] sm:text-xs font-semibold text-white/90">
-                    {lang === 'fr' ? 'Classement et indexation des catalogues' : 'Catalog classification & indexing'}
-                  </p>
-                  <p className={`text-[10px] sm:text-[11px] font-mono ${catalogCheck.status === 'checking' ? 'text-purple-300 animate-pulse' : catalogCheck.status === 'done' ? 'text-emerald-400 font-medium' : 'text-white/40'}`}>
-                    {catalogCheck.text}
-                  </p>
-                </div>
-              </div>
-              {catalogCheck.status === 'done' && (
-                <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
-                  {lang === 'fr' ? 'CATALOGUE OK' : 'CATALOG OK'}
-                </span>
-              )}
+            
+            <div className="w-36 h-0.5 bg-white/10 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] transition-all duration-500 rounded-full"
+                style={{
+                  width: catalogCheck.status === 'done' ? '100%' : serverCheck.status === 'done' ? '66%' : browserCheck.status === 'done' ? '33%' : '15%'
+                }}
+              />
             </div>
           </div>
         </div>
@@ -861,7 +842,7 @@ export default function App() {
             <span className="hidden md:inline truncate text-white/50">{t.searchPlaceholder}</span>
           </button>
 
-          {/* Profil Button (PC & Tablette) - Ouvre Connexion si invité, ou Sidebar si connecté */}
+          {/* Profil / Connexion Button (PC & Tablette) */}
           <div 
             className="flex items-center gap-2.5 p-1.5 pr-3 md:pr-4 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-md outline-none active:scale-95" 
             onClick={() => {
