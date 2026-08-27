@@ -573,17 +573,15 @@ export default function App() {
   };
 
   const handleCreateParty = async (movie: any, roomName: string) => {
-    if (!user || !fbUser) {
-      setShowLoginModal(true);
-      return;
-    }
+    const hostUid = user?.uid || fbUser?.uid || ('guest_' + Math.random().toString(36).substring(2, 9));
+    const hostName = userName || (user ? defaultUserName : (lang === 'fr' ? 'Hôte' : 'Host'));
     const newPartyId = 'LVL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-    const cleanRoomName = censorText((roomName || "").trim() || `Salon de ${defaultUserName}`);
+    const cleanRoomName = censorText((roomName || "").trim() || `Salon de ${hostName}`);
 
     try {
       const isTvShow = movie.first_air_date !== undefined;
       await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', newPartyId), {
-        hostUid: user.uid,
+        hostUid: hostUid,
         mods: [],
         modInvites: [],
         banned: [],
@@ -597,7 +595,7 @@ export default function App() {
         status: 'idle',
         syncTime: Date.now(),
         currentOffset: 0,
-        members: [{ uid: user.uid, name: defaultUserName, photo: userPhoto || "" }],
+        members: [{ uid: hostUid, name: hostName, photo: userPhoto || "" }],
         messages: []
       });
       localStorage.setItem('active_party_id', newPartyId);
@@ -613,16 +611,9 @@ export default function App() {
   };
 
   const triggerCreateParty = (movie: any) => {
-    if (!user) { setShowLoginModal(true); return; }
-    const seen = localStorage.getItem('lm_party_tutorial_seen');
-    if (!seen) {
-      setPendingPartyAction({ type: 'create', movie });
-      setShowPartyTutorial(true);
-    } else {
-      setCreatePartyMovie(movie);
-      setCustomRoomName("");
-      setShowCreatePartyPrompt(true);
-    }
+    setCreatePartyMovie(movie);
+    setCustomRoomName("");
+    setShowCreatePartyPrompt(true);
   };
 
   const handleGoogleSignIn = async (onSuccess?: () => void) => {

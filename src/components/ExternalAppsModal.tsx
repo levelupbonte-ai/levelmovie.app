@@ -360,33 +360,25 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
           {/* Iframe Viewer (Plein écran sans deuxième header redondant) */}
           <div className="flex-1 relative w-full h-full bg-[#020306]">
             {iframeLoading && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#020202]/95 gap-3.5">
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#060608]/90 backdrop-blur-sm">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center animate-pulse">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="w-full h-full drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="-150 -150 300 300" className="w-full h-full drop-shadow-[0_0_24px_rgba(168,85,247,0.85)]">
                     <defs>
-                      <radialGradient id="bgGradModal" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                        <stop offset="0%" stopColor="#1a0b2e" />
-                        <stop offset="100%" stopColor="#020202" />
-                      </radialGradient>
                       <linearGradient id="starGradModal" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stopColor="#d8b4fe" />
                         <stop offset="50%" stopColor="#a855f7" />
                         <stop offset="100%" stopColor="#6b21a8" />
                       </linearGradient>
-                      <filter id="glowModal" x="-30%" y="-30%" width="160%" height="160%">
-                        <feGaussianBlur stdDeviation="15" result="blur" />
+                      <filter id="glowModal" x="-40%" y="-40%" width="180%" height="180%">
+                        <feGaussianBlur stdDeviation="10" result="blur" />
                         <feComposite in="SourceGraphic" in2="blur" operator="over" />
                       </filter>
                     </defs>
-                    <rect width="512" height="512" rx="128" fill="url(#bgGradModal)" />
-                    <g transform="translate(256, 265) scale(1.4)" filter="url(#glowModal)">
+                    <g filter="url(#glowModal)">
                       <path d="M 0 -110 L 31 -35 L 105 -35 L 45 12 L 68 85 L 0 40 L -68 85 L -45 12 L -105 -35 L -31 -35 Z" fill="url(#starGradModal)" />
                     </g>
                   </svg>
                 </div>
-                <span className="text-xs font-mono tracking-widest uppercase text-white/70">
-                  {isFr ? 'Chargement' : 'Loading'}
-                </span>
               </div>
             )}
 

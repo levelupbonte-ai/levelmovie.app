@@ -626,14 +626,11 @@ export function MovieModal({
         return (
           <>
             {iframeLoading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-0 gap-3">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-0">
                 <div className="relative flex items-center justify-center">
-                  <div className="absolute inset-0 bg-[#a855f7]/20 blur-xl rounded-full animate-pulse scale-150" />
-                  <LevelMovieLogo className="w-10 h-10 text-[#c084fc] relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
+                  <div className="absolute inset-0 bg-[#a855f7]/25 blur-xl rounded-full animate-pulse scale-150" />
+                  <LevelMovieLogo className="w-10 h-10 text-[#c084fc] relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(168,85,247,0.85)]" />
                 </div>
-                <span className="text-xs font-mono tracking-wide text-white/70">
-                  {getDynamicLoadingText()}
-                </span>
               </div>
             )}
             <iframe key={`trailer-${tKey}`} className={`absolute inset-0 w-full h-full bg-black z-10 transition-opacity duration-500 ${iframeLoading ? 'opacity-0' : 'opacity-100'}`} src={`https://www.youtube-nocookie.com/embed/${tKey}?autoplay=1&controls=1&modestbranding=1&rel=0&playsinline=1&showinfo=0&fs=1`} onLoad={() => setIframeLoading(false)} allow="autoplay; encrypted-media; picture-in-picture" frameBorder="0" allowFullScreen></iframe>
@@ -646,14 +643,11 @@ export function MovieModal({
     return (
       <>
         {iframeLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-0 gap-3">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-0">
             <div className="relative flex items-center justify-center">
-              <div className="absolute inset-0 bg-[#a855f7]/20 blur-xl rounded-full animate-pulse scale-150" />
-              <LevelMovieLogo className="w-10 h-10 text-[#c084fc] relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
+              <div className="absolute inset-0 bg-[#a855f7]/25 blur-xl rounded-full animate-pulse scale-150" />
+              <LevelMovieLogo className="w-10 h-10 text-[#c084fc] relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(168,85,247,0.85)]" />
             </div>
-            <span className="text-xs font-mono tracking-wide text-white/70">
-              {getDynamicLoadingText()}
-            </span>
           </div>
         )}
         <iframe key={iframeSrc} className={`absolute inset-0 w-full h-full bg-transparent z-10 transition-opacity duration-500 ${iframeLoading ? 'opacity-0' : 'opacity-100'}`} src={iframeSrc} onLoad={() => setIframeLoading(false)} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
@@ -855,14 +849,11 @@ export function MovieModal({
             <iframe key={iframeSrc} className={`absolute inset-0 w-full h-full bg-transparent z-10 transition-opacity duration-500 ${iframeLoading ? 'opacity-0' : 'opacity-100'}`} src={iframeSrc} onLoad={() => setIframeLoading(false)} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
 
             {iframeLoading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-0 gap-3">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-0">
                 <div className="relative flex items-center justify-center">
-                  <div className="absolute inset-0 bg-[#a855f7]/20 blur-xl rounded-full animate-pulse scale-150" />
-                  <LevelMovieLogo className="w-10 h-10 text-[#c084fc] relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
+                  <div className="absolute inset-0 bg-[#a855f7]/25 blur-xl rounded-full animate-pulse scale-150" />
+                  <LevelMovieLogo className="w-10 h-10 text-[#c084fc] relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(168,85,247,0.85)]" />
                 </div>
-                <span className="text-xs font-mono tracking-wide text-white/70">
-                  {lang === 'fr' || lang === 'fr-FR' ? 'Connexion au salon...' : 'Connecting to room...'}
-                </span>
               </div>
             )}
 
@@ -1196,14 +1187,11 @@ export function MovieModal({
 
         <div className="relative pt-[56.25%] md:h-[70vh] md:pt-0 w-full bg-black shrink-0 overflow-hidden border-b border-white/10 shadow-lg flex items-center justify-center">
           {loading ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#060608] z-10 gap-3">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#060608] z-10">
               <div className="relative flex items-center justify-center">
-                <div className="absolute inset-0 bg-[#a855f7]/20 blur-xl rounded-full animate-pulse scale-150" />
-                <LevelMovieLogo className="w-10 h-10 text-[#c084fc] relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
+                <div className="absolute inset-0 bg-[#a855f7]/25 blur-xl rounded-full animate-pulse scale-150" />
+                <LevelMovieLogo className="w-10 h-10 text-[#c084fc] relative z-10 animate-pulse drop-shadow-[0_0_15px_rgba(168,85,247,0.85)]" />
               </div>
-              <span className="text-xs font-mono tracking-wide text-white/70">
-                {lang === 'fr' || lang === 'fr-FR' ? 'Chargement des détails...' : 'Loading details...'}
-              </span>
             </div>
           ) : error ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#060608] text-center p-6 border-b border-[#a855f7]/30">
