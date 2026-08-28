@@ -208,7 +208,7 @@ export const LevelOppaApp: React.FC<LevelOppaAppProps> = ({ onClose, lang = 'fr'
 
   // Toggle bookmark
   const toggleBookmark = async (articleId: string) => {
-    const next = new Set(savedBookmarks);
+    const next = new Set<string>(savedBookmarks);
     if (next.has(articleId)) {
       next.delete(articleId);
       showToast(isFr ? 'Article retiré des signets' : 'Bookmark removed');
