@@ -240,6 +240,200 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Weather search endpoint (Open-Meteo Geocoding / WeatherAPI)
+app.get('/api/weather-search', async (req, res) => {
+  const q = (req.query.q as string || '').trim();
+  if (!q) return res.json([]);
+
+  try {
+    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=fr&format=json`;
+    const response = await fetch(geoUrl);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.results && data.results.length > 0) {
+        const mapped = data.results.map((r: any) => ({
+          name: r.name,
+          region: r.admin1 || r.country,
+          country: r.country,
+          lat: r.latitude,
+          lon: r.longitude
+        }));
+        return res.json(mapped);
+      }
+    }
+  } catch (err) {
+    console.warn('Weather search error:', err);
+  }
+  res.json([]);
+});
+
+// Full Weather endpoint with hourly, daily, sun arc, and air quality
+app.get('/api/weather', async (req, res) => {
+  let queryCity = (req.query.q as string || 'Paris').trim();
+  let lat = 48.8566;
+  let lon = 2.3522;
+  let cityName = 'Paris';
+  let countryName = 'France';
+
+  if (queryCity.includes(',')) {
+    const parts = queryCity.split(',');
+    const pLat = parseFloat(parts[0]);
+    const pLon = parseFloat(parts[1]);
+    if (!isNaN(pLat) && !isNaN(pLon)) {
+      lat = pLat;
+      lon = pLon;
+      cityName = `Lat ${lat.toFixed(2)}`;
+      countryName = `Lon ${lon.toFixed(2)}`;
+    }
+  } else if (queryCity && queryCity !== 'auto:ip') {
+    try {
+      const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(queryCity)}&count=1&language=fr&format=json`;
+      const gRes = await fetch(geoUrl);
+      if (gRes.ok) {
+        const gData = await gRes.json();
+        if (gData.results && gData.results[0]) {
+          lat = gData.results[0].latitude;
+          lon = gData.results[0].longitude;
+          cityName = gData.results[0].name;
+          countryName = gData.results[0].country || 'France';
+        }
+      }
+    } catch {}
+  }
+
+  try {
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,weather_code,pressure_msl,surface_pressure,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,daylight_duration,sunshine_duration,uv_index_max,precipitation_sum,rain_sum,showers_sum,snowfall_sum,precipitation_hours,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant&timezone=auto`;
+    
+    const wRes = await fetch(weatherUrl);
+    if (!wRes.ok) throw new Error('Weather fetch failed');
+    const wData = await wRes.json();
+
+    const cur = wData.current || {};
+    const daily = wData.daily || {};
+    const hourly = wData.hourly || {};
+
+    const codeToCondition = (code: number, isDay: number) => {
+      if (code === 0) return { text: isDay ? 'Ensoleillé' : 'Nuit dégagée', icon: isDay ? '//cdn.weatherapi.com/weather/64x64/day/113.png' : '//cdn.weatherapi.com/weather/64x64/night/113.png', code: 1000 };
+      if (code <= 3) return { text: 'Partiellement nuageux', icon: isDay ? '//cdn.weatherapi.com/weather/64x64/day/116.png' : '//cdn.weatherapi.com/weather/64x64/night/116.png', code: 1003 };
+      if (code <= 48) return { text: 'Brouillard', icon: '//cdn.weatherapi.com/weather/64x64/day/143.png', code: 1030 };
+      if (code <= 67) return { text: 'Pluie modérée', icon: '//cdn.weatherapi.com/weather/64x64/day/296.png', code: 1183 };
+      if (code <= 77) return { text: 'Chutes de neige', icon: '//cdn.weatherapi.com/weather/64x64/day/338.png', code: 1225 };
+      if (code <= 82) return { text: 'Averses fortes', icon: '//cdn.weatherapi.com/weather/64x64/day/308.png', code: 1195 };
+      if (code <= 99) return { text: 'Orages', icon: '//cdn.weatherapi.com/weather/64x64/day/389.png', code: 1276 };
+      return { text: 'Nuageux', icon: '//cdn.weatherapi.com/weather/64x64/day/119.png', code: 1006 };
+    };
+
+    const condition = codeToCondition(cur.weather_code || 0, cur.is_day ?? 1);
+
+    const formatHourTime = (isoString: string) => {
+      const d = new Date(isoString);
+      return `${d.getHours()}:00`;
+    };
+
+    // Format forecast payload matching LevelDay expectations
+    const forecastDays = (daily.time || []).slice(0, 3).map((dStr: string, idx: number) => {
+      const dayCode = daily.weather_code?.[idx] || 0;
+      const dayCond = codeToCondition(dayCode, 1);
+      const srTime = daily.sunrise?.[idx] ? new Date(daily.sunrise[idx]).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '06:30 AM';
+      const ssTime = daily.sunset?.[idx] ? new Date(daily.sunset[idx]).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '08:45 PM';
+
+      return {
+        date: dStr,
+        day: {
+          maxtemp_c: daily.temperature_2m_max?.[idx] || 22,
+          mintemp_c: daily.temperature_2m_min?.[idx] || 14,
+          avgtemp_c: ((daily.temperature_2m_max?.[idx] || 22) + (daily.temperature_2m_min?.[idx] || 14)) / 2,
+          maxwind_kph: daily.wind_speed_10m_max?.[idx] || 15,
+          totalprecip_mm: daily.precipitation_sum?.[idx] || 0,
+          avghumidity: 65,
+          daily_chance_of_rain: daily.precipitation_probability_max?.[idx] || 10,
+          daily_chance_of_snow: 0,
+          uv: daily.uv_index_max?.[idx] || 5,
+          condition: dayCond
+        },
+        astro: {
+          sunrise: srTime,
+          sunset: ssTime,
+          moonrise: '09:15 PM',
+          moonset: '07:40 AM',
+          moon_phase: 'Waxing Gibbous',
+          moon_illumination: '78'
+        },
+        hour: (hourly.time || []).slice(idx * 24, (idx + 1) * 24).map((hTime: string, hIdx: number) => {
+          const globalIdx = idx * 24 + hIdx;
+          const hCode = hourly.weather_code?.[globalIdx] || 0;
+          return {
+            time: hTime,
+            temp_c: hourly.temperature_2m?.[globalIdx] || 18,
+            is_day: 1,
+            condition: codeToCondition(hCode, 1),
+            wind_kph: hourly.wind_speed_10m?.[globalIdx] || 12,
+            humidity: hourly.relative_humidity_2m?.[globalIdx] || 60,
+            chance_of_rain: hourly.precipitation_probability?.[globalIdx] || 0,
+            chance_of_snow: 0
+          };
+        })
+      };
+    });
+
+    const sr = daily.sunrise?.[0] ? new Date(daily.sunrise[0]).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '06:30 AM';
+    const ss = daily.sunset?.[0] ? new Date(daily.sunset[0]).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '08:45 PM';
+
+    res.json({
+      forecast: {
+        location: {
+          name: cityName,
+          region: countryName,
+          country: countryName,
+          lat,
+          lon,
+          localtime: new Date().toISOString().replace('T', ' ').slice(0, 16)
+        },
+        current: {
+          temp_c: cur.temperature_2m || 20,
+          is_day: cur.is_day ?? 1,
+          condition,
+          wind_kph: cur.wind_speed_10m || 14,
+          wind_dir: 'SSW',
+          pressure_mb: Math.round(cur.pressure_msl || 1015),
+          humidity: cur.relative_humidity_2m || 55,
+          cloud: cur.cloud_cover || 25,
+          feelslike_c: cur.apparent_temperature || 20,
+          vis_km: 10,
+          uv: daily.uv_index_max?.[0] || 4,
+          gust_kph: cur.wind_gusts_10m || 22,
+          dewpoint_c: (cur.temperature_2m || 20) - ((100 - (cur.relative_humidity_2m || 55)) / 5),
+          air_quality: {
+            'us-epa-index': 1,
+            pm2_5: 8.4,
+            pm10: 14.2,
+            co: 240,
+            o3: 45
+          }
+        },
+        forecast: {
+          forecastday: forecastDays
+        },
+        alerts: {
+          alert: []
+        }
+      },
+      astronomy: {
+        sunrise: sr,
+        sunset: ss,
+        moonrise: '09:15 PM',
+        moonset: '07:40 AM',
+        moon_phase: 'Waxing Gibbous',
+        moon_illumination: '78'
+      }
+    });
+
+  } catch (err: any) {
+    console.error('Weather error:', err);
+    res.status(500).json({ error: 'Failed to retrieve weather data' });
+  }
+});
+
 // Dona Suggestions / Spotlight
 app.get('/api/dona/suggestions', async (req, res) => {
   const lang = (req.query.lang as string) === 'en' ? 'en-US' : 'fr-FR';

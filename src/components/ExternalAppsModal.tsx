@@ -1,26 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { 
-  ArrowLeft, RotateCw, Globe, Shield, Sparkles, Music, 
-  Bot, Tv, Smartphone, ExternalLink, Check, Lock, Layers,
-  Compass, Search, Star, Download, ChevronRight, Home,
-  ShieldCheck, Share2, Info, ArrowUpRight, Grid, Bookmark,
-  LogOut, Play
+  RotateCw, Sparkles, Music, Flame, Sun, 
+  MessageSquare, Star, Home, LogOut, Play,
+  ShieldCheck, Search, ChevronRight, Layers, ArrowLeft
 } from 'lucide-react';
-import { LevelMovieLogo } from '../constants';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { LevelMusicApp } from './apps/LevelMusicApp';
+import { LevelOppaApp } from './apps/LevelOppaApp';
+import { LevelDayApp } from './apps/LevelDayApp';
+import { LevelReviewsApp } from './apps/LevelReviewsApp';
 
 interface LevelApp {
-  id: string;
+  id: 'level-music' | 'level-oppa' | 'level-day' | 'level-reviews';
   name: string;
   category: string;
   tagline: string;
   description: string;
-  iconType: 'bot' | 'music' | 'pwa' | 'ai' | 'tv' | 'tools' | 'store';
+  iconType: 'music' | 'oppa' | 'weather' | 'reviews';
   badge: string;
   badgeColor: string;
   rating: string;
   downloads: string;
-  embedUrl: string;
   accentColor: string;
   features: string[];
 }
@@ -29,6 +28,7 @@ interface ExternalAppsModalProps {
   isOpen: boolean;
   onClose: () => void;
   lang: string;
+  user?: any;
   showToast?: (msg: string, type?: string) => void;
 }
 
@@ -36,247 +36,161 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
   isOpen,
   onClose,
   lang,
+  user,
   showToast
 }) => {
   const isFr = lang === 'fr';
 
-  // Applications officielles de l'écosystème LevelUp
-  const defaultApps: LevelApp[] = [
+  // The 4 Official LevelUp Ecosystem Apps requested by user
+  const officialApps: LevelApp[] = [
     {
-      id: 'levelup-ai-assistant',
-      name: 'LevelUp AI Media Assistant',
-      category: isFr ? 'Assistant & Intelligence' : 'AI & Intelligence',
-      tagline: isFr ? 'Assistant de découverte cinématographique et d’alertes' : 'Smart cinema discovery & release companion',
+      id: 'level-music',
+      name: 'LevelMusic',
+      category: isFr ? 'Musique & Hi-Fi OST' : 'Music & Audio',
+      tagline: isFr ? 'Streaming musical, playlists et hits mondiaux' : 'Global hits, curated tracks & playlists',
       description: isFr 
-        ? 'Assistant multimodal intelligent pour analyser vos goûts, explorer les synopsis complets et planifier des notifications pour vos sorties favorites.' 
-        : 'Smart assistant designed to curate custom recommendations, explore filmography details and set calendar notifications.',
-      iconType: 'bot',
-      badge: 'Officiel',
-      badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-      rating: '4.9',
-      downloads: '18.4k',
-      embedUrl: 'https://en.wikipedia.org/wiki/Portal:Film',
-      accentColor: 'from-emerald-500/20 via-indigo-500/10 to-transparent',
-      features: [
-        isFr ? 'Recommandations intelligentes' : 'Intelligent recommendations',
-        isFr ? 'Fiches d’analyse approfondies' : 'In-depth filmography analysis',
-        isFr ? 'Alertes de sorties en direct' : 'Live theatrical alerts'
-      ]
-    },
-    {
-      id: 'level-music-ost',
-      name: 'LevelMusic Cinema & OST',
-      category: isFr ? 'Musique & Hi-Fi OST' : 'Cinema OST & Soundtracks',
-      tagline: isFr ? 'Bandes originales cultes, thèmes d’animes et scores' : 'Iconic movie scores & anime soundtracks',
-      description: isFr
-        ? 'Lecteur audio haute fidélité dédié aux chefs-d’œuvre musicaux du 7ème art, compositeurs légendaires et génériques cultes.'
-        : 'High-fidelity audio player streaming legendary cinematic scores, epic themes, and curated anime soundtracks.',
+        ? 'Lecteur audio interactif avec recherche intégrée, classements mondiaux, création de playlists et synchronisation Supabase.'
+        : 'Interactive music player with catalog search, charts, custom playlists, and cloud sync.',
       iconType: 'music',
-      badge: 'Hi-Fi Audio',
-      badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-      rating: '4.8',
-      downloads: '32.1k',
-      embedUrl: 'https://archive.org/details/audio_music',
-      accentColor: 'from-purple-500/20 via-pink-500/10 to-transparent',
-      features: [
-        isFr ? 'Qualité audio Master sans perte' : 'Lossless Master sound quality',
-        isFr ? 'Playlists par compositeur (Zimmer, Williams...)' : 'Composer collections (Zimmer, Williams...)',
-        isFr ? 'Mode lecture arrière-plan' : 'Background playback engine'
-      ]
-    },
-    {
-      id: 'cinepulse-analytics',
-      name: 'CinéPulse Box-Office Live',
-      category: isFr ? 'Analyses & Tendances' : 'Box Office & Stats',
-      tagline: isFr ? 'Chiffres du box-office mondial et tendances en direct' : 'Worldwide box office metrics & trends',
-      description: isFr
-        ? 'Tableau de bord financier et statistique en direct des recettes cinématographiques internationales et notes presse.'
-        : 'Real-time financial and statistical tracking of global box-office grosses, theatrical admissions, and critic rankings.',
-      iconType: 'tv',
-      badge: 'Live Metrics',
-      badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-      rating: '4.7',
-      downloads: '12.8k',
-      embedUrl: 'https://www.themoviedb.org/movie/now-playing',
-      accentColor: 'from-amber-500/20 via-orange-500/10 to-transparent',
-      features: [
-        isFr ? 'Suivi des entrées mondiales' : 'Global box-office tracking',
-        isFr ? 'Comparatifs de rentabilité' : 'Budget vs revenue analytics',
-        isFr ? 'Notes de la presse internationale' : 'Global press score aggregations'
-      ]
-    },
-    {
-      id: 'ai-recommender-engine',
-      name: 'LevelUp Neural Mood Finder',
-      category: isFr ? 'Moteur Sémantique' : 'Neural Mood Engine',
-      tagline: isFr ? 'Trouvez le film parfait selon votre humeur' : 'Match the exact movie to your mood',
-      description: isFr
-        ? 'Moteur sémantique neural qui analyse vos envies du moment (frissons, nostalgie, rires) pour générer votre séance idéale.'
-        : 'Semantic neural engine that understands emotional nuances to curate tailored movie selections instantly.',
-      iconType: 'ai',
-      badge: 'Neural AI',
+      badge: 'LevelMusic',
       badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
       rating: '4.9',
-      downloads: '45.6k',
-      embedUrl: 'https://www.themoviedb.org/trending',
-      accentColor: 'from-blue-500/20 via-cyan-500/10 to-transparent',
+      downloads: '48.2k',
+      accentColor: 'from-blue-600/30 via-indigo-600/10 to-transparent',
       features: [
-        isFr ? 'Recherche par émotion / humeur' : 'Emotion & mood targeting',
-        isFr ? 'Filtres de durée et rythme' : 'Pacing & duration filters',
-        isFr ? 'Export direct vers LevelMovie' : 'One-click launch in LevelMovie'
+        isFr ? 'Lecteur audio avec scrubbing en direct' : 'Live audio player with seek control',
+        isFr ? 'Playlists & Favoris synchronisés' : 'Synced Playlists & Favorites',
+        isFr ? 'Liaisons directes Apple Music, Spotify, YouTube' : 'Apple Music, Spotify & YouTube links'
       ]
     },
     {
-      id: 'levelup-pwa-standalone',
-      name: 'LevelMovie PWA Studio Companion',
-      category: isFr ? 'Application Mobile PWA' : 'Standalone PWA App',
-      tagline: isFr ? 'Installation smartphone, tablette et bureau' : 'Offline-ready Progressive Web App',
-      description: isFr
-        ? 'Guide et pack d’optimisation pour installer LevelMovie comme application native plein écran avec cache hors-ligne.'
-        : 'Companion pack to install LevelMovie directly on Android, iOS or Desktop as a standalone application.',
-      iconType: 'pwa',
-      badge: 'PWA v3',
-      badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
+      id: 'level-oppa',
+      name: 'LevelUp - Oppa Feed',
+      category: isFr ? 'Actus & Moments Vidéo' : 'News & Video Moments',
+      tagline: isFr ? 'Fil d’actualité, Stories 24h et Trailers cinéma' : 'Newsfeed, 24h Stories & Movie Trailers',
+      description: isFr 
+        ? 'Réseau d’actualités cinéma et pop-culture avec Stories dynamiques, vidéos Moments façon reels, galerie Shows et Radar de sorties.'
+        : 'Cinema & pop-culture hub featuring dynamic Stories, vertical Moment reels, Shows wall, and Radar releases.',
+      iconType: 'oppa',
+      badge: 'Oppa Feed',
+      badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
       rating: '5.0',
-      downloads: '58.9k',
-      embedUrl: 'https://web.dev/progressive-web-apps/',
-      accentColor: 'from-teal-500/20 via-emerald-500/10 to-transparent',
+      downloads: '64.5k',
+      accentColor: 'from-purple-600/30 via-pink-600/10 to-transparent',
       features: [
-        isFr ? 'Installation 1-clic écran d’accueil' : '1-click home screen install',
-        isFr ? 'Accélération matérielle' : 'Hardware video acceleration',
-        isFr ? 'Zéro consommation d’espace disque' : 'Ultralight storage footprint'
+        isFr ? 'Stories interactives avec pistes sonores' : 'Interactive stories with soundtrack clips',
+        isFr ? 'Moments : Bandes-annonces en plein écran' : 'Moments : Fullscreen movie trailer reels',
+        isFr ? 'Espace VIP & notifications en direct' : 'VIP Hub & realtime alerts'
+      ]
+    },
+    {
+      id: 'level-day',
+      name: 'LevelDay - Weather Pro',
+      category: isFr ? 'Météo & Radar Satellite' : 'Weather Radar & Satellite',
+      tagline: isFr ? 'Prévisions ultra précises et arc solaire' : 'High-precision forecasts & solar arc',
+      description: isFr 
+        ? 'Station météo avancée avec prévisions heure par heure, arc de trajectoire solaire/lunaire en temps réel et analyse de qualité d’air EPA.'
+        : 'Advanced meteorological dashboard with hourly forecasts, live sun/moon trajectory arc, and air quality indices.',
+      iconType: 'weather',
+      badge: 'Weather Pro',
+      badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+      rating: '4.8',
+      downloads: '31.7k',
+      accentColor: 'from-amber-600/30 via-orange-600/10 to-transparent',
+      features: [
+        isFr ? 'Arc solaire & nocturne en temps réel' : 'Live solar & nighttime arc physics',
+        isFr ? 'Prévisions 24h et alertes météo' : '24h forecast & severe weather alerts',
+        isFr ? 'Qualité de l’air & phases de la Lune' : 'Air quality EPA & Moon phases'
+      ]
+    },
+    {
+      id: 'level-reviews',
+      name: 'Avis Clients - LevelUp',
+      category: isFr ? 'Avis & Communauté' : 'Reviews & Feedback',
+      tagline: isFr ? 'Retours d’expérience certifiés et notations' : 'Certified customer feedback & ratings',
+      description: isFr 
+        ? 'Plateforme officielle d’avis et d’évaluation des services LevelUp, avec certification par Clé VIP ou compte utilisateur relié à Supabase.'
+        : 'Official community feedback hub with VIP key certification and cloud-synced reviews.',
+      iconType: 'reviews',
+      badge: 'Certifié',
+      badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+      rating: '4.9',
+      downloads: '22.1k',
+      accentColor: 'from-emerald-600/30 via-teal-600/10 to-transparent',
+      features: [
+        isFr ? 'Publication instantanée d’avis 1 à 5 étoiles' : 'Instant 1 to 5 stars reviews',
+        isFr ? 'Certification par Clé privée LevelUp' : 'LevelUp private key verification',
+        isFr ? 'Synchronisation directe avec la base Supabase' : 'Direct Supabase database syncing'
       ]
     }
   ];
 
-  const [appsList, setAppsList] = useState<LevelApp[]>(defaultApps);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [currentAppId, setCurrentAppId] = useState<LevelApp['id'] | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Navigation du Navigateur d'Écosystème
-  const [currentApp, setCurrentApp] = useState<LevelApp | null>(null);
-  const [browserHistory, setBrowserHistory] = useState<LevelApp[]>([]);
-  const [iframeKey, setIframeKey] = useState(0);
-  const [iframeLoading, setIframeLoading] = useState(false);
-
-  // Synchronisation avec Supabase si présent
-  useEffect(() => {
-    if (!isOpen) {
-      setCurrentApp(null);
-      setBrowserHistory([]);
-      return;
-    }
-
-    if (isSupabaseConfigured && supabase) {
-      (async () => {
-        try {
-          const { data, error } = await supabase
-            .from('external_apps')
-            .select('*')
-            .limit(20);
-
-          if (data && data.length > 0 && !error) {
-            const remoteApps: LevelApp[] = data.map((d: any) => ({
-              id: d.id,
-              name: d.name,
-              category: d.category || (isFr ? 'Écosystème LevelUp' : 'LevelUp Ecosystem'),
-              tagline: d.tagline || (isFr ? 'Application vérifiée' : 'Verified companion app'),
-              description: d.description || '',
-              iconType: 'store',
-              badge: d.badge || 'LevelUp Verified',
-              badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-              rating: d.rating || '4.8',
-              downloads: d.downloads || '10k',
-              embedUrl: d.embed_url || d.url || '',
-              accentColor: 'from-purple-500/20 via-indigo-500/10 to-transparent',
-              features: d.features || [isFr ? 'Intégration LevelMovie' : 'LevelMovie Integration']
-            }));
-            setAppsList([...defaultApps, ...remoteApps]);
-          }
-        } catch (e) {
-          // keep defaults
-        }
-      })();
-    }
-  }, [isOpen, isFr]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   if (!isOpen) return null;
 
-  const categories = [
-    { id: 'all', label: isFr ? 'Tout l’Écosystème' : 'All Ecosystem' },
-    { id: 'ai', label: isFr ? 'Intelligence IA' : 'AI & Brain' },
-    { id: 'music', label: isFr ? 'Musique & OST' : 'Music & Audio' },
-    { id: 'stats', label: isFr ? 'Box-Office & Data' : 'Stats & Box-Office' },
-    { id: 'apps', label: isFr ? 'Apps Mobiles' : 'Mobile Apps' }
-  ];
+  const currentApp = officialApps.find(a => a.id === currentAppId) || null;
 
-  const filteredApps = appsList.filter((app) => {
-    const matchesSearch = 
-      app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.tagline.toLowerCase().includes(searchQuery.toLowerCase());
-
-    if (!matchesSearch) return false;
-    if (selectedCategory === 'all') return true;
-    if (selectedCategory === 'ai') return app.iconType === 'ai' || app.iconType === 'bot';
-    if (selectedCategory === 'music') return app.iconType === 'music';
-    if (selectedCategory === 'stats') return app.iconType === 'tv';
-    if (selectedCategory === 'apps') return app.iconType === 'pwa';
-    return true;
+  const filteredApps = officialApps.filter((app) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      app.name.toLowerCase().includes(q) ||
+      app.tagline.toLowerCase().includes(q) ||
+      app.description.toLowerCase().includes(q) ||
+      app.category.toLowerCase().includes(q)
+    );
   });
 
-  const handleLaunchApp = (app: LevelApp) => {
-    setBrowserHistory((prev) => [...prev, app]);
-    setCurrentApp(app);
-    setIframeLoading(true);
-    setIframeKey((prev) => prev + 1);
-    if (showToast) {
-      showToast(isFr ? `Lancement de ${app.name}...` : `Launching ${app.name}...`, 'info');
-    }
-  };
-
-  const handleBackToStore = () => {
-    setCurrentApp(null);
-  };
-
-  const getAppIcon = (type: string) => {
+  const getAppIcon = (type: LevelApp['iconType']) => {
     switch (type) {
-      case 'bot':
-        return <Bot className="w-7 h-7 text-indigo-400" />;
       case 'music':
-        return <Music className="w-7 h-7 text-pink-400" />;
-      case 'ai':
-        return <Sparkles className="w-7 h-7 text-blue-400" />;
-      case 'pwa':
-        return <Smartphone className="w-7 h-7 text-teal-400" />;
-      case 'tv':
-        return <Tv className="w-7 h-7 text-amber-400" />;
+        return <Music className="w-7 h-7 text-blue-400" />;
+      case 'oppa':
+        return <Flame className="w-7 h-7 text-purple-400" />;
+      case 'weather':
+        return <Sun className="w-7 h-7 text-amber-400" />;
+      case 'reviews':
+        return <MessageSquare className="w-7 h-7 text-emerald-400" />;
       default:
-        return <Layers className="w-7 h-7 text-[#a855f7]" />;
+        return <Layers className="w-7 h-7 text-purple-400" />;
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[9650] w-screen h-screen bg-[#05060a] text-white flex flex-col overflow-hidden animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[9650] w-screen h-screen bg-[#040509] text-white flex flex-col overflow-hidden animate-in fade-in duration-300">
       
       {/* ========================================================================= */}
-      {/* TOP BAR : LEVELUP APP NAVIGATEUR & ECOSYSTEM                              */}
+      {/* TOP ECOSYSTEM HEADER BAR                                                  */}
       {/* ========================================================================= */}
-      <header className="h-16 px-4 sm:px-6 bg-[#080911] border-b border-white/10 flex items-center justify-between gap-3 shrink-0 z-30">
+      <header className="h-16 px-4 sm:px-6 bg-[#080911] border-b border-white/10 flex items-center justify-between gap-3 shrink-0 z-40">
         
-        {/* Left: Titre épuré "LevelUp App" (sans logo levelmovie et sans affichage d'URL) */}
+        {/* Left: App switcher / Title */}
         <div className="flex items-center gap-3">
+          {currentApp && (
+            <button
+              onClick={() => setCurrentAppId(null)}
+              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors mr-1 cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">{isFr ? 'Écosystème' : 'All Apps'}</span>
+            </button>
+          )}
+
           <div className="flex items-center gap-2">
             <span className="text-base sm:text-lg font-black tracking-wider text-white">
               Level<span className="text-[#a855f7]">Up</span>
-              <span className="text-white/60 ml-1 font-semibold text-sm sm:text-base">App</span>
+              <span className="text-white/60 ml-1 font-semibold text-sm sm:text-base">
+                {currentApp ? `• ${currentApp.name}` : 'Apps'}
+              </span>
             </span>
           </div>
         </div>
 
-        {/* Center: Recherche (en mode Store) */}
+        {/* Center: Search (only in Store Hub) */}
         {!currentApp && (
-          <div className="hidden lg:flex items-center flex-1 max-w-sm mx-4">
+          <div className="hidden md:flex items-center flex-1 max-w-sm mx-4">
             <div className="w-full flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 focus-within:border-[#a855f7] transition-colors">
               <Search className="w-4 h-4 text-white/40" />
               <input
@@ -295,50 +209,42 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
           </div>
         )}
 
-        {/* Right: Boutons de Navigation épurés et design */}
+        {/* Right: Quick actions */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           
-          {/* Bouton 1 : Rafraîchir / Recharger */}
+          {/* Refresh */}
           <button
             onClick={() => {
-              if (currentApp) {
-                setIframeLoading(true);
-                setIframeKey((k) => k + 1);
-              } else {
-                setIframeLoading(true);
-                setTimeout(() => setIframeLoading(false), 300);
-              }
-              if (showToast) {
-                showToast(isFr ? 'Actualisation...' : 'Refreshing...', 'info');
-              }
+              setRefreshKey(k => k + 1);
+              if (showToast) showToast(isFr ? 'Actualisation de l’application...' : 'Refreshing app...', 'info');
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-all cursor-pointer text-xs font-semibold"
-            title={isFr ? 'Actualiser la vue' : 'Refresh view'}
+            title={isFr ? 'Actualiser' : 'Refresh'}
           >
-            <RotateCw className={`w-3.5 h-3.5 ${iframeLoading ? 'animate-spin text-[#a855f7]' : ''}`} />
+            <RotateCw className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{isFr ? 'Actualiser' : 'Refresh'}</span>
           </button>
 
-          {/* Bouton 2 : Revenir à l'accueil du Store */}
+          {/* Return to Home / Store */}
           <button
-            onClick={handleBackToStore}
+            onClick={() => setCurrentAppId(null)}
             disabled={!currentApp}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               currentApp 
                 ? 'text-white hover:text-[#c084fc] hover:bg-white/5 cursor-pointer' 
                 : 'text-white/30 cursor-not-allowed opacity-40'
             }`}
-            title={isFr ? "Retour à l'accueil du store" : 'Back to Store Hub'}
+            title={isFr ? "Retour au Hub" : 'Back to Store Hub'}
           >
             <Home className="w-3.5 h-3.5 text-[#a855f7]" />
-            <span className="hidden sm:inline">{isFr ? 'Accueil' : 'Home'}</span>
+            <span className="hidden sm:inline">{isFr ? 'Hub' : 'Hub'}</span>
           </button>
 
-          {/* Bouton 3 : Sortir (icône seule sans texte) */}
+          {/* Exit */}
           <button
             onClick={onClose}
             className="flex items-center justify-center p-2 rounded-lg text-white/70 hover:text-rose-400 hover:bg-white/5 transition-all cursor-pointer ml-1"
-            title={isFr ? 'Sortir' : 'Exit'}
+            title={isFr ? 'Fermer' : 'Close'}
           >
             <LogOut className="w-4 h-4 rotate-180" />
           </button>
@@ -348,128 +254,71 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
       </header>
 
       {/* ========================================================================= */}
-      {/* CORPS PRINCIPAL : SOIT LE STORE ÉCOSYSTÈME, SOIT LE NAVIGATEUR IN-APP     */}
+      {/* APP VIEWER OR STORE HUB                                                   */}
       {/* ========================================================================= */}
-      {currentApp ? (
-        
-        /* --------------------------------------------------------- */
-        /* MODE A : NAVIGATEUR IN-APP SANDBOX POUR L'APP ACTIVE      */
-        /* --------------------------------------------------------- */
-        <div className="flex-1 relative w-full h-full bg-[#020306] overflow-hidden flex flex-col">
-          
-          {/* Iframe Viewer (Plein écran sans deuxième header redondant) */}
-          <div className="flex-1 relative w-full h-full bg-[#020306]">
-            {iframeLoading && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#060608]/90 backdrop-blur-sm">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center animate-pulse">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="-150 -150 300 300" className="w-full h-full drop-shadow-[0_0_24px_rgba(168,85,247,0.85)]">
-                    <defs>
-                      <linearGradient id="starGradModal" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#d8b4fe" />
-                        <stop offset="50%" stopColor="#a855f7" />
-                        <stop offset="100%" stopColor="#6b21a8" />
-                      </linearGradient>
-                      <filter id="glowModal" x="-40%" y="-40%" width="180%" height="180%">
-                        <feGaussianBlur stdDeviation="10" result="blur" />
-                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                      </filter>
-                    </defs>
-                    <g filter="url(#glowModal)">
-                      <path d="M 0 -110 L 31 -35 L 105 -35 L 45 12 L 68 85 L 0 40 L -68 85 L -45 12 L -105 -35 L -31 -35 Z" fill="url(#starGradModal)" />
-                    </g>
-                  </svg>
-                </div>
-              </div>
-            )}
-
-            <iframe
-              key={iframeKey}
-              src={currentApp.embedUrl}
-              onLoad={() => setIframeLoading(false)}
-              className="w-full h-full border-none"
-              title={currentApp.name}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-              allow="autoplay; encrypted-media; fullscreen"
-            />
-          </div>
-
+      {currentAppId === 'level-music' && (
+        <div key={`app-music-${refreshKey}`} className="flex-1 w-full h-full overflow-hidden">
+          <LevelMusicApp onClose={() => setCurrentAppId(null)} lang={lang} user={user} />
         </div>
+      )}
 
-      ) : (
+      {currentAppId === 'level-oppa' && (
+        <div key={`app-oppa-${refreshKey}`} className="flex-1 w-full h-full overflow-hidden">
+          <LevelOppaApp onClose={() => setCurrentAppId(null)} lang={lang} user={user} />
+        </div>
+      )}
 
-        /* --------------------------------------------------------- */
-        /* MODE B : LE STORE ÉCOSYSTÈME LEVELUP (STYLE APP STORE)   */
-        /* --------------------------------------------------------- */
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-8 lg:p-12 max-w-7xl w-full mx-auto space-y-8">
+      {currentAppId === 'level-day' && (
+        <div key={`app-day-${refreshKey}`} className="flex-1 w-full h-full overflow-hidden">
+          <LevelDayApp onClose={() => setCurrentAppId(null)} lang={lang} user={user} />
+        </div>
+      )}
+
+      {currentAppId === 'level-reviews' && (
+        <div key={`app-reviews-${refreshKey}`} className="flex-1 w-full h-full overflow-hidden">
+          <LevelReviewsApp onClose={() => setCurrentAppId(null)} lang={lang} user={user} />
+        </div>
+      )}
+
+      {!currentAppId && (
+        /* Store Front Hub */
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-8 lg:p-12 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in">
           
-          {/* Hero Storefront Banner */}
+          {/* Banner */}
           <div className="relative rounded-3xl p-6 sm:p-10 bg-gradient-to-r from-[#170a2c] via-[#0e1022] to-[#070810] border border-white/10 overflow-hidden shadow-2xl">
             <div className="absolute -top-24 -right-24 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 max-w-2xl space-y-4">
+            <div className="relative z-10 max-w-2xl space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-mono text-[#c084fc]">
                 <Sparkles className="w-3.5 h-3.5 text-[#a855f7]" />
-                <span>{isFr ? 'Écosystème Officiel LevelUp' : 'LevelUp Official Storefront'}</span>
+                <span>{isFr ? 'Écosystème Officiel LevelUp' : 'Official LevelUp Ecosystem'}</span>
               </div>
 
               <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight">
                 {isFr 
-                  ? 'Le Hub d’Applications pour votre Expérience Cinéma' 
-                  : 'The Dedicated App Hub for Next-Gen Cinema'}
+                  ? 'Vos 4 Applications LevelUp Intégrées' 
+                  : 'Your 4 Integrated LevelUp Applications'}
               </h2>
 
               <p className="text-xs sm:text-sm text-white/70 leading-relaxed">
                 {isFr
-                  ? 'Découvrez et lancez instantanément tous les services connectés LevelUp au sein de votre navigateur, sans quitter LevelMovie.'
-                  : 'Run all connected LevelUp companion tools seamlessly inside your app without external redirects or popups.'}
+                  ? 'Toutes les applications officielles de l’écosystème sont connectées directement à notre base de données Supabase unifiée.'
+                  : 'All official applications are seamlessly integrated and cloud-synced with our unified Supabase database.'}
               </p>
             </div>
           </div>
 
-          {/* Search bar on mobile */}
-          <div className="lg:hidden">
-            <div className="w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-white/5 border border-white/10">
-              <Search className="w-4 h-4 text-white/40" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={isFr ? 'Rechercher une application...' : 'Search apps...'}
-                className="flex-1 bg-transparent text-xs text-white placeholder-white/40 outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Categories Tab Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-2 border-b border-white/5">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                  selectedCategory === cat.id
-                    ? 'text-white bg-white/10 shadow-sm border border-white/15'
-                    : 'text-white/50 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Apps Showcase Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Grid of the 4 Apps */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredApps.map((app) => (
               <div
                 key={app.id}
                 className="rounded-3xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] hover:from-white/[0.08] hover:to-white/[0.03] border border-white/10 hover:border-[#a855f7]/40 p-6 flex flex-col justify-between gap-6 transition-all group shadow-lg hover:shadow-purple-900/20"
               >
-                {/* App Card Header */}
                 <div className="space-y-4">
-                  
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center justify-center group-hover:scale-110 transition-transform pt-1">
+                    <div className="flex items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/10 group-hover:scale-110 transition-transform">
                       {getAppIcon(app.iconType)}
                     </div>
 
@@ -486,13 +335,13 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
                   </div>
 
                   <div>
-                    <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#c084fc] transition-colors leading-snug">
+                    <h3 className="text-lg sm:text-xl font-black text-white group-hover:text-[#c084fc] transition-colors leading-snug">
                       {app.name}
                     </h3>
                     <p className="text-xs font-semibold text-white/50 mt-0.5">
                       {app.tagline}
                     </p>
-                    <p className="text-xs text-white/60 mt-3 leading-relaxed">
+                    <p className="text-xs text-white/60 mt-2.5 leading-relaxed">
                       {app.description}
                     </p>
                   </div>
@@ -506,33 +355,34 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
                       </div>
                     ))}
                   </div>
-
                 </div>
 
                 {/* Launch Button */}
                 <button
-                  onClick={() => handleLaunchApp(app)}
-                  className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-[#a855f7] border border-white/10 hover:border-[#a855f7] text-white text-xs font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  onClick={() => {
+                    setCurrentAppId(app.id);
+                    if (showToast) showToast(isFr ? `Lancement de ${app.name}...` : `Launching ${app.name}...`, 'info');
+                  }}
+                  className="w-full py-3 rounded-2xl bg-white/5 hover:bg-[#a855f7] border border-white/10 hover:border-[#a855f7] text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 shadow-md"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>{isFr ? 'Ouvrir dans le Navigateur' : 'Launch In Ecosystem'}</span>
+                  <span>{isFr ? 'Ouvrir l’application' : 'Launch Application'}</span>
+                  <ChevronRight className="w-4 h-4 ml-auto text-white/40 group-hover:text-white" />
                 </button>
-
               </div>
             ))}
           </div>
 
-          {/* Store Footer */}
-          <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
+          {/* Footer badge */}
+          <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>{isFr ? 'Toutes les applications sont vérifiées et isolées dans la Sandbox LevelUp.' : 'All applications are sandboxed and verified by LevelUp.'}</span>
+              <span>{isFr ? 'Toutes les applications sont 100% synchronisées avec Supabase.' : 'All applications are fully connected to Supabase.'}</span>
             </div>
-            <span>© {new Date().getFullYear()} LevelUp Ecosystem Store</span>
+            <span>© {new Date().getFullYear()} LevelUp Ecosystem Hub</span>
           </div>
 
         </div>
-
       )}
 
     </div>
