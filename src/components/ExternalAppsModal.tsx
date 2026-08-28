@@ -182,9 +182,14 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
             <span className="text-base sm:text-lg font-black tracking-wider text-white">
               Level<span className="text-[#a855f7]">Up</span>
               <span className="text-white/60 ml-1 font-semibold text-sm sm:text-base">
-                {currentApp ? `• ${currentApp.name}` : 'Apps'}
+                {currentApp ? `• ${currentApp.name}` : 'App Store'}
               </span>
             </span>
+            {!currentApp && (
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+                {isFr ? 'Bientôt disponible' : 'Coming Soon'}
+              </span>
+            )}
           </div>
         </div>
 
@@ -290,21 +295,21 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
             <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10 max-w-2xl space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-mono text-[#c084fc]">
-                <Sparkles className="w-3.5 h-3.5 text-[#a855f7]" />
-                <span>{isFr ? 'Écosystème Officiel LevelUp' : 'Official LevelUp Ecosystem'}</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 backdrop-blur-md border border-amber-500/20 text-xs font-mono text-amber-300">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isFr ? 'Bientôt disponible • Coming Soon' : 'Coming Soon'}</span>
               </div>
 
               <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight">
                 {isFr 
-                  ? 'Vos 4 Applications LevelUp Intégrées' 
-                  : 'Your 4 Integrated LevelUp Applications'}
+                  ? 'LevelUp App Store' 
+                  : 'LevelUp App Store'}
               </h2>
 
               <p className="text-xs sm:text-sm text-white/70 leading-relaxed">
                 {isFr
-                  ? 'Toutes les applications officielles de l’écosystème sont connectées directement à notre base de données Supabase unifiée.'
-                  : 'All official applications are seamlessly integrated and cloud-synced with our unified Supabase database.'}
+                  ? 'Le magasin d’applications officiel de l’écosystème LevelUp est actuellement en cours de préparation technique. Toutes les applications seront accessibles très prochainement.'
+                  : 'The official LevelUp ecosystem App Store is currently in development. All integrated apps will be unlocked soon.'}
               </p>
             </div>
           </div>
@@ -314,17 +319,17 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
             {filteredApps.map((app) => (
               <div
                 key={app.id}
-                className="rounded-3xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] hover:from-white/[0.08] hover:to-white/[0.03] border border-white/10 hover:border-[#a855f7]/40 p-6 flex flex-col justify-between gap-6 transition-all group shadow-lg hover:shadow-purple-900/20"
+                className="rounded-3xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/10 p-6 flex flex-col justify-between gap-6 transition-all group shadow-lg"
               >
                 <div className="space-y-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/10 group-hover:scale-110 transition-transform">
+                    <div className="flex items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/10">
                       {getAppIcon(app.iconType)}
                     </div>
 
                     <div className="flex flex-col items-end gap-1">
-                      <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${app.badgeColor}`}>
-                        {app.badge}
+                      <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border bg-amber-500/15 text-amber-300 border-amber-500/30">
+                        {isFr ? 'Bientôt disponible' : 'Coming Soon'}
                       </span>
                       <div className="flex items-center gap-1 text-[11px] font-bold text-amber-400">
                         <Star className="w-3 h-3 fill-amber-400" />
@@ -335,7 +340,7 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
                   </div>
 
                   <div>
-                    <h3 className="text-lg sm:text-xl font-black text-white group-hover:text-[#c084fc] transition-colors leading-snug">
+                    <h3 className="text-lg sm:text-xl font-black text-white leading-snug">
                       {app.name}
                     </h3>
                     <p className="text-xs font-semibold text-white/50 mt-0.5">
@@ -357,17 +362,17 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
                   </div>
                 </div>
 
-                {/* Launch Button */}
+                {/* Launch / Coming Soon Button */}
                 <button
                   onClick={() => {
-                    setCurrentAppId(app.id);
-                    if (showToast) showToast(isFr ? `Lancement de ${app.name}...` : `Launching ${app.name}...`, 'info');
+                    if (showToast) {
+                      showToast(isFr ? `LevelUp App Store est en cours de préparation (Bientôt disponible)` : `LevelUp App Store is coming soon`, 'info');
+                    }
                   }}
-                  className="w-full py-3 rounded-2xl bg-white/5 hover:bg-[#a855f7] border border-white/10 hover:border-[#a855f7] text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 shadow-md"
+                  className="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 shadow-md"
                 >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>{isFr ? 'Ouvrir l’application' : 'Launch Application'}</span>
-                  <ChevronRight className="w-4 h-4 ml-auto text-white/40 group-hover:text-white" />
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span>{isFr ? 'Bientôt disponible' : 'Coming Soon'}</span>
                 </button>
               </div>
             ))}

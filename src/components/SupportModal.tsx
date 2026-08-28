@@ -362,17 +362,17 @@ export const SupportModal: React.FC<SupportModalProps> = ({
           <div className="h-4 w-[1px] bg-white/15 hidden sm:block"></div>
 
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#a855f7]/15 text-[#c084fc]">
-              <LevelMovieLogo className="w-5 h-5" />
-            </div>
-            <div className="flex items-center gap-2">
+            {/* Desktop Brand with Logo (Clean, no bubble background) */}
+            <div className="hidden sm:flex items-center gap-2">
+              <LevelMovieLogo className="w-5 h-5 text-[#a855f7]" />
               <span className="text-sm sm:text-base font-semibold text-white tracking-tight">
                 Level<span className="text-[#a855f7]">Movie</span>
               </span>
-              <span className="text-xs text-white/40 font-medium">
-                {isFr ? "Centre d'aide" : "Help Center"}
-              </span>
             </div>
+            {/* Help Center Title (Always visible, clean on mobile without LevelMovie logo) */}
+            <span className="text-xs text-white/80 sm:text-white/40 font-medium">
+              {isFr ? "Centre d'aide" : "Help Center"}
+            </span>
           </div>
         </div>
 
