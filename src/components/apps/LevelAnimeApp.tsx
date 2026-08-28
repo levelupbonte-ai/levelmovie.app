@@ -252,7 +252,7 @@ const AnimeModal: React.FC<AnimeModalProps> = ({
   const [selectedServer, setSelectedServer] = useState('vidsrc_cc');
   const [iframeLoading, setIframeLoading] = useState(true);
 
-  const TMDB_API_KEY = '027cc951d888c64e5f15dcb853c7347a';
+  const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY || '027cc951d888c64e5f15dcb853c7347a';
 
   const AVAILABLE_SERVERS = [
     { id: 'vidsrc_cc', name: '1. ANIME DIRECT (VF/VOSTFR)' },
@@ -920,10 +920,7 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
     }
   }, [currentCategory, selectedScheduleDay]);
 
-  const openAnimeModal = (anime: any, mode: 'info' | 'play' | 'trailer' = 'info') => {
-    setSelectedAnime(anime);
-    setModalMode(mode);
-
+  const openAnimeModal = async (anime: any, mode: 'info' | 'play' | 'trailer' = 'info') => {
     // Save to history
     const existingHist = history.filter(a => a.mal_id !== anime.mal_id);
     const updatedHistory = [anime, ...existingHist].slice(0, 25);
@@ -931,6 +928,27 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
     try {
       localStorage.setItem('levelanime_history', JSON.stringify(updatedHistory));
     } catch {}
+
+    if (onOpenMovie) {
+      if (showToast) showToast(isFr ? 'Recherche sur le lecteur principal...' : 'Loading main player...');
+      try {
+        const query = anime.title_english || anime.title;
+        const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY || '027cc951d888c64e5f15dcb853c7347a';
+        const searchRes = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`);
+        const searchData = await searchRes.json();
+        const match = searchData.results?.find((r: any) => r.media_type === 'tv' || r.media_type === 'movie');
+        if (match) {
+          onOpenMovie(match, mode);
+          return;
+        }
+      } catch (e) {
+        console.warn('TMDB lookup failed', e);
+      }
+    }
+
+    // Fallback to local anime modal if TMDB not found or onOpenMovie not passed
+    setSelectedAnime(anime);
+    setModalMode(mode);
   };
 
   const toggleWatchlist = (anime: any, e?: React.MouseEvent) => {

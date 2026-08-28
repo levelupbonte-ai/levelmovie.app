@@ -17,7 +17,7 @@ interface LevelOppaAppProps {
   user?: any;
 }
 
-const TMDB_KEY = '027cc951d888c64e5f15dcb853c7347a';
+const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY || '027cc951d888c64e5f15dcb853c7347a';
 
 export const LevelOppaApp: React.FC<LevelOppaAppProps> = ({ lang = 'fr', user }) => {
   const isFr = lang === 'fr';

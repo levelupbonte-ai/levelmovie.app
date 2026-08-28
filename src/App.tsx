@@ -1362,6 +1362,7 @@ export default function App() {
             onTabChange={(tab) => setAnimeSubTab(tab)}
             onNavigateHome={() => setCurrentCategory('home')}
             showToast={(msg, type) => showToast(msg, type)}
+            onOpenMovie={(m, mode) => openModal(m, mode || 'info')}
           />
         </div>
       ) : (
@@ -1401,7 +1402,7 @@ export default function App() {
       )}
 
       {/* PIED DE PAGE & AVERTISSEMENT LÉGAL AGRÉGATEUR PRO */}
-      {currentCategory !== 'dona' && (
+      {['home', 'tv', 'movie'].includes(currentCategory) && (
         <FooterDisclaimer
           lang={lang}
           onOpenSupport={() => setShowSupport(true)}

@@ -76,12 +76,12 @@ export const copyToClipboardFallback = (text: string) => {
 };
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-  authDomain: "levelup-ecosystem.com",
-  projectId: "levelup-ia",
-  storageBucket: "levelup-ia.firebasestorage.app",
-  messagingSenderId: "229420004282",
-  appId: "1:229420004282:web:6735f059a947f0936ae383",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "levelup-ecosystem.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "levelup-ia",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "levelup-ia.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "229420004282",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:229420004282:web:6735f059a947f0936ae383",
   measurementId: "G-MSRDY2574K"
 };
 
@@ -98,7 +98,7 @@ export const VAPID_KEY = 'BPc3w8mDuNONg6Wl5TyU_x-l8KfUAtd_D868u3PaPpgrM7HUBMJ5qm
 export const NOTIF_PATH = ['artifacts', 'levelup-ecosystem', 'public', 'data', 'notifications'] as const;
 export const FCM_TOKEN_PATH = (uid: string) => ['artifacts', 'levelup-ecosystem', 'public', 'data', 'fcm_tokens', uid] as const;
 
-export const API_KEY = '027cc951d888c64e5f15dcb853c7347a';
+export const API_KEY = import.meta.env.VITE_TMDB_API_KEY || '027cc951d888c64e5f15dcb853c7347a';
 export const BASE_URL = 'https://api.themoviedb.org/3';
 export const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 export const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';

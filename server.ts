@@ -8,12 +8,9 @@ import Parser from 'rss-parser';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const app = express();
 const PORT = 3000;
-const TMDB_API_KEY = '027cc951d888c64e5f15dcb853c7347a';
+const TMDB_API_KEY = process.env.TMDB_API_KEY || '027cc951d888c64e5f15dcb853c7347a';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
 app.use(express.json({ limit: '10mb' }));
@@ -21,24 +18,7 @@ app.use(express.json({ limit: '10mb' }));
 // =========================================================================
 // INTELLIGENT GEMINI MULTI-KEY ROTATION & LOAD BALANCER ENGINE
 // =========================================================================
-const USER_DIRECT_GEMINI_KEYS = [
-  "AIzaSyBrzdpiPf0OVq7CHzS7ZS7ryz-7aCyGTDo",
-  "AIzaSyCEZ8tO1Yd-40ITlZup_K50R2xXr05N_1M",
-  "AIzaSyC9no26dvEU67AgUZMQ2kSz8VysVlkzP9E",
-  "AIzaSyDftYPuC0Sc2DwvN-EdgARwFofPUGt7b-s",
-  "AIzaSyA8H-34-IfDdS1ZspY-cP21fWoYhUYRH9o",
-  "AIzaSyBIwWQALsWIyn44mhUAoIwu_VZqeeQ9dNc",
-  "AIzaSyAs_JgK9_zYXoc1fEMO5K08BtNpitjXNf8",
-  "AIzaSyB5OGPQR7AXdTkXfZOZfkSVh5J0P23sLnQ",
-  "AIzaSyBl8j0fi9i5rdDik71ZSlM91-7VTYdsuH0",
-  "AIzaSyD-aIjklxhbYwoy9-aZhHVx14bk6vA_XkE",
-  "AIzaSyA26zYrBflQVYMTLkJMO4QpuYHBiQMZ3iU",
-  "AIzaSyBO4sPAqXgOZFJzoz6P6jhnu7BgTvSqj68",
-  "AIzaSyCtDyjC-M97e4YVVge8QcqLMAC5VwBItBo",
-  "AIzaSyAwi9ICJv2OrF6VQoD1nG_hzAq9RiGvu3w",
-  "AIzaSyDhbp9J_JE_hwTj-LDj0QQ8yhSAs-qgs4Y",
-  "AIzaSyCHgmrl5iRGXcWTS_w0xVBwjnU81Ni9dKM"
-];
+const USER_DIRECT_GEMINI_KEYS: string[] = [];
 
 class GeminiKeyManager {
   private keys: string[] = [];
