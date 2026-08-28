@@ -1,7 +1,8 @@
 import React from 'react';
 import {
   X, Settings, Bookmark, Clapperboard, LayoutGrid, HelpCircle,
-  Film, Tv, Users, Home, LogOut, User, ChevronRight, ExternalLink
+  Film, Tv, Users, Home, LogOut, User, ChevronRight, ExternalLink,
+  Compass, Calendar
 } from 'lucide-react';
 import { LevelMovieLogo, DonaStar } from '../constants';
 
@@ -14,7 +15,7 @@ interface AppSidebarProps {
   onOpenExternalApps: () => void;
   onOpenSupport: () => void;
   onOpenDona?: () => void;
-  onNavigateCategory: (cat: string) => void;
+  onNavigateCategory: (cat: string, subTab?: string) => void;
   onOpenLogin: () => void;
   onOpenLogout: () => void;
   user: any;
@@ -23,6 +24,7 @@ interface AppSidebarProps {
   userPhoto: string | null;
   watchlistCount: number;
   currentCategory: string;
+  animeSubTab?: string;
   lang: string;
   t: any;
 }
@@ -45,6 +47,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   userPhoto,
   watchlistCount,
   currentCategory,
+  animeSubTab = 'home',
   lang,
   t
 }) => {
@@ -215,27 +218,88 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             </button>
 
             {/* 3.5. ANIME HUB */}
-            <button
-              onClick={() => { onClose(); onNavigateCategory('anime'); }}
-              className={`w-full py-2.5 px-3 rounded-xl transition-all text-left flex items-center justify-between group cursor-pointer ${
-                currentCategory === 'anime'
-                  ? 'bg-white/10 text-white'
-                  : 'hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-3.5">
-                <LevelMovieLogo className="w-4 h-4 group-hover:scale-110 transition-transform" color="#ef4444" />
-                <div>
-                  <div className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
-                    LevelAnime
-                  </div>
-                  <div className="text-[10px] text-white/40">
-                    {lang === 'fr' ? 'Simulcasts, VF/VOSTFR & saisons' : 'Simulcasts, dubs & seasons'}
+            <div className="space-y-1">
+              <button
+                onClick={() => { onClose(); onNavigateCategory('anime', 'home'); }}
+                className={`w-full py-2.5 px-3 rounded-xl transition-all text-left flex items-center justify-between group cursor-pointer ${
+                  currentCategory === 'anime'
+                    ? 'bg-red-500/15 border border-red-500/30 text-white'
+                    : 'hover:bg-white/5'
+                }`}
+              >
+                <div className="flex items-center gap-3.5">
+                  <LevelMovieLogo className="w-4 h-4 group-hover:scale-110 transition-transform" color="#ef4444" />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
+                        LevelAnime
+                      </span>
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-red-500/20 text-red-300 border border-red-500/30 uppercase">
+                        Anime
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-white/40">
+                      {lang === 'fr' ? 'Simulcasts, VF/VOSTFR & saisons' : 'Simulcasts, dubs & seasons'}
+                    </div>
                   </div>
                 </div>
+                <ChevronRight className={`w-4 h-4 text-white/30 group-hover:text-white transition-transform ${currentCategory === 'anime' ? 'rotate-90 text-red-400' : ''}`} />
+              </button>
+
+              {/* Sub-options for LevelAnime in Sidebar */}
+              <div className="pl-6 pr-1 space-y-1">
+                <button
+                  onClick={() => { onClose(); onNavigateCategory('anime', 'home'); }}
+                  className={`w-full py-1.5 px-3 rounded-lg text-left flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                    currentCategory === 'anime' && animeSubTab === 'home'
+                      ? 'bg-red-500/20 text-red-300 font-bold border border-red-500/20'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Home className="w-3.5 h-3.5" />
+                    <span>{lang === 'fr' ? 'Accueil Anime' : 'Anime Home'}</span>
+                  </div>
+                  {currentCategory === 'anime' && animeSubTab === 'home' && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                  )}
+                </button>
+
+                <button
+                  onClick={() => { onClose(); onNavigateCategory('anime', 'explore'); }}
+                  className={`w-full py-1.5 px-3 rounded-lg text-left flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                    currentCategory === 'anime' && animeSubTab === 'explore'
+                      ? 'bg-red-500/20 text-red-300 font-bold border border-red-500/20'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Compass className="w-3.5 h-3.5" />
+                    <span>{lang === 'fr' ? 'Explorer Catalogue' : 'Explore Anime'}</span>
+                  </div>
+                  {currentCategory === 'anime' && animeSubTab === 'explore' && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                  )}
+                </button>
+
+                <button
+                  onClick={() => { onClose(); onNavigateCategory('anime', 'releases'); }}
+                  className={`w-full py-1.5 px-3 rounded-lg text-left flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                    currentCategory === 'anime' && animeSubTab === 'releases'
+                      ? 'bg-red-500/20 text-red-300 font-bold border border-red-500/20'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>{lang === 'fr' ? 'Calendrier Sorties' : 'Release Calendar'}</span>
+                  </div>
+                  {currentCategory === 'anime' && animeSubTab === 'releases' && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                  )}
+                </button>
               </div>
-              <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-            </button>
+            </div>
 
             {/* 4. APPLICATIONS EXTERNES / LEVELUP STORE */}
             <button

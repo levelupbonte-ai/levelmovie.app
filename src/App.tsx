@@ -5,7 +5,7 @@ import {
   Home, Tv, Clapperboard, History, AlertOctagon, Bookmark,
   ArrowDown, ArrowUp, Plus, Users, Mail, AlertTriangle, CheckCircle, XCircle,
   Building, Lock, Menu, Sparkles, Compass, ShieldCheck, Zap,
-  Clock, SquarePen
+  Clock, SquarePen, Calendar
 } from 'lucide-react';
 import {
   onAuthStateChanged, signInAnonymously, signInWithPopup, signInWithRedirect, signOut
@@ -126,6 +126,7 @@ export default function App() {
   const [showDona, setShowDona] = useState(false);
   const [donaHistoryTrigger, setDonaHistoryTrigger] = useState(0);
   const [donaNewChatTrigger, setDonaNewChatTrigger] = useState(0);
+  const [animeSubTab, setAnimeSubTab] = useState<'home' | 'explore' | 'releases'>('home');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [loginBackdrops, setLoginBackdrops] = useState<string[]>([]);
 
@@ -978,19 +979,25 @@ export default function App() {
           <div 
             className="flex items-center cursor-pointer outline-none group transition-transform active:scale-95 select-none" 
             onClick={() => {
-              setCurrentCategory('home');
-              setPageSeed((prev) => prev + 1);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              showToast(lang === 'fr' ? 'Nouveautés & actualisation du catalogue...' : 'Discovering new releases & refreshing catalog...', 'info');
+              if (currentCategory === 'anime') {
+                setAnimeSubTab('home');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showToast(lang === 'fr' ? 'Actualisation du catalogue LevelAnime...' : 'Refreshing LevelAnime catalog...', 'info');
+              } else {
+                setCurrentCategory('home');
+                setPageSeed((prev) => prev + 1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showToast(lang === 'fr' ? 'Nouveautés & actualisation du catalogue...' : 'Discovering new releases & refreshing catalog...', 'info');
+              }
             }}
-            title={lang === 'fr' ? 'Actualiser le catalogue LevelMovie' : 'Refresh LevelMovie catalog'}
+            title={currentCategory === 'anime' ? (lang === 'fr' ? 'Actualiser le catalogue LevelAnime' : 'Refresh LevelAnime catalog') : (lang === 'fr' ? 'Actualiser le catalogue LevelMovie' : 'Refresh LevelMovie catalog')}
           >
             {/* Mobile ONLY: Logo Icon (No text) */}
             <div className="md:hidden flex items-center justify-center p-1">
-              <LevelMovieLogo className="w-7 h-7 text-[#a855f7] transition-transform group-hover:scale-110" />
+              <LevelMovieLogo className="w-7 h-7 transition-transform group-hover:scale-110" color={currentCategory === 'anime' ? '#ef4444' : '#a855f7'} />
             </div>
 
-            {/* PC ONLY: LevelMovie stylized text (No icon) */}
+            {/* PC ONLY: Stylized text (No icon) */}
             <h1 className="hidden md:flex text-xl md:text-2xl font-black tracking-widest leading-none drop-shadow-lg items-center">
               <span className="text-white">Level</span><span className="text-[#a855f7]">Movie</span>
             </h1>
@@ -1012,6 +1019,10 @@ export default function App() {
               <Users className="w-3.5 h-3.5"/> 
               {t.partyTab}
               {activePartyCode && currentCategory !== 'party' && <div className="absolute -top-1 -right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-[#060608]"></div>}
+            </button>
+            <button onClick={() => setCurrentCategory('anime')} className={`flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'anime' ? 'text-red-500 font-bold' : ''}`}>
+              <LevelMovieLogo className="w-3.5 h-3.5" color="#ef4444" />
+              <span>Anime</span>
             </button>
             <button onClick={() => setCurrentCategory('watchlist')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'watchlist' ? 'text-[#a855f7]' : ''}`}>{t.myList}</button>
           </nav>
@@ -1154,7 +1165,7 @@ export default function App() {
           <button onClick={() => setCurrentCategory('party')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'party' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
             <Users className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.partyTab}</span>
           </button>
-          <button onClick={() => setCurrentCategory('anime')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'anime' && !showSidebar ? 'text-red-500' : 'text-white/50 hover:text-white'}`}>
+          <button onClick={() => { setCurrentCategory('anime'); setAnimeSubTab('home'); }} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'anime' && !showSidebar ? 'text-red-500' : 'text-white/50 hover:text-white'}`}>
             <LevelMovieLogo className="w-5 h-5" color="#ef4444" /> <span className="text-[9px] font-bold uppercase tracking-widest">Anime</span>
           </button>
           <button onClick={() => setShowSidebar(true)} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
@@ -1347,6 +1358,9 @@ export default function App() {
             userPhoto={userPhoto}
             userName={userName}
             userEmail={userEmail}
+            activeTab={animeSubTab}
+            onTabChange={(tab) => setAnimeSubTab(tab)}
+            onNavigateHome={() => setCurrentCategory('home')}
             showToast={(msg, type) => showToast(msg, type)}
           />
         </div>
@@ -1416,7 +1430,12 @@ export default function App() {
         onOpenExternalApps={() => setShowExternalApps(true)}
         onOpenSupport={() => setShowSupport(true)}
         onOpenDona={() => { setShowSidebar(false); setCurrentCategory('dona'); }}
-        onNavigateCategory={(cat) => setCurrentCategory(cat)}
+        onNavigateCategory={(cat, subTab) => {
+          setCurrentCategory(cat);
+          if (subTab) {
+            setAnimeSubTab(subTab as 'home' | 'explore' | 'releases');
+          }
+        }}
         onOpenLogin={() => setShowLoginModal(true)}
         onOpenLogout={() => setShowLogoutConfirm(true)}
         user={user}
@@ -1425,6 +1444,7 @@ export default function App() {
         userPhoto={userPhoto}
         watchlistCount={watchlistData.length}
         currentCategory={currentCategory}
+        animeSubTab={animeSubTab}
         lang={lang}
         t={t}
       />
