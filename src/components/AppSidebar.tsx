@@ -122,25 +122,24 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
               {lang === 'fr' ? 'Menu Principal' : 'Main Menu'}
             </div>
 
-            {/* 0. DONA IA CINÉMA */}
+            {/* 0. DONA */}
             {onOpenDona && (
               <button
                 onClick={() => { onClose(); onOpenDona(); }}
-                className="w-full py-2.5 px-3 rounded-xl bg-[#a855f7]/10 border border-[#a855f7]/30 hover:bg-[#a855f7]/20 transition-all text-left flex items-center justify-between group cursor-pointer shadow-[0_0_15px_rgba(168,85,247,0.15)] mb-1"
+                className="w-full py-2.5 px-3 rounded-xl hover:bg-white/5 transition-all text-left flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
                   <DonaStar className="w-5 h-5 group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] shrink-0" />
                   <div>
-                    <div className="text-xs font-black text-white group-hover:text-[#c084fc] transition-colors flex items-center gap-1.5">
-                      <span>Dona</span>
-                      <span className="text-[9px] px-1.5 py-0.2 bg-[#a855f7] text-white rounded-full font-extrabold uppercase">IA</span>
+                    <div className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
+                      Dona
                     </div>
-                    <div className="text-[10px] text-white/60">
+                    <div className="text-[10px] text-white/40">
                       {lang === 'fr' ? 'Recommandations & Assistant' : 'Movie & Series Advisor'}
                     </div>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-[#c084fc] group-hover:translate-x-0.5 transition-all" />
+                <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
               </button>
             )}
 

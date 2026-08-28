@@ -999,7 +999,7 @@ export default function App() {
             <button 
               onClick={() => setCurrentCategory('dona')} 
               className={`flex items-center gap-1.5 transition-all outline-none cursor-pointer group ${currentCategory === 'dona' ? 'text-[#c084fc] font-black' : 'text-white/60 hover:text-white'}`}
-              title="Dona - IA Cinéma LevelMovie"
+              title="Dona"
             >
               <DonaStar className="w-4 h-4 group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
               <span className="font-bold tracking-wide">Dona</span>
@@ -1141,13 +1141,13 @@ export default function App() {
           </button>
           <button 
             onClick={() => setCurrentCategory('dona')} 
-            className={`flex flex-col items-center justify-center gap-1 transition-all outline-none cursor-pointer active:scale-95 group ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/50 hover:text-white'}`}
-            title="Dona - IA Cinéma"
+            className={`flex flex-col items-center justify-center gap-1 transition-all outline-none cursor-pointer active:scale-95 group ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/70 hover:text-white'}`}
+            title="Dona"
           >
             <div className="relative flex items-center justify-center w-6 h-6">
-              <DonaStar className="w-5 h-5 relative z-10 transition-transform group-hover:scale-105" />
+              <DonaStar className="w-5 h-5 relative z-10 transition-transform group-hover:scale-110 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" />
             </div>
-            <span className={`text-[9px] font-black uppercase tracking-wider ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/50'}`}>Dona</span>
+            <span className={`text-[9px] font-black uppercase tracking-wider ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/60'}`}>Dona</span>
           </button>
           <button onClick={() => setCurrentCategory('party')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'party' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
             <Users className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.partyTab}</span>
@@ -1168,7 +1168,15 @@ export default function App() {
             <DonaModal
               isOpen={true}
               onClose={() => setCurrentCategory('home')}
-              onSelectMovie={(movie) => openModal(movie, 'info')}
+              onSelectMovie={(movie, mode = 'info') => openModal(movie, mode)}
+              onCreateParty={(movie) => triggerCreateParty(movie)}
+              onNavigateCategory={(cat) => setCurrentCategory(cat)}
+              onOpenSearch={(q) => {
+                if (q) setSearchQuery(q);
+                setShowSearchModal(true);
+              }}
+              onOpenSettings={() => setShowSettings(true)}
+              onOpenSupport={() => setShowSupport(true)}
               lang={lang}
               historyTrigger={donaHistoryTrigger}
               newChatTrigger={donaNewChatTrigger}
@@ -1186,12 +1194,19 @@ export default function App() {
                 <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest mb-1">{t.joinPartyTitle}</h2>
                 <p className="text-white/50 text-xs md:text-sm">{t.joinPartyDesc}</p>
               </div>
-              <div className="flex w-full md:w-auto bg-black/50 border border-white/10 rounded-full p-1 shadow-inner focus-within:border-[#a855f7] transition-colors max-w-sm">
+              <div className="flex items-center w-full md:w-auto min-w-[280px] max-w-md bg-black/60 border border-white/15 rounded-2xl md:rounded-full p-1.5 shadow-inner focus-within:border-[#a855f7] transition-colors">
                 <input 
                   type="text" 
                   id="partyCodeInput"
                   placeholder={t.partyCodePlaceholder}
-                  className="flex-1 md:w-48 bg-transparent px-4 py-2.5 text-white font-mono text-[11px] md:text-xs outline-none uppercase tracking-[0.1em]"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const inputEl = document.getElementById('partyCodeInput') as HTMLInputElement;
+                      const code = inputEl ? inputEl.value.trim().toUpperCase() : '';
+                      if (code) triggerJoinParty(code);
+                    }
+                  }}
+                  className="flex-1 min-w-0 bg-transparent px-3.5 py-2 text-white font-mono text-xs outline-none uppercase tracking-[0.1em] placeholder:text-white/40"
                 />
                 <button 
                   onClick={() => {
@@ -1199,7 +1214,7 @@ export default function App() {
                     const code = inputEl ? inputEl.value.trim().toUpperCase() : '';
                     if (code) triggerJoinParty(code);
                   }}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white px-6 py-2.5 rounded-full font-black uppercase tracking-widest transition-all active:scale-95 text-[10px] md:text-[11px] shadow-[0_0_15px_rgba(168,85,247,0.4)] shrink-0 cursor-pointer"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white px-4 md:px-5 py-2 rounded-xl md:rounded-full font-black uppercase tracking-wider transition-all active:scale-95 text-[11px] shadow-[0_0_15px_rgba(168,85,247,0.4)] shrink-0 cursor-pointer whitespace-nowrap"
                 >
                   {t.joinBtn}
                 </button>

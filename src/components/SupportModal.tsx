@@ -55,7 +55,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     'Serveur Global (VidSrc)': 24,
     'Serveur Multi (SuperEmbed)': 28,
     'Serveur Alpha (VidLink)': 20,
-    'Serveur Delta (Smashy)': 31,
+    'Serveur Beta (VidSrc To)': 26,
     'Cloud Database (Supabase)': 16
   });
   const [isPinging, setIsPinging] = useState(false);
@@ -121,8 +121,8 @@ export const SupportModal: React.FC<SupportModalProps> = ({
         {
           title: isFr ? 'Étape 1 : Changer de serveur miroir' : 'Step 1: Switch video mirror',
           desc: isFr
-            ? 'En haut à droite du lecteur, ouvrez le sélecteur de Serveurs (ex: Global, Multi, Alpha, Delta). Chaque serveur propose des flux vidéo indépendants.'
-            : 'Open the Server dropdown at the top-right of the player (e.g., Global, Multi, Alpha, Delta) and select another mirror.'
+            ? 'En haut à droite du lecteur, ouvrez le sélecteur de Serveurs (ex: Global, Multi, Alpha, Beta). Chaque serveur propose des flux vidéo indépendants.'
+            : 'Open the Server dropdown at the top-right of the player (e.g., Global, Multi, Alpha, Beta) and select another mirror.'
         },
         {
           title: isFr ? 'Étape 2 : Vérifier les bloqueurs de scripts iframe' : 'Step 2: Check iframe ad-blockers',
@@ -314,7 +314,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
         'Serveur Global (VidSrc)': Math.floor(18 + Math.random() * 12),
         'Serveur Multi (SuperEmbed)': Math.floor(20 + Math.random() * 14),
         'Serveur Alpha (VidLink)': Math.floor(16 + Math.random() * 10),
-        'Serveur Delta (Smashy)': Math.floor(22 + Math.random() * 15),
+        'Serveur Beta (VidSrc To)': Math.floor(22 + Math.random() * 15),
         'Cloud Database (Supabase)': Math.floor(12 + Math.random() * 8)
       });
       setIsPinging(false);
