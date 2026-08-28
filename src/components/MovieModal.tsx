@@ -1715,45 +1715,6 @@ export function MovieModal({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Contrôles de taille de l'écran sur PC */}
-            <div className="hidden md:flex items-center bg-white/5 border border-white/10 rounded-xl p-1 gap-1">
-              <span className="text-[9px] font-bold text-white/40 uppercase px-1.5 flex items-center gap-1">
-                <Monitor className="w-3 h-3 text-[#a855f7]" />
-                <span>{lang === 'fr' ? 'Taille PC' : 'Size'}</span>
-              </span>
-              {[
-                { id: 'compact', label: lang === 'fr' ? 'Compact' : 'Compact', title: 'Taille compacte (45vh)' },
-                { id: 'normal', label: lang === 'fr' ? 'Standard' : 'Standard', title: 'Taille équilibrée (60vh)' },
-                { id: 'large', label: lang === 'fr' ? 'Grand' : 'Cinema', title: 'Taille cinéma (75vh)' },
-                { id: 'full', label: lang === 'fr' ? 'Max' : 'Max', title: 'Taille maximale (88vh)' },
-              ].map(s => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => handleSetPlayerSize(s.id as any)}
-                  className={`px-2 py-1 rounded-lg text-[9px] font-extrabold uppercase transition-all cursor-pointer ${
-                    playerSize === s.id
-                      ? 'bg-[#a855f7] text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]'
-                      : 'text-white/60 hover:text-white hover:bg-white/10'
-                  }`}
-                  title={s.title}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Bouton Signaler Pubs Serveur */}
-            <button
-              type="button"
-              onClick={() => openReportModal(selectedServer)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95"
-              title={lang === 'fr' ? "Signaler ce serveur si trop de pubs" : "Report server if too many ads"}
-            >
-              <Flag className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{lang === 'fr' ? 'Signaler Pubs' : 'Report Ads'}</span>
-            </button>
-
             <button onClick={onClose} className="p-2 text-white/50 hover:text-white transition-colors cursor-pointer outline-none active:scale-90" title={t.closePlayer}>
               <X className="w-6 h-6" />
             </button>
@@ -1788,44 +1749,92 @@ export function MovieModal({
         <div className="p-5 md:p-10 lg:p-14 shrink-0 bg-gradient-to-b from-[#15092a]/30 to-[#0a0a0f] flex-1 pb-32 w-full mx-auto">
           {modalMode === 'play' && (
             <>
-              <div className="mb-8 flex flex-col gap-5 bg-black/40 p-5 md:p-6 rounded-2xl border border-white/5 shadow-inner max-w-5xl mx-auto">
-                <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
+              {/* SECTION CONTRÔLES DU LECTEUR EN MODE REGARDER (Serveurs, Signalement et Taille PC) */}
+              <div className="mb-8 flex flex-col gap-5 bg-black/40 p-5 md:p-6 rounded-3xl border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)] max-w-5xl mx-auto backdrop-blur-sm">
+                
+                {/* En-tête des contrôles de lecture */}
+                <div className="flex flex-wrap justify-between items-center gap-3 pb-3 border-b border-white/5">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-black text-white/70 uppercase tracking-widest flex items-center">
-                      <Server className="w-4 h-4 inline mr-2 text-[#a855f7]" /> {t.externalSources}
+                    <div className="w-7 h-7 rounded-xl bg-[#a855f7]/20 border border-[#a855f7]/40 flex items-center justify-center">
+                      <Server className="w-3.5 h-3.5 text-[#c084fc]" />
+                    </div>
+                    <span className="text-xs font-black text-white uppercase tracking-wider">
+                      {t.externalSources || 'Serveurs de streaming'}
                     </span>
-                    {/* Bouton rapide de signalement à côté des serveurs */}
-                    <button
-                      type="button"
-                      onClick={() => openReportModal(selectedServer)}
-                      className="px-2 py-1 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-lg text-[9px] font-bold uppercase transition-colors cursor-pointer flex items-center gap-1 active:scale-95"
-                      title={lang === 'fr' ? 'Signaler le serveur actif si trop de publicités' : 'Report active server if too many ads'}
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {/* Contrôles de taille d'écran sur PC (Uniquement en mode regarder) */}
+                    <div className="hidden md:flex items-center bg-white/5 border border-white/10 rounded-2xl p-1 gap-1 shadow-inner">
+                      <span className="text-[9px] font-bold text-white/40 uppercase px-2 flex items-center gap-1.5">
+                        <Monitor className="w-3 h-3 text-[#a855f7]" />
+                        <span>{lang === 'fr' ? 'Taille écran' : 'Player size'}</span>
+                      </span>
+                      {[
+                        { id: 'compact', label: lang === 'fr' ? 'Compact' : 'Compact', title: 'Taille compacte (45vh)' },
+                        { id: 'normal', label: lang === 'fr' ? 'Standard' : 'Standard', title: 'Taille équilibrée (60vh)' },
+                        { id: 'large', label: lang === 'fr' ? 'Cinéma' : 'Cinema', title: 'Taille cinéma (75vh)' },
+                        { id: 'full', label: lang === 'fr' ? 'Max' : 'Max', title: 'Taille plein écran (88vh)' },
+                      ].map(s => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => handleSetPlayerSize(s.id as any)}
+                          className={`px-2.5 py-1 rounded-xl text-[9px] font-extrabold uppercase transition-all cursor-pointer ${
+                            playerSize === s.id
+                              ? 'bg-[#a855f7] text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]'
+                              : 'text-white/60 hover:text-white hover:bg-white/10'
+                          }`}
+                          title={s.title}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button 
+                      onClick={() => setModalMode('info')} 
+                      className="text-[10px] font-bold text-white/60 hover:text-white uppercase tracking-widest border border-white/10 px-3.5 py-1.5 rounded-xl hover:bg-white/10 transition-colors outline-none cursor-pointer flex items-center gap-1.5"
                     >
-                      <Flag className="w-3 h-3" />
-                      <span>{lang === 'fr' ? 'Trop de pub ?' : 'Too many ads?'}</span>
+                      <Info className="w-3.5 h-3.5 text-[#a855f7]" /> 
+                      <span>{t.movieInfo}</span>
                     </button>
                   </div>
-                  <button onClick={() => setModalMode('info')} className="text-[10px] font-bold text-white/50 hover:text-white uppercase tracking-widest border border-white/10 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors outline-none cursor-pointer flex items-center"><Info className="w-3 h-3 inline mr-1" /> {t.movieInfo}</button>
                 </div>
-                <p className="text-[10px] text-[#a855f7] mb-2 font-bold uppercase tracking-widest flex items-center">
-                  <Info className="w-3 h-3 inline mr-1" /> {t.audioTip}
+
+                <p className="text-[10px] text-[#a855f7] font-bold uppercase tracking-widest flex items-center">
+                  <Info className="w-3 h-3 inline mr-1.5" /> {t.audioTip}
                 </p>
-                <div className="flex flex-wrap gap-3 items-center">
+
+                {/* BULLE DES SERVEURS AVEC LE DRAPEAU DE SIGNALEMENT INTÉGRÉ */}
+                <div className="flex flex-wrap items-center gap-2.5 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
                   {AVAILABLE_SERVERS.map(srv => (
-                    <div key={srv.id} className="relative group/srv">
-                      <button onClick={() => handlePlayRequest(srv.id)} className={`px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase transition-all outline-none cursor-pointer ${selectedServer === srv.id ? 'bg-[#a855f7] text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10'}`}>
-                        {srv.name}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); openReportModal(srv.id); }}
-                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#151520] hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/40 rounded-full flex items-center justify-center opacity-0 group-hover/srv:opacity-100 transition-opacity shadow-md cursor-pointer"
-                        title={lang === 'fr' ? `Signaler ${srv.name} (Pubs)` : `Report ${srv.name}`}
-                      >
-                        <Flag className="w-2.5 h-2.5" />
-                      </button>
-                    </div>
+                    <button 
+                      key={srv.id}
+                      onClick={() => handlePlayRequest(srv.id)} 
+                      className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all outline-none cursor-pointer ${
+                        selectedServer === srv.id 
+                          ? 'bg-[#a855f7] text-white shadow-[0_0_15px_rgba(168,85,247,0.35)] scale-[1.02]' 
+                          : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {srv.name}
+                    </button>
                   ))}
+
+                  {/* Séparateur subtil */}
+                  <div className="hidden sm:block w-px h-6 bg-white/10 mx-1"></div>
+
+                  {/* Bouton Drapeau Signaler dans la même bulle */}
+                  <button
+                    type="button"
+                    onClick={() => openReportModal(selectedServer)}
+                    className="flex items-center gap-2 px-3.5 py-2.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 hover:text-yellow-300 border border-yellow-500/30 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-sm ml-auto sm:ml-0"
+                    title={lang === 'fr' ? "Signaler un serveur (pubs excessives ou panne)" : "Report server (ads or broken stream)"}
+                  >
+                    <Flag className="w-3.5 h-3.5" />
+                    <span>{lang === 'fr' ? 'Signaler' : 'Report'}</span>
+                  </button>
                 </div>
               </div>
 
