@@ -214,24 +214,47 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
               <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
             </button>
 
-            {/* 4. APPLICATIONS EXTERNES / LEVELUP STORE (COMING SOON) */}
+            {/* 3.5. ANIME HUB */}
+            <button
+              onClick={() => { onClose(); onNavigateCategory('anime'); }}
+              className={`w-full py-2.5 px-3 rounded-xl transition-all text-left flex items-center justify-between group cursor-pointer ${
+                currentCategory === 'anime'
+                  ? 'bg-white/10 text-white'
+                  : 'hover:bg-white/5'
+              }`}
+            >
+              <div className="flex items-center gap-3.5">
+                <LevelMovieLogo className="w-4 h-4 group-hover:scale-110 transition-transform" color="#ef4444" />
+                <div>
+                  <div className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
+                    LevelAnime
+                  </div>
+                  <div className="text-[10px] text-white/40">
+                    {lang === 'fr' ? 'Simulcasts, VF/VOSTFR & saisons' : 'Simulcasts, dubs & seasons'}
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+            </button>
+
+            {/* 4. APPLICATIONS EXTERNES / LEVELUP STORE */}
             <button
               onClick={() => { onClose(); onOpenExternalApps(); }}
               className="w-full py-2.5 px-3 rounded-xl hover:bg-white/5 transition-all text-left flex items-center justify-between group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <LayoutGrid className="w-4 h-4 text-white/50 group-hover:text-indigo-400 transition-colors" />
+                <LayoutGrid className="w-4 h-4 text-white/50 group-hover:text-purple-400 transition-colors" />
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
-                      {lang === 'fr' ? 'LevelUp App Store' : 'LevelUp App Store'}
+                      LevelUp App Store
                     </span>
-                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
-                      {lang === 'fr' ? 'Bientôt' : 'Soon'}
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
+                      Suite
                     </span>
                   </div>
                   <div className="text-[10px] text-white/40">
-                    {lang === 'fr' ? 'Bientôt disponible' : 'Coming soon'}
+                    {lang === 'fr' ? 'Écosystème & modules connectés' : 'Ecosystem & connected apps'}
                   </div>
                 </div>
               </div>

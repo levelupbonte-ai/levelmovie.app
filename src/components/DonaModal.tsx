@@ -716,11 +716,9 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                     ) : (
                       /* Message Dona : Réponse fluide sans bulle encadrée */
                       <div className="flex gap-3 max-w-[95%] sm:max-w-[90%] items-start">
-                        {/* Avatar Dona */}
-                        <div className="shrink-0 mt-1">
-                          <div className="w-7 h-7 rounded-xl bg-[#181128] border border-[#a855f7]/40 flex items-center justify-center shadow-[0_0_10px_rgba(168,85,247,0.3)]">
-                            <DonaStar className="w-4 h-4 drop-shadow-[0_0_6px_rgba(168,85,247,0.7)]" />
-                          </div>
+                        {/* Avatar Dona : Logo pur sans bulle ni boîte de fond */}
+                        <div className="shrink-0 mt-1 select-none flex items-center justify-center">
+                          <DonaStar className="w-5 h-5 drop-shadow-[0_0_10px_rgba(168,85,247,0.9)]" />
                         </div>
 
                         {/* Contenu Dona sans bulle / sans boîte de contour */}

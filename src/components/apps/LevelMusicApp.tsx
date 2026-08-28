@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Home, Search, Library, User, Play, Pause, SkipBack, SkipForward,
+  Home, Search, Library, Play, Pause, SkipBack, SkipForward,
   Heart, MoreHorizontal, ChevronDown, X, Plus, ListPlus, ListMusic,
   Share2, Mic2, Volume2, VolumeX, Shuffle, Repeat, Repeat1,
-  Music, LogOut, ArrowLeft, Clock, ChevronRight, Globe, ExternalLink,
+  Music, LogOut, ArrowLeft, Clock, ChevronRight, ExternalLink,
   Sparkles, Check
 } from 'lucide-react';
 import { 
@@ -12,6 +12,7 @@ import {
   fetchMusicPlaylistsSupabase, 
   createMusicPlaylistSupabase 
 } from '../../lib/supabase';
+import { InAppBrowserModal, InAppBrowserData } from './InAppBrowserModal';
 
 interface LevelMusicAppProps {
   onClose?: () => void;
@@ -111,12 +112,13 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
   const [repeatMode, setRepeatMode] = useState<'none' | 'all' | 'one'>('none');
 
   // UI state
-  const [view, setView] = useState<'home' | 'search' | 'library' | 'artist' | 'profile'>('home');
+  const [view, setView] = useState<'home' | 'search' | 'library' | 'artist'>('home');
   const [playerOpen, setPlayerOpen] = useState(false);
   const [optionsTrack, setOptionsTrack] = useState<Track | null>(null);
   const [sourcesTrack, setSourcesTrack] = useState<Track | null>(null);
   const [playlistModal, setPlaylistModal] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [inAppBrowserData, setInAppBrowserData] = useState<InAppBrowserData | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   // Data
@@ -151,9 +153,9 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
   const [artistName, setArtistName] = useState('');
   const [artistTracks, setArtistTracks] = useState<Track[]>([]);
   const [artistLoading, setArtistLoading] = useState(false);
-  const [prevView, setPrevView] = useState<'home' | 'search' | 'library' | 'profile'>('home');
+  const [prevView, setPrevView] = useState<'home' | 'search' | 'library'>('home');
 
-  const userId = user?.uid || 'user_local_levelmusic';
+  const userId = user?.uid || 'levelmovie_user';
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -409,22 +411,28 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
                 { name: 'YouTube', url: `https://www.youtube.com/results?search_query=${encodeURIComponent(sourcesTrack.artist + ' ' + sourcesTrack.name)}`, color: 'from-red-600 to-red-700' },
                 { name: 'Spotify', url: `https://open.spotify.com/search/${encodeURIComponent(sourcesTrack.artist + ' ' + sourcesTrack.name)}`, color: 'from-emerald-500 to-green-600' },
                 { name: 'Deezer', url: `https://www.deezer.com/search/${encodeURIComponent(sourcesTrack.artist + ' ' + sourcesTrack.name)}`, color: 'from-purple-500 to-indigo-600' }
-              ].map((link, idx) => (
-                <a
+              ].filter(l => Boolean(l.url)).map((link, idx) => (
+                <button
                   key={idx}
-                  href={link.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors"
+                  onClick={() => {
+                    setSourcesTrack(null);
+                    setInAppBrowserData({
+                      url: link.url!,
+                      title: `${sourcesTrack.name} — ${sourcesTrack.artist} (${link.name})`,
+                      source: link.name,
+                      img: sourcesTrack.imageLg || sourcesTrack.image
+                    });
+                  }}
+                  className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer text-left"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${link.color} flex items-center justify-center font-bold text-xs text-white shadow-md`}>
+                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-tr ${link.color} flex items-center justify-center font-bold text-xs text-white shadow-md`}>
                       {link.name.charAt(0)}
                     </div>
-                    <span className="text-xs font-semibold text-white">Ouvrir dans {link.name}</span>
+                    <span className="text-xs font-semibold text-white">Écouter sur {link.name}</span>
                   </div>
-                  <ExternalLink className="w-4 h-4 text-white/40" />
-                </a>
+                  <ChevronRight className="w-4 h-4 text-white/40" />
+                </button>
               ))}
             </div>
           </div>
@@ -482,25 +490,8 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
         </div>
       )}
 
-      {/* Main Top Header */}
-      <header className="h-14 px-4 sm:px-6 bg-[#07080d]/90 backdrop-blur-md border-b border-white/5 flex items-center justify-between shrink-0 z-20">
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView('home')}>
-          <div className="w-8 h-8 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
-            <Music className="w-4 h-4" />
-          </div>
-          <span className="font-black text-sm tracking-wider">
-            Level<span className="text-blue-500">Music</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setView(view === 'profile' ? 'home' : 'profile')}
-            className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs shadow-md border border-blue-400/40"
-          >
-            {(user?.displayName || 'U')[0].toUpperCase()}
-          </button>
-        </div>
-      </header>
+      {/* Top Gradient Accent Line */}
+      <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 opacity-90 shrink-0 shadow-[0_0_20px_rgba(59,130,246,0.5)]" />
 
       {/* Main Scrollable View Area */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 pb-28">
@@ -818,39 +809,6 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
           </div>
         )}
 
-        {/* VIEW 5: PROFILE */}
-        {view === 'profile' && (
-          <div className="space-y-6 max-w-xl mx-auto animate-in fade-in">
-            <h1 className="text-2xl font-black text-white">{isFr ? 'Profil & Réglages' : 'Profile & Settings'}</h1>
-            <div className="p-5 rounded-3xl bg-white/[0.03] border border-white/10 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center font-black text-xl text-white shadow-md">
-                {(user?.displayName || 'U')[0].toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-base font-bold text-white truncate">{user?.displayName || 'Utilisateur LevelUp'}</div>
-                <div className="text-xs text-white/40 truncate">{user?.email || 'Synchronisé via Supabase'}</div>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Globe className="w-4 h-4 text-blue-500" />
-                <span className="text-xs font-bold text-white">{isFr ? 'Langue' : 'Language'}</span>
-              </div>
-              <button
-                onClick={() => {
-                  const next = isFr ? 'en' : 'fr';
-                  setAppLang(next);
-                  localStorage.setItem('lm_lang', next);
-                }}
-                className="px-3 py-1.5 rounded-full bg-white/10 text-xs font-bold text-white hover:bg-white/20"
-              >
-                {isFr ? 'Passer en English' : 'Passer en Français'}
-              </button>
-            </div>
-          </div>
-        )}
-
       </div>
 
       {/* Mini Player */}
@@ -991,8 +949,7 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
         {[
           { id: 'home', icon: Home, label: isFr ? 'Accueil' : 'Home' },
           { id: 'search', icon: Search, label: isFr ? 'Recherche' : 'Search' },
-          { id: 'library', icon: Library, label: isFr ? 'Bibliothèque' : 'Library' },
-          { id: 'profile', icon: User, label: isFr ? 'Profil' : 'Profile' }
+          { id: 'library', icon: Library, label: isFr ? 'Bibliothèque' : 'Library' }
         ].map(tab => {
           const Icon = tab.icon;
           const active = view === tab.id;
@@ -1010,6 +967,15 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
           );
         })}
       </nav>
+
+      {/* In-App Browser Modal */}
+      {inAppBrowserData && (
+        <InAppBrowserModal
+          data={inAppBrowserData}
+          onClose={() => setInAppBrowserData(null)}
+          lang={appLang}
+        />
+      )}
 
     </div>
   );

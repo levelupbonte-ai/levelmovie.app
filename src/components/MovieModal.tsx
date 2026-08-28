@@ -630,25 +630,47 @@ export function MovieModal({
     e.preventDefault();
     if (!reportingServer) return;
     setIsSubmittingReport(true);
+    const serverObj = AVAILABLE_SERVERS.find(s => s.id === reportingServer);
+    const serverName = serverObj ? serverObj.name : reportingServer;
+    const reportPayload = {
+      serverId: reportingServer,
+      serverName,
+      reason: reportReason,
+      note: reportNote.trim(),
+      mediaId: movie?.id || null,
+      mediaTitle: movie?.title || movie?.name || '',
+      mediaType: typeStr,
+      season: isTV ? selectedSeason : null,
+      episode: isTV ? selectedEpisode : null,
+      userUid: user?.uid || 'anonymous',
+      userName: defaultUserName || 'Utilisateur',
+      createdAt: new Date().toISOString()
+    };
+
     try {
-      const serverObj = AVAILABLE_SERVERS.find(s => s.id === reportingServer);
-      const serverName = serverObj ? serverObj.name : reportingServer;
+      // 1. Post to backend reporting endpoint
+      fetch('/api/report-server', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reportPayload)
+      }).catch(() => {});
+
+      // 2. Save locally for instant persistence
+      try {
+        const localReports = JSON.parse(localStorage.getItem('levelmovie_server_reports') || '[]');
+        localReports.unshift(reportPayload);
+        localStorage.setItem('levelmovie_server_reports', JSON.stringify(localReports.slice(0, 50)));
+      } catch (_) {}
+
+      // 3. Try Firestore if available and authorized, catching permissions errors silently
       if (db && APP_ID) {
-        await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'server_reports'), {
-          serverId: reportingServer,
-          serverName,
-          reason: reportReason,
-          note: reportNote.trim(),
-          mediaId: movie?.id || null,
-          mediaTitle: movie?.title || movie?.name || '',
-          mediaType: typeStr,
-          season: isTV ? selectedSeason : null,
-          episode: isTV ? selectedEpisode : null,
-          userUid: user?.uid || 'anonymous',
-          userName: defaultUserName || 'Utilisateur',
-          createdAt: new Date().toISOString()
-        });
+        try {
+          await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'server_reports'), reportPayload);
+        } catch (_) {
+          // Fallback gracefully without console error spam
+        }
       }
+
       setShowReportAdsModal(false);
       showToast(
         lang === 'fr' 
@@ -656,8 +678,7 @@ export function MovieModal({
           : `Report sent for ${serverName}. Thank you for helping keep servers clean!`,
         'success'
       );
-    } catch (err) {
-      console.error('Error reporting server ads:', err);
+    } catch (_) {
       setShowReportAdsModal(false);
       showToast(
         lang === 'fr' ? 'Signalement pris en compte !' : 'Report recorded!',
@@ -1533,45 +1554,89 @@ export function MovieModal({
           )}
         </div>
 
-        {/* Colonne Droite: Chat */}
+        {/* Colonne Droite: Chat Live Watch Party Pro */}
         {!isMinimized && !isChatHidden && (
-          <div className="flex-1 lg:w-[350px] xl:w-[400px] flex flex-col bg-[#0c0c10] border-t lg:border-t-0 lg:border-l border-white/5 relative z-40 min-h-0 shadow-[-20px_0_40px_rgba(0,0,0,0.8)]">
-            <div className="p-2.5 bg-black/60 border-b border-white/5 backdrop-blur-md relative z-20 shrink-0">
-              <div className="flex items-center gap-2 w-full">
+          <div className="flex-1 lg:w-[360px] xl:w-[420px] flex flex-col bg-[#0b0b12] border-t lg:border-t-0 lg:border-l border-purple-500/20 relative z-40 min-h-0 shadow-[-25px_0_50px_rgba(0,0,0,0.9)]">
+            {/* Header du Salon Live */}
+            <div className="p-3 bg-[#0f0f18]/95 border-b border-white/10 backdrop-blur-xl relative z-20 shrink-0 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-600 flex items-center justify-center text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] shrink-0">
+                  <WatchPartySVG className="w-4 h-4 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-black text-white uppercase tracking-wider truncate">
+                      {partyData.roomName || 'Cinema Room'}
+                    </span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[9px] font-mono text-purple-300/80">
+                    <span>CODE: <strong className="text-white select-all">{partyId}</strong></span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (navigator.clipboard) {
+                          navigator.clipboard.writeText(partyId);
+                          if (showToast) showToast('Code du salon copié !', 'success');
+                        }
+                      }}
+                      className="hover:text-white transition-colors cursor-pointer"
+                      title="Copier le code"
+                    >
+                      <Copy className="w-2.5 h-2.5 inline ml-0.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowShareModal(true)}
-                  className="flex-1 bg-white/5 hover:bg-[#a855f7]/20 hover:border-[#a855f7]/40 border border-white/10 text-white text-[10px] font-black uppercase tracking-wider py-2 rounded-xl transition-all flex items-center justify-center gap-2 outline-none shadow-sm cursor-pointer active:scale-95"
+                  className="bg-gradient-to-r from-purple-600/30 to-pink-600/30 hover:from-purple-600 hover:to-pink-600 text-purple-200 hover:text-white border border-[#a855f7]/40 px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(168,85,247,0.25)] cursor-pointer active:scale-95"
+                  title="Inviter des amis"
                 >
-                  <Share2 className="w-3.5 h-3.5 text-[#c084fc]" />
-                  <span>Partager / Inviter</span>
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Inviter</span>
                 </button>
               </div>
             </div>
 
-            <div className="px-3 py-2 border-b border-white/5 flex gap-2 overflow-x-auto no-scrollbar shrink-0 items-center bg-black/20">
+            {/* Barre des Membres Connectés */}
+            <div className="px-3 py-2 border-b border-white/5 flex gap-2.5 overflow-x-auto no-scrollbar shrink-0 items-center bg-black/40">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-white/40 shrink-0 flex items-center gap-1">
+                <Users className="w-3 h-3 text-purple-400" />
+                {partyData.members?.length || 1}
+              </span>
+              <div className="h-4 w-px bg-white/10 shrink-0" />
               {partyData.members?.map((m: any) => {
                 const isMHost = m.uid === partyData.hostUid;
                 const isMMod = partyData.mods?.includes(m.uid);
                 return (
-                  <div key={m.uid} onClick={(e) => { e.stopPropagation(); openMemberMenu(m); }} className={`relative group flex flex-col items-center shrink-0 ${m.uid !== user?.uid ? 'cursor-pointer hover:opacity-80' : ''}`}>
-                    <div className={`w-8 h-8 rounded-full bg-[#151520] flex items-center justify-center font-black text-[12px] text-[#a855f7] border-[2px] shadow-sm overflow-hidden ${isMHost ? 'border-[#a855f7]' : (isMMod ? 'border-blue-500' : 'border-white/20')}`}>
+                  <div 
+                    key={m.uid} 
+                    onClick={(e) => { e.stopPropagation(); openMemberMenu(m); }} 
+                    className={`relative group flex items-center shrink-0 ${m.uid !== user?.uid ? 'cursor-pointer hover:scale-105' : ''} transition-transform`}
+                    title={`${m.name || 'Membre'}${isMHost ? ' (Hôte)' : isMMod ? ' (Modérateur)' : ''}`}
+                  >
+                    <div className={`w-7 h-7 rounded-full bg-[#181824] flex items-center justify-center font-black text-[11px] text-[#c084fc] border-[2px] shadow-sm overflow-hidden ${isMHost ? 'border-[#a855f7] shadow-[0_0_8px_rgba(168,85,247,0.5)]' : (isMMod ? 'border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'border-white/20')}`}>
                       {m.name?.charAt(0).toUpperCase() || '?'}
                     </div>
-                    {isMHost && <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#a855f7] rounded-full border-2 border-[#111116] flex items-center justify-center"><Star className="w-2 h-2 fill-white text-white"/></div>}
-                    {isMMod && !isMHost && <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 rounded-full border-2 border-[#111116] flex items-center justify-center"><ShieldCheck className="w-2 h-2 fill-white text-white"/></div>}
+                    {isMHost && <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#a855f7] rounded-full border border-[#111116] flex items-center justify-center"><Star className="w-2 h-2 fill-white text-white"/></div>}
+                    {isMMod && !isMHost && <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 rounded-full border border-[#111116] flex items-center justify-center"><ShieldCheck className="w-2 h-2 fill-white text-white"/></div>}
                   </div>
                 );
               })}
             </div>
 
-            <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1 no-scrollbar bg-gradient-to-t from-black/80 via-black/40 to-transparent min-h-0">
-              <div className="bg-[#a855f7]/10 border border-[#a855f7]/30 p-2.5 rounded-xl mb-3 flex gap-2.5 items-start shrink-0 shadow-inner">
-                <ShieldCheck className="w-4 h-4 text-[#a855f7] shrink-0 mt-0.5" />
-                <p className="text-[10px] md:text-[11px] text-[#a855f7] leading-snug">
-                  <strong className="font-black uppercase tracking-widest block mb-0.5">{t.partyInfoPinTitle}</strong>
+            {/* Fil des Messages */}
+            <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5 no-scrollbar bg-gradient-to-t from-black/90 via-black/50 to-transparent min-h-0">
+              <div className="bg-gradient-to-r from-purple-900/20 via-purple-600/10 to-transparent border border-purple-500/25 p-2.5 rounded-2xl mb-2 flex gap-2.5 items-start shrink-0 shadow-inner">
+                <ShieldCheck className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+                <div className="text-[10px] md:text-[11px] text-purple-200/90 leading-snug">
+                  <strong className="font-black uppercase tracking-wider block text-purple-300 mb-0.5">{t.partyInfoPinTitle}</strong>
                   {t.partyInfoPinText}
-                </p>
+                </div>
               </div>
 
               {partyData.messages?.filter((msg: any) => !partyData.muted?.some((m: any) => m.uid === msg.uid)).map((msg: any, i: number) => {
@@ -1586,13 +1651,13 @@ export function MovieModal({
                   else if (msg.action === 'EPISODE') sysText = `${t.sysEpisode} S${msg.season} E${msg.episode}`;
 
                   return (
-                    <div key={i} className={`flex items-start w-full group mb-2 p-1 -mx-1 rounded-lg ${msg.action === 'BAN' ? 'bg-red-500/10 border border-red-500/20' : ''}`}>
-                      <div className={`w-6 h-6 rounded-full border flex items-center justify-center mr-2.5 shrink-0 mt-0.5 shadow-sm ${msg.action === 'BAN' ? 'bg-red-500/20 border-red-500/30' : 'bg-[#a855f7]/20 border-[#a855f7]/30'}`}>
-                        {msg.action === 'BAN' ? <UserMinus className="w-3 h-3 text-red-500" /> : <ShieldCheck className="w-3 h-3 text-[#a855f7]" />}
+                    <div key={i} className={`flex items-start w-full group mb-1 p-1.5 rounded-xl transition-all ${msg.action === 'BAN' ? 'bg-red-500/15 border border-red-500/30' : 'bg-white/[0.02] border border-white/5'}`}>
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center mr-2 shrink-0 mt-0.5 shadow-sm ${msg.action === 'BAN' ? 'bg-red-500/20 border-red-500/30' : 'bg-purple-500/20 border-purple-500/30'}`}>
+                        {msg.action === 'BAN' ? <UserMinus className="w-2.5 h-2.5 text-red-400" /> : <ShieldCheck className="w-2.5 h-2.5 text-purple-400" />}
                       </div>
-                      <div className="flex-1 text-[12px] md:text-[13px] leading-snug drop-shadow-md break-words pt-0.5 text-white/60 italic">
-                        <span className={`font-bold mr-1 ${msg.action === 'BAN' ? 'text-red-500' : 'text-[#a855f7]'}`}>Alerte</span>
-                        <span className={msg.action === 'BAN' ? 'text-red-200/80' : 'text-white/60'}>{msg.name} {sysText}</span>
+                      <div className="flex-1 text-[11px] md:text-[12px] leading-snug break-words pt-0.5 text-white/70 italic">
+                        <span className={`font-black mr-1 uppercase text-[10px] tracking-wider ${msg.action === 'BAN' ? 'text-red-400' : 'text-purple-400'}`}>Système</span>
+                        <span className={msg.action === 'BAN' ? 'text-red-200' : 'text-white/70'}>{msg.name} {sysText}</span>
                       </div>
                     </div>
                   );
@@ -1602,23 +1667,25 @@ export function MovieModal({
                 const msgIsMod = partyData.mods?.includes(msg.uid);
 
                 return (
-                  <div key={i} className="flex items-start w-full group mb-2 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded-lg transition-colors chat-msg">
-                    <div onClick={(e) => { e.stopPropagation(); if (msg.uid !== user?.uid) openMemberMenu(msg); }} className="w-6 h-6 rounded-full bg-[#151520] flex items-center justify-center font-black text-[10px] text-[#a855f7] mr-2.5 shrink-0 border border-white/10 shadow-sm mt-0.5 hover:opacity-80">
+                  <div key={i} className="flex items-start w-full group cursor-pointer hover:bg-white/[0.04] p-1.5 -mx-1 rounded-xl transition-colors chat-msg">
+                    <div onClick={(e) => { e.stopPropagation(); if (msg.uid !== user?.uid) openMemberMenu(msg); }} className="w-6 h-6 rounded-full bg-[#181824] flex items-center justify-center font-black text-[10px] text-[#c084fc] mr-2.5 shrink-0 border border-purple-500/20 shadow-sm mt-0.5 hover:opacity-80">
                       {msg.name?.charAt(0).toUpperCase() || '?'}
                     </div>
 
-                    <div className="flex-1 text-[12px] md:text-[13px] leading-snug drop-shadow-md break-words pt-0.5" onClick={() => { if (msg.uid !== user?.uid) setReplyingTo({ name: msg.name, text: msg.text }); }}>
+                    <div className="flex-1 text-[12px] md:text-[13px] leading-snug break-words pt-0.5" onClick={() => { if (msg.uid !== user?.uid) setReplyingTo({ name: msg.name, text: msg.text }); }}>
                       {msg.replyTo && (
-                        <div className="text-[9px] text-white/40 mb-0.5 flex items-center gap-1.5 border-l-2 border-[#a855f7] pl-1.5">
-                          <Reply className="w-2.5 h-2.5" /> <span className="truncate max-w-[200px]"><strong className="text-white/60">{msg.replyTo.name}:</strong> {msg.replyTo.text}</span>
+                        <div className="text-[9px] text-white/50 mb-1 flex items-center gap-1.5 border-l-2 border-purple-500 pl-1.5 bg-white/[0.02] py-0.5 rounded-r">
+                          <Reply className="w-2.5 h-2.5 text-purple-400" /> <span className="truncate max-w-[200px]"><strong className="text-white/80">{msg.replyTo.name}:</strong> {msg.replyTo.text}</span>
                         </div>
                       )}
-                      <span className={`font-black mr-2 ${msgIsHost ? 'text-[#a855f7]' : (msgIsMod ? 'text-blue-400' : 'text-white/70')}`}>
-                        {msg.name}
-                        {msgIsHost && <span className="bg-[#a855f7]/20 text-[#a855f7] text-[6px] px-1 py-0.5 rounded uppercase font-black border border-[#a855f7]/30 ml-1.5 align-middle">{t.hostBadge}</span>}
-                        {msgIsMod && !msgIsHost && <span className="bg-blue-500/20 text-blue-400 text-[6px] px-1 py-0.5 rounded uppercase font-black border border-blue-500/30 ml-1.5 align-middle">{t.modBadge}</span>}
-                      </span>
-                      <span className="text-white drop-shadow-sm">{msg.text}</span>
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className={`font-black ${msgIsHost ? 'text-purple-400' : (msgIsMod ? 'text-blue-400' : 'text-white/80')}`}>
+                          {msg.name}
+                        </span>
+                        {msgIsHost && <span className="bg-purple-500/20 text-purple-300 text-[8px] px-1.5 py-0.2 rounded-full uppercase font-black border border-purple-500/30">👑 Hôte</span>}
+                        {msgIsMod && !msgIsHost && <span className="bg-blue-500/20 text-blue-300 text-[8px] px-1.5 py-0.2 rounded-full uppercase font-black border border-blue-500/30">🛡️ Mod</span>}
+                      </div>
+                      <span className="text-white/95 mt-0.5 block leading-relaxed">{msg.text}</span>
                     </div>
                   </div>
                 );
@@ -1626,17 +1693,35 @@ export function MovieModal({
               <div ref={chatEndRef} className="h-2 shrink-0" />
             </div>
 
+            {/* Quick Live Reactions Bar */}
+            <div className="px-3 py-1.5 bg-black/60 border-t border-white/5 flex items-center justify-between gap-1 shrink-0 overflow-x-auto no-scrollbar">
+              <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest mr-1 hidden sm:inline">Réagir</span>
+              {['🔥', '🍿', '😱', '❤️', '😂', '👏', '🚀', '👑'].map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => {
+                    handleSendPartyMessage(emoji, null);
+                  }}
+                  className="w-7 h-7 rounded-lg bg-white/5 hover:bg-purple-600/30 border border-white/10 hover:border-purple-500/40 text-sm flex items-center justify-center transition-all hover:scale-125 active:scale-95 cursor-pointer shadow-sm"
+                  title={`Envoyer ${emoji}`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+
             {/* Barre de saisie de message professionnelle */}
-            <div className="p-2.5 md:p-3 border-t border-white/10 bg-[#0c0c12]/95 backdrop-blur-md shrink-0 z-20" style={{ paddingBottom: kbOffset > 0 ? `${kbOffset + 10}px` : '' }}>
+            <div className="p-2.5 md:p-3 border-t border-white/10 bg-[#0c0c14]/95 backdrop-blur-xl shrink-0 z-20" style={{ paddingBottom: kbOffset > 0 ? `${kbOffset + 10}px` : '' }}>
               {replyingTo && (
-                <div className="flex items-center justify-between bg-white/5 px-3 py-1.5 rounded-t-xl border-x border-t border-[#a855f7]/30 -mt-7 mb-1.5 backdrop-blur-sm">
-                  <div className="text-[10px] text-white/70 truncate flex-1 flex items-center gap-1.5">
-                    <Reply className="w-3 h-3 text-[#c084fc]" /> <span className="font-bold text-white">{t.replyTo} {replyingTo.name}:</span> <span className="italic truncate">{replyingTo.text}</span>
+                <div className="flex items-center justify-between bg-purple-950/40 px-3 py-1.5 rounded-t-xl border-x border-t border-purple-500/40 -mt-7 mb-1.5 backdrop-blur-sm">
+                  <div className="text-[10px] text-white/80 truncate flex-1 flex items-center gap-1.5">
+                    <Reply className="w-3 h-3 text-[#c084fc]" /> <span className="font-bold text-white">{t.replyTo} {replyingTo.name}:</span> <span className="italic truncate text-purple-200">{replyingTo.text}</span>
                   </div>
                   <button type="button" onClick={() => setReplyingTo(null)} className="text-white/40 hover:text-white p-1 outline-none cursor-pointer"><X className="w-3.5 h-3.5" /></button>
                 </div>
               )}
-              <div className={`relative flex items-center bg-[#13131c] border border-white/15 focus-within:border-[#a855f7] ${replyingTo ? 'rounded-b-2xl rounded-tr-2xl' : 'rounded-2xl'} p-1.5 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)] focus-within:shadow-[0_0_20px_rgba(168,85,247,0.25)]`}>
+              <div className={`relative flex items-center bg-[#141420] border border-white/15 focus-within:border-purple-500 ${replyingTo ? 'rounded-b-2xl rounded-tr-2xl' : 'rounded-2xl'} p-1.5 transition-all shadow-[0_4px_25px_rgba(0,0,0,0.6)] focus-within:shadow-[0_0_25px_rgba(168,85,247,0.3)]`}>
                 <input 
                   type="text" 
                   maxLength={150}
@@ -1668,7 +1753,7 @@ export function MovieModal({
                     }
                   }} 
                   disabled={!chatInput.trim()}
-                  className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 disabled:from-white/5 disabled:to-white/5 disabled:text-white/20 text-white flex items-center justify-center transition-all shadow-[0_0_12px_rgba(168,85,247,0.3)] disabled:shadow-none active:scale-90 cursor-pointer disabled:cursor-not-allowed"
+                  className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 disabled:from-white/5 disabled:to-white/5 disabled:text-white/20 text-white flex items-center justify-center transition-all shadow-[0_0_15px_rgba(168,85,247,0.35)] disabled:shadow-none active:scale-90 cursor-pointer disabled:cursor-not-allowed"
                   title="Envoyer le message"
                 >
                   <ArrowUp className="w-4 h-4 stroke-[2.5]" />
@@ -1735,13 +1820,45 @@ export function MovieModal({
               </div>
             </div>
           ) : error ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#060608] text-center p-6 border-b border-[#a855f7]/30">
-              <LevelMovieLogo className="w-12 h-12 text-[#a855f7] mb-6 opacity-80" />
-              <div className="bg-red-500/10 p-4 rounded-full mb-4">
-                <AlertTriangle className="w-8 h-8 text-red-400" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#07070b] text-center p-6 border-b border-[#a855f7]/30 space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-[#a855f7]/30 flex items-center justify-center shadow-lg">
+                <Server className="w-7 h-7 text-[#c084fc]" />
               </div>
-              <h3 className="text-lg font-black mb-2 text-white uppercase tracking-widest drop-shadow-md">{t.notFound}</h3>
-              <p className="text-white/60 text-xs max-w-sm">{t.contentUnavailableDesc}</p>
+              <div className="max-w-md">
+                <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wider mb-1">
+                  {lang === 'fr' ? 'Flux en cours de synchronisation' : 'Stream Synchronizing'}
+                </h3>
+                <p className="text-white/60 text-xs leading-relaxed">
+                  {lang === 'fr' 
+                    ? 'Le serveur actuel met plus de temps que prévu à répondre. Vous pouvez basculer instantanément sur un autre miroir ou visionner la bande-annonce.' 
+                    : 'The current stream server is taking longer than expected. You can switch to another mirror server or watch the official trailer.'}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(false);
+                    setLoading(true);
+                    const nextServer = selectedServer === 'vidsrc_me' ? 'superembed' : selectedServer === 'superembed' ? 'vidlink' : 'vidsrc_me';
+                    setSelectedServer(nextServer);
+                    setTimeout(() => setLoading(false), 800);
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-[#a855f7] hover:opacity-95 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
+                >
+                  {lang === 'fr' ? 'Changer de serveur miroir' : 'Switch Mirror Server'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(false);
+                    setModalMode('trailer');
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
+                >
+                  {lang === 'fr' ? 'Bande-Annonce' : 'Trailer'}
+                </button>
+              </div>
             </div>
           ) : renderIframe()}
         </div>

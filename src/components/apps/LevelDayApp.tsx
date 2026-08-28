@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Search, MapPin, Wind, Droplets, Eye, Gauge, Thermometer,
   Sun, Moon, Cloud, AlertTriangle, Snowflake, X, RotateCw,
-  CloudRain, Bell, Lock, User, LogOut, Sparkles, Check
+  CloudRain, Sparkles, Check
 } from 'lucide-react';
 import { syncWeatherLocationSupabase } from '../../lib/supabase';
 
@@ -23,14 +23,12 @@ const AQI_MAP: Record<number, { l: string; c: string; bg: string }> = {
 
 export const LevelDayApp: React.FC<LevelDayAppProps> = ({ onClose, lang = 'fr', user }) => {
   const isFr = lang === 'fr';
-  const userId = user?.uid || 'user_local_weather';
+  const userId = user?.uid || 'levelmovie_user';
 
   const [unit, setUnit] = useState<'C' | 'F'>('C');
   const [cityQuery, setCityQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSearch, setShowSearch] = useState(false);
-  const [showNotifs, setShowNotifs] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
 
   const [data, setData] = useState<any | null>(null);
   const [astro, setAstro] = useState<any | null>(null);
@@ -120,94 +118,76 @@ export const LevelDayApp: React.FC<LevelDayAppProps> = ({ onClose, lang = 'fr', 
         <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-blue-900/20 rounded-full blur-3xl" />
       </div>
 
-      {/* Top Fixed Header */}
-      <header className="h-16 px-4 sm:px-6 bg-[#040816]/90 backdrop-blur-md border-b border-white/5 flex items-center justify-between shrink-0 z-20">
-        <div>
-          <div className="font-black text-lg tracking-wider text-white">
-            <span className="text-purple-400">LEVEL</span>DAY
-          </div>
-          <div className="text-[9px] font-mono text-purple-300/70 uppercase">WEATHER RADAR PRO</div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Unit switch */}
-          <div className="flex bg-white/5 p-1 rounded-xl border border-white/10 text-xs font-bold">
-            <button
-              onClick={() => setUnit('C')}
-              className={`px-2.5 py-1 rounded-lg transition-colors ${unit === 'C' ? 'bg-purple-600 text-white shadow-sm' : 'text-white/40 hover:text-white'}`}
-            >
-              °C
-            </button>
-            <button
-              onClick={() => setUnit('F')}
-              className={`px-2.5 py-1 rounded-lg transition-colors ${unit === 'F' ? 'bg-purple-600 text-white shadow-sm' : 'text-white/40 hover:text-white'}`}
-            >
-              °F
-            </button>
-          </div>
-
-          <button
-            onClick={() => loadWeather(lastCity)}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10"
-            title="Rafraîchir"
-          >
-            <RotateCw className={`w-4 h-4 ${loading ? 'animate-spin text-purple-400' : ''}`} />
-          </button>
-
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors ${
-              showSearch ? 'bg-purple-600 text-white border-purple-500' : 'bg-white/5 text-white/70 border-white/10 hover:text-white'
-            }`}
-          >
-            <Search className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Recherche</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Search Input Box */}
-      {showSearch && (
-        <div className="p-3 bg-[#080d20] border-b border-white/10 z-20 space-y-2">
-          <div className="relative">
-            <Search className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              ref={inputRef}
-              autoFocus
-              type="text"
-              value={cityQuery}
-              onChange={e => setCityQuery(e.target.value)}
-              placeholder="Ville, région, pays..."
-              className="w-full bg-black/50 border border-white/10 rounded-xl py-2 pl-9 pr-8 text-xs text-white outline-none focus:border-purple-500"
-            />
-            {cityQuery && (
-              <button onClick={() => setCityQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-          {suggestions.length > 0 && (
-            <div className="rounded-xl bg-[#0c122c] border border-white/10 overflow-hidden divide-y divide-white/5 shadow-xl">
-              {suggestions.map((s, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => pickCity(s.name)}
-                  className="p-2.5 px-4 text-xs hover:bg-white/5 flex items-center justify-between cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 text-purple-400" />
-                    <span className="font-bold text-white">{s.name}</span>
-                    <span className="text-white/40">{s.country}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Top Gradient Accent Line */}
+      <div className="h-1.5 w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 opacity-90 shrink-0 shadow-[0_0_20px_rgba(59,130,246,0.5)]" />
 
       {/* Main Weather Scroll View */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 space-y-6 max-w-4xl w-full mx-auto pb-16">
+
+        {/* Top Weather Control Bar (Search, Units, Refresh) */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#080d20]/80 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white/10 shadow-lg">
+          {/* City Search Bar */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={cityQuery}
+              onChange={e => setCityQuery(e.target.value)}
+              placeholder="Rechercher une ville, région, pays..."
+              className="w-full bg-black/40 border border-white/10 rounded-xl py-2 pl-9 pr-8 text-xs text-white outline-none focus:border-cyan-500 transition-colors"
+            />
+            {cityQuery && (
+              <button onClick={() => setCityQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 z-30 rounded-xl bg-[#0c122c] border border-white/10 overflow-hidden divide-y divide-white/5 shadow-2xl">
+                {suggestions.map((s, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => pickCity(s.name)}
+                    className="p-2.5 px-4 text-xs hover:bg-white/5 flex items-center justify-between cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5 text-cyan-400" />
+                      <span className="font-bold text-white">{s.name}</span>
+                      <span className="text-white/40">{s.country}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Unit Toggle & Refresh */}
+          <div className="flex items-center justify-end gap-2 shrink-0">
+            <div className="flex bg-black/40 p-1 rounded-xl border border-white/10 text-xs font-bold">
+              <button
+                onClick={() => setUnit('C')}
+                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${unit === 'C' ? 'bg-cyan-600 text-white shadow-sm' : 'text-white/40 hover:text-white'}`}
+              >
+                °C
+              </button>
+              <button
+                onClick={() => setUnit('F')}
+                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${unit === 'F' ? 'bg-cyan-600 text-white shadow-sm' : 'text-white/40 hover:text-white'}`}
+              >
+                °F
+              </button>
+            </div>
+
+            <button
+              onClick={() => loadWeather(lastCity)}
+              className="p-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+              title="Rafraîchir la météo"
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-cyan-400' : ''}`} />
+              <span className="hidden sm:inline">Actualiser</span>
+            </button>
+          </div>
+        </div>
 
         {err && (
           <div className="p-3 rounded-2xl bg-red-950/40 border border-red-500/30 text-xs text-red-300 flex items-center gap-2">

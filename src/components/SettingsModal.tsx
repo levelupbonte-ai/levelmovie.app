@@ -1428,35 +1428,47 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       case 'store':
         return (
           <div className="space-y-6 animate-in fade-in duration-150">
-            <div className="border-b border-white/10 pb-3">
-              <h3 className="text-xl font-black text-white uppercase tracking-wider">
-                LevelUp Store • {lang === 'fr' ? 'Écosystème & Avantages' : 'App Ecosystem & Perks'}
-              </h3>
-              <p className="text-xs text-white/50 mt-1">
-                {lang === 'fr' 
-                  ? 'Gérez vos codes d\'accès, avantages VIP et modules de l\'écosystème LevelUp.' 
-                  : 'Manage promo codes, VIP perks and connected LevelUp modules.'}
-              </p>
+            <div className="border-b border-white/10 pb-3 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-black text-white uppercase tracking-wider">
+                    LevelUp Store & Suite
+                  </h3>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
+                    Architecture Pro
+                  </span>
+                </div>
+                <p className="text-xs text-white/50 mt-1">
+                  {lang === 'fr' 
+                    ? 'Supervision des services connectés, synchronisation Cloud Supabase et privilèges de l’écosystème LevelUp.' 
+                    : 'Manage connected services, Supabase cloud sync and LevelUp ecosystem privileges.'}
+                </p>
+              </div>
             </div>
 
             <div className="space-y-4">
-              {/* Carte Code Promo / Pass VIP */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+              {/* VIP Activation Card */}
+              <div className="bg-gradient-to-r from-purple-950/40 via-purple-900/20 to-black/40 border border-purple-500/30 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3 relative overflow-hidden">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-white flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-amber-400" />
-                    <span>{lang === 'fr' ? 'Activer un Pass VIP ou Code Créateur' : 'Activate VIP Pass or Creator Code'}</span>
+                    <span>{lang === 'fr' ? 'Clé d’activation VIP & Accès Privilège' : 'VIP License & Privilege Access'}</span>
                   </span>
-                  {isVipActive && (
-                    <span className="text-xs font-black text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2.5 py-1 rounded-full">
-                      ✓ VIP ACTIVÉ
+                  {isVipActive ? (
+                    <span className="text-xs font-black text-amber-300 bg-amber-400/15 border border-amber-400/40 px-3 py-1 rounded-full shadow-[0_0_12px_rgba(251,191,36,0.25)] flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5" />
+                      VIP PRO ACTIF
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-mono font-semibold text-white/40 bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
+                      Standard
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-white/50">
+                <p className="text-xs text-white/70 leading-relaxed">
                   {lang === 'fr' 
-                    ? 'Débloquez des badges exclusifs et un accès prioritaire aux serveurs de streaming (Essayez : VIP2026, LEVELUP ou CINEMA)' 
-                    : 'Unlock exclusive badges and prioritized server access (Try: VIP2026, LEVELUP or CINEMA)'}
+                    ? 'Débloquez le routage haute priorité, la bande passante sans compression et la certification communautaire.' 
+                    : 'Unlock high-priority stream routing, lossless audio feeds and certified community badges.'}
                 </p>
 
                 <div className="flex gap-2 pt-1">
@@ -1464,47 +1476,57 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     type="text"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
-                    placeholder={lang === 'fr' ? 'Entrez un code (ex: VIP2026)' : 'Enter code (e.g. VIP2026)'}
-                    className="flex-1 bg-[#151624] border border-white/20 rounded-full text-white text-xs px-4 py-2.5 outline-none focus:border-[#a855f7] uppercase font-mono tracking-wider"
+                    placeholder={lang === 'fr' ? 'Clé de licence (ex: VIP2026, CINEMA)' : 'License key (e.g. VIP2026, CINEMA)'}
+                    className="flex-1 bg-black/60 border border-white/20 focus:border-[#a855f7] rounded-xl text-white text-xs px-4 py-2.5 outline-none uppercase font-mono tracking-wider transition-colors shadow-inner"
                   />
                   <button
                     type="button"
                     onClick={handleRedeemCode}
-                    className="px-5 py-2.5 rounded-full bg-[#a855f7] hover:bg-[#9333ea] text-white text-xs font-black uppercase tracking-wider transition-colors shadow-md cursor-pointer shrink-0"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#a855f7] to-[#7c3aed] hover:from-[#9333ea] hover:to-[#6d28d9] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-98 cursor-pointer shrink-0"
                   >
                     {lang === 'fr' ? 'Activer' : 'Redeem'}
                   </button>
                 </div>
               </div>
 
-              {/* Modules de l'écosystème */}
+              {/* Ecosystem Micro-services */}
               <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs font-bold text-white/60 px-1">
+                  <span>{lang === 'fr' ? 'Modules connectés de la Suite' : 'Connected Suite Modules'}</span>
+                  <span className="font-mono text-[11px] text-purple-300">v2.6 High-Performance</span>
+                </div>
+
                 {[
-                  { name: 'LevelMovie', desc: 'Plateforme de streaming & Watch Party', ver: 'v2.5.0', size: '18.4 MB', active: true },
-                  { name: 'Dona IA Assistant', desc: 'IA générative cinéphile & recommandations', ver: 'v1.8.2', size: '12.1 MB', active: true },
-                  { name: 'LevelMusic', desc: 'Lecteur audio & bandes originales de films', ver: 'v1.4.0', size: '8.7 MB', active: isVipActive },
-                  { name: 'LevelStudio Engine', desc: 'Gestionnaire de salons et encodage vidéo', ver: 'v2.0.1', size: '15.0 MB', active: true },
-                  { name: 'LevelGame Hub', desc: 'Quiz cinéma interactifs et mini-jeux multijoueurs', ver: 'v1.0.4', size: '6.2 MB', active: false },
+                  { name: 'LevelMovie Engine', desc: 'Moteur de streaming adaptatif multi-sources & Watch Party en temps réel', ver: 'v2.6.0', latency: '24ms', state: 'Opérationnel', active: true },
+                  { name: 'Level IA & Dona', desc: 'Intelligence cinéphile avancée propulsée par cluster multi-clés Gemini', ver: 'v2.6.0', latency: '35ms', state: 'Opérationnel', active: true },
+                  { name: 'LevelMusic Hi-Fi', desc: 'Lecteur audio HD & indexation automatique des bandes originales de films', ver: 'v2.4.1', latency: '40ms', state: isVipActive ? 'Opérationnel' : 'Pass VIP requis', active: isVipActive },
+                  { name: 'Oppa Media Hub', desc: 'Flux d’actualités cinéma en direct, Reels vidéo & Stories immersives', ver: 'v2.2.0', latency: '28ms', state: 'Opérationnel', active: true },
+                  { name: 'LevelDay Radar', desc: 'Station météorologique haute précision et arc astronomique dynamique', ver: 'v2.1.0', latency: '19ms', state: 'Opérationnel', active: true },
                 ].map((app, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl border border-white/10 bg-white/[0.02] flex items-center justify-between gap-3 shadow-sm">
-                    <div>
+                  <div key={idx} className="p-4 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-colors flex items-center justify-between gap-3 shadow-sm">
+                    <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-white">{app.name}</span>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-white/70">{app.ver}</span>
-                        {app.active && (
-                          <span className="text-[10px] text-emerald-400 font-bold">• Actif</span>
-                        )}
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          app.active ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                        }`}>
+                          • {app.state}
+                        </span>
                       </div>
-                      <p className="text-xs text-white/50 mt-1">{app.desc}</p>
-                      <span className="text-[10px] font-mono text-white/40">{app.size}</span>
+                      <p className="text-xs text-white/50">{app.desc}</p>
+                      <div className="flex items-center gap-3 text-[10px] font-mono text-white/40">
+                        <span>Latence : <strong className="text-emerald-400">{app.latency}</strong></span>
+                        <span>Protocole : <strong>TLS 1.3 / Supabase WSS</strong></span>
+                      </div>
                     </div>
 
                     <button
                       type="button"
-                      onClick={() => showToast(`Module ${app.name} vérifié (${app.ver})`, 'info')}
-                      className="px-4 py-1.5 rounded-full border border-white/20 hover:border-white/50 text-xs font-bold uppercase transition-colors shrink-0 cursor-pointer"
+                      onClick={() => showToast(`Module ${app.name} diagnostiqué : statut optimal`, 'info')}
+                      className="px-4 py-2 rounded-xl border border-white/15 hover:border-purple-400 bg-white/5 hover:bg-purple-600/20 text-xs font-bold text-white/80 hover:text-white uppercase transition-all shrink-0 cursor-pointer"
                     >
-                      {lang === 'fr' ? 'Vérifier' : 'Check'}
+                      {lang === 'fr' ? 'Diagnostiquer' : 'Inspect'}
                     </button>
                   </div>
                 ))}

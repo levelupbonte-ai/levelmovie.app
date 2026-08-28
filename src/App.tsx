@@ -34,6 +34,8 @@ import { AuthModal } from './components/AuthModal';
 import { DonaModal } from './components/DonaModal';
 import { CinematicPosterWall } from './components/CinematicPosterWall';
 import { FooterDisclaimer } from './components/FooterDisclaimer';
+import { NetworkOfflineManager } from './components/NetworkOfflineManager';
+import { LevelAnimeApp } from './components/apps/LevelAnimeApp';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
 // Regional Automatic Language Detection:
@@ -1152,8 +1154,8 @@ export default function App() {
           <button onClick={() => setCurrentCategory('party')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'party' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
             <Users className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.partyTab}</span>
           </button>
-          <button onClick={() => setCurrentCategory('movie')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'movie' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-            <Clapperboard className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.movies}</span>
+          <button onClick={() => setCurrentCategory('anime')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'anime' && !showSidebar ? 'text-red-500' : 'text-white/50 hover:text-white'}`}>
+            <LevelMovieLogo className="w-5 h-5" color="#ef4444" /> <span className="text-[9px] font-bold uppercase tracking-widest">Anime</span>
           </button>
           <button onClick={() => setShowSidebar(true)} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
             <Menu className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.menu || 'Menu'}</span>
@@ -1184,20 +1186,57 @@ export default function App() {
           </div>
         </div>
       ) : currentCategory === 'party' ? (
-        <div className="pt-24 px-4 md:px-14 pb-24 min-h-screen relative z-30 w-full max-w-[2000px] mx-auto">
-          <div className="w-full bg-gradient-to-br from-[#a855f7]/10 via-transparent to-transparent border border-white/10 rounded-[2rem] p-6 md:p-10 backdrop-blur-md shadow-2xl mb-8">
-            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
-              <div className="w-16 h-16 shrink-0 rounded-2xl bg-[#a855f7]/20 flex items-center justify-center border border-[#a855f7]/30 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
-                <WatchPartySVG className="w-8 h-8 text-[#a855f7]" />
+        <div className="pt-24 px-4 md:px-14 pb-24 min-h-screen relative z-30 w-full max-w-[2000px] mx-auto space-y-8 animate-in fade-in duration-300">
+          {/* Executive Watch Party Cinema Lounge Header */}
+          <div className="relative w-full rounded-[2.5rem] p-6 sm:p-10 bg-gradient-to-r from-[#170a2c] via-[#0d0d1a] to-[#080812] border border-[#a855f7]/30 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(168,85,247,0.15)] overflow-hidden">
+            <div className="absolute -top-32 -right-32 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-pink-600/15 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+              {/* Left Info & Live Badges */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-3xl bg-gradient-to-br from-[#a855f7]/30 via-purple-600/20 to-pink-500/20 flex items-center justify-center border border-[#a855f7]/50 shadow-[0_0_30px_rgba(168,85,247,0.35)]">
+                  <WatchPartySVG className="w-9 h-9 sm:w-11 sm:h-11 text-[#c084fc] animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#a855f7]/20 border border-[#a855f7]/40 text-[#c084fc] text-[11px] font-mono font-bold uppercase tracking-wider">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                      {lang === 'fr' ? 'Cinema Live Rooms' : 'Cinema Live Rooms'}
+                    </span>
+                    <span className="text-[10px] font-mono text-white/50 bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
+                      v2.6 Ultra-Sync
+                    </span>
+                  </div>
+
+                  <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
+                    {t.joinPartyTitle}
+                  </h2>
+                  <p className="text-white/70 text-xs sm:text-sm max-w-xl leading-relaxed">
+                    {t.joinPartyDesc}
+                  </p>
+
+                  {/* Feature Pills */}
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                    <span className="text-[10px] font-semibold text-white/60 bg-white/[0.04] border border-white/10 px-2.5 py-1 rounded-xl">
+                      ⚡ {lang === 'fr' ? 'Sync sub-seconde' : 'Sub-second sync'}
+                    </span>
+                    <span className="text-[10px] font-semibold text-white/60 bg-white/[0.04] border border-white/10 px-2.5 py-1 rounded-xl">
+                      🔒 {lang === 'fr' ? 'Salons chiffrés' : 'Encrypted rooms'}
+                    </span>
+                    <span className="text-[10px] font-semibold text-white/60 bg-white/[0.04] border border-white/10 px-2.5 py-1 rounded-xl">
+                      💬 {lang === 'fr' ? 'Chat & Émojis direct' : 'Live chat & reactions'}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 text-center md:text-left w-full">
-                <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest mb-1">{t.joinPartyTitle}</h2>
-                <p className="text-white/50 text-xs md:text-sm">{t.joinPartyDesc}</p>
-              </div>
-              <div className="flex items-center w-full md:w-auto min-w-[280px] max-w-md bg-black/60 border border-white/15 rounded-2xl md:rounded-full p-1.5 shadow-inner focus-within:border-[#a855f7] transition-colors">
+
+              {/* Right Join Code Form */}
+              <div className="w-full lg:w-auto shrink-0 flex flex-col sm:flex-row items-center gap-2.5 bg-black/70 border border-purple-500/30 p-2 sm:p-2.5 rounded-2xl shadow-2xl focus-within:border-[#a855f7] focus-within:shadow-[0_0_25px_rgba(168,85,247,0.25)] transition-all">
                 <input 
                   type="text" 
                   id="partyCodeInput"
+                  maxLength={12}
                   placeholder={t.partyCodePlaceholder}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -1206,15 +1245,16 @@ export default function App() {
                       if (code) triggerJoinParty(code);
                     }
                   }}
-                  className="flex-1 min-w-0 bg-transparent px-3.5 py-2 text-white font-mono text-xs outline-none uppercase tracking-[0.1em] placeholder:text-white/40"
+                  className="w-full sm:w-56 bg-transparent px-4 py-2.5 text-white font-mono text-sm uppercase tracking-widest outline-none placeholder:text-white/30"
                 />
                 <button 
+                  type="button"
                   onClick={() => {
                     const inputEl = document.getElementById('partyCodeInput') as HTMLInputElement;
                     const code = inputEl ? inputEl.value.trim().toUpperCase() : '';
                     if (code) triggerJoinParty(code);
                   }}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white px-4 md:px-5 py-2 rounded-xl md:rounded-full font-black uppercase tracking-wider transition-all active:scale-95 text-[11px] shadow-[0_0_15px_rgba(168,85,247,0.4)] shrink-0 cursor-pointer whitespace-nowrap"
+                  className="w-full sm:w-auto bg-gradient-to-r from-purple-600 via-[#a855f7] to-pink-600 hover:opacity-95 text-white px-6 py-3 rounded-xl font-black uppercase tracking-wider transition-all active:scale-95 text-xs shadow-[0_0_20px_rgba(168,85,247,0.4)] shrink-0 cursor-pointer whitespace-nowrap"
                 >
                   {t.joinBtn}
                 </button>
@@ -1222,7 +1262,15 @@ export default function App() {
             </div>
           </div>
 
-          <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-widest border-l-4 border-[#a855f7] pl-3 mb-6">{t.watchPartyMovies}</h2>
+          <div className="flex items-center justify-between pt-2">
+            <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-widest border-l-4 border-[#a855f7] pl-3">
+              {t.watchPartyMovies}
+            </h2>
+            <span className="text-[11px] font-mono text-purple-300/70 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full hidden sm:inline-block">
+              {lang === 'fr' ? 'Cliquez sur « + » pour lancer un salon' : 'Click « + » to host a room'}
+            </span>
+          </div>
+
           <main className="relative space-y-8 md:space-y-10">
             {rowsConfig.map((row, i) => (
               <Row key={i} title={row.title} fetchUrl={row.url} isLarge={row.large} shuffle={row.shuffle} onMovieClick={(m) => openModal(m, 'info')} pageSeed={pageSeed} parentalFilter={parentalFilter} quickAction={{ icon: Plus, label: t.createPartyBtn, onClick: (m) => triggerCreateParty(m) }} />
@@ -1290,6 +1338,17 @@ export default function App() {
               lang={langCode}
             />
           </main>
+        </div>
+      ) : currentCategory === 'anime' ? (
+        <div className="pt-14 md:pt-16 min-h-screen">
+          <LevelAnimeApp
+            lang={lang}
+            user={user}
+            userPhoto={userPhoto}
+            userName={userName}
+            userEmail={userEmail}
+            showToast={(msg, type) => showToast(msg, type)}
+          />
         </div>
       ) : (
         <>
@@ -1609,6 +1668,14 @@ export default function App() {
           setIsMinimized={setIsPartyMinimized}
         />
       )}
+
+      {/* GESTIONNAIRE RÉSEAU & MODE HORS-LIGNE PRO */}
+      <NetworkOfflineManager
+        lang={lang}
+        onOpenWatchlist={() => setCurrentCategory('watchlist')}
+        onOpenHistory={() => setCurrentCategory('history')}
+        showToast={showToast}
+      />
     </div>
   );
 }

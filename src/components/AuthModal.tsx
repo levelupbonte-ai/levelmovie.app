@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Mail, Key, ArrowLeft, Check, Sparkles, AlertCircle, Eye, EyeOff,
   User, UserPlus, LogOut, ArrowRight, ShieldCheck, Star, Flame, Lock,
-  ChevronRight, Camera, Upload, Image as ImageIcon, AtSign, CheckCircle2, X
+  ChevronRight, Camera, Upload, Image as ImageIcon, AtSign, CheckCircle2, X,
+  RotateCw
 } from 'lucide-react';
 import { LevelMovieLogo, DEFAULT_AVATARS, AvatarPreset } from '../constants';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -64,31 +65,69 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [errorMsg, setErrorMsg] = useState('');
   const [legalModal, setLegalModal] = useState<'terms' | 'privacy' | null>(null);
 
-  // Poster Carousel Showcase (right side)
+  // Poster Carousel Showcase (right side - dynamic TMDB API powered)
   const [posterIndex, setPosterIndex] = useState(0);
+  const [dynamicPosters, setDynamicPosters] = useState<Array<{ title: string; bg: string; rating: string; overview?: string }>>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const onboardFileInputRef = useRef<HTMLInputElement>(null);
 
   const isFr = lang === 'fr';
 
-  const showcasePosters = [
+  const defaultShowcasePosters = [
     {
       title: isFr ? 'L’univers cinéma sans limites' : 'Limitless Cinema Streaming',
-      bg: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1200&q=80',
-      rating: '4.9/5'
+      bg: 'https://image.tmdb.org/t/p/w1280/8YFL5QQVPy3AgrEQxNYVSgiPEbe.jpg',
+      rating: '8.9/10',
+      overview: 'Découvrez des milliers de films en 4K et organisez des soirées cinéma inoubliables.'
+    },
+    {
+      title: isFr ? 'Animation Japonaise & Shōnen' : 'Japanese Anime & Masterpieces',
+      bg: 'https://image.tmdb.org/t/p/w1280/2u0w3w9x7h2UoG9xW6v5i9kG8mC.jpg',
+      rating: '9.2/10',
+      overview: 'Les meilleurs animes, simulcasts et films d’animation en haute fidélité.'
     },
     {
       title: isFr ? 'Salons Watch Party synchronisés' : 'Synced Live Watch Parties',
-      bg: 'https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?auto=format&fit=crop&w=1200&q=80',
-      rating: '5.0/5'
+      bg: 'https://image.tmdb.org/t/p/w1280/xOMo8BRK7PfcJv9JCnx7s520QIq.jpg',
+      rating: '9.0/10',
+      overview: 'Regardez vos films préférés ensemble avec vos amis en temps réel.'
     },
     {
-      title: isFr ? 'Catalogue 4K & Séries Cultes' : '4K Catalog & Cult Movies',
-      bg: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80',
-      rating: '4.8/5'
+      title: isFr ? 'Science-Fiction & Blockbusters' : 'Sci-Fi & Blockbusters',
+      bg: 'https://image.tmdb.org/t/p/w1280/xJHokMbljvjADYdit5fK5VQsXEG.jpg',
+      rating: '8.8/10',
+      overview: 'Voyagez à travers des univers spectaculaires et des sagas cultes.'
+    },
+    {
+      title: isFr ? 'Thrillers & Grands Classiques' : 'Thrillers & Cult Classics',
+      bg: 'https://image.tmdb.org/t/p/w1280/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg',
+      rating: '8.7/10',
+      overview: 'Suspense palpitant, réalisation d’exception et acteurs légendaires.'
+    },
+    {
+      title: isFr ? 'Séries TV & Épopées Mondiales' : 'TV Series & Epic Sagas',
+      bg: 'https://image.tmdb.org/t/p/w1280/z7BNk13y0eA636uV4j9lB217cK.jpg',
+      rating: '9.1/10',
+      overview: 'Toutes les saisons et épisodes disponibles en streaming instantané.'
     }
   ];
+
+  // Fetch real TMDB dynamic showcase posters from our server API
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/tmdb/showcase')
+      .then(res => res.json())
+      .then(data => {
+        if (isMounted && Array.isArray(data) && data.length >= 5) {
+          setDynamicPosters(data);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
+  const showcasePosters = dynamicPosters.length >= 5 ? dynamicPosters : defaultShowcasePosters;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -464,9 +503,38 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
 
                 {errorMsg && (
-                  <div className="mb-4 p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2 shadow-sm">
-                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                    <span>{errorMsg}</span>
+                  <div className="mb-5 p-4 rounded-2xl bg-rose-950/70 border border-rose-500/40 text-rose-200 text-xs shadow-lg space-y-2 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-rose-300">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                        <span>{isFr ? 'Oups ! Connexion indisponible' : 'Oops! Connection unavailable'}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setErrorMsg('')}
+                        className="text-white/40 hover:text-white text-xs cursor-pointer p-0.5"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <p className="text-white/80 text-[11px] leading-relaxed">
+                      {errorMsg.includes('Failed to fetch') || errorMsg.includes('network') || errorMsg.includes('indisponible')
+                        ? (isFr ? 'Impossible d’établir la connexion avec les serveurs sécurisés. Veuillez vérifier votre réseau Internet et essayer de vous reconnecter.' : 'Unable to connect to secure servers. Please check your network and try reconnecting.')
+                        : errorMsg}
+                    </p>
+                    <div className="pt-1 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setErrorMsg('');
+                          handleGoogleAuth();
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                      >
+                        <RotateCw className="w-3 h-3" />
+                        <span>{isFr ? 'Essayer de vous connecter' : 'Try reconnecting'}</span>
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -527,9 +595,38 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
 
                 {errorMsg && (
-                  <div className="mb-4 p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2 shadow-sm">
-                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                    <span>{errorMsg}</span>
+                  <div className="mb-5 p-4 rounded-2xl bg-rose-950/70 border border-rose-500/40 text-rose-200 text-xs shadow-lg space-y-2 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-rose-300">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                        <span>{isFr ? 'Oups ! Connexion indisponible' : 'Oops! Connection unavailable'}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setErrorMsg('')}
+                        className="text-white/40 hover:text-white text-xs cursor-pointer p-0.5"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <p className="text-white/80 text-[11px] leading-relaxed">
+                      {errorMsg.includes('Failed to fetch') || errorMsg.includes('network') || errorMsg.includes('indisponible')
+                        ? (isFr ? 'Impossible d’établir la connexion avec les serveurs sécurisés. Veuillez vérifier votre réseau Internet et essayer de vous reconnecter.' : 'Unable to connect to secure servers. Please check your network and try reconnecting.')
+                        : errorMsg}
+                    </p>
+                    <div className="pt-1 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setErrorMsg('');
+                          handleLoginSubmit({ preventDefault: () => {} } as any);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                      >
+                        <RotateCw className="w-3 h-3" />
+                        <span>{isFr ? 'Essayer de vous connecter' : 'Try reconnecting'}</span>
+                      </button>
+                    </div>
                   </div>
                 )}
 

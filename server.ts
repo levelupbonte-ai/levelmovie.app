@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
+import Parser from 'rss-parser';
 
 dotenv.config();
 
@@ -20,6 +21,25 @@ app.use(express.json({ limit: '10mb' }));
 // =========================================================================
 // INTELLIGENT GEMINI MULTI-KEY ROTATION & LOAD BALANCER ENGINE
 // =========================================================================
+const USER_DIRECT_GEMINI_KEYS = [
+  "AIzaSyBrzdpiPf0OVq7CHzS7ZS7ryz-7aCyGTDo",
+  "AIzaSyCEZ8tO1Yd-40ITlZup_K50R2xXr05N_1M",
+  "AIzaSyC9no26dvEU67AgUZMQ2kSz8VysVlkzP9E",
+  "AIzaSyDftYPuC0Sc2DwvN-EdgARwFofPUGt7b-s",
+  "AIzaSyA8H-34-IfDdS1ZspY-cP21fWoYhUYRH9o",
+  "AIzaSyBIwWQALsWIyn44mhUAoIwu_VZqeeQ9dNc",
+  "AIzaSyAs_JgK9_zYXoc1fEMO5K08BtNpitjXNf8",
+  "AIzaSyB5OGPQR7AXdTkXfZOZfkSVh5J0P23sLnQ",
+  "AIzaSyBl8j0fi9i5rdDik71ZSlM91-7VTYdsuH0",
+  "AIzaSyD-aIjklxhbYwoy9-aZhHVx14bk6vA_XkE",
+  "AIzaSyA26zYrBflQVYMTLkJMO4QpuYHBiQMZ3iU",
+  "AIzaSyBO4sPAqXgOZFJzoz6P6jhnu7BgTvSqj68",
+  "AIzaSyCtDyjC-M97e4YVVge8QcqLMAC5VwBItBo",
+  "AIzaSyAwi9ICJv2OrF6VQoD1nG_hzAq9RiGvu3w",
+  "AIzaSyDhbp9J_JE_hwTj-LDj0QQ8yhSAs-qgs4Y",
+  "AIzaSyCHgmrl5iRGXcWTS_w0xVBwjnU81Ni9dKM"
+];
+
 class GeminiKeyManager {
   private keys: string[] = [];
   private currentIndex = 0;
@@ -37,12 +57,19 @@ class GeminiKeyManager {
   public refreshKeys(): void {
     const rawKeys: string[] = [];
 
-    // 1. Single GEMINI_API_KEY
+    // 1. Direct User Cluster Keys (Highest priority & guaranteed availability)
+    for (const directKey of USER_DIRECT_GEMINI_KEYS) {
+      if (directKey && directKey.trim().length > 10) {
+        rawKeys.push(directKey.trim());
+      }
+    }
+
+    // 2. Single GEMINI_API_KEY from environment
     if (process.env.GEMINI_API_KEY) {
       rawKeys.push(process.env.GEMINI_API_KEY.trim());
     }
 
-    // 2. Comma / Semicolon / Space / Newline separated GEMINI_API_KEYS
+    // 3. Comma / Semicolon / Space / Newline separated GEMINI_API_KEYS
     if (process.env.GEMINI_API_KEYS) {
       const split = process.env.GEMINI_API_KEYS.split(/[\s,;\n]+/);
       for (const k of split) {
@@ -50,8 +77,8 @@ class GeminiKeyManager {
       }
     }
 
-    // 3. Individual GEMINI_API_KEY_1 ... GEMINI_API_KEY_25
-    for (let i = 1; i <= 25; i++) {
+    // 4. Individual GEMINI_API_KEY_1 ... GEMINI_API_KEY_30
+    for (let i = 1; i <= 30; i++) {
       const envKey = process.env[`GEMINI_API_KEY_${i}`];
       if (envKey && envKey.trim()) {
         rawKeys.push(envKey.trim());
@@ -74,7 +101,7 @@ class GeminiKeyManager {
       }
     }
 
-    console.log(`[GeminiKeyManager] Loaded ${this.keys.length} distinct Gemini API key(s) in rotation pool.`);
+    console.log(`[GeminiKeyManager] Active pool: ${this.keys.length} keys loaded for instant Dona execution.`);
   }
 
   public getKeyCount(): number {
@@ -204,7 +231,9 @@ async function fetchTMDB(endpoint: string, params: Record<string, string> = {}) 
 async function searchTMDBMovies(query: string, lang = 'fr-FR'): Promise<any[]> {
   if (!query) return [];
   const cleanQ = query.trim();
-  const searchRes = await fetchTMDB('/search/multi', {
+
+  // Try direct search first
+  let searchRes = await fetchTMDB('/search/multi', {
     query: cleanQ,
     language: lang,
     include_adult: 'false',
@@ -212,20 +241,567 @@ async function searchTMDBMovies(query: string, lang = 'fr-FR'): Promise<any[]> {
   });
 
   if (searchRes && searchRes.results && searchRes.results.length > 0) {
-    return searchRes.results
+    const valid = searchRes.results
       .filter((m: any) => m.poster_path && (m.media_type === 'movie' || m.media_type === 'tv' || !m.media_type))
       .slice(0, 6);
+    if (valid.length > 0) return valid;
   }
+
+  // If complex prompt (e.g., "recommande moi des films comme Interstellar"), try extracting key nouns/titles
+  const words = cleanQ.split(/\s+/);
+  if (words.length > 3) {
+    // Try removing common French/English conversational filler words
+    const stripped = cleanQ
+      .replace(/\b(recommande|cherche|trouve|donne|moi|des|les|un|une|film|films|serie|series|comme|similaire|svp|s'il|te|plait|top|meilleur|meilleurs|about|recommend|search|find|movies|movie|shows|like|similar|please|best)\b/gi, '')
+      .trim();
+    if (stripped.length >= 2) {
+      searchRes = await fetchTMDB('/search/multi', {
+        query: stripped,
+        language: lang,
+        include_adult: 'false',
+        page: '1',
+      });
+      if (searchRes && searchRes.results && searchRes.results.length > 0) {
+        const valid = searchRes.results
+          .filter((m: any) => m.poster_path && (m.media_type === 'movie' || m.media_type === 'tv' || !m.media_type))
+          .slice(0, 6);
+        if (valid.length > 0) return valid;
+      }
+    }
+  }
+
   return [];
 }
 
 async function getTrendingSpotlight(lang = 'fr-FR'): Promise<any[]> {
   const res = await fetchTMDB('/trending/all/day', { language: lang });
   if (res && res.results) {
-    return res.results.filter((m: any) => m.poster_path).slice(0, 6);
+    return res.results.filter((m: any) => m.poster_path).slice(0, 8);
   }
   return [];
 }
+
+// =========================================================================
+// LEVELUP ADVANCED RSS ENGINE & NEWS EXTRACTOR
+// =========================================================================
+const rssParser = new Parser({
+  customFields: {
+    item: [
+      ['media:content', 'mediaContent'],
+      ['media:thumbnail', 'mediaThumbnail'],
+      ['enclosure', 'enclosure'],
+      ['content:encoded', 'contentEncoded'],
+      ['description', 'description']
+    ]
+  }
+});
+
+const RSS_SOURCES: Record<string, { name: string; url: string }[]> = {
+  gaming: [
+    { name: 'JeuxVideo.com', url: 'https://www.jeuxvideo.com/rss/rss.xml' },
+    { name: 'IGN France', url: 'https://fr.ign.com/feed.xml' },
+    { name: 'Gameblog', url: 'https://www.gameblog.fr/rss.xml' },
+    { name: 'Gamekult', url: 'https://www.gamekult.com/feed.xml' },
+    { name: 'ActuGaming', url: 'https://www.actugaming.net/feed/' },
+    { name: 'Xboxygen', url: 'https://www.xboxygen.com/spip.php?page=backend' },
+    { name: 'GamerGen', url: 'https://www.gamergen.com/rss' }
+  ],
+  otaku: [
+    { name: 'Manga-News', url: 'https://www.manga-news.com/index.php/rss' },
+    { name: 'Adala-News', url: 'https://adala-news.fr/feed/' },
+    { name: 'Crunchyroll', url: 'https://www.crunchyroll.com/newsrss?lang=frFR' },
+    { name: 'Nautiljon', url: 'https://www.nautiljon.com/actualite/rss.php' },
+    { name: 'Anime News Network', url: 'https://www.animenewsnetwork.com/news/rss.xml?ann-edition=fr' }
+  ],
+  tools: [
+    { name: 'Journal du Geek', url: 'https://www.journaldugeek.com/feed/' },
+    { name: 'Frandroid', url: 'https://www.frandroid.com/feed' },
+    { name: 'Numerama', url: 'https://www.numerama.com/feed/' },
+    { name: 'Les Numériques', url: 'https://www.lesnumeriques.com/rss.xml' },
+    { name: 'Presse-Citron', url: 'https://www.presse-citron.net/feed/' },
+    { name: 'Phonandroid', url: 'https://www.phonandroid.com/feed' },
+    { name: 'Korben', url: 'https://korben.info/feed' },
+    { name: '01net', url: 'https://www.01net.com/actualites/feed/' }
+  ],
+  movies: [
+    { name: 'Premiere', url: 'https://www.premiere.fr/rss/cinema' },
+    { name: 'EcranLarge', url: 'https://www.ecranlarge.com/flux-rss/actus' },
+    { name: 'CinéSéries', url: 'https://www.cineserie.com/feed/' },
+    { name: 'JDG Ciné', url: 'https://www.journaldugeek.com/culture/feed/' }
+  ],
+  music: [
+    { name: 'Tsugi', url: 'https://www.tsugi.fr/feed/' },
+    { name: 'Les Inrocks', url: 'https://www.lesinrocks.com/musique/feed/' },
+    { name: 'Metalorgie', url: 'https://www.metalorgie.com/feed/news' },
+    { name: 'La Grosse Radio', url: 'https://www.lagrosseradio.com/feed/' }
+  ],
+  sports: [
+    { name: "L'Équipe", url: 'https://www.lequipe.fr/rss/actu_rss.xml' },
+    { name: 'RMC Sport', url: 'https://rmcsport.bfmtv.com/rss/info/flux.xml' },
+    { name: 'Eurosport', url: 'https://www.eurosport.fr/rss.xml' },
+    { name: 'Foot Mercato', url: 'https://www.footmercato.net/rss' },
+    { name: 'So Foot', url: 'https://www.sofoot.com/rss' }
+  ],
+  world: [
+    { name: 'France Info', url: 'https://www.francetvinfo.fr/titres.rss' },
+    { name: 'Le Monde', url: 'https://www.lemonde.fr/rss/une.xml' },
+    { name: 'Le Figaro', url: 'https://www.lefigaro.fr/rss/figaro_actualites.xml' },
+    { name: '20 Minutes', url: 'https://www.20minutes.fr/feeds/rss-actu-france.xml' },
+    { name: 'Le Parisien', url: 'https://www.leparisien.fr/arcio/rss/' }
+  ],
+  economy: [
+    { name: 'Les Echos', url: 'https://services.lesechos.fr/rss/les-echos-accueil.xml' },
+    { name: 'La Tribune', url: 'https://www.latribune.fr/feed.xml' },
+    { name: 'BFM Business', url: 'https://www.bfmtv.com/rss/economie/' }
+  ]
+};
+
+function extractBestImage(item: any, sourceName: string) {
+  let img: string | null = null;
+  if (item.mediaContent && item.mediaContent['$'] && item.mediaContent['$'].url && !item.mediaContent['$'].type?.startsWith('video/')) {
+    img = item.mediaContent['$'].url;
+  } else if (item.mediaThumbnail && item.mediaThumbnail['$'] && item.mediaThumbnail['$'].url) {
+    img = item.mediaThumbnail['$'].url;
+  } else if (item.enclosure && item.enclosure.url && item.enclosure.url.match(/\.(jpeg|jpg|gif|png|webp)/i)) {
+    img = item.enclosure.url;
+  } else {
+    const regex = /<img[^>]+src=["']([^"']+)["']/i;
+    if (item.contentEncoded) {
+      const match = item.contentEncoded.match(regex);
+      if (match) img = match[1];
+    }
+    if (!img && item.description) {
+      const match = item.description.match(regex);
+      if (match) img = match[1];
+    }
+  }
+
+  if (!img || img.length < 5) {
+    const safeSeed = encodeURIComponent((item.title || sourceName).substring(0, 20).replace(/[^a-zA-Z0-9]/g, ''));
+    img = `https://picsum.photos/seed/${safeSeed}/800/450`;
+  }
+  return img;
+}
+
+function extractBestVideo(item: any) {
+  let video: string | null = null;
+  const htmlContent = (item.contentEncoded || '') + ' ' + (item.description || '');
+
+  const iframeRegex = /src=["'](https:\/\/(?:www\.)?(?:youtube\.com\/embed|dailymotion\.com\/embed\/video|player\.vimeo\.com\/video|player\.twitch\.tv\/\?channel|tiktok\.com\/embed|streamable\.com\/e)\/[^"']+)["']/i;
+  const matchIframe = htmlContent.match(iframeRegex);
+  if (matchIframe) return matchIframe[1];
+
+  const linkRegex = /(https:\/\/(?:www\.)?(?:twitch\.tv\/videos\/|streamable\.com\/|tiktok\.com\/@[\w.-]+\/video\/|vimeo\.com\/)\w+)/i;
+  const matchLink = htmlContent.match(linkRegex);
+  if (matchLink) return matchLink[1];
+
+  const videoTagRegex = /<(?:video|source)[^>]+src=["']([^"']+\.(?:mp4|webm|ogg|m3u8)(?:\?[^"']*)?)["']/i;
+  const matchVideo = htmlContent.match(videoTagRegex);
+  if (matchVideo) return matchVideo[1];
+
+  if (item.enclosure && item.enclosure.url) {
+    const type = item.enclosure.type || '';
+    const isVideoUrl = item.enclosure.url.match(/\.(mp4|webm|ogg|m3u8|mov|avi)/i);
+    if (type.startsWith('video/') || isVideoUrl) {
+      return item.enclosure.url;
+    }
+  }
+
+  if (item.mediaContent && item.mediaContent['$']) {
+    const mediaUrl = item.mediaContent['$'].url;
+    const mediaType = item.mediaContent['$'].type || '';
+    if (mediaType.startsWith('video/') || mediaUrl?.match(/\.(mp4|webm|ogg|m3u8|mov|avi)/i)) {
+      return mediaUrl;
+    }
+  }
+
+  return null;
+}
+
+async function fetchCategoryNews(categoryKey: string) {
+  const sources = RSS_SOURCES[categoryKey];
+  if (!sources) return [];
+
+  let allArticles: any[] = [];
+  const requests = sources.map(async (source) => {
+    try {
+      const feed = await rssParser.parseURL(source.url);
+      return (feed.items || []).map(item => {
+        const finalImage = extractBestImage(item, source.name);
+        const finalVideo = extractBestVideo(item);
+        return {
+          title: item.title,
+          link: item.link,
+          desc: item.contentSnippet || item.content || item.description || '',
+          date: item.pubDate || item.isoDate || new Date().toISOString(),
+          img: finalImage,
+          video: finalVideo,
+          source: source.name,
+          category: categoryKey
+        };
+      });
+    } catch {
+      return [];
+    }
+  });
+
+  const results = await Promise.allSettled(requests);
+  results.forEach(res => {
+    if (res.status === 'fulfilled') {
+      allArticles = allArticles.concat(res.value);
+    }
+  });
+
+  return allArticles.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 150);
+}
+
+// =========================================================================
+// API ROUTES
+// =========================================================================
+
+// Showcase Posters for Auth Connection Screen (Fetched live with TMDB key with 10+ dynamic titles)
+app.get('/api/tmdb/showcase', async (req, res) => {
+  try {
+    const [trendingRes, animeRes] = await Promise.all([
+      fetchTMDB('/trending/all/week', { language: 'fr-FR' }),
+      fetchTMDB('/discover/tv', { with_genres: '16', with_original_language: 'ja', sort_by: 'popularity.desc', language: 'fr-FR' })
+    ]);
+
+    const combined: any[] = [];
+    if (trendingRes && trendingRes.results) {
+      trendingRes.results.forEach((m: any) => {
+        if (m.backdrop_path) {
+          combined.push({
+            id: m.id,
+            title: m.title || m.name,
+            bg: `https://image.tmdb.org/t/p/w1280${m.backdrop_path}`,
+            poster: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : null,
+            rating: `${(m.vote_average || 8.0).toFixed(1)}/10`,
+            overview: m.overview || 'Expérience cinéma & streaming haute fidélité.',
+            type: m.media_type || (m.first_air_date ? 'tv' : 'movie')
+          });
+        }
+      });
+    }
+
+    if (animeRes && animeRes.results) {
+      animeRes.results.forEach((a: any) => {
+        if (a.backdrop_path) {
+          combined.push({
+            id: a.id,
+            title: a.name || a.title,
+            bg: `https://image.tmdb.org/t/p/w1280${a.backdrop_path}`,
+            poster: a.poster_path ? `https://image.tmdb.org/t/p/w500${a.poster_path}` : null,
+            rating: `${(a.vote_average || 8.5).toFixed(1)}/10`,
+            overview: a.overview || 'L’univers anime et manga en ultra haute définition.',
+            type: 'tv'
+          });
+        }
+      });
+    }
+
+    // Return at least 10 dynamic items
+    res.json(combined.slice(0, 15));
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch showcase' });
+  }
+});
+
+// TMDB Anime Catalogue (Real thousands of anime shows, anime movies, trending)
+app.get('/api/tmdb/anime', async (req, res) => {
+  const page = (req.query.page as string) || '1';
+  const type = (req.query.type as string) || 'popular'; // popular, movies, top_rated
+  try {
+    let data;
+    if (type === 'movies') {
+      data = await fetchTMDB('/discover/movie', {
+        with_genres: '16',
+        with_original_language: 'ja',
+        sort_by: 'popularity.desc',
+        language: 'fr-FR',
+        page
+      });
+    } else if (type === 'top_rated') {
+      data = await fetchTMDB('/discover/tv', {
+        with_genres: '16',
+        with_original_language: 'ja',
+        'vote_count.gte': '200',
+        sort_by: 'vote_average.desc',
+        language: 'fr-FR',
+        page
+      });
+    } else {
+      data = await fetchTMDB('/discover/tv', {
+        with_genres: '16',
+        with_original_language: 'ja',
+        sort_by: 'popularity.desc',
+        language: 'fr-FR',
+        page
+      });
+    }
+
+    if (data && data.results) {
+      const formatted = data.results.map((item: any) => ({
+        id: item.id,
+        title: item.name || item.title,
+        desc: item.overview || 'Chef-d’œuvre de l’animation japonaise.',
+        img: item.backdrop_path ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}` : (item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://picsum.photos/800/450'),
+        poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+        rating: item.vote_average ? `${item.vote_average.toFixed(1)}` : '8.2',
+        release: item.first_air_date || item.release_date || '2024',
+        type: type === 'movies' ? 'movie' : 'tv'
+      }));
+      return res.json({ results: formatted, total_pages: data.total_pages || 1 });
+    }
+    res.json({ results: [] });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch anime catalogue' });
+  }
+});
+
+// TMDB Movies, Trending & Radar
+app.get('/api/tmdb/catalogue', async (req, res) => {
+  const category = (req.query.cat as string) || 'trending';
+  const page = (req.query.page as string) || '1';
+  try {
+    let data;
+    if (category === 'upcoming' || category === 'radar') {
+      data = await fetchTMDB('/movie/upcoming', { language: 'fr-FR', page });
+    } else if (category === 'top_rated') {
+      data = await fetchTMDB('/movie/top_rated', { language: 'fr-FR', page });
+    } else if (category === 'popular') {
+      data = await fetchTMDB('/movie/popular', { language: 'fr-FR', page });
+    } else {
+      data = await fetchTMDB('/trending/all/day', { language: 'fr-FR', page });
+    }
+
+    if (data && data.results) {
+      const formatted = data.results.map((m: any) => ({
+        id: m.id,
+        title: m.title || m.name,
+        desc: m.overview || 'Production cinématographique incontournable.',
+        img: m.backdrop_path ? `https://image.tmdb.org/t/p/w780${m.backdrop_path}` : (m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://picsum.photos/800/450'),
+        poster: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : null,
+        rating: m.vote_average ? `${m.vote_average.toFixed(1)}` : '7.8',
+        release: m.release_date || m.first_air_date || '2024',
+        media_type: m.media_type || (m.first_air_date ? 'tv' : 'movie')
+      }));
+      return res.json({ results: formatted, total_pages: data.total_pages || 1 });
+    }
+    res.json({ results: [] });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch catalogue' });
+  }
+});
+
+// TMDB Trailer & Video Extractor (Returns official YouTube / TMDB video embed or key)
+app.get('/api/tmdb/trailer/:id', async (req, res) => {
+  const { id } = req.params;
+  const isTv = req.query.type === 'tv';
+  try {
+    const endpoint = isTv ? `/tv/${id}/videos` : `/movie/${id}/videos`;
+    let data = await fetchTMDB(endpoint, { language: 'fr-FR' });
+    if (!data || !data.results || data.results.length === 0) {
+      data = await fetchTMDB(endpoint, { language: 'en-US' });
+    }
+
+    if (data && data.results && data.results.length > 0) {
+      const trailer = data.results.find((v: any) => v.type === 'Trailer' && v.site === 'YouTube') ||
+                      data.results.find((v: any) => v.site === 'YouTube') ||
+                      data.results[0];
+      return res.json({
+        key: trailer.key,
+        site: trailer.site,
+        name: trailer.name,
+        youtubeUrl: `https://www.youtube.com/watch?v=${trailer.key}`,
+        embedUrl: `https://www.youtube.com/embed/${trailer.key}?autoplay=1&enablejsapi=1`
+      });
+    }
+    res.json({ key: null, embedUrl: null });
+  } catch (err) {
+    res.status(500).json({ error: 'Trailer not found' });
+  }
+});
+
+// RSS News API endpoint with Category filter & multi-source feeds
+app.get('/api/news', async (req, res) => {
+  const category = (req.query.category as string) || 'all';
+  try {
+    if (category === 'all') {
+      let mixed: any[] = [];
+      for (const cat of Object.keys(RSS_SOURCES)) {
+        const news = await fetchCategoryNews(cat);
+        mixed = mixed.concat(news);
+      }
+      mixed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return res.json(mixed.slice(0, 300));
+    }
+
+    if (!RSS_SOURCES[category]) {
+      return res.status(404).json({ error: "Catégorie introuvable." });
+    }
+
+    const news = await fetchCategoryNews(category);
+    res.json(news);
+  } catch (error) {
+    console.error("Erreur API News:", error);
+    res.status(500).json({ error: "Erreur serveur lors de la génération des actualités." });
+  }
+});
+
+// In-App Web Browser Proxy (Removes X-Frame-Options & CSP so all external sites render inside the app)
+app.get('/api/proxy-web', async (req, res) => {
+  const targetUrl = (req.query.url as string || '').trim();
+  if (!targetUrl || !targetUrl.startsWith('http')) {
+    return res.status(400).send('URL invalide ou absente.');
+  }
+
+  try {
+    const parsedUrl = new URL(targetUrl);
+    const targetOrigin = parsedUrl.origin;
+
+    const response = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cache-Control': 'no-cache',
+      },
+      redirect: 'follow',
+    });
+
+    const contentType = response.headers.get('content-type') || 'text/html';
+
+    if (!contentType.includes('text/html')) {
+      const buffer = await response.arrayBuffer();
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      return res.send(Buffer.from(buffer));
+    }
+
+    let html = await response.text();
+
+    // Base tag to resolve relative assets (css, images, fonts)
+    const baseTag = `<base href="${targetOrigin}/">`;
+    
+    // Injected script to prevent framebusting and route internal links through proxy
+    const injectedScript = `
+      <script>
+        try {
+          window.top = window.self;
+          window.parent = window.self;
+        } catch(e) {}
+
+        document.addEventListener('click', function(e) {
+          try {
+            var a = e.target.closest('a');
+            if (a && a.href && a.href.startsWith('http') && !a.href.includes('/api/proxy-web')) {
+              e.preventDefault();
+              window.location.href = '/api/proxy-web?url=' + encodeURIComponent(a.href);
+            }
+          } catch(err) {}
+        }, true);
+      </script>
+    `;
+
+    if (html.includes('<head>')) {
+      html = html.replace('<head>', `<head>${baseTag}${injectedScript}`);
+    } else if (html.includes('<HEAD>')) {
+      html = html.replace('<HEAD>', `<HEAD>${baseTag}${injectedScript}`);
+    } else {
+      html = `${baseTag}${injectedScript}${html}`;
+    }
+
+    // Strip out meta CSP & frame blockers
+    html = html.replace(/<meta[^>]*http-equiv=["']?(content-security-policy|x-frame-options)["']?[^>]*>/gi, '');
+
+    res.removeHeader('X-Frame-Options');
+    res.removeHeader('Content-Security-Policy');
+    res.removeHeader('Cross-Origin-Embedder-Policy');
+    res.removeHeader('Cross-Origin-Opener-Policy');
+    res.removeHeader('Cross-Origin-Resource-Policy');
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.send(html);
+
+  } catch (err: any) {
+    console.error('[Proxy Web Error]:', err?.message);
+    return res.status(500).send(`
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { background: #07080f; color: #fff; font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; text-align: center; }
+          .box { background: #10121d; border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 32px; max-width: 460px; }
+          h3 { margin-top: 0; color: #c084fc; font-size: 18px; }
+          p { color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.6; }
+          a { display: inline-block; margin-top: 14px; background: #9333ea; color: white; padding: 10px 20px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="box">
+          <h3>Chargement direct indisponible</h3>
+          <p>Le serveur distant bloque l'accès direct ou demande une authentification spéciale.</p>
+          <a href="${targetUrl}" target="_blank" rel="noreferrer">Ouvrir dans un nouvel onglet</a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+});
+
+// Rich Article Extractor for Reader Mode
+app.get('/api/extract-article', async (req, res) => {
+  const targetUrl = (req.query.url as string || '').trim();
+  if (!targetUrl || !targetUrl.startsWith('http')) {
+    return res.status(400).json({ error: 'URL requise' });
+  }
+
+  try {
+    const response = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
+      },
+    });
+
+    const html = await response.text();
+
+    const titleMatch = html.match(/<meta property=["']og:title["'] content=["']([^"']+)["']/i) ||
+                       html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim() : '';
+
+    const imgMatch = html.match(/<meta property=["']og:image["'] content=["']([^"']+)["']/i) ||
+                     html.match(/<meta name=["']twitter:image["'] content=["']([^"']+)["']/i);
+    const img = imgMatch ? imgMatch[1].trim() : '';
+
+    const descMatch = html.match(/<meta property=["']og:description["'] content=["']([^"']+)["']/i) ||
+                      html.match(/<meta name=["']description["'] content=["']([^"']+)["']/i);
+    const desc = descMatch ? descMatch[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim() : '';
+
+    const paragraphMatches = html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi);
+    const paragraphs: string[] = [];
+    for (const m of paragraphMatches) {
+      const clean = m[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim();
+      if (clean.length > 45 && !clean.toLowerCase().includes('cookie') && !clean.toLowerCase().includes('abonnez-vous')) {
+        paragraphs.push(clean);
+      }
+    }
+
+    res.json({
+      title,
+      img,
+      desc,
+      paragraphs: paragraphs.slice(0, 35),
+      url: targetUrl
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Extraction impossible' });
+  }
+});
 
 // =========================================================================
 // API ROUTES
@@ -238,6 +814,17 @@ app.get('/api/health', (req, res) => {
     keysConfigured: keyManager.getKeyCount(),
     timestamp: Date.now(),
   });
+});
+
+// Server Ads & Issue Reporting Endpoint
+app.post('/api/report-server', (req, res) => {
+  try {
+    const report = req.body || {};
+    console.log(`[ServerReport] Received report for ${report.serverName || report.serverId}: ${report.reason || 'General'}`);
+    res.json({ success: true, timestamp: Date.now() });
+  } catch (err) {
+    res.json({ success: true });
+  }
 });
 
 // Weather search endpoint (Open-Meteo Geocoding / WeatherAPI)
@@ -491,43 +1078,34 @@ app.post('/api/dona/chat', async (req, res) => {
       tmdbResults.map((m, idx) => `${idx + 1}. Titre: "${m.title || m.name}" (ID TMDB: ${m.id}, Date: ${m.release_date || m.first_air_date || 'N/A'}, Note: ${m.vote_average || 'N/A'}/10, Type: ${m.media_type || (m.first_air_date ? 'tv' : 'movie')})\nSynopsis: ${m.overview || 'Pas de résumé'}`).join('\n')
     : '';
 
-  const systemInstruction = `
-Tu es "Dona" (la voix et l'intelligence centrale de LevelMovie), la véritable maîtresse de maison et cheffe d'orchestre absolue de l'application de streaming LevelMovie.
-Tu ne te contentes pas de répondre : tu CONTRÔLES et PILOTES toute l'application et réalises toutes les actions pour l'utilisateur.
+  const globalPromptEnv = process.env.GLOBAL_PROMPT || '';
+  const baseSystemInstruction = globalPromptEnv.trim() || `
+# PROMPT SYSTÈME MAÎTRE — DONA & LEVEL IA (Intelligence Officielle LevelUp & LevelMovie v2.6)
 
-Tes capacités et pouvoirs d'exécution totale :
-1. 👥 GESTION DES WATCH PARTIES (SALONS EN DIRECT) :
-   Tu peux créer, configurer et lancer des Watch Parties pour l'utilisateur, définir le nom du salon, inviter ses amis, proposer des films parfaits pour la soirée.
-   Balise : [party:ID|Titre] ou [party:ID|Titre|NomDuSalon]
+Tu es **Dona** (également connue sous le nom de **Level IA**), l'intelligence artificielle suprême et l'assistante officielle de l'écosystème **LevelUp** et de la plateforme de streaming **LevelMovie**.
 
-2. 🎬 LECTURE & VISIONNAGE DIRECT :
-   Tu lances instantanément les films, séries ou épisodes.
-   Balise : [play:ID|Titre]
+### 🧠 INTELLIGENCE & PERSONA :
+- **Niveau d'Intelligence Exceptionnel** : Tu possèdes une culture encyclopédique, un raisonnement analytique profond, une plume élégante, précise et captivante. Tu es capable de comprendre les nuances, le sous-texte, l'humour, la poésie, les références cinématographiques complexes et d'argumenter avec pertinence.
+- **Polyvalence Totale (IA Universelle)** : Même si tu es l'experte absolue du cinéma et de LevelMovie, tu sais répondre à **n'importe quel sujet** avec brio (culture générale, sciences, programmation, philosophie, analyse de scénario, conseils, productivité, etc.). Tu ne dis JAMAIS "je ne peux parler que de cinéma". Tu réponds intelligemment à tout !
+- **Expertise Cinématographique Maîtresse** : Tu connais sur le bout des doigts la filmographie mondiale, les réalisateurs (Nolan, Villeneuve, Tarantino, Kubrick, Miyazaki, Scorsese, Fincher, Spielberg...), l'histoire du 7ème art, la photographie, le montage, les musiques de film (Hans Zimmer, John Williams, Ennio Morricone...), les anecdotes de tournage et la chronologie des univers (MCU, Star Wars, DC, Dune, Tolkien, etc.).
 
-3. 🍿 BANDES-ANNONCES OFFICIELLES :
-   Tu affiches directement les trailers en plein écran.
-   Balise : [trailer:ID|Titre]
+### ⚡ POUVOIRS D'ACTION & BALISES INTERACTIVES LEVELMOVIE :
+Lorsque tu mentionnes des films, séries, actions ou fonctionnalités, intègre naturellement des **balises interactives cliquables** dans ton texte afin que l'utilisateur puisse agir en 1 clic :
+1. 🎬 **Lancer un film/série en streaming** : \`[play:ID|Titre]\` (ex: \`[play:157336|Interstellar]\`)
+2. 🍿 **Visionner la bande-annonce officielle** : \`[trailer:ID|Titre]\` (ex: \`[trailer:157336|Interstellar]\`)
+3. 👥 **Créer / Lancer une Watch Party synchronisée** : \`[party:ID|Titre]\` ou \`[party:ID|Titre|NomDuSalon]\` (ex: \`[party:157336|Interstellar|Soirée Espace]\`)
+4. 🔔 **Programmer un rappel ou alerte de sortie** : \`[action:remind:Titre]\`
+5. 🔍 **Lancer une recherche ciblée dans le catalogue** : \`[action:search:Terme]\`
+6. 📁 **Ouvrir une catégorie ou un onglet** : \`[category:movies]\` ou \`[category:series]\` ou \`[category:party]\` ou \`[category:trailers]\`
+7. ⭐ **Ajouter à la Watchlist** : \`[action:watchlist:ID|Titre]\`
 
-4. 🔔 RAPPELS, SORTIES & NOTIFICATIONS :
-   Tu peux enregistrer des alertes et rappels de sortie pour les films très attendus ou les sorties cinéma de 2025/2026.
-   Balise : [action:remind:ID|Titre|Date] ou [action:remind:Titre]
+### ✍️ DIRECTIVES DE STYLE ET DE STRUCTURE :
+- **Clarté & Esthétique** : Utilise du markdown propre, des sauts de ligne aérés, des listes à puces soignées et mets en gras les points clés.
+- **Ton** : Professionnel, chaleureux, passionné, direct, bienveillant et complice.
+- **Langue** : ${isFr ? 'Français' : 'English'}.
+- Si l'utilisateur cherche une recommandation, explique **pourquoi** ce film est une merveille (ambiance, réalisation, jeu d'acteur) et fournis les boutons d'action cliquables.`;
 
-5. 🔍 RECHERCHES, GENRES & EXPLORATION :
-   Tu guides l'utilisateur dans tout le catalogue, les filtres par genre, les classements IMDb / TMDB.
-   Balises : [action:search:Recherche] ou [action:genre:Genre] ou [category:movie] / [category:trailers] / [category:watchlist] / [category:party]
-
-6. ⭐ GESTION DE LA WATCHLIST & PARAMÈTRES :
-   Tu peux ajouter des films à la liste ou ouvrir les réglages.
-   Balises : [action:watchlist:ID|Titre] ou [action:settings] ou [action:support]
-
-Directives de communication :
-- Ton ton est ultra-chaleureux, enthousiaste, passionné, direct et complice, comme une experte cinéma d'élite à la tête de la plateforme.
-- Langue de réponse : ${isFr ? 'Français' : 'English'}.
-- Sois claire, percutante, utilise des retours à la ligne et des balises interactives actionnables pour que l'utilisateur n'ait qu'à cliquer pour tout lancer.
-
-${tmdbContextSummary}
-
-Réponds avec énergie et précision à la demande. Intègre toujours les balises cliquables correspondantes dès que tu mentionnes un film ou une action.`;
+  const systemInstruction = `${baseSystemInstruction}\n\n${tmdbContextSummary}\n\nRéponds avec excellence, intelligence et précision.`;
 
   try {
     const aiResponseText = await keyManager.executeWithRotation(async (ai) => {
@@ -550,10 +1128,9 @@ Réponds avec énergie et précision à la demande. Intègre toujours les balise
       });
 
       const candidateModels = [
-        'gemini-3.7-flash',
-        'gemini-3.1-flash-lite',
-        'gemini-flash-latest',
-        'gemini-3.6-flash',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
       ];
 
       let lastModelError: any = null;

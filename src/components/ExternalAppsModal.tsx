@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import { 
-  RotateCw, Sparkles, Music, Flame, Sun, 
-  MessageSquare, Star, Home, LogOut, Play,
-  ShieldCheck, Search, ChevronRight, Layers, ArrowLeft
+  RotateCw, Music, Flame, Sun, 
+  MessageSquare, LogOut, Home,
+  Layers, ExternalLink, Tv
 } from 'lucide-react';
 import { LevelMusicApp } from './apps/LevelMusicApp';
 import { LevelOppaApp } from './apps/LevelOppaApp';
 import { LevelDayApp } from './apps/LevelDayApp';
 import { LevelReviewsApp } from './apps/LevelReviewsApp';
+import { LevelAnimeApp } from './apps/LevelAnimeApp';
+import { LevelMovieLogo } from '../constants';
 
 interface LevelApp {
-  id: 'level-music' | 'level-oppa' | 'level-day' | 'level-reviews';
+  id: 'level-anime' | 'level-music' | 'level-oppa' | 'level-day' | 'level-reviews';
   name: string;
   category: string;
   tagline: string;
   description: string;
-  iconType: 'music' | 'oppa' | 'weather' | 'reviews';
+  iconType: 'anime' | 'music' | 'oppa' | 'weather' | 'reviews';
   badge: string;
   badgeColor: string;
   rating: string;
@@ -41,8 +43,28 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
 }) => {
   const isFr = lang === 'fr';
 
-  // The 4 Official LevelUp Ecosystem Apps requested by user
+  // The Official LevelUp Ecosystem Apps
   const officialApps: LevelApp[] = [
+    {
+      id: 'level-anime',
+      name: 'LevelAnime',
+      category: isFr ? 'Anime & Simulcast HD' : 'Anime & Simulcast',
+      tagline: isFr ? 'Catalogue Anime complet, épisodes en VF/VOSTFR et classements' : 'Complete Anime hub, VF/VOSTFR episodes & rankings',
+      description: isFr
+        ? 'Plateforme ultime d’anime avec streaming des épisodes par saison, top 10 des sorties, lecteur multivoix VF & VOSTFR et base de données complète.'
+        : 'Ultimate anime portal featuring full season streams, top rankings, multi-server player and extensive catalog.',
+      iconType: 'anime',
+      badge: 'LevelAnime',
+      badgeColor: 'bg-red-500/20 text-red-300 border-red-500/30',
+      rating: '5.0',
+      downloads: '75.4k',
+      accentColor: 'from-red-600/30 via-rose-600/10 to-transparent',
+      features: [
+        isFr ? 'Lecteur d’épisodes par saisons & serveurs multiples' : 'Season episode player & multi-servers',
+        isFr ? 'Simulcasts, classements mondiaux & genres' : 'Simulcasts, worldwide charts & genres',
+        isFr ? 'Listes de favoris et mode découverte' : 'Anime watchlist & surprise explorer'
+      ]
+    },
     {
       id: 'level-music',
       name: 'LevelMusic',
@@ -126,25 +148,16 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
   ];
 
   const [currentAppId, setCurrentAppId] = useState<LevelApp['id'] | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
 
   if (!isOpen) return null;
 
   const currentApp = officialApps.find(a => a.id === currentAppId) || null;
 
-  const filteredApps = officialApps.filter((app) => {
-    const q = searchQuery.toLowerCase();
-    return (
-      app.name.toLowerCase().includes(q) ||
-      app.tagline.toLowerCase().includes(q) ||
-      app.description.toLowerCase().includes(q) ||
-      app.category.toLowerCase().includes(q)
-    );
-  });
-
   const getAppIcon = (type: LevelApp['iconType']) => {
     switch (type) {
+      case 'anime':
+        return <LevelMovieLogo className="w-7 h-7" color="#ef4444" />;
       case 'music':
         return <Music className="w-7 h-7 text-blue-400" />;
       case 'oppa':
@@ -166,57 +179,31 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
       {/* ========================================================================= */}
       <header className="h-16 px-4 sm:px-6 bg-[#080911] border-b border-white/10 flex items-center justify-between gap-3 shrink-0 z-40">
         
-        {/* Left: App switcher / Title */}
-        <div className="flex items-center gap-3">
+        {/* Left: Title */}
+        <div className="flex items-center gap-2">
+          <span className="text-base sm:text-lg font-black tracking-wider text-white">
+            Level<span className="text-[#a855f7]">Up</span>
+            <span className="text-white/60 ml-1 font-semibold text-sm sm:text-base">
+              {currentApp ? `• ${currentApp.name}` : 'App Store'}
+            </span>
+          </span>
+        </div>
+
+        {/* Right: Quick actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          
+          {/* Home / Hub Button (No bubble, sleek header action) */}
           {currentApp && (
             <button
               onClick={() => setCurrentAppId(null)}
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors mr-1 cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-all cursor-pointer text-xs font-semibold"
+              title={isFr ? "Retour au Hub Store" : "Back to Store Hub"}
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">{isFr ? 'Écosystème' : 'All Apps'}</span>
+              <Home className="w-3.5 h-3.5 text-purple-400" />
+              <span className="hidden sm:inline">{isFr ? 'Hub' : 'Hub'}</span>
             </button>
           )}
 
-          <div className="flex items-center gap-2">
-            <span className="text-base sm:text-lg font-black tracking-wider text-white">
-              Level<span className="text-[#a855f7]">Up</span>
-              <span className="text-white/60 ml-1 font-semibold text-sm sm:text-base">
-                {currentApp ? `• ${currentApp.name}` : 'App Store'}
-              </span>
-            </span>
-            {!currentApp && (
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
-                {isFr ? 'Bientôt disponible' : 'Coming Soon'}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Center: Search (only in Store Hub) */}
-        {!currentApp && (
-          <div className="hidden md:flex items-center flex-1 max-w-sm mx-4">
-            <div className="w-full flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 focus-within:border-[#a855f7] transition-colors">
-              <Search className="w-4 h-4 text-white/40" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={isFr ? 'Rechercher une application...' : 'Search applications...'}
-                className="flex-1 bg-transparent text-xs text-white placeholder-white/40 outline-none"
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-white/40 hover:text-white text-xs">
-                  ✕
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Right: Quick actions */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          
           {/* Refresh */}
           <button
             onClick={() => {
@@ -228,21 +215,6 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
           >
             <RotateCw className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{isFr ? 'Actualiser' : 'Refresh'}</span>
-          </button>
-
-          {/* Return to Home / Store */}
-          <button
-            onClick={() => setCurrentAppId(null)}
-            disabled={!currentApp}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              currentApp 
-                ? 'text-white hover:text-[#c084fc] hover:bg-white/5 cursor-pointer' 
-                : 'text-white/30 cursor-not-allowed opacity-40'
-            }`}
-            title={isFr ? "Retour au Hub" : 'Back to Store Hub'}
-          >
-            <Home className="w-3.5 h-3.5 text-[#a855f7]" />
-            <span className="hidden sm:inline">{isFr ? 'Hub' : 'Hub'}</span>
           </button>
 
           {/* Exit */}
@@ -261,6 +233,12 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
       {/* ========================================================================= */}
       {/* APP VIEWER OR STORE HUB                                                   */}
       {/* ========================================================================= */}
+      {currentAppId === 'level-anime' && (
+        <div key={`app-anime-${refreshKey}`} className="flex-1 w-full h-full overflow-hidden">
+          <LevelAnimeApp lang={lang} user={user} showToast={showToast} />
+        </div>
+      )}
+
       {currentAppId === 'level-music' && (
         <div key={`app-music-${refreshKey}`} className="flex-1 w-full h-full overflow-hidden">
           <LevelMusicApp onClose={() => setCurrentAppId(null)} lang={lang} user={user} />
@@ -289,102 +267,82 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
         /* Store Front Hub */
         <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-8 lg:p-12 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in">
           
-          {/* Banner */}
-          <div className="relative rounded-3xl p-6 sm:p-10 bg-gradient-to-r from-[#170a2c] via-[#0e1022] to-[#070810] border border-white/10 overflow-hidden shadow-2xl">
-            <div className="absolute -top-24 -right-24 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative z-10 max-w-2xl space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 backdrop-blur-md border border-amber-500/20 text-xs font-mono text-amber-300">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>{isFr ? 'Bientôt disponible • Coming Soon' : 'Coming Soon'}</span>
-              </div>
-
+          {/* Executive Header Banner */}
+          <div className="relative rounded-3xl p-6 sm:p-10 bg-gradient-to-r from-[#170a2c] via-[#0e1022] to-[#070810] border border-purple-500/20 overflow-hidden shadow-2xl">
+            <div className="relative z-10 max-w-3xl space-y-3">
               <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight">
-                {isFr 
-                  ? 'LevelUp App Store' 
-                  : 'LevelUp App Store'}
+                LevelUp <span className="text-[#a855f7]">App Store</span>
               </h2>
 
-              <p className="text-xs sm:text-sm text-white/70 leading-relaxed">
+              <p className="text-xs sm:text-sm text-white/75 leading-relaxed max-w-2xl">
                 {isFr
-                  ? 'Le magasin d’applications officiel de l’écosystème LevelUp est actuellement en cours de préparation technique. Toutes les applications seront accessibles très prochainement.'
-                  : 'The official LevelUp ecosystem App Store is currently in development. All integrated apps will be unlocked soon.'}
+                  ? 'Portail applicatif unifié de l’écosystème LevelUp. Découvrez nos applications de streaming musical, flux d’actualités vidéo, station météo et centre d’avis communautaires.'
+                  : 'Unified application portal for the LevelUp ecosystem. Explore music streaming, video newsfeeds, weather station and community feedback.'}
               </p>
             </div>
           </div>
 
           {/* Grid of the 4 Apps */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredApps.map((app) => (
+            {officialApps.map((app) => (
               <div
                 key={app.id}
-                className="rounded-3xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/10 p-6 flex flex-col justify-between gap-6 transition-all group shadow-lg"
+                className="rounded-3xl bg-gradient-to-b from-white/[0.05] to-white/[0.01] hover:border-purple-500/30 border border-white/10 p-6 flex flex-col justify-between gap-6 transition-all group shadow-lg"
               >
                 <div className="space-y-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/10">
+                  <div className="flex items-center gap-3.5">
+                    <div className="shrink-0 group-hover:scale-110 transition-transform">
                       {getAppIcon(app.iconType)}
                     </div>
 
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border bg-amber-500/15 text-amber-300 border-amber-500/30">
-                        {isFr ? 'Bientôt disponible' : 'Coming Soon'}
-                      </span>
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-amber-400">
-                        <Star className="w-3 h-3 fill-amber-400" />
-                        <span>{app.rating}</span>
-                        <span className="text-white/30 text-[10px]">({app.downloads})</span>
-                      </div>
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-black text-white leading-snug group-hover:text-purple-300 transition-colors">
+                        {app.name}
+                      </h3>
+                      <p className="text-xs font-semibold text-white/50 mt-0.5">
+                        {app.tagline}
+                      </p>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-lg sm:text-xl font-black text-white leading-snug">
-                      {app.name}
-                    </h3>
-                    <p className="text-xs font-semibold text-white/50 mt-0.5">
-                      {app.tagline}
-                    </p>
-                    <p className="text-xs text-white/60 mt-2.5 leading-relaxed">
+                    <p className="text-xs text-white/70 leading-relaxed">
                       {app.description}
                     </p>
                   </div>
 
                   {/* Highlights list */}
-                  <div className="pt-2 space-y-1.5">
+                  <div className="pt-2 space-y-1.5 border-t border-white/5">
                     {app.features.map((feat, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-[11px] text-white/70">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#a855f7]" />
+                      <div key={idx} className="flex items-center gap-2 text-[11px] text-white/60">
+                        <span className="text-[#a855f7] font-bold">—</span>
                         <span>{feat}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Launch / Coming Soon Button */}
+                {/* Launch / Open Button */}
                 <button
                   onClick={() => {
+                    setCurrentAppId(app.id);
                     if (showToast) {
-                      showToast(isFr ? `LevelUp App Store est en cours de préparation (Bientôt disponible)` : `LevelUp App Store is coming soon`, 'info');
+                      showToast(isFr ? `Ouverture de ${app.name}...` : `Launching ${app.name}...`, 'success');
                     }
                   }}
-                  className="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 shadow-md"
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-[#a855f7] hover:from-purple-500 hover:to-[#9333ea] border border-purple-400/30 text-white text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2.5 cursor-pointer active:scale-98 shadow-[0_0_20px_rgba(168,85,247,0.3)]"
                 >
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                  <span>{isFr ? 'Bientôt disponible' : 'Coming Soon'}</span>
+                  <ExternalLink className="w-4 h-4" />
+                  <span>{isFr ? `Lancer ${app.name}` : `Launch ${app.name}`}</span>
                 </button>
               </div>
             ))}
           </div>
 
-          {/* Footer badge */}
+          {/* Footer */}
           <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>{isFr ? 'Toutes les applications sont 100% synchronisées avec Supabase.' : 'All applications are fully connected to Supabase.'}</span>
-            </div>
-            <span>© {new Date().getFullYear()} LevelUp Ecosystem Hub</span>
+            <span>{isFr ? 'Applications synchronisées avec l’écosystème LevelUp.' : 'Applications synchronized with the LevelUp ecosystem.'}</span>
+            <span>© {new Date().getFullYear()} LevelUp Ecosystem</span>
           </div>
 
         </div>
@@ -393,3 +351,4 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
     </div>
   );
 };
+

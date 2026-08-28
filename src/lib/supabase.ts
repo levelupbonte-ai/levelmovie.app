@@ -233,7 +233,7 @@ export interface ClientReview {
   rating: number;
   comment: string;
   isVerified?: boolean;
-  authMethod?: 'google' | 'key';
+  authMethod?: 'google' | 'key' | 'levelmovie';
   photoURL?: string | null;
   userId?: string;
   created_at?: string;
