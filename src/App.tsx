@@ -8,17 +8,14 @@ import {
   Clock, SquarePen, Calendar
 } from 'lucide-react';
 import {
-  onAuthStateChanged, signInAnonymously, signInWithPopup, signInWithRedirect, signOut
-} from 'firebase/auth';
+  doc, setDoc, getDoc, deleteDoc, collection, addDoc, onSnapshot, query, orderBy, limit, getDocs, arrayUnion,
+  onAuthStateChanged, signInAnonymously, signInWithPopup, signInWithRedirect, signOut,
+  app, auth, db, googleProvider, facebookProvider, VAPID_KEY, NOTIF_PATH, FCM_TOKEN_PATH,
+  getMessaging, getToken, onMessage, isSupported as isMessagingSupported
+} from './lib/firebase-stub';
 import {
-  doc, setDoc, getDoc, deleteDoc, collection, addDoc, onSnapshot, query, orderBy, limit, getDocs, arrayUnion
-} from 'firebase/firestore';
-import { getMessaging, getToken, onMessage, isSupported as isMessagingSupported } from 'firebase/messaging';
-
-import {
-  app, auth, db, APP_ID, googleProvider, facebookProvider, VAPID_KEY, NOTIF_PATH, FCM_TOKEN_PATH,
   API_KEY, BASE_URL, IMAGE_BASE_URL, LevelMovieLogo, DonaStar, WatchPartySVG,
-  censorText, filterMatureContent, getDailySeed, getWeekSeed, getHoursUntilMidnight
+  censorText, filterMatureContent, getDailySeed, getWeekSeed, getHoursUntilMidnight, APP_ID
 } from './constants';
 import { i18n, globalStyles } from './i18n';
 import { Banner } from './components/Banner';

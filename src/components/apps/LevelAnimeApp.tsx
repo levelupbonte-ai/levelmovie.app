@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { LevelMovieLogo } from '../../constants';
 import {
   Play, Info, Search, X, Star, ChevronLeft, ChevronRight,
   Bookmark, Home, Tv, Clapperboard, Users, Flame, Calendar,
@@ -1074,6 +1075,25 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
       </header>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-[#060608] flex items-center justify-center flex-col overflow-hidden animate-in fade-in duration-500">
+        <div className="relative mb-5 animate-pulse">
+          <div className="absolute inset-0 bg-red-500/35 blur-2xl rounded-full scale-125 animate-pulse" />
+          <LevelMovieLogo className="w-20 h-20 text-red-500 relative z-10 drop-shadow-[0_0_30px_rgba(239,68,68,0.85)]" color="#ef4444" />
+        </div>
+        <div className="text-4xl sm:text-5xl font-black tracking-widest drop-shadow-2xl flex items-center">
+          <span className="text-white">Level</span><span className="text-red-500">Anime</span>
+        </div>
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <span className="text-xs font-mono tracking-wide animate-pulse text-white/70">
+            {isFr ? 'Chargement des catalogues...' : 'Loading catalogs...'}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#060608] text-white flex flex-col pb-20">

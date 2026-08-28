@@ -6,7 +6,7 @@ import {
   Minimize2, ChevronUp, Reply, Lock, ExternalLink, ArrowUp, Mail, GripHorizontal,
   MessageSquare, MessageSquareOff, Flag, Monitor, Maximize2
 } from 'lucide-react';
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, collectionGroup, getDocs, setDoc, addDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, collectionGroup, getDocs, setDoc, addDoc, collection } from '../lib/firebase-stub';
 import {
   BASE_URL, IMAGE_BASE_URL, IMAGE_ORIGINAL, API_KEY, LevelMovieLogo, WatchPartySVG,
   copyToClipboardFallback, formatTimeEstimate

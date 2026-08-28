@@ -1,7 +1,4 @@
 import React from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
 
 export const DonaStar = ({ className = "w-6 h-6" }: { className?: string }) => {
   const gradientId = React.useId ? React.useId().replace(/:/g, "_") : "dona_star_grad";
@@ -75,28 +72,7 @@ export const copyToClipboardFallback = (text: string) => {
   document.body.removeChild(textArea);
 };
 
-export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "levelup-ecosystem.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "levelup-ia",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "levelup-ia.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "229420004282",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:229420004282:web:6735f059a947f0936ae383",
-  measurementId: "G-MSRDY2574K"
-};
-
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
 export const APP_ID = (typeof (window as any).__app_id !== 'undefined' ? (window as any).__app_id : "level-ia-premium").replace(/\//g, '_');
-
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
-export const facebookProvider = new FacebookAuthProvider();
-
-export const VAPID_KEY = 'BPc3w8mDuNONg6Wl5TyU_x-l8KfUAtd_D868u3PaPpgrM7HUBMJ5qmuCCmR_U05YZlzGdYfFHPoQEzCakFaTjGM';
-export const NOTIF_PATH = ['artifacts', 'levelup-ecosystem', 'public', 'data', 'notifications'] as const;
-export const FCM_TOKEN_PATH = (uid: string) => ['artifacts', 'levelup-ecosystem', 'public', 'data', 'fcm_tokens', uid] as const;
 
 export const API_KEY = import.meta.env.VITE_TMDB_API_KEY || '027cc951d888c64e5f15dcb853c7347a';
 export const BASE_URL = 'https://api.themoviedb.org/3';
