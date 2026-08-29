@@ -232,13 +232,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setErrorMsg('');
     try {
       if (isSupabaseConfigured() && supabase) {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: window.location.origin
+        const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
+
+        if (isInIframe) {
+          // Google blocks OAuth inside iframes (403 / X-Frame-Options: SAMEORIGIN)
+          // We request the OAuth URL and open it in a top-level window or popup
+          const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: window.location.origin,
+              skipBrowserRedirect: true
+            }
+          });
+          if (error) throw error;
+          
+          if (data?.url) {
+            const popup = window.open(data.url, '_blank');
+            if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+              try {
+                window.top!.location.href = data.url;
+              } catch (_) {
+                window.location.href = data.url;
+              }
+            }
           }
-        });
-        if (error) throw error;
+        } else {
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: window.location.origin
+            }
+          });
+          if (error) throw error;
+        }
       } else {
         setTimeout(() => {
           setLoading(false);

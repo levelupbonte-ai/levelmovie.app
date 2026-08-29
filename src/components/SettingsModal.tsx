@@ -2060,36 +2060,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* ================= SIDEBAR (Desktop) / LIST (Mobile) ================= */}
-        <div className={`${mobileActiveTab !== null ? 'hidden sm:flex' : 'flex'} flex-col w-full sm:w-64 border-r border-white/10 bg-[#0a0b12] shrink-0 overflow-y-auto`}>
+        <div className={`${mobileActiveTab !== null ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-72 lg:w-80 border-r border-white/10 bg-[#0a0b12] shrink-0 overflow-y-auto`}>
           
-          <div className="hidden sm:flex items-center gap-3 px-6 py-5 border-b border-white/10 shrink-0">
-            <h2 className="font-black text-base tracking-widest text-white uppercase">
+          <div className="hidden md:flex items-center gap-3 px-7 py-6 border-b border-white/10 shrink-0">
+            <h2 className="font-black text-lg tracking-widest text-white uppercase flex items-center gap-2.5">
+              <span className="w-2 h-2 rounded-full bg-[#a855f7] shadow-[0_0_8px_#a855f7]" />
               {lang === 'fr' ? 'Paramètres' : 'Settings'}
             </h2>
           </div>
 
-          <div className="flex-1 p-3 sm:p-3 space-y-1">
+          <div className="flex-1 p-3 md:p-4 space-y-1.5">
             {tabs.map((tab) => {
-              const isActive = (mobileActiveTab === tab.id) || (activeTab === tab.id && typeof window !== 'undefined' && window.innerWidth >= 640);
+              const isActive = (mobileActiveTab === tab.id) || (activeTab === tab.id && typeof window !== 'undefined' && window.innerWidth >= 768);
               return (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => {
                     setActiveTab(tab.id);
-                    if (typeof window !== 'undefined' && window.innerWidth < 640) setMobileActiveTab(tab.id);
+                    if (typeof window !== 'undefined' && window.innerWidth < 768) setMobileActiveTab(tab.id);
                   }}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-left transition-all cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-left transition-all cursor-pointer ${
                     isActive
                       ? 'bg-[#a855f7]/20 text-white font-bold border border-[#a855f7]/40 shadow-sm'
                       : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <tab.icon className={`w-4 h-4 ${isActive ? 'text-[#c084fc]' : 'text-white/40'}`} />
-                    <span className="text-xs font-semibold">{tab.label}</span>
+                  <div className="flex items-center gap-3.5">
+                    <tab.icon className={`w-4.5 h-4.5 ${isActive ? 'text-[#c084fc]' : 'text-white/40'}`} />
+                    <span className="text-sm font-semibold">{tab.label}</span>
                   </div>
-                  <ChevronRight className="w-4 h-4 opacity-50 sm:hidden" />
+                  <ChevronRight className="w-4 h-4 opacity-50 md:hidden" />
                 </button>
               );
             })}
@@ -2103,7 +2104,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 if (user) onOpenLogout();
                 else onOpenLogin();
               }}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-full bg-[#a855f7]/15 hover:bg-[#a855f7]/25 text-white border border-[#a855f7]/40 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer shadow-sm"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full bg-[#a855f7]/15 hover:bg-[#a855f7]/25 text-white border border-[#a855f7]/40 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer shadow-sm"
             >
               {user ? (
                 <>
@@ -2121,18 +2122,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* ================= CONTENT AREA ================= */}
-        <div className={`flex-1 overflow-y-auto bg-[#0c0d14] relative ${mobileActiveTab === null ? 'hidden sm:block' : 'block'}`}>
+        <div className={`flex-1 overflow-y-auto bg-[#0c0d14] relative ${mobileActiveTab === null ? 'hidden md:block' : 'block'}`}>
           {/* Close button Desktop */}
           <button 
             type="button"
             onClick={onClose}
-            className="hidden sm:flex absolute top-5 right-5 w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 items-center justify-center text-white/60 hover:text-white transition-colors cursor-pointer"
+            className="hidden md:flex absolute top-6 right-8 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 items-center justify-center text-white/60 hover:text-white transition-colors cursor-pointer shadow-md z-10"
           >
             <X className="w-5 h-5" />
           </button>
           
-          <div className="p-6 sm:p-10 max-w-2xl">
-            {renderTabContent(typeof window !== 'undefined' && window.innerWidth < 640 ? mobileActiveTab! : activeTab)}
+          <div className="p-6 sm:p-8 md:p-12 lg:p-14 max-w-5xl mx-auto w-full">
+            {renderTabContent(typeof window !== 'undefined' && window.innerWidth < 768 ? mobileActiveTab! : activeTab)}
           </div>
         </div>
 
