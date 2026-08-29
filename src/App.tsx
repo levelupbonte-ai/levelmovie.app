@@ -28,6 +28,7 @@ import { ExternalAppsModal } from './components/ExternalAppsModal';
 import { SupportModal } from './components/SupportModal';
 import { SearchModal } from './components/SearchModal';
 import { AuthModal } from './components/AuthModal';
+import { MandatoryProfileCompletionModal } from './components/MandatoryProfileCompletionModal';
 import { DonaModal } from './components/DonaModal';
 import { CinematicPosterWall } from './components/CinematicPosterWall';
 import { FooterDisclaimer } from './components/FooterDisclaimer';
@@ -82,6 +83,9 @@ export default function App() {
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  const [userHandle, setUserHandle] = useState<string>(() => localStorage.getItem('levelmovie_user_handle') || '');
+  const [showMandatoryOnboarding, setShowMandatoryOnboarding] = useState(false);
+  const [onboardingOAuthUser, setOnboardingOAuthUser] = useState<any>(null);
   const [authError, setAuthError] = useState('');
   const [isLoadingAuth, setIsLoadingAuth] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -276,17 +280,36 @@ export default function App() {
     }
 
     if (isSupabaseConfigured && supabase) {
+      const evaluateUserSession = (sessionUser: any) => {
+        if (!sessionUser) return;
+        const uid = sessionUser.id || sessionUser.uid;
+        const userMeta = sessionUser.user_metadata || {};
+        const isCompleted = userMeta.profile_completed === true || 
+          localStorage.getItem(`lm_profile_completed_${uid}`) === 'true';
+
+        if (!isCompleted) {
+          console.log('⚡ [Mandatory Onboarding] Première connexion OAuth détectée sans profil complété:', sessionUser.email);
+          setOnboardingOAuthUser(sessionUser);
+          setShowMandatoryOnboarding(true);
+          setShowLoginModal(false);
+        } else {
+          setUser({ uid, email: sessionUser.email });
+          const name = userMeta.full_name || sessionUser.email?.split('@')[0] || t.defaultUser;
+          setUserName(name);
+          if (sessionUser.email) setUserEmail(sessionUser.email);
+          const photo = userMeta.avatar_url || null;
+          if (photo) setUserPhoto(photo);
+          const handle = userMeta.username || localStorage.getItem('levelmovie_user_handle') || '';
+          if (handle) setUserHandle(handle);
+        }
+      };
+
       supabase.auth.getSession().then(({ data: { session }, error }) => {
         if (error) {
           console.error('❌ [Supabase Auth] Erreur lors de la récupération de session :', error);
         } else if (session?.user) {
           console.log('✅ [Supabase Auth] Utilisateur connecté :', session.user.email, session.user.id);
-          setUser({ uid: session.user.id });
-          const name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || t.defaultUser;
-          setUserName(name);
-          if (session.user.email) setUserEmail(session.user.email);
-          const photo = session.user.user_metadata?.avatar_url || null;
-          if (photo) setUserPhoto(photo);
+          evaluateUserSession(session.user);
         } else {
           console.log('ℹ️ [Supabase Auth] Prêt (Aucune session active enregistrée).');
         }
@@ -295,12 +318,15 @@ export default function App() {
       const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
         console.log('🔄 [Supabase Auth Event] :', event, session?.user?.email || '(aucun)');
         if (session?.user) {
-          setUser({ uid: session.user.id });
-          const name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || t.defaultUser;
-          setUserName(name);
-          if (session.user.email) setUserEmail(session.user.email);
-          const photo = session.user.user_metadata?.avatar_url || null;
-          if (photo) setUserPhoto(photo);
+          evaluateUserSession(session.user);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setUserName('');
+          setUserEmail('');
+          setUserPhoto(null);
+          setUserHandle('');
+          setShowMandatoryOnboarding(false);
+          setOnboardingOAuthUser(null);
         }
       });
 
@@ -308,12 +334,7 @@ export default function App() {
         if (e.data?.type === 'OAUTH_AUTH_SUCCESS') {
           supabase.auth.getSession().then(({ data: { session } }) => {
             if (session?.user) {
-              setUser({ uid: session.user.id });
-              const name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || t.defaultUser;
-              setUserName(name);
-              if (session.user.email) setUserEmail(session.user.email);
-              const photo = session.user.user_metadata?.avatar_url || null;
-              if (photo) setUserPhoto(photo);
+              evaluateUserSession(session.user);
             }
           });
         }
@@ -479,33 +500,21 @@ export default function App() {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
           const u = session.user;
-          const fullName = u.user_metadata?.full_name || u.user_metadata?.first_name || u.email?.split('@')[0] || 'Utilisateur';
-          setUser({ uid: u.id, email: u.email });
-          setUserName(fullName);
-          setUserEmail(u.email || '');
-          setUserPhoto(u.user_metadata?.avatar_url || null);
-          localStorage.setItem('levelmovie_user_uid', u.id);
-          localStorage.setItem('levelmovie_user_name', fullName);
-          localStorage.setItem('levelmovie_user_email', u.email || '');
-        }
-      });
+          const userMeta = u.user_metadata || {};
+          const isCompleted = userMeta.profile_completed === true || 
+            localStorage.getItem(`lm_profile_completed_${u.id}`) === 'true';
 
-      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (session?.user) {
-          const u = session.user;
-          const fullName = u.user_metadata?.full_name || u.user_metadata?.first_name || u.email?.split('@')[0] || 'Utilisateur';
-          setUser({ uid: u.id, email: u.email });
-          setUserName(fullName);
-          setUserEmail(u.email || '');
-          setUserPhoto(u.user_metadata?.avatar_url || null);
-          localStorage.setItem('levelmovie_user_uid', u.id);
-          localStorage.setItem('levelmovie_user_name', fullName);
-          localStorage.setItem('levelmovie_user_email', u.email || '');
-        } else if (_event === 'SIGNED_OUT') {
-          setUser(null);
-          setUserName('');
-          setUserEmail('');
-          setUserPhoto(null);
+          if (!isCompleted) {
+            setOnboardingOAuthUser(u);
+            setShowMandatoryOnboarding(true);
+          } else {
+            const fullName = userMeta.full_name || userMeta.first_name || u.email?.split('@')[0] || 'Utilisateur';
+            setUser({ uid: u.id, email: u.email });
+            setUserName(fullName);
+            setUserEmail(u.email || '');
+            setUserPhoto(userMeta.avatar_url || null);
+            if (userMeta.username) setUserHandle(userMeta.username);
+          }
         }
       });
     }
@@ -1415,6 +1424,7 @@ export default function App() {
         userName={defaultUserName}
         userEmail={userEmail}
         userPhoto={userPhoto}
+        userHandle={userHandle}
         watchlistCount={watchlistData.length}
         currentCategory={currentCategory}
         animeSubTab={animeSubTab}
@@ -1484,9 +1494,33 @@ export default function App() {
           setUserName(name);
           setUserEmail(email);
           if (photo) setUserPhoto(photo);
+          if (handle) setUserHandle(handle);
         }}
         lang={lang}
         showToast={showToast}
+      />
+
+      {/* MODAL OBLIGATOIRE DE FINALISATION DE PROFIL POUR NOUVELLES CONNEXIONS OAUTH */}
+      <MandatoryProfileCompletionModal
+        isOpen={showMandatoryOnboarding && !!onboardingOAuthUser}
+        user={onboardingOAuthUser}
+        lang={lang}
+        showToast={showToast}
+        onComplete={({ name, handle, photo, email }) => {
+          const uid = onboardingOAuthUser?.id || onboardingOAuthUser?.uid || `usr_${Date.now()}`;
+          setUser({ uid, email });
+          setUserName(name);
+          setUserEmail(email);
+          setUserPhoto(photo);
+          setUserHandle(handle);
+          setShowMandatoryOnboarding(false);
+          setOnboardingOAuthUser(null);
+        }}
+        onCancelSignOut={async () => {
+          setShowMandatoryOnboarding(false);
+          setOnboardingOAuthUser(null);
+          await handleLogout();
+        }}
       />
 
       {/* MODAL DE DECONNEXION */}

@@ -420,19 +420,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             data: {
               username: cleanHandle,
               full_name: cleanName,
-              avatar_url: onboardAvatar
+              avatar_url: onboardAvatar,
+              profile_completed: true
             }
           });
         }
       }
 
+      const uid = onboardingUser?.id || onboardingUser?.uid || `usr_${Date.now()}`;
       localStorage.setItem('levelmovie_username', cleanName);
+      localStorage.setItem('levelmovie_user_name', cleanName);
       localStorage.setItem('levelmovie_user_handle', cleanHandle);
       localStorage.setItem('levelmovie_user_photo', onboardAvatar);
+      localStorage.setItem('lm_photo', onboardAvatar);
+      localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
 
       setLoading(false);
       onLoginSuccess(
-        onboardingUser || { id: `usr_${Date.now()}`, email: 'google_user' },
+        onboardingUser || { id: uid, email: 'google_user' },
         cleanName,
         onboardingUser?.email || '',
         onboardAvatar,

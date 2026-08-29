@@ -22,6 +22,7 @@ interface AppSidebarProps {
   userName: string;
   userEmail: string;
   userPhoto: string | null;
+  userHandle?: string;
   watchlistCount: number;
   currentCategory: string;
   animeSubTab?: string;
@@ -45,6 +46,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   userName,
   userEmail,
   userPhoto,
+  userHandle,
   watchlistCount,
   currentCategory,
   animeSubTab = 'home',
@@ -103,9 +105,15 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 <div className="text-xs font-bold text-white truncate">
                   {userName || t.defaultUser}
                 </div>
-                <div className="text-[11px] text-white/40 truncate font-mono">
-                  {user ? (userEmail || 'ID: ' + (user.uid || user.id || 'usr_member')) : (lang === 'fr' ? 'Mode Invité' : 'Guest Mode')}
-                </div>
+                {user && userHandle ? (
+                  <div className="text-[11px] text-[#c084fc] font-mono font-medium truncate">
+                    @{userHandle}
+                  </div>
+                ) : (
+                  <div className="text-[11px] text-white/40 truncate font-mono">
+                    {user ? (userEmail || 'ID: ' + (user.uid || user.id || 'usr_member')) : (lang === 'fr' ? 'Mode Invité' : 'Guest Mode')}
+                  </div>
+                )}
               </div>
             </div>
 
