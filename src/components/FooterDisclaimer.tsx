@@ -1,13 +1,15 @@
 import React from 'react';
 import { LevelMovieLogo } from '../constants';
+import { Shield, FileText } from 'lucide-react';
 
 interface FooterDisclaimerProps {
   lang: string;
   onOpenSupport?: () => void;
   onOpenSettings?: () => void;
+  onOpenLegal?: (doc: 'terms' | 'privacy') => void;
 }
 
-export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({ lang }) => {
+export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({ lang, onOpenLegal }) => {
   const isFr = lang === 'fr';
 
   return (
@@ -29,8 +31,26 @@ export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({ lang }) => {
             : "Decentralized Cinema Aggregator & Indexing Engine"}
         </p>
 
-        {/* Liens Écosystème & Mentions */}
+        {/* Liens Juridiques & Écosystème */}
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2 text-[11px] text-white/40">
+          <button
+            type="button"
+            onClick={() => onOpenLegal?.('terms')}
+            className="hover:text-[#c084fc] transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <FileText className="w-3 h-3" />
+            {isFr ? "Conditions d'utilisation" : "Terms of Service"}
+          </button>
+          <span>•</span>
+          <button
+            type="button"
+            onClick={() => onOpenLegal?.('privacy')}
+            className="hover:text-[#60a5fa] transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <Shield className="w-3 h-3" />
+            {isFr ? "Politique de confidentialité" : "Privacy Policy"}
+          </button>
+          <span>•</span>
           <a
             href="https://levelup-ecosystem.com"
             target="_blank"
@@ -39,12 +59,9 @@ export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({ lang }) => {
           >
             Powered by LevelUp Ecosystem
           </a>
-          <span>•</span>
-          <span className="font-mono">
-            {isFr ? "Aucun droit réservé" : "No rights reserved"}
-          </span>
         </div>
       </div>
     </footer>
   );
 };
+

@@ -1001,6 +1001,17 @@ app.get('/api/weather', async (req, res) => {
   }
 });
 
+// Direct Clean Routes for Legal Pages (Google OAuth compliance)
+app.get('/terms', (req, res) => {
+  const filePath = path.join(process.cwd(), process.env.NODE_ENV === 'production' ? 'dist/terms.html' : 'public/terms.html');
+  res.sendFile(filePath);
+});
+
+app.get('/privacy', (req, res) => {
+  const filePath = path.join(process.cwd(), process.env.NODE_ENV === 'production' ? 'dist/privacy.html' : 'public/privacy.html');
+  res.sendFile(filePath);
+});
+
 // Dona Suggestions / Spotlight
 app.get('/api/dona/suggestions', async (req, res) => {
   const lang = (req.query.lang as string) === 'en' ? 'en-US' : 'fr-FR';

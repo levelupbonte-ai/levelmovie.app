@@ -32,6 +32,7 @@ import { MandatoryProfileCompletionModal } from './components/MandatoryProfileCo
 import { DonaModal } from './components/DonaModal';
 import { CinematicPosterWall } from './components/CinematicPosterWall';
 import { FooterDisclaimer } from './components/FooterDisclaimer';
+import { LegalModal, LegalDocType } from './components/LegalModal';
 import { NetworkOfflineManager } from './components/NetworkOfflineManager';
 import { LevelAnimeApp } from './components/apps/LevelAnimeApp';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
@@ -125,6 +126,8 @@ export default function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [authModalInitialView, setAuthModalInitialView] = useState<AuthView>('view-main');
+  const [showLegalModal, setShowLegalModal] = useState(false);
+  const [legalDocType, setLegalDocType] = useState<LegalDocType>('terms');
   const [showDona, setShowDona] = useState(false);
   const [donaHistoryTrigger, setDonaHistoryTrigger] = useState(0);
   const [donaNewChatTrigger, setDonaNewChatTrigger] = useState(0);
@@ -1417,6 +1420,10 @@ export default function App() {
           lang={lang}
           onOpenSupport={() => setShowSupport(true)}
           onOpenSettings={() => setShowSettings(true)}
+          onOpenLegal={(doc) => {
+            setLegalDocType(doc);
+            setShowLegalModal(true);
+          }}
         />
       )}
 
@@ -1507,11 +1514,23 @@ export default function App() {
         onOpenLogin={() => setShowLoginModal(true)}
         onOpenLogout={() => setShowLogoutConfirm(true)}
         onOpenDona={() => { setShowSettings(false); setCurrentCategory('dona'); }}
+        onOpenLegal={(doc) => {
+          setLegalDocType(doc);
+          setShowLegalModal(true);
+        }}
         watchlistCount={watchlistData.length}
         historyCount={recentlyViewed.length}
         onNavigateCategory={(cat) => setCurrentCategory(cat)}
         showToast={showToast}
         t={t}
+      />
+
+      {/* MODAL JURIDIQUE : CONDITIONS GÉNÉRALES & CONFIDENTIALITÉ */}
+      <LegalModal
+        isOpen={showLegalModal}
+        onClose={() => setShowLegalModal(false)}
+        initialDoc={legalDocType}
+        lang={lang}
       />
 
       {/* MODAL AUTH / CONNEXION & INSCRIPTION PLEIN ECRAN */}

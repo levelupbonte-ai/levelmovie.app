@@ -25,6 +25,7 @@ interface SettingsModalProps {
   onOpenLogin: () => void;
   onOpenLogout: () => void;
   onOpenDona?: () => void;
+  onOpenLegal?: (doc: 'terms' | 'privacy') => void;
   watchlistCount: number;
   historyCount: number;
   onNavigateCategory: (cat: string) => void;
@@ -88,6 +89,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenLogin,
   onOpenLogout,
   onOpenDona,
+  onOpenLegal,
   watchlistCount,
   historyCount,
   onNavigateCategory,
@@ -1966,36 +1968,48 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="space-y-6 animate-in fade-in duration-150">
             <div className="border-b border-white/10 pb-3">
               <h3 className="text-xl font-black text-white uppercase tracking-wider">
-                {lang === 'fr' ? 'Politique de Confidentialité' : 'Privacy Policy'}
+                {lang === 'fr' ? 'Protection des Données & RGPD' : 'Data Privacy & GDPR'}
               </h3>
               <p className="text-xs text-white/50 mt-1">
-                {lang === 'fr' ? 'Transparence et engagement sur la protection de vos données' : 'Transparency and data privacy commitment'}
+                {lang === 'fr' ? 'Transparence et engagements stricts de sécurité LevelUp' : 'Transparency and LevelUp security commitments'}
               </p>
             </div>
             
             <p className="text-sm text-white/70 leading-relaxed">
               {lang === 'fr' 
-                ? 'Nous prenons la protection de vos données très au sérieux. Consultez nos politiques pour comprendre comment vos données sont gérées sur LevelMovie et au sein de l\'écosystème LevelUp.'
-                : 'We take data protection very seriously. Check our policies to understand how your data is managed across LevelMovie and the LevelUp Ecosystem.'}
+                ? 'Nous prenons la protection de vos données très au sérieux. Aucune donnée n\'est vendue ou utilisée à des fins publicitaires. Consultez nos documents officiels ci-dessous :'
+                : 'We take data protection very seriously. No personal data is ever sold or used for advertising. Read our official policies below:'}
             </p>
 
             <div className="flex flex-col gap-3 pt-2">
-              <a 
-                href="#privacy-levelmovie" 
-                onClick={(e) => { e.preventDefault(); showToast('Politique LevelMovie affichée', 'info'); }}
-                className="py-3.5 px-5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 text-white text-sm font-medium flex justify-between items-center transition-colors cursor-pointer"
+              <button 
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenLegal?.('privacy');
+                }}
+                className="py-3.5 px-5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 text-white text-sm font-medium flex justify-between items-center transition-colors cursor-pointer text-left"
               >
-                <span>Politique de Confidentialité LevelMovie</span>
+                <div>
+                  <span className="font-semibold">{lang === 'fr' ? 'Politique de Confidentialité Officielle (RGPD)' : 'Official Privacy Policy (GDPR)'}</span>
+                  <p className="text-[11px] text-white/40 mt-0.5">{lang === 'fr' ? 'Version 1.2 · Mai 2026' : 'Version 1.2 · May 2026'}</p>
+                </div>
                 <ChevronRight className="w-4 h-4 text-white/40" />
-              </a>
-              <a 
-                href="#privacy-levelup" 
-                onClick={(e) => { e.preventDefault(); showToast('Politique LevelUp Ecosystem affichée', 'info'); }}
-                className="py-3.5 px-5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 text-white text-sm font-medium flex justify-between items-center transition-colors cursor-pointer"
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenLegal?.('terms');
+                }}
+                className="py-3.5 px-5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 text-white text-sm font-medium flex justify-between items-center transition-colors cursor-pointer text-left"
               >
-                <span>Politique de Confidentialité LevelUp Ecosystem</span>
+                <div>
+                  <span className="font-semibold">{lang === 'fr' ? "Conditions Générales d'Utilisation" : "Terms of Service"}</span>
+                  <p className="text-[11px] text-white/40 mt-0.5">{lang === 'fr' ? 'Règles, clé LVL & Charte DMCA' : 'Rules, LVL Key & DMCA Policy'}</p>
+                </div>
                 <ChevronRight className="w-4 h-4 text-white/40" />
-              </a>
+              </button>
             </div>
           </div>
         );
@@ -2014,11 +2028,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 space-y-4 text-sm text-white/75 leading-relaxed shadow-sm">
               <p>
-                <strong className="text-white">LevelMovie</strong> fait partie intégrante de l'écosystème innovant <strong className="text-[#c084fc]">LevelUp</strong>. Notre mission est de fournir la meilleure expérience de streaming participative, gratuite et immersive avec Watch Party synchronisée et intelligence artificielle.
+                <strong className="text-white">LevelMovie</strong> fait partie intégrante de l'écosystème innovant <strong className="text-[#c084fc]">LevelUp</strong>. Notre mission est de fournir la meilleure expérience cinématographique participative, fluide et sécurisée avec Watch Party synchronisée et intelligence artificielle.
               </p>
               <p>
-                Plateforme propulsée par des technologies de pointe : intégration de catalogues dynamiques, lecteurs multi-serveurs avec basculement automatique et assistant vocal intelligent Dona.
+                Propulsé par des architectures décentralisées, des catalogues intelligents et le respect absolu de la vie privée des utilisateurs.
               </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenLegal?.('terms');
+                }}
+                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-white/80 transition-colors"
+              >
+                {lang === 'fr' ? "Conditions d'utilisation" : "Terms of Service"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenLegal?.('privacy');
+                }}
+                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-white/80 transition-colors"
+              >
+                {lang === 'fr' ? "Confidentialité" : "Privacy Policy"}
+              </button>
             </div>
           </div>
         );
