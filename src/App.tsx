@@ -27,7 +27,7 @@ import { AppSidebar } from './components/AppSidebar';
 import { ExternalAppsModal } from './components/ExternalAppsModal';
 import { SupportModal } from './components/SupportModal';
 import { SearchModal } from './components/SearchModal';
-import { AuthModal } from './components/AuthModal';
+import { AuthModal, AuthView } from './components/AuthModal';
 import { MandatoryProfileCompletionModal } from './components/MandatoryProfileCompletionModal';
 import { DonaModal } from './components/DonaModal';
 import { CinematicPosterWall } from './components/CinematicPosterWall';
@@ -124,6 +124,7 @@ export default function App() {
   const [isNearBottom, setIsNearBottom] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [authModalInitialView, setAuthModalInitialView] = useState<AuthView>('view-main');
   const [showDona, setShowDona] = useState(false);
   const [donaHistoryTrigger, setDonaHistoryTrigger] = useState(0);
   const [donaNewChatTrigger, setDonaNewChatTrigger] = useState(0);
@@ -579,43 +580,81 @@ export default function App() {
         }
       }
 
-      // POCKET 3: Support & FAQ Full-screen Center
-      const isSupportReq = params.get('support') === 'true' || params.get('help') === 'true' || params.get('faq') === 'true' || path === '/support' || hash === '#support' || hash === '#help';
+      // POCKET 3: Support & FAQ Center
+      const isSupportReq = params.get('modal') === 'support' || params.get('support') === 'true' || params.get('help') === 'true' || params.get('faq') === 'true' || path === '/support' || hash === '#support' || hash === '#help';
       if (isSupportReq) {
         setShowSupport(true);
         return;
       }
 
-      // POCKET 4: Auth / Login / Signup
-      const authAction = params.get('auth') || (params.get('login') === 'true' ? 'login' : null);
-      if (authAction) {
+      // POCKET 4: Auth / Login / Signup / Forgot Password
+      const authParam = params.get('auth');
+      const isLoginParam = params.get('login') === 'true' || params.get('signin') === 'true';
+      const isSignupParam = params.get('signup') === 'true' || params.get('register') === 'true' || params.get('create-account') === 'true';
+      const isForgotParam = params.get('forgot') === 'true' || params.get('forgot-password') === 'true';
+
+      if (authParam === 'login' || isLoginParam || path === '/login') {
+        setAuthModalInitialView('view-login');
+        setShowLoginModal(true);
+        return;
+      }
+      if (authParam === 'register' || authParam === 'signup' || isSignupParam || path === '/register' || path === '/signup' || path === '/create-account') {
+        setAuthModalInitialView('view-register-credentials');
+        setShowLoginModal(true);
+        return;
+      }
+      if (authParam === 'forgot-password' || authParam === 'forgot' || isForgotParam || path === '/forgot-password') {
+        setAuthModalInitialView('view-forgot-password');
+        setShowLoginModal(true);
+        return;
+      }
+      if (authParam || path === '/auth') {
+        setAuthModalInitialView('view-main');
         setShowLoginModal(true);
         return;
       }
 
-      // POCKET 5: Search Query
+      // POCKET 5: Search Modal & Search Query
+      const isSearchModal = params.get('modal') === 'search' || params.get('search') === 'true';
       const queryParam = params.get('search') || params.get('q');
-      if (queryParam) {
+      if (queryParam && queryParam !== 'true') {
         setCurrentCategory('search');
         setSearchQuery(queryParam);
+        setShowSearchModal(true);
+        return;
+      }
+      if (isSearchModal || path === '/search') {
+        setShowSearchModal(true);
         return;
       }
 
-      // POCKET 6: Navigation Category / Tabs
+      // POCKET 6: External Apps Modal
+      const isAppsModal = params.get('modal') === 'apps' || params.get('apps') === 'true' || path === '/apps';
+      if (isAppsModal) {
+        setShowExternalApps(true);
+        return;
+      }
+
+      // POCKET 7: Navigation Category / Tabs
       const tabParam = params.get('tab') || params.get('category') || params.get('cat');
       if (tabParam) {
-        const validTabs = ['home', 'movies', 'series', 'parties', 'favorites', 'history', 'top', 'search'];
+        const validTabs = ['home', 'movie', 'movies', 'tv', 'series', 'party', 'parties', 'anime', 'watchlist', 'favorites', 'trailers', 'dona'];
         const targetTab = tabParam.toLowerCase();
         if (validTabs.includes(targetTab)) {
-          setCurrentCategory(targetTab);
+          const mappedTab = (targetTab === 'movies' ? 'movie' : targetTab === 'series' ? 'tv' : targetTab === 'parties' ? 'party' : targetTab === 'favorites' ? 'watchlist' : targetTab);
+          setCurrentCategory(mappedTab);
           return;
         }
       }
+      if (path === '/anime') { setCurrentCategory('anime'); return; }
+      if (path === '/dona') { setCurrentCategory('dona'); return; }
+      if (path === '/watchlist' || path === '/favorites') { setCurrentCategory('watchlist'); return; }
+      if (path === '/trailers') { setCurrentCategory('trailers'); return; }
 
-      // POCKET 7: Settings
-      const settingsParam = params.get('settings');
-      if (settingsParam) {
-        if (['account', 'servers', 'parental', 'data', 'interface'].includes(settingsParam)) {
+      // POCKET 8: Settings
+      const settingsParam = params.get('settings') || (params.get('modal') === 'settings' ? 'account' : null);
+      if (settingsParam || path === '/settings') {
+        if (typeof settingsParam === 'string' && ['account', 'servers', 'parental', 'data', 'interface'].includes(settingsParam)) {
           setSettingsTab(settingsParam);
         }
         setShowSettings(true);
@@ -1478,13 +1517,20 @@ export default function App() {
       {/* MODAL AUTH / CONNEXION & INSCRIPTION PLEIN ECRAN */}
       <AuthModal
         isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLoginSuccess={(loggedUser, name, email, photo, handle) => {
+        initialView={authModalInitialView}
+        onClose={() => {
+          setShowLoginModal(false);
+          setAuthModalInitialView('view-main');
+        }}
+        onLoginSuccess={(loggedUser, name, email, photo, handle, age) => {
           setUser(loggedUser);
           setUserName(name);
           setUserEmail(email);
           if (photo) setUserPhoto(photo);
           if (handle) setUserHandle(handle);
+          if (age) {
+            localStorage.setItem('levelmovie_user_age', String(age));
+          }
         }}
         lang={lang}
         showToast={showToast}
@@ -1496,13 +1542,16 @@ export default function App() {
         user={onboardingOAuthUser}
         lang={lang}
         showToast={showToast}
-        onComplete={({ name, handle, photo, email }) => {
+        onComplete={({ name, handle, photo, email, age }) => {
           const uid = onboardingOAuthUser?.id || onboardingOAuthUser?.uid || `usr_${Date.now()}`;
           setUser({ uid, email });
           setUserName(name);
           setUserEmail(email);
           setUserPhoto(photo);
           setUserHandle(handle);
+          if (age) {
+            localStorage.setItem('levelmovie_user_age', String(age));
+          }
           setShowMandatoryOnboarding(false);
           setOnboardingOAuthUser(null);
         }}

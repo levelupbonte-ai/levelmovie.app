@@ -211,6 +211,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('modal', 'search');
+        if (query.trim()) {
+          url.searchParams.set('q', query.trim());
+        }
+        window.history.replaceState({}, '', url.pathname + '?' + url.searchParams.toString() + url.hash);
+      } catch (_) {}
     } else {
       stopVoiceSearch();
       setQuery('');
@@ -219,6 +227,16 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       setSearchMode('catalog');
       setSpeechTranscript('');
       setSpeechError(null);
+      try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('modal') === 'search') {
+          url.searchParams.delete('modal');
+          url.searchParams.delete('q');
+          url.searchParams.delete('search');
+          const qs = url.searchParams.toString();
+          window.history.replaceState({}, '', url.pathname + (qs ? '?' + qs : '') + url.hash);
+        }
+      } catch (_) {}
     }
     return () => {
       stopVoiceSearch();

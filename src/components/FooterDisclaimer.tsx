@@ -3,6 +3,8 @@ import { LevelMovieLogo } from '../constants';
 
 interface FooterDisclaimerProps {
   lang: string;
+  onOpenSupport?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({ lang }) => {

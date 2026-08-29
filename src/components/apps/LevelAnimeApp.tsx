@@ -808,6 +808,7 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
   userPhoto,
   userName = 'Membre VIP',
   userEmail = '',
+  userAge = null,
   activeTab = 'home',
   onTabChange,
   onOpenMovie,

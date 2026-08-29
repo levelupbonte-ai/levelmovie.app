@@ -33,16 +33,31 @@ export const supabase: SupabaseClient | null = (supabaseUrl && supabaseAnonKey)
 /**
  * Sync user profile in Supabase
  */
-export async function syncUserProfileSupabase(userId: string, data: { name?: string; email?: string; photo?: string; preferences?: any }) {
+export async function syncUserProfileSupabase(
+  userId: string,
+  data: {
+    name?: string;
+    displayName?: string;
+    email?: string;
+    photo?: string;
+    photoURL?: string;
+    username?: string;
+    age?: number;
+    profile_completed?: boolean;
+    preferences?: any;
+  }
+) {
   if (!supabase) return null;
   try {
     const { error } = await supabase
       .from('profiles')
       .upsert({
         id: userId,
-        full_name: data.name,
+        full_name: data.displayName || data.name,
         email: data.email,
-        avatar_url: data.photo,
+        avatar_url: data.photoURL || data.photo,
+        username: data.username,
+        age: data.age,
         preferences: data.preferences,
         updated_at: new Date().toISOString()
       });

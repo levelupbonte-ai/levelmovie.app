@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   RotateCw, Music, Flame, Sun, 
   MessageSquare, LogOut, Home,
@@ -149,6 +149,30 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
 
   const [currentAppId, setCurrentAppId] = useState<LevelApp['id'] | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('modal', 'apps');
+        if (currentAppId) {
+          url.searchParams.set('app', currentAppId);
+        }
+        window.history.replaceState({}, '', url.pathname + '?' + url.searchParams.toString() + url.hash);
+      } catch (_) {}
+    } else {
+      try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('modal') === 'apps') {
+          url.searchParams.delete('modal');
+          url.searchParams.delete('app');
+          url.searchParams.delete('apps');
+          const qs = url.searchParams.toString();
+          window.history.replaceState({}, '', url.pathname + (qs ? '?' + qs : '') + url.hash);
+        }
+      } catch (_) {}
+    }
+  }, [isOpen, currentAppId]);
 
   if (!isOpen) return null;
 

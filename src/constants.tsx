@@ -114,22 +114,36 @@ export const filterMatureContent = (items: any[], parentalFilterActive: boolean)
 
 /**
  * Filter catalog for minors (< 18 years old):
- * Removes 18+ content, adult flags, gore/extreme violence genres, and filters suggestions adapted to youth.
+ * Removes 18+ content, adult flags, horror/gore/extreme violence genres,
+ * and provides youth-adapted suggestion lists for 16-17 year olds.
+ * 18+ users have full uncensored access.
  */
 export const filterContentByAge = (items: any[], userAge: number | null | undefined) => {
   if (!Array.isArray(items)) return items;
-  if (!userAge || userAge >= 18) {
-    return items.filter(item => item && item.adult !== true);
+  // If user is 18 or older, or age is undefined (guest default), pass all safe standard items
+  if (userAge !== null && userAge !== undefined && userAge >= 18) {
+    return items;
   }
-  // For users under 18: strictly no adult content, no horror (27), and filter out dark mature themes
-  return items.filter(item => {
-    if (!item) return false;
-    if (item.adult === true) return false;
-    const genreIds = item.genre_ids || (item.genres ? item.genres.map((g: any) => g.id) : []);
-    // Under 18 restriction: eliminate horror (27)
-    if (genreIds.includes(27)) return false;
-    return true;
-  });
+  // If user is under 18 (16-17 years old):
+  if (userAge !== null && userAge !== undefined && userAge < 18) {
+    return items.filter(item => {
+      if (!item) return false;
+      // Strictly exclude any content flagged as adult or 18+
+      if (item.adult === true || item.is_adult === true) return false;
+      const genreIds = item.genre_ids || (item.genres ? item.genres.map((g: any) => typeof g === 'object' ? g.id : g) : []);
+      // Strictly exclude Horror (27), War/Extreme Gore (10752)
+      if (genreIds.includes(27) || genreIds.includes(10752)) return false;
+      // Filter out mature anime genres and titles with NSFW/Ecchi/Erotic keywords
+      const title = (item.title || item.name || item.original_title || item.original_name || '').toLowerCase();
+      const overview = (item.overview || item.synopsis || '').toLowerCase();
+      const matureKeywords = ['hentai', 'ecchi', 'erotic', 'gore', 'slasher', 'massacre', '18+', 'nsfw', 'explicit'];
+      if (matureKeywords.some(kw => title.includes(kw) || overview.includes(kw))) {
+        return false;
+      }
+      return true;
+    });
+  }
+  return items.filter(item => item && item.adult !== true);
 };
 
 export const seededRandom = (seed: number) => {

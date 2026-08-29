@@ -249,6 +249,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   // File import ref
   const importFileRef = useRef<HTMLInputElement | null>(null);
 
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('modal', 'settings');
+        url.searchParams.set('settings_tab', activeTab);
+        window.history.replaceState({}, '', url.pathname + '?' + url.searchParams.toString() + url.hash);
+      } catch (_) {}
+    } else {
+      try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('modal') === 'settings') {
+          url.searchParams.delete('modal');
+          url.searchParams.delete('settings');
+          url.searchParams.delete('settings_tab');
+          const qs = url.searchParams.toString();
+          window.history.replaceState({}, '', url.pathname + (qs ? '?' + qs : '') + url.hash);
+        }
+      } catch (_) {}
+    }
+  }, [isOpen, activeTab]);
+
   // Sound generator for test
   const playNotificationSound = () => {
     try {
@@ -636,8 +658,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <div className="space-y-4">
               {/* Carte Photo & Identifiant avec Copie */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 sm:p-5 flex items-center gap-5 shadow-sm">
-                <div className="relative group shrink-0">
+              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-5 shadow-sm">
+                <input
+                  type="file"
+                  ref={importFileRef}
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 5 * 1024 * 1024) {
+                      showToast(lang === 'fr' ? 'L\'image dépasse 5 Mo' : 'Image exceeds 5MB', 'error');
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      const res = reader.result as string;
+                      setCustomAvatar(res);
+                      localStorage.setItem('levelmovie_custom_avatar', res);
+                      localStorage.setItem('levelmovie_user_photo', res);
+                      localStorage.setItem('lm_photo', res);
+                      showToast(lang === 'fr' ? 'Photo de profil mise à jour !' : 'Profile photo updated!', 'success');
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                  className="hidden"
+                />
+
+                <div className="relative group shrink-0 self-center sm:self-auto">
                   <div className="w-20 h-20 bg-[#151624] border-2 border-white/20 rounded-2xl overflow-hidden flex items-center justify-center shadow-md">
                     {customAvatar || userPhoto ? (
                       <img src={customAvatar || userPhoto || ''} alt="Avatar" className="w-full h-full object-cover" />
@@ -649,9 +696,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                   <button 
                     type="button"
-                    onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+                    onClick={() => importFileRef.current?.click()}
                     className="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    title={lang === 'fr' ? 'Changer l\'avatar' : 'Change avatar'}
+                    title={lang === 'fr' ? 'Importer une photo' : 'Upload a photo'}
                   >
                     <Camera className="w-6 h-6 text-white" />
                   </button>
@@ -668,7 +715,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <input 
                       type="text" 
                       readOnly 
@@ -690,40 +737,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       {copiedId ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white/70" />}
                     </button>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => importFileRef.current?.click()}
+                    className="text-xs text-[#c084fc] hover:text-white font-bold inline-flex items-center gap-1.5 cursor-pointer underline underline-offset-2"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{lang === 'fr' ? 'Importer une photo depuis l\'appareil' : 'Upload photo from device'}</span>
+                  </button>
                 </div>
               </div>
-
-              {/* Sélection d'avatar rapide si ouvert */}
-              {showAvatarPicker && (
-                <div className="p-4 bg-[#0e0f1a] border border-[#a855f7]/30 rounded-2xl space-y-3 animate-in fade-in">
-                  <span className="text-xs font-bold text-white block">
-                    {lang === 'fr' ? 'Choisir un avatar prédéfini :' : 'Choose a preset avatar:'}
-                  </span>
-                  <div className="grid grid-cols-5 gap-2">
-                    {[
-                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&auto=format&fit=crop&q=80',
-                    ].map((url, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => {
-                          setCustomAvatar(url);
-                          localStorage.setItem('levelmovie_custom_avatar', url);
-                          setShowAvatarPicker(false);
-                          showToast(lang === 'fr' ? 'Avatar mis à jour !' : 'Avatar updated!', 'success');
-                        }}
-                        className="w-12 h-12 rounded-xl overflow-hidden border-2 border-white/20 hover:border-[#a855f7] transition-all cursor-pointer"
-                      >
-                        <img src={url} alt="preset" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Carte Email et Moyen de connexion */}
               <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">

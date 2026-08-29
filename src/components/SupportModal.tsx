@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   X, Search, Play, Users, Volume2, Lock, Laptop, Server,
   ChevronRight, ChevronDown, Check, ArrowLeft, Send, Sparkles,
@@ -59,6 +59,26 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     'Cloud Database (Supabase)': 16
   });
   const [isPinging, setIsPinging] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('modal', 'support');
+        window.history.replaceState({}, '', url.pathname + '?' + url.searchParams.toString() + url.hash);
+      } catch (_) {}
+    } else {
+      try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('modal') === 'support') {
+          url.searchParams.delete('modal');
+          url.searchParams.delete('support');
+          const qs = url.searchParams.toString();
+          window.history.replaceState({}, '', url.pathname + (qs ? '?' + qs : '') + url.hash);
+        }
+      } catch (_) {}
+    }
+  }, [isOpen]);
 
   // Categorires in Google Help Center style
   const categories = useMemo(() => [
