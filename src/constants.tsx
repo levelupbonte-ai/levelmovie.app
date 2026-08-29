@@ -41,6 +41,12 @@ export const LevelMovieLogo = ({ className = "w-6 h-6", color = "currentColor" }
   </svg>
 );
 
+export const TikTokHomeIcon = ({ className = "w-5 h-5", fill = "currentColor" }: { className?: string; fill?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2.5L2 11.2H5.2V21.5H10.2V15.2C10.2 14.2 11 13.4 12 13.4C13 13.4 13.8 14.2 13.8 15.2V21.5H18.8V11.2H22L12 2.5Z" />
+  </svg>
+);
+
 export const WatchPartySVG = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>

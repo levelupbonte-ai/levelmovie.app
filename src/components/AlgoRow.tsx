@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Star, Clapperboard, Play } from 'lucide-react';
 import { BASE_URL, IMAGE_BASE_URL, API_KEY, filterMatureContent, seededShuffle } from '../constants';
+import { LevelMovieImage } from './LevelMovieImage';
 
 export const AlgoRow = React.memo(function AlgoRow({
   title,
@@ -75,21 +76,33 @@ export const AlgoRow = React.memo(function AlgoRow({
       </div>
 
       <div ref={rowRef} className="flex overflow-y-hidden overflow-x-scroll py-2 space-x-3 md:space-x-5 no-scrollbar pr-8">
-        {movies.map(movie => (
-          <div
-            key={movie.id}
-            className="relative flex-none cursor-pointer rounded-2xl overflow-hidden shadow-xl border border-[#a855f7]/20 bg-[#151520] hover:scale-105 transition-transform w-[240px] md:w-[320px] h-[135px] md:h-[180px]"
-            onClick={() => onMovieClick(movie)}
-          >
-            <img className="object-cover w-full h-full" src={`${IMAGE_BASE_URL}${movie.backdrop_path}`} loading="lazy" draggable="false" alt="" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent flex flex-col justify-end p-3">
-              <p className="text-white font-black text-[11px] md:text-sm uppercase tracking-wider truncate drop-shadow-md">{movie.title || movie.name}</p>
-              <span className="text-[#a855f7] font-bold text-[9px] md:text-[10px] mt-0.5 flex items-center gap-1">
-                <Star className="w-3 h-3" /> {movie.vote_average?.toFixed(1)}
-              </span>
+        {movies.map(movie => {
+          const movieTitle = movie.title || movie.name || 'LevelMovie';
+          return (
+            <div
+              key={movie.id}
+              className="relative flex-none cursor-pointer rounded-2xl overflow-hidden shadow-xl border border-[#a855f7]/20 bg-[#151520] hover:scale-105 transition-transform w-[240px] md:w-[320px] h-[135px] md:h-[180px]"
+              onClick={() => onMovieClick(movie)}
+            >
+              <LevelMovieImage
+                src={`${IMAGE_BASE_URL}${movie.backdrop_path || movie.poster_path}`}
+                alt={movieTitle}
+                fallbackTitle={movieTitle}
+                brandTheme="purple"
+                className="object-cover w-full h-full"
+                containerClassName="w-full h-full"
+                loading="lazy"
+                draggable={false}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent flex flex-col justify-end p-3 pointer-events-none">
+                <p className="text-white font-black text-[11px] md:text-sm uppercase tracking-wider truncate drop-shadow-md">{movieTitle}</p>
+                <span className="text-[#a855f7] font-bold text-[9px] md:text-[10px] mt-0.5 flex items-center gap-1">
+                  <Star className="w-3 h-3" /> {movie.vote_average?.toFixed(1)}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div
@@ -164,21 +177,33 @@ export const TrailerRow = React.memo(function TrailerRow({
         {title} <Clapperboard className="w-4 h-4 text-[#ec4899]" />
       </h2>
       <div className="flex overflow-x-scroll py-2 space-x-3 md:space-x-5 no-scrollbar pr-8">
-        {items.map(m => (
-          <div
-            key={m.id}
-            className="relative flex-none cursor-pointer rounded-2xl overflow-hidden shadow-xl border border-[#ec4899]/20 bg-[#151520] hover:scale-105 transition-transform w-[200px] md:w-[260px] aspect-video group"
-            onClick={() => onPlayTrailer(m)}
-          >
-            <img className="object-cover w-full h-full opacity-70 group-hover:opacity-40 transition-opacity" src={`${IMAGE_BASE_URL}${m.backdrop_path}`} loading="lazy" draggable="false" alt="" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-black/60 border border-white/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-[#ec4899]/90 group-hover:border-[#ec4899] transition-all shadow-lg backdrop-blur-sm">
-                <Play className="w-5 h-5 fill-white text-white ml-0.5" />
+        {items.map(m => {
+          const itemTitle = m.title || m.name || 'LevelMovie';
+          return (
+            <div
+              key={m.id}
+              className="relative flex-none cursor-pointer rounded-2xl overflow-hidden shadow-xl border border-[#ec4899]/20 bg-[#151520] hover:scale-105 transition-transform w-[200px] md:w-[260px] aspect-video group"
+              onClick={() => onPlayTrailer(m)}
+            >
+              <LevelMovieImage
+                src={`${IMAGE_BASE_URL}${m.backdrop_path || m.poster_path}`}
+                alt={itemTitle}
+                fallbackTitle={itemTitle}
+                brandTheme="purple"
+                className="object-cover w-full h-full opacity-70 group-hover:opacity-40 transition-opacity"
+                containerClassName="w-full h-full"
+                loading="lazy"
+                draggable={false}
+              />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-black/60 border border-white/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-[#ec4899]/90 group-hover:border-[#ec4899] transition-all shadow-lg backdrop-blur-sm">
+                  <Play className="w-5 h-5 fill-white text-white ml-0.5" />
+                </div>
               </div>
+              <p className="absolute bottom-2 left-2 right-2 text-white font-bold text-[10px] md:text-[11px] truncate drop-shadow-md pointer-events-none">{itemTitle}</p>
             </div>
-            <p className="absolute bottom-2 left-2 right-2 text-white font-bold text-[10px] md:text-[11px] truncate drop-shadow-md">{m.title || m.name}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { BASE_URL, IMAGE_BASE_URL, API_KEY } from '../constants';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { LevelMovieImage } from './LevelMovieImage';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -481,23 +482,20 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                             className="group relative rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-white/20 overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] shadow-md flex flex-col"
                           >
                             <div className="relative aspect-[2/3] w-full bg-[#121320] overflow-hidden">
-                              {poster ? (
-                                <img
-                                  src={poster}
-                                  alt={title}
-                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-white/30">
-                                  <Film className="w-8 h-8" />
-                                </div>
-                              )}
-                              <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-bold text-white uppercase">
+                              <LevelMovieImage
+                                src={poster}
+                                alt={title}
+                                fallbackTitle={title}
+                                brandTheme="purple"
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                containerClassName="w-full h-full"
+                                loading="lazy"
+                              />
+                              <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-bold text-white uppercase z-10">
                                 {isTv ? 'SÉRIE' : 'FILM'}
                               </div>
                               {movie.vote_average > 0 && (
-                                <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-amber-500/90 text-[9px] font-black text-black flex items-center gap-0.5">
+                                <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-amber-500/90 text-[9px] font-black text-black flex items-center gap-0.5 z-10">
                                   <Star className="w-2.5 h-2.5 fill-black" />
                                   {movie.vote_average.toFixed(1)}
                                 </div>

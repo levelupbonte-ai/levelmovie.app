@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { LevelMovieLogo } from '../../constants';
+import { LevelMovieImage } from '../LevelMovieImage';
+import {
+  REAL_POPULAR_ANIMES,
+  REAL_ACTION_ANIMES,
+  REAL_FANTASY_ANIMES,
+  REAL_ANIME_MOVIES
+} from '../../data/animeData';
 import {
   Play, Info, Search, X, Star, ChevronLeft, ChevronRight,
   Bookmark, Home, Tv, Clapperboard, Users, Flame, Calendar,
@@ -7,7 +14,8 @@ import {
   Loader2, Eye, Trophy, Heart, AlignLeft, Filter, Sparkles, LayoutGrid,
   BellRing, Mic2, Settings, User, PlayCircle, Subtitles, HardDrive, LogOut,
   ShieldCheck, KeyRound, EyeOff, AlertTriangle, Server, Share2, Film, Check,
-  RotateCw, Clock, Zap, Radio, Sparkle
+  RotateCw, Clock, Zap, Radio, Sparkle, Swords, Wand2, Smile, Skull,
+  Bot, Coffee, Ghost, Theater, Map, Activity, Crown, Dumbbell, BookOpen, Layers
 } from 'lucide-react';
 
 interface LevelAnimeAppProps {
@@ -30,20 +38,39 @@ const formatMetric = (num: number) => {
   return num.toString();
 };
 
+// Clean SVG Icon mapping for genres
 const ANIME_GENRES = [
-  { id: 1, name: 'Action', icon: '🔥' },
-  { id: 2, name: 'Aventure', icon: '🗺️' },
-  { id: 10, name: 'Fantasy & Isekai', icon: '✨' },
-  { id: 4, name: 'Comédie', icon: '😂' },
-  { id: 8, name: 'Drame', icon: '🎭' },
-  { id: 22, name: 'Romance', icon: '❤️' },
-  { id: 24, name: 'Sci-Fi & Mecha', icon: '🚀' },
-  { id: 14, name: 'Dark Fantasy & Horreur', icon: '🩸' },
-  { id: 30, name: 'Sport', icon: '🏅' },
-  { id: 36, name: 'Tranche de vie', icon: '☕' },
-  { id: 7, name: 'Mystère & Thriller', icon: '🔍' },
-  { id: 37, name: 'Surnaturel', icon: '👻' },
+  { id: 1, name: 'Combats & Action', iconKey: 'swords', color: 'text-red-400' },
+  { id: 10, name: 'Fantasy & Isekai', iconKey: 'wand2', color: 'text-amber-400' },
+  { id: 2, name: 'Aventure & Quêtes', iconKey: 'compass', color: 'text-emerald-400' },
+  { id: 14, name: 'Dark Fantasy & Horreur', iconKey: 'skull', color: 'text-rose-400' },
+  { id: 37, name: 'Surnaturel & Magie', iconKey: 'zap', color: 'text-purple-400' },
+  { id: 24, name: 'Sci-Fi & Mecha', iconKey: 'bot', color: 'text-cyan-400' },
+  { id: 22, name: 'Romance & Drame', iconKey: 'heart', color: 'text-pink-400' },
+  { id: 30, name: 'Sports & Tournois', iconKey: 'trophy', color: 'text-yellow-400' },
+  { id: 7, name: 'Mystère & Thriller', iconKey: 'search', color: 'text-blue-400' },
+  { id: 4, name: 'Comédie & Humour', iconKey: 'smile', color: 'text-orange-400' },
+  { id: 36, name: 'Tranche de vie', iconKey: 'coffee', color: 'text-teal-400' },
+  { id: 8, name: 'Psychologique', iconKey: 'theater', color: 'text-indigo-400' },
 ];
+
+const renderGenreSvg = (key: string, className = "w-4 h-4") => {
+  switch (key) {
+    case 'swords': return <Swords className={className} />;
+    case 'wand2': return <Wand2 className={className} />;
+    case 'compass': return <Compass className={className} />;
+    case 'skull': return <Skull className={className} />;
+    case 'zap': return <Zap className={className} />;
+    case 'bot': return <Bot className={className} />;
+    case 'heart': return <Heart className={className} />;
+    case 'trophy': return <Trophy className={className} />;
+    case 'search': return <Search className={className} />;
+    case 'smile': return <Smile className={className} />;
+    case 'coffee': return <Coffee className={className} />;
+    case 'theater': return <Theater className={className} />;
+    default: return <Sparkles className={className} />;
+  }
+};
 
 const getDayKeyFromDate = (date: Date): string => {
   const dayIndex = date.getDay(); // 0 = Sunday, 1 = Monday, ...
@@ -62,15 +89,124 @@ const WEEK_DAYS = [
 ];
 
 // -------------------------------------------------------------
+// STANDALONE SUB-COMPONENT: ANIME CARD
+// -------------------------------------------------------------
+interface AnimeCardProps {
+  anime: any;
+  onOpenAnime: (anime: any, mode?: 'info' | 'play' | 'trailer') => void;
+  onToggleWatchlist?: (anime: any, e?: React.MouseEvent) => void;
+  isWatchlisted?: boolean;
+  className?: string;
+  aspectClass?: string;
+}
+
+const AnimeCard: React.FC<AnimeCardProps> = React.memo(({
+  anime,
+  onOpenAnime,
+  onToggleWatchlist,
+  isWatchlisted = false,
+  className = "w-[135px] sm:w-[155px] md:w-[180px] lg:w-[200px]",
+  aspectClass = "aspect-[2/3]"
+}) => {
+  const imageUrl = anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url || anime.images?.webp?.image_url;
+  const title = anime.title_english || anime.title || 'Anime';
+  const score = anime.score ? anime.score.toFixed(1) : null;
+  const year = anime.year || (anime.aired?.prop?.from?.year) || '';
+  const episodes = anime.episodes ? `${anime.episodes} EPS` : (anime.airing ? 'SIMULCAST' : 'HD');
+
+  return (
+    <div
+      onClick={() => onOpenAnime(anime, 'info')}
+      className={`group relative flex-none cursor-pointer rounded-xl overflow-hidden shadow-xl border border-white/5 bg-[#121218] hover:border-red-500/50 hover:shadow-2xl hover:shadow-red-950/30 transition-all duration-300 ${className}`}
+    >
+      <div className={`relative w-full ${aspectClass} overflow-hidden bg-[#0d0d14]`}>
+        <LevelMovieImage
+          src={imageUrl}
+          alt={title}
+          fallbackTitle={title}
+          brandTheme="red"
+          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+          containerClassName="w-full h-full"
+          loading="lazy"
+          draggable={false}
+        />
+
+        {/* Top Badges */}
+        <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none z-10">
+          <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-md border border-white/10 text-green-400 text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow">
+            VF / VOSTFR
+          </span>
+          {score && (
+            <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-md border border-white/10 text-amber-400 text-[8px] sm:text-[9px] font-bold flex items-center gap-0.5 shadow">
+              <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+              <span>{score}</span>
+            </span>
+          )}
+        </div>
+
+        {/* Hover / Active Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2.5 sm:p-3 z-20">
+          <div className="flex items-center gap-1.5 text-[9px] text-white/70 font-mono mb-1">
+            <span className="px-1.5 py-0.2 rounded bg-red-600/80 text-white font-black text-[8px] uppercase">
+              {episodes}
+            </span>
+            {year && <span>{year}</span>}
+          </div>
+
+          <h3 className="text-white font-bold text-[11px] sm:text-xs uppercase line-clamp-2 leading-tight drop-shadow-md mb-2">
+            {title}
+          </h3>
+
+          {/* Quick Action Buttons */}
+          <div className="flex items-center gap-1.5 pt-1.5 border-t border-white/10" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => onOpenAnime(anime, 'play')}
+              className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
+            >
+              <Play className="w-2.5 h-2.5 fill-white" />
+              <span>Voir</span>
+            </button>
+
+            <button
+              onClick={() => onOpenAnime(anime, 'info')}
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white/80 hover:text-white transition-colors cursor-pointer"
+              title="Détails"
+            >
+              <Info className="w-3 h-3" />
+            </button>
+
+            {onToggleWatchlist && (
+              <button
+                onClick={(e) => onToggleWatchlist(anime, e)}
+                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                  isWatchlisted
+                    ? 'bg-red-600/20 border-red-500 text-red-400'
+                    : 'bg-white/10 hover:bg-white/20 border-white/10 text-white/70 hover:text-white'
+                }`}
+                title="Favoris"
+              >
+                <Bookmark className={`w-3 h-3 ${isWatchlisted ? 'fill-current' : ''}`} />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// -------------------------------------------------------------
 // STANDALONE SUB-COMPONENT: TOP 10 ROW
 // -------------------------------------------------------------
 interface Top10RowProps {
   title: string;
   animes: any[];
   onOpenAnime: (anime: any, mode?: 'info' | 'play' | 'trailer') => void;
+  onToggleWatchlist?: (anime: any, e?: React.MouseEvent) => void;
+  isAddedToWatchlist?: (id: number) => boolean;
 }
 
-const Top10Row: React.FC<Top10RowProps> = ({ title, animes, onOpenAnime }) => {
+const Top10Row: React.FC<Top10RowProps> = ({ title, animes, onOpenAnime, onToggleWatchlist, isAddedToWatchlist }) => {
   const rowRef = useRef<HTMLDivElement | null>(null);
 
   const scrollAction = (direction: 'left' | 'right') => {
@@ -83,48 +219,44 @@ const Top10Row: React.FC<Top10RowProps> = ({ title, animes, onOpenAnime }) => {
   if (!animes || animes.length === 0) return null;
 
   return (
-    <div className="group relative mb-10 mt-6">
-      <h2 className="text-white text-sm md:text-lg font-black mb-3 uppercase tracking-[0.2em] border-l-4 border-red-500 ml-4 md:ml-12 pl-3 drop-shadow-sm flex items-center gap-2">
-        <span>{title}</span>
-        <TrendingUp className="w-4 h-4 text-red-500" />
-      </h2>
+    <div className="group relative mb-10 mt-6 ml-4 md:ml-12">
+      <div className="flex items-center justify-between mr-4 md:mr-12 mb-3">
+        <h2 className="text-white text-sm md:text-lg font-black uppercase tracking-[0.2em] border-l-4 border-red-500 pl-3 drop-shadow-sm flex items-center gap-2.5">
+          <span>{title}</span>
+          <TrendingUp className="w-4 h-4 text-red-500" />
+        </h2>
+        <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-600/10 border border-red-500/20 text-red-400">
+          TOP 10 POPULAIRE
+        </span>
+      </div>
 
       <div
         onClick={() => scrollAction('left')}
-        className="absolute left-0 top-10 bottom-0 z-30 w-12 bg-gradient-to-r from-[#060608] to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-start cursor-pointer transition-opacity"
+        className="absolute left-0 top-12 bottom-0 z-30 w-12 bg-gradient-to-r from-[#060608] via-[#060608]/90 to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-start cursor-pointer transition-opacity -ml-4 md:-ml-12 hidden md:flex outline-none"
       >
         <ChevronLeft className="text-white hover:text-red-400 transition-colors w-8 h-8 ml-2" />
       </div>
 
       <div
         ref={rowRef}
-        className="flex overflow-x-auto py-6 space-x-8 md:space-x-12 no-scrollbar pl-12 md:pl-20 pr-12 scroll-smooth items-end"
+        className="flex overflow-x-auto py-6 space-x-8 md:space-x-12 no-scrollbar pl-8 md:pl-16 pr-12 scroll-smooth items-end cursor-grab active:cursor-grabbing"
       >
         {animes.slice(0, 10).map((anime, index) => (
           <div
-            key={`${anime.mal_id}-${index}`}
-            className="relative flex-none cursor-pointer group flex items-end w-[130px] md:w-[170px] lg:w-[200px]"
-            onClick={() => onOpenAnime(anime, 'info')}
+            key={`top10-${anime.mal_id}-${index}`}
+            className="relative flex-none cursor-pointer group flex items-end w-[135px] sm:w-[155px] md:w-[180px] lg:w-[200px]"
           >
-            <span className="text-[90px] md:text-[130px] leading-none font-black absolute -left-8 md:-left-12 -bottom-3 z-20 pointer-events-none drop-shadow-2xl italic tracking-tighter text-transparent [-webkit-text-stroke:2px_#ef4444]">
+            <span className="text-[85px] sm:text-[105px] md:text-[130px] leading-none font-black absolute -left-7 md:-left-12 -bottom-2.5 z-20 pointer-events-none drop-shadow-2xl italic tracking-tighter text-transparent [-webkit-text-stroke:2px_#ef4444]">
               {index + 1}
             </span>
-            <div className="relative rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-[#121218] group-hover:scale-105 transition-transform duration-300 w-full aspect-[2/3] z-10">
-              <img
-                className="object-cover w-full h-full"
-                src={anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url}
-                loading="lazy"
-                alt={anime.title}
+            <div className="w-full z-10">
+              <AnimeCard
+                anime={anime}
+                onOpenAnime={onOpenAnime}
+                onToggleWatchlist={onToggleWatchlist}
+                isWatchlisted={isAddedToWatchlist ? isAddedToWatchlist(anime.mal_id) : false}
+                className="w-full"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5">
-                <h3 className="text-white font-bold text-[10px] md:text-xs uppercase line-clamp-2 leading-tight">
-                  {anime.title_english || anime.title}
-                </h3>
-                <div className="text-red-400 font-bold text-[9px] mt-1 flex items-center gap-1">
-                  <Star className="w-2.5 h-2.5 fill-red-400" />
-                  <span>{anime.score || '8.5'}</span>
-                </div>
-              </div>
             </div>
           </div>
         ))}
@@ -132,7 +264,7 @@ const Top10Row: React.FC<Top10RowProps> = ({ title, animes, onOpenAnime }) => {
 
       <div
         onClick={() => scrollAction('right')}
-        className="absolute right-0 top-10 bottom-0 z-30 w-12 bg-gradient-to-l from-[#060608] to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-end cursor-pointer transition-opacity"
+        className="absolute right-0 top-12 bottom-0 z-30 w-12 bg-gradient-to-l from-[#060608] via-[#060608]/90 to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-end cursor-pointer transition-opacity hidden md:flex outline-none"
       >
         <ChevronRight className="text-white hover:text-red-400 transition-colors w-8 h-8 mr-2" />
       </div>
@@ -146,12 +278,26 @@ const Top10Row: React.FC<Top10RowProps> = ({ title, animes, onOpenAnime }) => {
 interface AnimeRowProps {
   title: string;
   animes: any[];
-  icon?: string;
+  icon?: React.ReactNode;
+  badge?: string;
   onOpenAnime: (anime: any, mode?: 'info' | 'play' | 'trailer') => void;
+  onToggleWatchlist?: (anime: any, e?: React.MouseEvent) => void;
+  isAddedToWatchlist?: (id: number) => boolean;
 }
 
-const AnimeRow: React.FC<AnimeRowProps> = ({ title, animes, icon, onOpenAnime }) => {
+const AnimeRow: React.FC<AnimeRowProps> = ({
+  title,
+  animes,
+  icon,
+  badge,
+  onOpenAnime,
+  onToggleWatchlist,
+  isAddedToWatchlist
+}) => {
   const rowRef = useRef<HTMLDivElement | null>(null);
+  const isDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
 
   const scrollAction = (direction: 'left' | 'right') => {
     if (rowRef.current) {
@@ -160,58 +306,69 @@ const AnimeRow: React.FC<AnimeRowProps> = ({ title, animes, icon, onOpenAnime })
     }
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!rowRef.current) return;
+    isDownRef.current = true;
+    startXRef.current = e.pageX - rowRef.current.offsetLeft;
+    scrollLeftRef.current = rowRef.current.scrollLeft;
+  };
+  const handleMouseLeave = () => { isDownRef.current = false; };
+  const handleMouseUp = () => { isDownRef.current = false; };
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDownRef.current || !rowRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - rowRef.current.offsetLeft;
+    const walk = (x - startXRef.current) * 2;
+    rowRef.current.scrollLeft = scrollLeftRef.current - walk;
+  };
+
   if (!animes || animes.length === 0) return null;
 
   return (
-    <div className="group relative ml-4 md:ml-12 mb-8">
-      <h2 className="text-white text-sm md:text-base font-black mb-3 uppercase tracking-[0.2em] border-l-4 border-red-500 pl-3 drop-shadow-sm flex items-center gap-2">
-        {icon && <span className="text-base">{icon}</span>}
-        <span>{title}</span>
-      </h2>
+    <div className="group relative ml-4 md:ml-12 mb-8 animate-in fade-in duration-500">
+      <div className="flex items-center justify-between mr-4 md:mr-12 mb-3">
+        <h2 className="text-white text-sm md:text-base font-black uppercase tracking-[0.18em] border-l-4 border-red-500 pl-3 drop-shadow-sm flex items-center gap-2.5">
+          {icon && <span className="inline-flex items-center justify-center shrink-0">{icon}</span>}
+          <span>{title}</span>
+        </h2>
+        {badge && (
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">
+            {badge}
+          </span>
+        )}
+      </div>
 
       <div
         onClick={() => scrollAction('left')}
-        className="absolute left-0 top-8 bottom-0 z-30 w-10 bg-gradient-to-r from-[#060608] to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-start cursor-pointer transition-opacity -ml-4"
+        className="absolute left-0 top-10 bottom-0 z-30 w-10 bg-gradient-to-r from-[#060608] via-[#060608]/90 to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-start cursor-pointer transition-opacity -ml-4 md:-ml-12 hidden md:flex outline-none"
       >
-        <ChevronLeft className="text-white hover:text-red-400 transition-colors w-8 h-8" />
+        <ChevronLeft className="text-white hover:text-red-400 transition-colors w-8 h-8 ml-2" />
       </div>
 
       <div
         ref={rowRef}
-        className="flex overflow-x-auto py-2 space-x-3.5 no-scrollbar pr-8 scroll-smooth"
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        className="flex overflow-x-auto py-2 space-x-3.5 md:space-x-5 no-scrollbar pr-8 scroll-smooth cursor-grab active:cursor-grabbing"
       >
         {animes.map((anime, index) => (
-          <div
-            key={`${anime.mal_id}-${index}`}
-            className="relative flex-none cursor-pointer rounded-xl overflow-hidden shadow-lg border border-white/5 bg-[#121218] hover:scale-105 transition-transform duration-300 w-[130px] md:w-[170px] aspect-[2/3] group"
-            onClick={() => onOpenAnime(anime, 'info')}
-          >
-            <img
-              className="object-cover w-full h-full"
-              src={anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url}
-              loading="lazy"
-              alt={anime.title}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5">
-              <h3 className="text-white font-bold text-[10px] md:text-xs uppercase line-clamp-2 leading-tight">
-                {anime.title_english || anime.title}
-              </h3>
-              <div className="flex items-center justify-between mt-1 text-[9px] text-white/80">
-                <span className="text-red-400 font-bold flex items-center gap-0.5">
-                  <Star className="w-2.5 h-2.5 fill-red-400" /> {anime.score || 'N/A'}
-                </span>
-                <span>{anime.year || ''}</span>
-              </div>
-            </div>
-          </div>
+          <AnimeCard
+            key={`row-${anime.mal_id}-${index}`}
+            anime={anime}
+            onOpenAnime={onOpenAnime}
+            onToggleWatchlist={onToggleWatchlist}
+            isWatchlisted={isAddedToWatchlist ? isAddedToWatchlist(anime.mal_id) : false}
+          />
         ))}
       </div>
 
       <div
         onClick={() => scrollAction('right')}
-        className="absolute right-0 top-8 bottom-0 z-30 w-10 bg-gradient-to-l from-[#060608] to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-end cursor-pointer transition-opacity"
+        className="absolute right-0 top-10 bottom-0 z-30 w-10 bg-gradient-to-l from-[#060608] via-[#060608]/90 to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-end cursor-pointer transition-opacity hidden md:flex outline-none"
       >
-        <ChevronRight className="text-white hover:text-red-400 transition-colors w-8 h-8" />
+        <ChevronRight className="text-white hover:text-red-400 transition-colors w-8 h-8 mr-2" />
       </div>
     </div>
   );
@@ -253,7 +410,7 @@ const AnimeModal: React.FC<AnimeModalProps> = ({
   const [selectedServer, setSelectedServer] = useState('vidsrc_cc');
   const [iframeLoading, setIframeLoading] = useState(true);
 
-  const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY || '027cc951d888c64e5f15dcb853c7347a';
+  const TMDB_API_KEY = (import.meta as any).env?.VITE_TMDB_API_KEY || '027cc951d888c64e5f15dcb853c7347a';
 
   const AVAILABLE_SERVERS = [
     { id: 'vidsrc_cc', name: '1. ANIME DIRECT (VF/VOSTFR)' },
@@ -363,8 +520,9 @@ const AnimeModal: React.FC<AnimeModalProps> = ({
       {/* Top Floating Close Bar */}
       <div className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-8 py-3 bg-[#080910]/95 border-b border-white/10 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <span className="px-2.5 py-1 rounded bg-red-600 text-white font-black text-xs uppercase tracking-wider">
-            LevelAnime HD
+          <span className="px-2.5 py-1 rounded bg-red-600 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
+            <Flame className="w-3.5 h-3.5" />
+            <span>LevelAnime HD</span>
           </span>
           <h2 className="text-white font-bold text-sm md:text-base truncate max-w-xs md:max-w-xl">
             {anime.title_english || anime.title}
@@ -405,18 +563,24 @@ const AnimeModal: React.FC<AnimeModalProps> = ({
         </div>
       ) : (
         <div className="relative h-[45vh] md:h-[55vh] w-full overflow-hidden">
-          <img
+          <LevelMovieImage
             src={anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url}
             alt=""
+            brandTheme="red"
+            showLogoBadge={false}
             className="w-full h-full object-cover blur-sm scale-105 opacity-40"
+            containerClassName="w-full h-full"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#080910] via-transparent to-transparent" />
           <div className="absolute inset-0 flex items-center justify-center p-6">
             <div className="flex gap-6 items-center max-w-4xl">
-              <img
+              <LevelMovieImage
                 src={anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url}
-                alt=""
-                className="w-36 md:w-52 rounded-2xl shadow-2xl border border-white/20 shrink-0"
+                alt={anime.title_english || anime.title}
+                fallbackTitle={anime.title_english || anime.title}
+                brandTheme="red"
+                className="w-full h-full object-cover"
+                containerClassName="w-36 md:w-52 aspect-[2/3] rounded-2xl shadow-2xl border border-white/20 shrink-0 overflow-hidden"
               />
               <div className="space-y-3">
                 <h1 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tight">
@@ -583,10 +747,14 @@ const AnimeModal: React.FC<AnimeModalProps> = ({
             <div className="flex gap-4 overflow-x-auto no-scrollbar py-2">
               {characters.map(c => (
                 <div key={c.character?.mal_id} className="flex flex-col items-center gap-1.5 shrink-0 w-16 md:w-20 text-center">
-                  <img
+                  <LevelMovieImage
                     src={c.character?.images?.webp?.image_url}
-                    alt=""
-                    className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border border-white/10"
+                    alt={c.character?.name}
+                    fallbackTitle={c.character?.name}
+                    brandTheme="red"
+                    showLogoBadge={false}
+                    className="w-full h-full rounded-full object-cover"
+                    containerClassName="w-14 h-14 md:w-16 md:h-16 rounded-full border border-white/10 overflow-hidden"
                   />
                   <span className="text-[10px] font-bold text-white/90 line-clamp-1">{c.character?.name}</span>
                   <span className="text-[9px] text-red-400">{c.role}</span>
@@ -599,8 +767,9 @@ const AnimeModal: React.FC<AnimeModalProps> = ({
         {/* Recommendations */}
         {recommendations.length > 0 && (
           <div className="space-y-3 pt-6 border-t border-white/10">
-            <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider">
-              {isFr ? 'Titres Recommandés' : 'Recommended'}
+            <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider flex items-center gap-2">
+              <Award className="w-4 h-4 text-red-400" />
+              <span>{isFr ? 'Titres Recommandés' : 'Recommended'}</span>
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
               {recommendations.map(r => (
@@ -609,10 +778,13 @@ const AnimeModal: React.FC<AnimeModalProps> = ({
                   onClick={() => onSelectAnotherAnime(r, 'info')}
                   className="rounded-xl overflow-hidden border border-white/5 bg-[#121218] hover:scale-105 transition-transform cursor-pointer aspect-[2/3]"
                 >
-                  <img
+                  <LevelMovieImage
                     src={r.images?.webp?.large_image_url}
-                    alt=""
+                    alt={r.title}
+                    fallbackTitle={r.title}
+                    brandTheme="red"
                     className="w-full h-full object-cover"
+                    containerClassName="w-full h-full"
                   />
                 </div>
               ))}
@@ -652,25 +824,24 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
     }
   }, [activeTab]);
 
-  const handleSetCategory = (cat: 'home' | 'explore' | 'releases') => {
-    setCurrentCategory(cat);
-    if (onTabChange) onTabChange(cat);
-  };
-
-  // Anime Data Collections
-  const [heroAnime, setHeroAnime] = useState<any>(null);
-  const [trending, setTrending] = useState<any[]>([]);
-  const [popular, setPopular] = useState<any[]>([]);
-  const [actionAnime, setActionAnime] = useState<any[]>([]);
-  const [fantasyAnime, setFantasyAnime] = useState<any[]>([]);
-  const [topRated, setTopRated] = useState<any[]>([]);
+  // Anime Data Collections (Pre-seeded with real anime for zero-blank experience)
+  const [heroAnime, setHeroAnime] = useState<any>(REAL_POPULAR_ANIMES[0]);
+  const [trending, setTrending] = useState<any[]>(REAL_POPULAR_ANIMES);
+  const [popular, setPopular] = useState<any[]>(REAL_POPULAR_ANIMES);
+  
+  // Categorized & Genre Collections
+  const [actionAnime, setActionAnime] = useState<any[]>(REAL_ACTION_ANIMES);
+  const [fantasyAnime, setFantasyAnime] = useState<any[]>(REAL_FANTASY_ANIMES);
+  const [martialArtsAnime, setMartialArtsAnime] = useState<any[]>(REAL_ACTION_ANIMES);
+  const [supernaturalAnime, setSupernaturalAnime] = useState<any[]>(REAL_POPULAR_ANIMES);
+  const [topRated, setTopRated] = useState<any[]>(REAL_POPULAR_ANIMES);
   const [romanceAnime, setRomanceAnime] = useState<any[]>([]);
   const [horrorAnime, setHorrorAnime] = useState<any[]>([]);
   const [scifiAnime, setScifiAnime] = useState<any[]>([]);
   const [sportsAnime, setSportsAnime] = useState<any[]>([]);
   const [comedyAnime, setComedyAnime] = useState<any[]>([]);
   const [mysteryAnime, setMysteryAnime] = useState<any[]>([]);
-  const [animeMovies, setAnimeMovies] = useState<any[]>([]);
+  const [animeMovies, setAnimeMovies] = useState<any[]>(REAL_ANIME_MOVIES);
   const [upcomingAnime, setUpcomingAnime] = useState<any[]>([]);
 
   // Search and Explore
@@ -706,7 +877,7 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
     }
   });
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedAnime, setSelectedAnime] = useState<any>(null);
   const [modalMode, setModalMode] = useState<'info' | 'play' | 'trailer'>('info');
 
@@ -716,133 +887,193 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
 
   const isFetchingRef = useRef(false);
 
-  // Initial Fetching
+  // Helper to normalize TMDB anime objects to LevelAnime anime interface
+  const normalizeTmdbAnimeList = useCallback((items: any[]) => {
+    if (!items || !Array.isArray(items)) return [];
+    return items.map((item: any) => {
+      const isMovie = item.media_type === 'movie' || (!item.first_air_date && item.release_date);
+      const title = item.name || item.title || item.original_name || item.original_title || 'Anime';
+      const posterPath = item.poster_path
+        ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+        : 'https://image.tmdb.org/t/p/w500/geCRueV3ElhRTr0xtJuQiJ8KiIT.jpg';
+      const backdropPath = item.backdrop_path
+        ? `https://image.tmdb.org/t/p/original${item.backdrop_path}`
+        : posterPath;
+      const year = (item.first_air_date || item.release_date || '').slice(0, 4);
+
+      return {
+        mal_id: item.id,
+        id: item.id,
+        tmdb_id: item.id,
+        media_type: isMovie ? 'movie' : 'tv',
+        title: title,
+        title_english: item.name || item.title || title,
+        images: {
+          webp: {
+            image_url: posterPath,
+            large_image_url: posterPath,
+          },
+          jpg: {
+            image_url: posterPath,
+            large_image_url: posterPath,
+          }
+        },
+        trailer: {
+          images: {
+            maximum_image_url: backdropPath
+          }
+        },
+        score: item.vote_average ? Number(item.vote_average.toFixed(1)) : 8.5,
+        year: year ? parseInt(year) : 2024,
+        episodes: isMovie ? 1 : null,
+        airing: true,
+        synopsis: item.overview || 'Disponible en streaming HD VF et VOSTFR sans coupure sur LevelAnime.',
+        genres: [{ name: 'Anime' }]
+      };
+    });
+  }, []);
+
+  // Initial Fetching of Real Anime Collections via TMDB & Jikan
   useEffect(() => {
     let isMounted = true;
+    const TMDB_API_KEY = (import.meta as any).env?.VITE_TMDB_API_KEY || '027cc951d888c64e5f15dcb853c7347a';
 
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-        // 1. Trending & Hero Candidate
-        try {
-          const trendingRes = await fetch('https://api.jikan.moe/v4/seasons/now?limit=25');
-          const trendingData = await trendingRes.json();
-          if (isMounted && trendingData.data) {
-            const validTrending = trendingData.data.filter((a: any) => a.images?.webp?.large_image_url);
-            setTrending(validTrending);
-            const heroCandidate = validTrending.find((a: any) => a.trailer?.images?.maximum_image_url) || validTrending[0];
-            if (heroCandidate) setHeroAnime(heroCandidate);
+        // Fetch primary categories in parallel via TMDB for ultra-fast, 100% reliable real anime
+        const [
+          trendingRes,
+          topRatedRes,
+          actionRes,
+          fantasyRes,
+          comedyRes,
+          mysteryRes,
+          moviesRes
+        ] = await Promise.allSettled([
+          fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=1`),
+          fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_genres=16&with_original_language=ja&sort_by=vote_average.desc&vote_count.gte=200&page=1`),
+          fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_genres=16,10759&with_original_language=ja&sort_by=popularity.desc&page=1`),
+          fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_genres=16,10765&with_original_language=ja&sort_by=popularity.desc&page=1`),
+          fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_genres=16,35&with_original_language=ja&sort_by=popularity.desc&page=1`),
+          fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_genres=16,9648&with_original_language=ja&sort_by=popularity.desc&page=1`),
+          fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=1`)
+        ]);
+
+        if (isMounted) {
+          if (trendingRes.status === 'fulfilled') {
+            const data = await trendingRes.value.json();
+            if (data.results && data.results.length > 0) {
+              const normalized = normalizeTmdbAnimeList(data.results);
+              setTrending(normalized);
+              setPopular(normalized.slice(0, 10));
+              if (normalized[0]) setHeroAnime(normalized[0]);
+            }
           }
-        } catch {}
 
-        if (isMounted) setLoading(false);
-        await delay(400);
+          if (topRatedRes.status === 'fulfilled') {
+            const data = await topRatedRes.value.json();
+            if (data.results && data.results.length > 0) {
+              setTopRated(normalizeTmdbAnimeList(data.results));
+            }
+          }
 
-        // 2. Top 10 Popular
-        try {
-          const popRes = await fetch('https://api.jikan.moe/v4/top/anime?filter=airing&limit=10');
-          const popData = await popRes.json();
-          if (isMounted && popData.data) setPopular(popData.data);
-        } catch {}
-        await delay(400);
+          if (actionRes.status === 'fulfilled') {
+            const data = await actionRes.value.json();
+            if (data.results && data.results.length > 0) {
+              const normalized = normalizeTmdbAnimeList(data.results);
+              setActionAnime(normalized);
+              setMartialArtsAnime(normalized.slice(4));
+            }
+          }
 
-        // 3. Shonen & Action (Genre 1)
-        try {
-          const actRes = await fetch('https://api.jikan.moe/v4/anime?genres=1&order_by=popularity&sort=asc&limit=15');
-          const actData = await actRes.json();
-          if (isMounted && actData.data) setActionAnime(actData.data);
-        } catch {}
-        await delay(400);
+          if (fantasyRes.status === 'fulfilled') {
+            const data = await fantasyRes.value.json();
+            if (data.results && data.results.length > 0) {
+              const normalized = normalizeTmdbAnimeList(data.results);
+              setFantasyAnime(normalized);
+              setSupernaturalAnime(normalized.slice(3));
+              setScifiAnime(normalized.slice(6));
+            }
+          }
 
-        // 4. Fantasy & Isekai (Genre 10)
-        try {
-          const fanRes = await fetch('https://api.jikan.moe/v4/anime?genres=10&order_by=popularity&sort=asc&limit=15');
-          const fanData = await fanRes.json();
-          if (isMounted && fanData.data) setFantasyAnime(fanData.data);
-        } catch {}
-        await delay(400);
+          if (comedyRes.status === 'fulfilled') {
+            const data = await comedyRes.value.json();
+            if (data.results && data.results.length > 0) {
+              const normalized = normalizeTmdbAnimeList(data.results);
+              setComedyAnime(normalized);
+              setRomanceAnime(normalized.slice(3));
+            }
+          }
 
-        // 5. Top Rated All Time
-        try {
-          const topRes = await fetch('https://api.jikan.moe/v4/top/anime?limit=15');
-          const topData = await topRes.json();
-          if (isMounted && topData.data) setTopRated(topData.data);
-        } catch {}
-        await delay(400);
+          if (mysteryRes.status === 'fulfilled') {
+            const data = await mysteryRes.value.json();
+            if (data.results && data.results.length > 0) {
+              const normalized = normalizeTmdbAnimeList(data.results);
+              setMysteryAnime(normalized);
+              setHorrorAnime(normalized.slice(3));
+            }
+          }
 
-        // 6. Romance (Genre 22)
-        try {
-          const romRes = await fetch('https://api.jikan.moe/v4/anime?genres=22&order_by=popularity&sort=asc&limit=15');
-          const romData = await romRes.json();
-          if (isMounted && romData.data) setRomanceAnime(romData.data);
-        } catch {}
-        await delay(400);
-
-        // 7. Dark Fantasy & Horreur (Genre 14)
-        try {
-          const horRes = await fetch('https://api.jikan.moe/v4/anime?genres=14&order_by=popularity&sort=asc&limit=15');
-          const horData = await horRes.json();
-          if (isMounted && horData.data) setHorrorAnime(horData.data);
-        } catch {}
-        await delay(400);
-
-        // 8. Sci-Fi & Mecha (Genre 24)
-        try {
-          const sciRes = await fetch('https://api.jikan.moe/v4/anime?genres=24&order_by=popularity&sort=asc&limit=15');
-          const sciData = await sciRes.json();
-          if (isMounted && sciData.data) setScifiAnime(sciData.data);
-        } catch {}
-        await delay(400);
-
-        // 9. Sports (Genre 30)
-        try {
-          const spRes = await fetch('https://api.jikan.moe/v4/anime?genres=30&order_by=popularity&sort=asc&limit=15');
-          const spData = await spRes.json();
-          if (isMounted && spData.data) setSportsAnime(spData.data);
-        } catch {}
-        await delay(400);
-
-        // 10. Comédie & Tranche de vie (Genre 4)
-        try {
-          const comRes = await fetch('https://api.jikan.moe/v4/anime?genres=4&order_by=popularity&sort=asc&limit=15');
-          const comData = await comRes.json();
-          if (isMounted && comData.data) setComedyAnime(comData.data);
-        } catch {}
-        await delay(400);
-
-        // 11. Mystère & Thrillers (Genre 7)
-        try {
-          const mysRes = await fetch('https://api.jikan.moe/v4/anime?genres=7&order_by=popularity&sort=asc&limit=15');
-          const mysData = await mysRes.json();
-          if (isMounted && mysData.data) setMysteryAnime(mysData.data);
-        } catch {}
-        await delay(400);
-
-        // 12. Anime Movies (type=movie)
-        try {
-          const movRes = await fetch('https://api.jikan.moe/v4/top/anime?type=movie&limit=15');
-          const movData = await movRes.json();
-          if (isMounted && movData.data) setAnimeMovies(movData.data);
-        } catch {}
-        await delay(400);
-
-        // 13. Upcoming / Anticipées
-        try {
-          const upRes = await fetch('https://api.jikan.moe/v4/seasons/upcoming?limit=15');
-          const upData = await upRes.json();
-          if (isMounted && upData.data) setUpcomingAnime(upData.data);
-        } catch {}
-
-      } catch {
+          if (moviesRes.status === 'fulfilled') {
+            const data = await moviesRes.value.json();
+            if (data.results && data.results.length > 0) {
+              setAnimeMovies(normalizeTmdbAnimeList(data.results));
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Initial anime fetch error:', err);
+      } finally {
         if (isMounted) setLoading(false);
       }
     };
 
     fetchInitialData();
     return () => { isMounted = false; };
-  }, []);
+  }, [normalizeTmdbAnimeList]);
+
+  // Deduplicated Rows Engine (guarantees zero card duplicates across rows)
+  const deduplicatedRows = React.useMemo(() => {
+    const seen = new Set<number>();
+    if (heroAnime?.mal_id) seen.add(heroAnime.mal_id);
+
+    const getUnique = (list: any[], max: number = 20) => {
+      const result: any[] = [];
+      for (const item of list) {
+        if (!item || !item.mal_id) continue;
+        if (!seen.has(item.mal_id)) {
+          seen.add(item.mal_id);
+          result.push(item);
+          if (result.length >= max) break;
+        }
+      }
+      return result;
+    };
+
+    return {
+      cleanPopular: getUnique(popular.length > 0 ? popular : REAL_POPULAR_ANIMES, 10),
+      cleanTrending: getUnique(trending.length > 0 ? trending : REAL_POPULAR_ANIMES, 18),
+      cleanAction: getUnique(actionAnime.length > 0 ? actionAnime : REAL_ACTION_ANIMES, 18),
+      cleanFantasy: getUnique(fantasyAnime.length > 0 ? fantasyAnime : REAL_FANTASY_ANIMES, 18),
+      cleanMartial: getUnique(martialArtsAnime.length > 0 ? martialArtsAnime : REAL_ACTION_ANIMES, 18),
+      cleanSupernatural: getUnique(supernaturalAnime.length > 0 ? supernaturalAnime : REAL_POPULAR_ANIMES, 18),
+      cleanTopRated: getUnique(topRated.length > 0 ? topRated : REAL_POPULAR_ANIMES, 18),
+      cleanHorror: getUnique(horrorAnime.length > 0 ? horrorAnime : REAL_ACTION_ANIMES, 18),
+      cleanRomance: getUnique(romanceAnime.length > 0 ? romanceAnime : REAL_FANTASY_ANIMES, 18),
+      cleanScifi: getUnique(scifiAnime.length > 0 ? scifiAnime : REAL_ACTION_ANIMES, 18),
+      cleanSports: getUnique(sportsAnime.length > 0 ? sportsAnime : REAL_ACTION_ANIMES, 18),
+      cleanComedy: getUnique(comedyAnime.length > 0 ? comedyAnime : REAL_POPULAR_ANIMES, 18),
+      cleanMystery: getUnique(mysteryAnime.length > 0 ? mysteryAnime : REAL_POPULAR_ANIMES, 18),
+      cleanMovies: getUnique(animeMovies.length > 0 ? animeMovies : REAL_ANIME_MOVIES, 18),
+      cleanUpcoming: getUnique(upcomingAnime.length > 0 ? upcomingAnime : REAL_POPULAR_ANIMES, 18),
+    };
+  }, [
+    heroAnime, popular, trending, actionAnime, fantasyAnime, martialArtsAnime,
+    supernaturalAnime, topRated, horrorAnime, romanceAnime, scifiAnime,
+    sportsAnime, comedyAnime, mysteryAnime, animeMovies, upcomingAnime
+  ]);
 
   // Search anime
   useEffect(() => {
@@ -934,7 +1165,7 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
       if (showToast) showToast(isFr ? 'Recherche sur le lecteur principal...' : 'Loading main player...');
       try {
         const query = anime.title_english || anime.title;
-        const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY || '027cc951d888c64e5f15dcb853c7347a';
+        const TMDB_API_KEY = (import.meta as any).env?.VITE_TMDB_API_KEY || '027cc951d888c64e5f15dcb853c7347a';
         const searchRes = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`);
         const searchData = await searchRes.json();
         const match = searchData.results?.find((r: any) => r.media_type === 'tv' || r.media_type === 'movie');
@@ -947,7 +1178,7 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
       }
     }
 
-    // Fallback to local anime modal if TMDB not found or onOpenMovie not passed
+    // Fallback to local anime modal
     setSelectedAnime(anime);
     setModalMode(mode);
   };
@@ -1076,25 +1307,6 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
     );
   };
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 z-[9999] bg-[#060608] flex items-center justify-center flex-col overflow-hidden animate-in fade-in duration-500">
-        <div className="relative mb-5 animate-pulse">
-          <div className="absolute inset-0 bg-red-500/35 blur-2xl rounded-full scale-125 animate-pulse" />
-          <LevelMovieLogo className="w-20 h-20 text-red-500 relative z-10 drop-shadow-[0_0_30px_rgba(239,68,68,0.85)]" color="#ef4444" />
-        </div>
-        <div className="text-4xl sm:text-5xl font-black tracking-widest drop-shadow-2xl flex items-center">
-          <span className="text-white">Level</span><span className="text-red-500">Anime</span>
-        </div>
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <span className="text-xs font-mono tracking-wide animate-pulse text-white/70">
-            {isFr ? 'Chargement des catalogues...' : 'Loading catalogs...'}
-          </span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#060608] text-white flex flex-col pb-20">
       {/* Main Content Rendered by Category */}
@@ -1123,27 +1335,33 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {searchResults.map(anime => (
-                <div
-                  key={anime.mal_id}
-                  onClick={() => openAnimeModal(anime, 'info')}
-                  className="relative rounded-xl overflow-hidden border border-white/5 bg-[#121218] hover:scale-105 transition-transform cursor-pointer aspect-[2/3] group shadow-lg"
-                >
-                  <img
-                    src={anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end p-2.5">
-                    <span className="text-white text-xs font-bold line-clamp-2">
-                      {anime.title_english || anime.title}
-                    </span>
-                    <span className="text-red-400 text-[10px] font-bold mt-0.5">
-                      ★ {anime.score || '8.5'}
-                    </span>
+              {searchResults.map(anime => {
+                const animeTitle = anime.title_english || anime.title || 'Anime';
+                return (
+                  <div
+                    key={anime.mal_id}
+                    onClick={() => openAnimeModal(anime, 'info')}
+                    className="relative rounded-xl overflow-hidden border border-white/5 bg-[#121218] hover:scale-105 transition-transform cursor-pointer aspect-[2/3] group shadow-lg"
+                  >
+                    <LevelMovieImage
+                      src={anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url}
+                      alt={animeTitle}
+                      fallbackTitle={animeTitle}
+                      brandTheme="red"
+                      className="w-full h-full object-cover"
+                      containerClassName="w-full h-full"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end p-2.5 pointer-events-none">
+                      <span className="text-white text-xs font-bold line-clamp-2">
+                        {animeTitle}
+                      </span>
+                      <span className="text-red-400 text-[10px] font-bold mt-0.5 flex items-center gap-1">
+                        <Star className="w-2.5 h-2.5 fill-red-400" /> {anime.score || '8.5'}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -1157,7 +1375,7 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
                 <span>{isFr ? 'Explorer le Catalogue Complet' : 'Explore All Anime'}</span>
               </h2>
               <p className="text-xs text-white/50 pl-3 mt-1">
-                {isFr ? 'Filtrez par genres, découvrez les univers shōnen, isekai, romance et chefs-d’œuvre.' : 'Filter by genres, discover shonen, isekai, and top rated masterworks.'}
+                {isFr ? 'Filtrez par genres, découvrez les univers shōnen, fantasy, isekai et chefs-d’œuvre.' : 'Filter by genres, discover shonen, fantasy, isekai, and top rated masterworks.'}
               </p>
             </div>
 
@@ -1170,29 +1388,32 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
             </button>
           </div>
 
-          {/* Genre Filters */}
+          {/* Genre Filters with SVGs */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
             <button
               onClick={() => setSelectedGenre(null)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                 selectedGenre === null
                   ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
                   : 'bg-white/5 text-white/60 hover:text-white border border-white/10'
               }`}
             >
-              Tous les genres
+              <Layers className="w-3.5 h-3.5" />
+              <span>Tous les genres</span>
             </button>
             {ANIME_GENRES.map(g => (
               <button
                 key={g.id}
                 onClick={() => setSelectedGenre(g.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
                   selectedGenre === g.id
                     ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
                     : 'bg-white/5 text-white/60 hover:text-white border border-white/10'
                 }`}
               >
-                <span>{g.icon}</span>
+                <span className={selectedGenre === g.id ? 'text-white' : g.color}>
+                  {renderGenreSvg(g.iconKey, "w-3.5 h-3.5")}
+                </span>
                 <span>{g.name}</span>
               </button>
             ))}
@@ -1200,31 +1421,37 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
 
           {/* Explore Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {exploreAnime.map((anime, idx) => (
-              <div
-                key={`${anime.mal_id}-${idx}`}
-                onClick={() => openAnimeModal(anime, 'info')}
-                className="relative rounded-xl overflow-hidden border border-white/5 bg-[#121218] hover:scale-105 transition-transform duration-300 cursor-pointer aspect-[2/3] group shadow-lg"
-              >
-                <img
-                  src={anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url}
-                  alt=""
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5">
-                  <span className="text-white text-xs font-bold line-clamp-2 leading-tight">
-                    {anime.title_english || anime.title}
-                  </span>
-                  <div className="flex items-center justify-between mt-1 text-[9px] text-white/80">
-                    <span className="text-red-400 font-bold flex items-center gap-0.5">
-                      <Star className="w-2.5 h-2.5 fill-red-400" /> {anime.score || '8.5'}
+            {exploreAnime.map((anime, idx) => {
+              const animeTitle = anime.title_english || anime.title || 'Anime';
+              return (
+                <div
+                  key={`${anime.mal_id}-${idx}`}
+                  onClick={() => openAnimeModal(anime, 'info')}
+                  className="relative rounded-xl overflow-hidden border border-white/5 bg-[#121218] hover:scale-105 transition-transform duration-300 cursor-pointer aspect-[2/3] group shadow-lg"
+                >
+                  <LevelMovieImage
+                    src={anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url}
+                    alt={animeTitle}
+                    fallbackTitle={animeTitle}
+                    brandTheme="red"
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                    containerClassName="w-full h-full"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5 pointer-events-none">
+                    <span className="text-white text-xs font-bold line-clamp-2 leading-tight">
+                      {animeTitle}
                     </span>
-                    <span>{anime.episodes ? `${anime.episodes} EPS` : 'EN COURS'}</span>
+                    <div className="flex items-center justify-between mt-1 text-[9px] text-white/80">
+                      <span className="text-red-400 font-bold flex items-center gap-0.5">
+                        <Star className="w-2.5 h-2.5 fill-red-400" /> {anime.score || '8.5'}
+                      </span>
+                      <span>{anime.episodes ? `${anime.episodes} EPS` : 'EN COURS'}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {loadingExplore && (
@@ -1350,13 +1577,14 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
               </button>
               <button
                 onClick={() => setScheduleFilter('popular')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
                   scheduleFilter === 'popular'
                     ? 'bg-red-600 text-white'
                     : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
                 }`}
               >
-                ★ {isFr ? 'Mieux Notés' : 'Top Rated'}
+                <Star className="w-3 h-3 fill-current" />
+                <span>{isFr ? 'Mieux Notés' : 'Top Rated'}</span>
               </button>
             </div>
 
@@ -1440,13 +1668,16 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
                         onClick={() => openAnimeModal(anime, 'info')}
                         className="relative aspect-video w-full overflow-hidden cursor-pointer bg-black/40"
                       >
-                        <img
+                        <LevelMovieImage
                           src={anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url}
-                          alt=""
+                          alt={anime.title_english || anime.title}
+                          fallbackTitle={anime.title_english || anime.title}
+                          brandTheme="red"
                           loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          containerClassName="w-full h-full"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#121218] via-transparent to-black/60" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#121218] via-transparent to-black/60 pointer-events-none" />
 
                         {/* Top Left: Broadcast Hour */}
                         <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 bg-red-600/90 backdrop-blur-md px-2 py-0.5 rounded-md text-white text-[10px] font-mono font-black uppercase tracking-wider shadow">
@@ -1456,7 +1687,8 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
 
                         {/* Top Right: Status / Score */}
                         <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-md text-yellow-400 text-[10px] font-bold border border-white/10">
-                          <span>★ {anime.score ? anime.score.toFixed(1) : '8.2'}</span>
+                          <Star className="w-2.5 h-2.5 fill-yellow-400" />
+                          <span>{anime.score ? anime.score.toFixed(1) : '8.2'}</span>
                         </div>
 
                         {/* Bottom Thumbnail Overlay: Title & Ep */}
@@ -1543,16 +1775,16 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
           {upcomingAnime.length > 0 && (
             <div className="pt-8 border-t border-white/10">
               <AnimeRow
-                title={isFr ? '⏳ Sorties Attendues & Prochaines Saisons' : 'Upcoming Next Season'}
+                title={isFr ? 'Sorties Attendues & Prochaines Saisons' : 'Upcoming Next Season'}
                 animes={upcomingAnime}
-                icon="⏳"
+                icon={<Clock className="w-4 h-4 text-amber-400" />}
                 onOpenAnime={openAnimeModal}
               />
             </div>
           )}
         </div>
       ) : (
-        /* ACCUEIL / HOME VIEW (Rich rows of scrolling cards) */
+        /* ACCUEIL / HOME VIEW (Rich rows with SVGs & extra genre collections) */
         <>
           {renderHeroBanner()}
 
@@ -1562,113 +1794,206 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
               <AnimeRow
                 title={isFr ? 'Reprendre le visionnage' : 'Continue Watching'}
                 animes={history}
-                icon="▶️"
+                icon={<Play className="w-4 h-4 text-red-500 fill-red-500" />}
+                badge={isFr ? 'En cours' : 'Watching'}
                 onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
               />
             )}
 
             {/* Top 10 Populaire */}
-            <Top10Row
-              title={isFr ? 'Top 10 de la Semaine' : 'Top 10 This Week'}
-              animes={popular.length > 0 ? popular : trending}
-              onOpenAnime={openAnimeModal}
-            />
+            {deduplicatedRows.cleanPopular.length > 0 && (
+              <Top10Row
+                title={isFr ? 'Top 10 de la Semaine' : 'Top 10 This Week'}
+                animes={deduplicatedRows.cleanPopular}
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
 
             {/* 1. Nouveautés & Simulcasts */}
-            <AnimeRow
-              title={isFr ? '🔥 Nouveautés & Simulcasts en Direct' : 'Currently Airing Simulcasts'}
-              animes={trending}
-              icon="🔥"
-              onOpenAnime={openAnimeModal}
-            />
+            {deduplicatedRows.cleanTrending.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Nouveautés & Simulcasts en Direct' : 'Currently Airing Simulcasts'}
+                animes={deduplicatedRows.cleanTrending}
+                icon={<Flame className="w-4 h-4 text-orange-500" />}
+                badge="Simulcast H+1"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
 
-            {/* 2. Shōnen & Action Épique */}
-            <AnimeRow
-              title={isFr ? '⚡ Shōnen, Action & Combats Épiques' : 'Epic Shonen & Action'}
-              animes={actionAnime}
-              icon="⚡"
-              onOpenAnime={openAnimeModal}
-            />
+            {/* 2. Shōnen, Action & Combats Épiques */}
+            {deduplicatedRows.cleanAction.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Combats Épiques, Shōnen & Tournois' : 'Epic Battles & Shonen'}
+                animes={deduplicatedRows.cleanAction}
+                icon={<Swords className="w-4 h-4 text-red-500" />}
+                badge="Action pure"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
 
-            {/* 3. Isekai & Fantasy */}
-            <AnimeRow
-              title={isFr ? '✨ Isekai, Magie & Univers Fantasy' : 'Isekai & Fantasy Worlds'}
-              animes={fantasyAnime}
-              icon="✨"
-              onOpenAnime={openAnimeModal}
-            />
+            {/* 3. Fantasy & Univers Isekai */}
+            {deduplicatedRows.cleanFantasy.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Fantasy, Magie & Mondes Isekai' : 'Fantasy Worlds & Isekai'}
+                animes={deduplicatedRows.cleanFantasy}
+                icon={<Wand2 className="w-4 h-4 text-amber-400" />}
+                badge="Magie & Aventure"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
 
-            {/* 4. Chefs-d’œuvre Mieux Notés */}
-            <AnimeRow
-              title={isFr ? '🏆 Chefs-d’œuvre & Légendes Incontournables' : 'Masterpieces & Top Rated'}
-              animes={topRated}
-              icon="🏆"
-              onOpenAnime={openAnimeModal}
-            />
+            {/* 4. Arts Martiaux & Dépassement */}
+            {deduplicatedRows.cleanMartial.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Arts Martiaux, Duels & Confrontations' : 'Martial Arts & Duels'}
+                animes={deduplicatedRows.cleanMartial}
+                icon={<Dumbbell className="w-4 h-4 text-red-400" />}
+                badge="Combats rapprochés"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
 
-            {/* 5. Romance & Drame */}
-            <AnimeRow
-              title={isFr ? '❤️ Romance, Sentiments & Émotions' : 'Romance, Feelings & Drama'}
-              animes={romanceAnime}
-              icon="❤️"
-              onOpenAnime={openAnimeModal}
-            />
+            {/* 5. Surnaturel, Démons & Pouvoirs */}
+            {deduplicatedRows.cleanSupernatural.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Surnaturel, Pouvoirs Psychiques & Démons' : 'Supernatural & Powers'}
+                animes={deduplicatedRows.cleanSupernatural}
+                icon={<Zap className="w-4 h-4 text-purple-400" />}
+                badge="Surnaturel"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
 
-            {/* 6. Dark Fantasy & Horreur */}
-            <AnimeRow
-              title={isFr ? '🩸 Dark Fantasy, Horreur & Surnaturel' : 'Dark Fantasy, Horror & Supernatural'}
-              animes={horrorAnime}
-              icon="🩸"
-              onOpenAnime={openAnimeModal}
-            />
+            {/* 6. Chefs-d’œuvre Mieux Notés */}
+            {deduplicatedRows.cleanTopRated.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Chefs-d’œuvre & Légendes Incontournables' : 'Masterpieces & Top Rated'}
+                animes={deduplicatedRows.cleanTopRated}
+                icon={<Crown className="w-4 h-4 text-yellow-400" />}
+                badge="★ 8.8+"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
 
-            {/* 7. Sci-Fi & Mecha */}
-            <AnimeRow
-              title={isFr ? '🤖 Sci-Fi, Cyberpunk & Mecha' : 'Sci-Fi & Cyberpunk'}
-              animes={scifiAnime}
-              icon="🤖"
-              onOpenAnime={openAnimeModal}
-            />
+            {/* 7. Dark Fantasy & Horreur */}
+            {deduplicatedRows.cleanHorror.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Dark Fantasy, Horreur & Psychologique' : 'Dark Fantasy & Horror'}
+                animes={deduplicatedRows.cleanHorror}
+                icon={<Skull className="w-4 h-4 text-rose-500" />}
+                badge="Dark & Mystique"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
 
-            {/* 8. Sports */}
-            <AnimeRow
-              title={isFr ? '🏅 Sports, Tournois & Dépassement' : 'Sports & Tournaments'}
-              animes={sportsAnime}
-              icon="🏅"
-              onOpenAnime={openAnimeModal}
-            />
+            {/* 8. Romance & Émotions */}
+            {deduplicatedRows.cleanRomance.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Romance, Sentiments & Tranche de Vie' : 'Romance & Feelings'}
+                animes={deduplicatedRows.cleanRomance}
+                icon={<Heart className="w-4 h-4 text-pink-400" />}
+                badge="Émotions"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
 
-            {/* 9. Comédie & Tranche de vie */}
-            <AnimeRow
-              title={isFr ? '☕ Comédie, Amitié & Tranche de Vie' : 'Comedy & Slice of Life'}
-              animes={comedyAnime}
-              icon="☕"
-              onOpenAnime={openAnimeModal}
-            />
+            {/* 9. Sci-Fi & Mecha */}
+            {deduplicatedRows.cleanScifi.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Sci-Fi, Cyberpunk & Mecha' : 'Sci-Fi & Cyberpunk'}
+                animes={deduplicatedRows.cleanScifi}
+                icon={<Bot className="w-4 h-4 text-cyan-400" />}
+                badge="Futuriste"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
 
-            {/* 10. Mystère & Thrillers */}
-            <AnimeRow
-              title={isFr ? '🔍 Mystère, Enquêtes & Thrillers' : 'Mystery & Thrillers'}
-              animes={mysteryAnime}
-              icon="🔍"
-              onOpenAnime={openAnimeModal}
-            />
+            {/* 10. Sports & Compétitions */}
+            {deduplicatedRows.cleanSports.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Sports, Esprit d’Équipe & Victoires' : 'Sports & Tournaments'}
+                animes={deduplicatedRows.cleanSports}
+                icon={<Trophy className="w-4 h-4 text-amber-500" />}
+                badge="Compétition"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
 
-            {/* 11. Longs-Métrages */}
-            <AnimeRow
-              title={isFr ? '🎬 Longs-Métrages & Films d’Animation' : 'Anime Feature Films'}
-              animes={animeMovies}
-              icon="🎬"
-              onOpenAnime={openAnimeModal}
-            />
+            {/* 11. Comédies & Détente */}
+            {deduplicatedRows.cleanComedy.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Comédie, Amitié & Bonne Humeur' : 'Comedy & Slice of Life'}
+                animes={deduplicatedRows.cleanComedy}
+                icon={<Smile className="w-4 h-4 text-orange-400" />}
+                badge="Feel Good"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
 
-            {/* 12. Prochaines Sorties */}
-            <AnimeRow
-              title={isFr ? '⏳ Prochaines Sorties & Anticipations' : 'Upcoming Releases'}
-              animes={upcomingAnime}
-              icon="⏳"
-              onOpenAnime={openAnimeModal}
-            />
+            {/* 12. Mystère & Thrillers */}
+            {deduplicatedRows.cleanMystery.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Mystère, Enquêtes & Suspense' : 'Mystery & Thrillers'}
+                animes={deduplicatedRows.cleanMystery}
+                icon={<Search className="w-4 h-4 text-blue-400" />}
+                badge="Intrigue"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
+
+            {/* 13. Longs-Métrages */}
+            {deduplicatedRows.cleanMovies.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Longs-Métrages & Films d’Animation' : 'Anime Feature Films'}
+                animes={deduplicatedRows.cleanMovies}
+                icon={<Film className="w-4 h-4 text-purple-400" />}
+                badge="Films HD"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
+
+            {/* 14. Prochaines Sorties */}
+            {deduplicatedRows.cleanUpcoming.length > 0 && (
+              <AnimeRow
+                title={isFr ? 'Prochaines Sorties & Anticipations' : 'Upcoming Releases'}
+                animes={deduplicatedRows.cleanUpcoming}
+                icon={<Clock className="w-4 h-4 text-teal-400" />}
+                badge="À venir"
+                onOpenAnime={openAnimeModal}
+                onToggleWatchlist={toggleWatchlist}
+                isAddedToWatchlist={isAddedToWatchlist}
+              />
+            )}
           </main>
         </>
       )}

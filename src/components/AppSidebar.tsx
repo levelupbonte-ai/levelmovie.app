@@ -1,10 +1,10 @@
 import React from 'react';
 import {
   X, Settings, Bookmark, Clapperboard, LayoutGrid, HelpCircle,
-  Film, Tv, Users, Home, LogOut, User, ChevronRight, ExternalLink,
+  Film, Tv, Users, LogOut, User, ChevronRight, ExternalLink,
   Compass, Calendar
 } from 'lucide-react';
-import { LevelMovieLogo, DonaStar } from '../constants';
+import { LevelMovieLogo, DonaStar, TikTokHomeIcon } from '../constants';
 
 interface AppSidebarProps {
   isOpen: boolean;
@@ -217,33 +217,51 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
               <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
             </button>
 
+            {/* 3.2. SALONS / WATCH PARTY */}
+            <button
+              onClick={() => { onClose(); onNavigateCategory('party'); }}
+              className={`w-full py-2.5 px-3 rounded-xl transition-all text-left flex items-center justify-between group cursor-pointer ${
+                currentCategory === 'party'
+                  ? 'bg-purple-500/20 text-white'
+                  : 'hover:bg-white/5'
+              }`}
+            >
+              <div className="flex items-center gap-3.5">
+                <Users className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform shrink-0" />
+                <div>
+                  <div className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
+                    {lang === 'fr' ? 'Salons' : 'Watch Party'}
+                  </div>
+                  <div className="text-[10px] text-white/40">
+                    {lang === 'fr' ? 'Visionnage synchronisé entre amis' : 'Watch movies together with chat'}
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+            </button>
+
             {/* 3.5. ANIME HUB */}
             <div className="space-y-1">
               <button
                 onClick={() => { onClose(); onNavigateCategory('anime', 'home'); }}
                 className={`w-full py-2.5 px-3 rounded-xl transition-all text-left flex items-center justify-between group cursor-pointer ${
                   currentCategory === 'anime'
-                    ? 'bg-red-500/15 border border-red-500/30 text-white'
+                    ? 'bg-white/10 text-white'
                     : 'hover:bg-white/5'
                 }`}
               >
                 <div className="flex items-center gap-3.5">
                   <LevelMovieLogo className="w-4 h-4 group-hover:scale-110 transition-transform" color="#ef4444" />
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
-                        LevelAnime
-                      </span>
-                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-red-500/20 text-red-300 border border-red-500/30 uppercase">
-                        Anime
-                      </span>
+                    <div className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
+                      LevelAnime
                     </div>
                     <div className="text-[10px] text-white/40">
                       {lang === 'fr' ? 'Simulcasts, VF/VOSTFR & saisons' : 'Simulcasts, dubs & seasons'}
                     </div>
                   </div>
                 </div>
-                <ChevronRight className={`w-4 h-4 text-white/30 group-hover:text-white transition-transform ${currentCategory === 'anime' ? 'rotate-90 text-red-400' : ''}`} />
+                <ChevronRight className={`w-4 h-4 text-white/30 group-hover:text-white transition-transform ${currentCategory === 'anime' ? 'rotate-90 text-white' : ''}`} />
               </button>
 
               {/* Sub-options for LevelAnime in Sidebar */}
@@ -257,7 +275,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Home className="w-3.5 h-3.5" />
+                    <TikTokHomeIcon className="w-3.5 h-3.5" />
                     <span>{lang === 'fr' ? 'Accueil Anime' : 'Anime Home'}</span>
                   </div>
                   {currentCategory === 'anime' && animeSubTab === 'home' && (
@@ -309,13 +327,8 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
               <div className="flex items-center gap-3.5">
                 <LayoutGrid className="w-4 h-4 text-white/50 group-hover:text-purple-400 transition-colors" />
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
-                      LevelUp App Store
-                    </span>
-                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
-                      Suite
-                    </span>
+                  <div className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
+                    LevelUp App Store
                   </div>
                   <div className="text-[10px] text-white/40">
                     {lang === 'fr' ? 'Écosystème & modules connectés' : 'Ecosystem & connected apps'}

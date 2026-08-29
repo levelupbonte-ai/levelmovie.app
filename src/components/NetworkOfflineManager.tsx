@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { WifiOff, Wifi, RefreshCw, Bookmark, Film, AlertTriangle, ShieldCheck, CheckCircle2, CloudOff, Database } from 'lucide-react';
+import { WifiOff, RefreshCw, Bookmark, Film, CheckCircle2, CloudOff, Database, X } from 'lucide-react';
 import { LevelMovieLogo } from '../constants';
 
 interface NetworkOfflineManagerProps {
@@ -15,9 +15,12 @@ export function NetworkOfflineManager({
   onOpenHistory,
   showToast
 }: NetworkOfflineManagerProps) {
-  const [isOnline, setIsOnline] = useState<boolean>(() => {
-    return typeof navigator !== 'undefined' ? navigator.onLine : true;
+  // Strict Real Disconnection check: only true if browser is really offline (wifi turned off or zero network)
+  const [isOffline, setIsOffline] = useState<boolean>(() => {
+    return typeof navigator !== 'undefined' ? !navigator.onLine : false;
   });
+  
+  const [isDismissed, setIsDismissed] = useState<boolean>(false);
   const [showDetailModal, setShowDetailModal] = useState<boolean>(false);
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
   const [retryResult, setRetryResult] = useState<'success' | 'failed' | null>(null);
@@ -25,27 +28,26 @@ export function NetworkOfflineManager({
 
   const isFr = lang === 'fr';
 
-  // Manual or automatic ping to verify real server connectivity
+  // Manual or automatic ping strictly when navigator is offline or user asks
   const checkConnectivity = useCallback(async (manual = false): Promise<boolean> => {
     if (manual) setIsRetrying(true);
     setRetryResult(null);
 
-    try {
-      // First quick check: browser reported state
-      if (!navigator.onLine) {
-        if (manual) {
-          setTimeout(() => {
-            setIsRetrying(false);
-            setRetryResult('failed');
-          }, 600);
-        }
-        setIsOnline(false);
-        return false;
+    // If browser itself reports offline (wifi off)
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setIsOffline(true);
+      if (manual) {
+        setTimeout(() => {
+          setIsRetrying(false);
+          setRetryResult('failed');
+        }, 500);
       }
+      return false;
+    }
 
-      // Real ping to local /api/health with small cache-busting timestamp
+    try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
 
       const res = await fetch(`/api/health?t=${Date.now()}`, {
         method: 'GET',
@@ -62,28 +64,32 @@ export function NetworkOfflineManager({
       setLastCheckTime(now);
 
       if (res.ok) {
-        setIsOnline(true);
+        setIsOffline(false);
+        setIsDismissed(false);
         if (manual) {
           setRetryResult('success');
           setTimeout(() => {
             setIsRetrying(false);
             setShowDetailModal(false);
             if (showToast) {
-              showToast(isFr ? 'Connexion réseau rétablie avec succès' : 'Network connection restored successfully', 'success');
+              showToast(isFr ? 'Connexion Internet active et rétablie !' : 'Internet connection active and restored!', 'success');
             }
-          }, 800);
+          }, 600);
         }
         return true;
       } else {
-        throw new Error('Health check returned non-200');
+        throw new Error('Health check non-200');
       }
-    } catch (e) {
-      setIsOnline(false);
+    } catch {
+      // If fetch fails and browser is offline
+      if (!navigator.onLine) {
+        setIsOffline(true);
+      }
       if (manual) {
         setTimeout(() => {
           setIsRetrying(false);
           setRetryResult('failed');
-        }, 600);
+        }, 500);
       }
       return false;
     }
@@ -91,15 +97,16 @@ export function NetworkOfflineManager({
 
   useEffect(() => {
     const handleOnline = () => {
-      checkConnectivity(false).then((online) => {
-        if (online && showToast) {
-          showToast(isFr ? 'Connexion Internet rétablie • Données synchronisées' : 'Internet connection restored • Data synced', 'success');
-        }
-      });
+      setIsOffline(false);
+      setIsDismissed(false);
+      if (showToast) {
+        showToast(isFr ? 'Connexion Internet rétablie' : 'Internet connection restored', 'success');
+      }
     };
 
     const handleOffline = () => {
-      setIsOnline(false);
+      setIsOffline(true);
+      setIsDismissed(false);
       const now = new Date().toLocaleTimeString(isFr ? 'fr-FR' : 'en-US', {
         hour: '2-digit',
         minute: '2-digit',
@@ -107,37 +114,28 @@ export function NetworkOfflineManager({
       });
       setLastCheckTime(now);
       if (showToast) {
-        showToast(isFr ? 'Mode hors-ligne activé (Connexion réseau perdue)' : 'Offline mode active (Network connection lost)', 'error');
+        showToast(isFr ? 'Connexion Wi-Fi / Réseau coupée' : 'Network disconnected', 'error');
       }
     };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Periodic heartbeat check every 30 seconds
-    const interval = setInterval(() => {
-      if (navigator.onLine) {
-        checkConnectivity(false);
-      } else {
-        setIsOnline(false);
-      }
-    }, 30000);
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      clearInterval(interval);
     };
-  }, [checkConnectivity, isFr, showToast]);
+  }, [isFr, showToast]);
 
-  if (isOnline && !showDetailModal) {
+  // If online or user explicitly skipped/dismissed banner and modal isn't open
+  if (!isOffline && !showDetailModal) {
     return null;
   }
 
   return (
     <>
-      {/* 1. Flottant Compact en Haut d'Écran quand déconnecté */}
-      {!isOnline && (
+      {/* 1. Bandeau discret en haut avec bouton SKIP / FERMER (Uniquement si vrai hors-ligne et non ignoré) */}
+      {isOffline && !isDismissed && (
         <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[9990] max-w-[92vw] sm:max-w-md w-full animate-in slide-in-from-top-4 duration-300 pointer-events-auto">
           <div className="bg-[#100a1c]/95 border border-amber-500/40 hover:border-amber-400 shadow-[0_10px_30px_rgba(0,0,0,0.8),0_0_20px_rgba(245,158,11,0.25)] rounded-2xl px-4 py-2.5 flex items-center justify-between gap-3 backdrop-blur-xl transition-all">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -147,12 +145,11 @@ export function NetworkOfflineManager({
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black text-white uppercase tracking-wider truncate">
-                    {isFr ? 'Mode Hors-ligne Actif' : 'Offline Mode Active'}
+                    {isFr ? 'Hors-ligne (Wi-Fi déconnecté)' : 'Offline (No Connection)'}
                   </span>
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
                 </div>
                 <p className="text-[10px] text-white/60 truncate">
-                  {isFr ? 'Serveurs distants injoignables • Données locales' : 'Remote servers unreachable • Local cache only'}
+                  {isFr ? 'Accès aux contenus en cache local' : 'Local cache available'}
                 </p>
               </div>
             </div>
@@ -170,36 +167,44 @@ export function NetworkOfflineManager({
               <button
                 type="button"
                 onClick={() => setShowDetailModal(true)}
-                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-[#a855f7] hover:from-purple-500 hover:to-[#9333ea] text-white text-[11px] font-bold uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
+                className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-[#a855f7] hover:from-purple-500 hover:to-[#9333ea] text-white text-[10px] font-bold uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
               >
-                {isFr ? 'Détails' : 'Diagnose'}
+                {isFr ? 'Détails' : 'Info'}
+              </button>
+              
+              {/* BOUTON SKIP / FERMER POUR NE PAS ÊTRE GÊNÉ */}
+              <button
+                type="button"
+                onClick={() => setIsDismissed(true)}
+                className="p-1.5 rounded-xl bg-white/5 hover:bg-white/15 text-white/60 hover:text-white transition-all cursor-pointer"
+                title={isFr ? 'Ignorer ce message' : 'Skip & dismiss'}
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 2. Modal Diagnostic & Gestion Hors-Ligne Pro */}
+      {/* 2. Pop-up Plein Écran Total Net et Sans Flou (Solid Clean Full-Screen Backdrop) */}
       {showDetailModal && (
-        <div className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-[#0e0f18] border border-[#a855f7]/30 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden space-y-6">
-            <div className="absolute -top-28 -right-28 w-60 h-60 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-28 -left-28 w-60 h-60 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
-
-            {/* En-tête */}
-            <div className="flex items-start justify-between gap-4 relative z-10">
+        <div className="fixed inset-0 z-[9999] bg-[#06060a] flex flex-col justify-between p-4 sm:p-8 overflow-y-auto animate-in fade-in duration-150">
+          <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col justify-between py-6 space-y-6">
+            
+            {/* Header Plein Écran */}
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
               <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-lg shrink-0">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-lg shrink-0">
                   <WifiOff className="w-6 h-6" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider">
-                      {isFr ? 'Diagnostic Réseau & Cache' : 'Network & Cache Diagnostic'}
+                    <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider">
+                      {isFr ? 'État de la Connexion Réseau' : 'Network Connection Status'}
                     </h3>
                   </div>
                   <p className="text-xs text-white/50 mt-0.5">
-                    LevelMovie Engine • Architecture Haute Tolérance
+                    LevelMovie • Mode Hors-Ligne
                   </p>
                 </div>
               </div>
@@ -207,88 +212,99 @@ export function NetworkOfflineManager({
               <button
                 type="button"
                 onClick={() => setShowDetailModal(false)}
-                className="p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold transition-all cursor-pointer"
+                title={isFr ? 'Fermer' : 'Close'}
               >
-                ✕
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            {/* Statuts Techniques */}
-            <div className="space-y-2.5 relative z-10">
-              <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <CloudOff className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-semibold text-white/80">
-                    {isFr ? 'Accès Internet & Serveurs Miroirs' : 'Internet Access & Mirror Servers'}
-                  </span>
+            {/* Statuts Techniques Clairs et Nets */}
+            <div className="space-y-3">
+              <div className="p-4 rounded-2xl bg-[#11121c] border border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <CloudOff className="w-5 h-5 text-amber-400" />
+                  <div>
+                    <div className="text-sm font-bold text-white">
+                      {isFr ? 'Accès Internet & Wi-Fi' : 'Internet & Wi-Fi Access'}
+                    </div>
+                    <div className="text-xs text-white/50">
+                      {isFr ? 'Vérification du signal réseau' : 'Network signal check'}
+                    </div>
+                  </div>
                 </div>
-                <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full ${
-                  isOnline 
+                <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full ${
+                  !isOffline 
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
                     : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                 }`}>
-                  {isOnline ? (isFr ? 'En ligne' : 'Online') : (isFr ? 'Hors-ligne' : 'Offline')}
+                  {!isOffline ? (isFr ? 'Connecté' : 'Connected') : (isFr ? 'Wi-Fi Déconnecté' : 'Disconnected')}
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <Database className="w-4 h-4 text-[#a855f7]" />
-                  <span className="text-xs font-semibold text-white/80">
-                    {isFr ? 'Base Locale & Données en Cache' : 'Local Storage & Offline Cache'}
-                  </span>
+              <div className="p-4 rounded-2xl bg-[#11121c] border border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Database className="w-5 h-5 text-[#a855f7]" />
+                  <div>
+                    <div className="text-sm font-bold text-white">
+                      {isFr ? 'Données Locales & Historique' : 'Local Storage & History'}
+                    </div>
+                    <div className="text-xs text-white/50">
+                      {isFr ? 'Disponibles hors-ligne sans connexion' : 'Available offline'}
+                    </div>
+                  </div>
                 </div>
-                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   {isFr ? 'Opérationnel' : 'Active'}
                 </span>
               </div>
 
               {lastCheckTime && (
-                <div className="text-[11px] font-mono text-white/40 px-1 text-right">
-                  {isFr ? `Dernière vérification : ${lastCheckTime}` : `Last ping: ${lastCheckTime}`}
+                <div className="text-xs font-mono text-white/40 px-1 text-right">
+                  {isFr ? `Dernier test : ${lastCheckTime}` : `Last check: ${lastCheckTime}`}
                 </div>
               )}
             </div>
 
             {/* Note informative */}
-            <div className="p-4 rounded-2xl bg-purple-950/20 border border-purple-500/20 text-xs text-white/70 leading-relaxed relative z-10">
+            <div className="p-5 rounded-2xl bg-[#151224] border border-purple-500/30 text-xs sm:text-sm text-white/80 leading-relaxed">
               <p>
                 {isFr
-                  ? 'Pendant la coupure réseau, vos préférences, votre historique récent et votre Watchlist locale restent totalement consultables. Le streaming en direct et la recherche globale reprendront automatiquement dès le retour du signal.'
-                  : 'While offline, your preferences, recent watch history and local Watchlist remain available. Live streaming and catalogue searches will resume automatically once connection returns.'}
+                  ? 'Vos données sauvegardées (Watchlist, Historique, Paramètres) restent pleinement accessibles sans connexion Internet. Les flux vidéos reprendront dès que vous vous reconnecterez au Wi-Fi.'
+                  : 'Your saved data (Watchlist, History, Settings) remain fully accessible without connection. Video streams will resume once you reconnect to Wi-Fi.'}
               </p>
             </div>
 
-            {/* Boutons d'Action */}
-            <div className="space-y-3 relative z-10 pt-2">
+            {/* Actions & Bouton Skip */}
+            <div className="space-y-3 pt-2">
               <button
                 type="button"
                 onClick={() => checkConnectivity(true)}
                 disabled={isRetrying}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-[#a855f7] to-[#7c3aed] hover:from-purple-500 hover:to-[#6d28d9] text-white text-xs font-black uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2.5 cursor-pointer active:scale-98 disabled:opacity-50"
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-[#a855f7] to-[#7c3aed] hover:from-purple-500 hover:to-[#6d28d9] text-white text-xs font-black uppercase tracking-wider transition-all shadow-xl flex items-center justify-center gap-2.5 cursor-pointer active:scale-98 disabled:opacity-50"
               >
                 <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
                 <span>
                   {isRetrying
-                    ? (isFr ? 'Test de connectivité en cours...' : 'Testing connectivity...')
-                    : (isFr ? 'Tester la Reconnexion Immédiate' : 'Test Connection Now')}
+                    ? (isFr ? 'Vérification du signal...' : 'Checking signal...')
+                    : (isFr ? 'Tester la Reconnexion' : 'Test Connection')}
                 </span>
               </button>
 
               {retryResult === 'failed' && (
-                <div className="text-center text-[11px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 py-2 rounded-xl animate-in fade-in">
-                  {isFr ? 'Connexion toujours indisponible. Veuillez vérifier votre réseau Wi-Fi ou mobile.' : 'Connection still unavailable. Please check your Wi-Fi or mobile data.'}
+                <div className="text-center text-xs font-bold text-red-400 bg-red-500/15 border border-red-500/30 py-2.5 rounded-xl animate-in fade-in">
+                  {isFr ? 'Toujours hors-ligne. Veuillez activer votre Wi-Fi ou vos données mobiles.' : 'Still offline. Please enable Wi-Fi or mobile data.'}
                 </div>
               )}
 
               {retryResult === 'success' && (
-                <div className="text-center text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 py-2 rounded-xl animate-in fade-in flex items-center justify-center gap-2">
+                <div className="text-center text-xs font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 py-2.5 rounded-xl animate-in fade-in flex items-center justify-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   <span>{isFr ? 'Connexion rétablie avec succès !' : 'Connection restored successfully!'}</span>
                 </div>
               )}
 
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 {onOpenWatchlist && (
                   <button
                     type="button"
@@ -296,9 +312,9 @@ export function NetworkOfflineManager({
                       setShowDetailModal(false);
                       onOpenWatchlist();
                     }}
-                    className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    className="flex-1 py-3.5 rounded-2xl bg-[#13141f] hover:bg-[#1a1c2b] border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
-                    <Bookmark className="w-3.5 h-3.5 text-[#a855f7]" />
+                    <Bookmark className="w-4 h-4 text-[#a855f7]" />
                     <span>{isFr ? 'Ma Watchlist' : 'Watchlist'}</span>
                   </button>
                 )}
@@ -310,14 +326,26 @@ export function NetworkOfflineManager({
                       setShowDetailModal(false);
                       onOpenHistory();
                     }}
-                    className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    className="flex-1 py-3.5 rounded-2xl bg-[#13141f] hover:bg-[#1a1c2b] border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
-                    <Film className="w-3.5 h-3.5 text-blue-400" />
+                    <Film className="w-4 h-4 text-blue-400" />
                     <span>{isFr ? 'Historique' : 'History'}</span>
                   </button>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setIsDismissed(true);
+                  }}
+                  className="px-6 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
+                >
+                  {isFr ? 'Passer / Continuer' : 'Skip & Continue'}
+                </button>
               </div>
             </div>
+
           </div>
         </div>
       )}

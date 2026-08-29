@@ -1011,12 +1011,11 @@ export default function App() {
               <span className="font-bold tracking-wide">Dona</span>
             </button>
             <button onClick={() => setCurrentCategory('movie')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'movie' ? 'text-[#a855f7]' : ''}`}>{t.movies}</button>
-            <button onClick={() => setCurrentCategory('trailers')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'trailers' ? 'text-[#a855f7]' : ''}`}>{t.trailers || 'Bandes-Annonces'}</button>
-            <button onClick={() => setCurrentCategory('party')} className={`transition-colors hover:text-white outline-none flex items-center gap-1.5 relative cursor-pointer ${currentCategory === 'party' ? 'text-[#a855f7]' : ''}`}>
-              <Users className="w-3.5 h-3.5"/> 
-              {t.partyTab}
-              {activePartyCode && currentCategory !== 'party' && <div className="absolute -top-1 -right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-[#060608]"></div>}
+            <button onClick={() => setCurrentCategory('party')} className={`flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'party' ? 'text-[#a855f7] font-bold' : ''}`}>
+              <Users className="w-3.5 h-3.5" />
+              <span>{t.partyTab || 'Salons'}</span>
             </button>
+            <button onClick={() => setCurrentCategory('trailers')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'trailers' ? 'text-[#a855f7]' : ''}`}>{t.trailers || 'Bandes-Annonces'}</button>
             <button onClick={() => setCurrentCategory('anime')} className={`flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'anime' ? 'text-red-500 font-bold' : ''}`}>
               <LevelMovieLogo className="w-3.5 h-3.5" color="#ef4444" />
               <span>Anime</span>
@@ -1160,7 +1159,7 @@ export default function App() {
             <span className={`text-[9px] font-black uppercase tracking-wider ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/60'}`}>Dona</span>
           </button>
           <button onClick={() => setCurrentCategory('party')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'party' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-            <Users className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.partyTab}</span>
+            <Users className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.partyTab || 'Salons'}</span>
           </button>
           <button onClick={() => { setCurrentCategory('anime'); setAnimeSubTab('home'); }} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'anime' && !showSidebar ? 'text-red-500' : 'text-white/50 hover:text-white'}`}>
             <LevelMovieLogo className="w-5 h-5" color="#ef4444" /> <span className="text-[9px] font-bold uppercase tracking-widest">Anime</span>
@@ -1196,51 +1195,27 @@ export default function App() {
       ) : currentCategory === 'party' ? (
         <div className="pt-24 px-4 md:px-14 pb-24 min-h-screen relative z-30 w-full max-w-[2000px] mx-auto space-y-8 animate-in fade-in duration-300">
           {/* Executive Watch Party Cinema Lounge Header */}
-          <div className="relative w-full rounded-[2.5rem] p-6 sm:p-10 bg-gradient-to-r from-[#170a2c] via-[#0d0d1a] to-[#080812] border border-[#a855f7]/30 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(168,85,247,0.15)] overflow-hidden">
-            <div className="absolute -top-32 -right-32 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-pink-600/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative w-full rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-[#140b24] via-[#0d0d18] to-[#090912] border border-[#a855f7]/25 shadow-[0_15px_40px_rgba(0,0,0,0.7)] overflow-hidden">
+            <div className="absolute -top-32 -right-32 w-80 h-80 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
-              {/* Left Info & Live Badges */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-3xl bg-gradient-to-br from-[#a855f7]/30 via-purple-600/20 to-pink-500/20 flex items-center justify-center border border-[#a855f7]/50 shadow-[0_0_30px_rgba(168,85,247,0.35)]">
-                  <WatchPartySVG className="w-9 h-9 sm:w-11 sm:h-11 text-[#c084fc] animate-pulse" />
+            <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
+              {/* Left Info */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-[#a855f7]/15 flex items-center justify-center border border-[#a855f7]/30 text-[#c084fc] shadow-lg">
+                  <Users className="w-7 h-7 sm:w-8 sm:h-8" />
                 </div>
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#a855f7]/20 border border-[#a855f7]/40 text-[#c084fc] text-[11px] font-mono font-bold uppercase tracking-wider">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                      {lang === 'fr' ? 'Cinema Live Rooms' : 'Cinema Live Rooms'}
-                    </span>
-                    <span className="text-[10px] font-mono text-white/50 bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
-                      v2.6 Ultra-Sync
-                    </span>
-                  </div>
-
-                  <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
+                <div className="space-y-1.5">
+                  <h2 className="text-xl sm:text-2xl font-black uppercase tracking-wide text-white">
                     {t.joinPartyTitle}
                   </h2>
-                  <p className="text-white/70 text-xs sm:text-sm max-w-xl leading-relaxed">
+                  <p className="text-white/60 text-xs sm:text-sm max-w-xl leading-relaxed">
                     {t.joinPartyDesc}
                   </p>
-
-                  {/* Feature Pills */}
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
-                    <span className="text-[10px] font-semibold text-white/60 bg-white/[0.04] border border-white/10 px-2.5 py-1 rounded-xl">
-                      ⚡ {lang === 'fr' ? 'Sync sub-seconde' : 'Sub-second sync'}
-                    </span>
-                    <span className="text-[10px] font-semibold text-white/60 bg-white/[0.04] border border-white/10 px-2.5 py-1 rounded-xl">
-                      🔒 {lang === 'fr' ? 'Salons chiffrés' : 'Encrypted rooms'}
-                    </span>
-                    <span className="text-[10px] font-semibold text-white/60 bg-white/[0.04] border border-white/10 px-2.5 py-1 rounded-xl">
-                      💬 {lang === 'fr' ? 'Chat & Émojis direct' : 'Live chat & reactions'}
-                    </span>
-                  </div>
                 </div>
               </div>
 
               {/* Right Join Code Form */}
-              <div className="w-full lg:w-auto shrink-0 flex flex-col sm:flex-row items-center gap-2.5 bg-black/70 border border-purple-500/30 p-2 sm:p-2.5 rounded-2xl shadow-2xl focus-within:border-[#a855f7] focus-within:shadow-[0_0_25px_rgba(168,85,247,0.25)] transition-all">
+              <div className="w-full max-w-xl lg:max-w-md lg:w-auto shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-black/60 border border-white/10 p-2 sm:p-2.5 rounded-2xl shadow-xl focus-within:border-[#a855f7]/80 focus-within:shadow-[0_0_20px_rgba(168,85,247,0.2)] transition-all">
                 <input 
                   type="text" 
                   id="partyCodeInput"
@@ -1253,7 +1228,7 @@ export default function App() {
                       if (code) triggerJoinParty(code);
                     }
                   }}
-                  className="w-full sm:w-56 bg-transparent px-4 py-2.5 text-white font-mono text-sm uppercase tracking-widest outline-none placeholder:text-white/30"
+                  className="flex-1 w-full min-w-0 bg-transparent px-4 py-3 sm:py-2.5 text-white font-mono text-sm uppercase tracking-widest outline-none placeholder:text-white/30"
                 />
                 <button 
                   type="button"
@@ -1262,7 +1237,7 @@ export default function App() {
                     const code = inputEl ? inputEl.value.trim().toUpperCase() : '';
                     if (code) triggerJoinParty(code);
                   }}
-                  className="w-full sm:w-auto bg-gradient-to-r from-purple-600 via-[#a855f7] to-pink-600 hover:opacity-95 text-white px-6 py-3 rounded-xl font-black uppercase tracking-wider transition-all active:scale-95 text-xs shadow-[0_0_20px_rgba(168,85,247,0.4)] shrink-0 cursor-pointer whitespace-nowrap"
+                  className="w-full sm:w-auto inline-flex items-center justify-center bg-gradient-to-r from-purple-600 via-[#a855f7] to-purple-700 hover:opacity-95 text-white px-6 py-3 sm:py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all active:scale-95 text-xs shadow-md shrink-0 cursor-pointer whitespace-nowrap"
                 >
                   {t.joinBtn}
                 </button>
@@ -1398,8 +1373,8 @@ export default function App() {
         </>
       )}
 
-      {/* PIED DE PAGE & AVERTISSEMENT LÉGAL AGRÉGATEUR PRO */}
-      {['home', 'tv', 'movie'].includes(currentCategory) && (
+      {/* PIED DE PAGE & AVERTISSEMENT LÉGAL AGRÉGATEUR PRO (UNIQUEMENT TOUT EN BAS DE L'ACCUEIL) */}
+      {currentCategory === 'home' && (
         <FooterDisclaimer
           lang={lang}
           onOpenSupport={() => setShowSupport(true)}

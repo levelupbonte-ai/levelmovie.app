@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { BASE_URL, IMAGE_BASE_URL, filterMatureContent } from '../constants';
+import { LevelMovieImage } from './LevelMovieImage';
 
 export const Row = React.memo(function Row({
   title,
@@ -111,15 +112,25 @@ export const Row = React.memo(function Row({
         {movies.map(movie => {
           const imgClass = isLarge ? 'w-[140px] md:w-[200px] h-[210px] md:h-[300px]' : 'w-[200px] md:w-[260px] h-[112px] md:h-[146px]';
           const imgSrc = `${IMAGE_BASE_URL}${isLarge ? movie.poster_path : (movie.backdrop_path || movie.poster_path)}`;
+          const movieTitle = movie.title || movie.name || 'LevelMovie';
           return (
             <div
               key={movie.id}
               className="relative flex-none movie-card-hover cursor-pointer rounded-xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform"
               onClick={() => onMovieClick(movie)}
             >
-              <img className={`object-cover ${imgClass} transition-opacity duration-500`} src={imgSrc} loading="lazy" alt="" draggable="false"/>
+              <LevelMovieImage
+                src={imgSrc}
+                alt={movieTitle}
+                fallbackTitle={movieTitle}
+                brandTheme="purple"
+                className={`object-cover ${imgClass} transition-opacity duration-500`}
+                containerClassName={imgClass}
+                loading="lazy"
+                draggable={false}
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4 pointer-events-none">
-                <p className="text-white font-black text-[10px] md:text-sm uppercase tracking-wider truncate drop-shadow-md">{movie.title || movie.name}</p>
+                <p className="text-white font-black text-[10px] md:text-sm uppercase tracking-wider truncate drop-shadow-md">{movieTitle}</p>
                 <div className="flex items-center justify-between gap-2 mt-1 md:mt-2">
                   <span className="text-[#a855f7] font-bold text-[9px] md:text-[10px] flex items-center gap-1">
                     <Star className="w-3 h-3" /> {movie.vote_average?.toFixed(1)}
