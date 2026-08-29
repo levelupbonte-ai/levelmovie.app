@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
-import { BASE_URL, IMAGE_BASE_URL, filterMatureContent } from '../constants';
+import { BASE_URL, IMAGE_BASE_URL, filterMatureContent, filterContentByAge } from '../constants';
 import { LevelMovieImage } from './LevelMovieImage';
 
 export const Row = React.memo(function Row({
@@ -11,6 +11,7 @@ export const Row = React.memo(function Row({
   onMovieClick,
   pageSeed,
   parentalFilter,
+  userAge,
   quickAction
 }: {
   key?: React.Key;
@@ -21,6 +22,7 @@ export const Row = React.memo(function Row({
   onMovieClick: (m: any) => void;
   pageSeed: number;
   parentalFilter: boolean;
+  userAge?: number | null;
   quickAction?: { icon: any; label: string; onClick: (m: any) => void };
 }) {
   const [movies, setMovies] = useState<any[]>([]);
@@ -52,6 +54,7 @@ export const Row = React.memo(function Row({
 
         uniqueMovies = uniqueMovies.filter(m => m.adult !== true);
         uniqueMovies = filterMatureContent(uniqueMovies, parentalFilter);
+        uniqueMovies = filterContentByAge(uniqueMovies, userAge);
 
         if (shuffle) {
           uniqueMovies = uniqueMovies.sort(() => Math.random() - 0.5);
@@ -61,7 +64,7 @@ export const Row = React.memo(function Row({
       } catch (e) {}
     };
     fetchM();
-  }, [fetchUrl, pageSeed, shuffle, parentalFilter]);
+  }, [fetchUrl, pageSeed, shuffle, parentalFilter, userAge]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!rowRef.current) return;

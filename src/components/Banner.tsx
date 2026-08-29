@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { Play, Info, Star } from 'lucide-react';
-import { BASE_URL, IMAGE_ORIGINAL, LevelMovieLogo, filterMatureContent } from '../constants';
+import { BASE_URL, IMAGE_ORIGINAL, LevelMovieLogo, filterMatureContent, filterContentByAge } from '../constants';
 
-export function Banner({ url, onPlay, onInfo, setHero, heroMovie, t, pageSeed, parentalFilter }: {
+export function Banner({ url, onPlay, onInfo, setHero, heroMovie, t, pageSeed, parentalFilter, userAge }: {
   url: string;
   onPlay: () => void;
   onInfo: () => void;
@@ -11,6 +11,7 @@ export function Banner({ url, onPlay, onInfo, setHero, heroMovie, t, pageSeed, p
   t: any;
   pageSeed: number;
   parentalFilter: boolean;
+  userAge?: number | null;
 }) {
   useEffect(() => {
     const fetchMovie = async () => {
@@ -25,13 +26,14 @@ export function Banner({ url, onPlay, onInfo, setHero, heroMovie, t, pageSeed, p
         let valids = combined.filter((m: any) => m.backdrop_path);
         valids = valids.filter((m: any) => m.adult !== true);
         const filtered = filterMatureContent(valids, parentalFilter);
-        if (filtered.length > 0) valids = filtered;
+        const ageFiltered = filterContentByAge(filtered.length > 0 ? filtered : valids, userAge);
+        if (ageFiltered.length > 0) valids = ageFiltered;
 
         setHero(valids[Math.floor(Math.random() * valids.length)]);
       } catch (e) {}
     };
     fetchMovie();
-  }, [url, pageSeed, parentalFilter, setHero]);
+  }, [url, pageSeed, parentalFilter, userAge, setHero]);
 
   if (!heroMovie) return <div className="h-[80vh] w-full bg-[#060608] animate-pulse"></div>;
 

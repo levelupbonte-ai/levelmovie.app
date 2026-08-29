@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Star, Clapperboard, Play } from 'lucide-react';
-import { BASE_URL, IMAGE_BASE_URL, API_KEY, filterMatureContent, seededShuffle } from '../constants';
+import { BASE_URL, IMAGE_BASE_URL, API_KEY, filterMatureContent, filterContentByAge, seededShuffle } from '../constants';
 import { LevelMovieImage } from './LevelMovieImage';
 
 export const AlgoRow = React.memo(function AlgoRow({
@@ -10,7 +10,8 @@ export const AlgoRow = React.memo(function AlgoRow({
   badge,
   countdown,
   onMovieClick,
-  parentalFilter
+  parentalFilter,
+  userAge
 }: {
   key?: React.Key;
   title: string;
@@ -20,6 +21,7 @@ export const AlgoRow = React.memo(function AlgoRow({
   countdown?: string;
   onMovieClick: (m: any) => void;
   parentalFilter: boolean;
+  userAge?: number | null;
 }) {
   const [movies, setMovies] = useState<any[]>([]);
   const rowRef = useRef<HTMLDivElement>(null);
@@ -40,13 +42,14 @@ export const AlgoRow = React.memo(function AlgoRow({
 
         unique = unique.filter(m => m.adult !== true);
         unique = filterMatureContent(unique, parentalFilter);
+        unique = filterContentByAge(unique, userAge);
         unique = seededShuffle(unique, seed);
 
         setMovies(unique.slice(0, 15));
       } catch (e) {}
     };
     fetchM();
-  }, [fetchUrl, seed, parentalFilter]);
+  }, [fetchUrl, seed, parentalFilter, userAge]);
 
   const scrollAction = (direction: 'left' | 'right') => {
     if (rowRef.current) rowRef.current.scrollBy({ left: direction === 'left' ? -400 : 400, behavior: 'smooth' });

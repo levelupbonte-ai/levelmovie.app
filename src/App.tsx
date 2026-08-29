@@ -5,7 +5,7 @@ import {
   Home, Tv, Clapperboard, History, AlertOctagon, Bookmark,
   ArrowDown, ArrowUp, Plus, Users, Mail, AlertTriangle, CheckCircle, XCircle,
   Building, Lock, Menu, Sparkles, Compass, ShieldCheck, Zap,
-  Clock, SquarePen, Calendar
+  Clock, SquarePen, Calendar, Mic
 } from 'lucide-react';
 import {
   doc, setDoc, getDoc, deleteDoc, collection, addDoc, onSnapshot, query, orderBy, limit, getDocs, arrayUnion,
@@ -294,14 +294,25 @@ export default function App() {
           setShowLoginModal(false);
         } else {
           setUser({ uid, email: sessionUser.email });
-          const name = userMeta.full_name || sessionUser.email?.split('@')[0] || t.defaultUser;
+          const name = userMeta.full_name || userMeta.first_name || sessionUser.email?.split('@')[0] || t.defaultUser;
           setUserName(name);
           if (sessionUser.email) setUserEmail(sessionUser.email);
-          const photo = userMeta.avatar_url || null;
+          const photo = userMeta.avatar_url || localStorage.getItem('levelmovie_user_photo') || null;
           if (photo) setUserPhoto(photo);
           const handle = userMeta.username || localStorage.getItem('levelmovie_user_handle') || '';
           if (handle) setUserHandle(handle);
+          setShowLoginModal(false);
+          setShowMandatoryOnboarding(false);
         }
+
+        // Clean up URL hash from OAuth redirect
+        try {
+          if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
+            setTimeout(() => {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }, 800);
+          }
+        } catch (_) {}
       };
 
       supabase.auth.getSession().then(({ data: { session }, error }) => {
@@ -494,29 +505,6 @@ export default function App() {
       if (savedName) setUserName(savedName);
       if (savedEmail) setUserEmail(savedEmail);
       if (savedPhoto) setUserPhoto(savedPhoto);
-    }
-
-    if (isSupabaseConfigured && supabase) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          const u = session.user;
-          const userMeta = u.user_metadata || {};
-          const isCompleted = userMeta.profile_completed === true || 
-            localStorage.getItem(`lm_profile_completed_${u.id}`) === 'true';
-
-          if (!isCompleted) {
-            setOnboardingOAuthUser(u);
-            setShowMandatoryOnboarding(true);
-          } else {
-            const fullName = userMeta.full_name || userMeta.first_name || u.email?.split('@')[0] || 'Utilisateur';
-            setUser({ uid: u.id, email: u.email });
-            setUserName(fullName);
-            setUserEmail(u.email || '');
-            setUserPhoto(userMeta.avatar_url || null);
-            if (userMeta.username) setUserHandle(userMeta.username);
-          }
-        }
-      });
     }
 
     let ticking = false;
@@ -1071,9 +1059,10 @@ export default function App() {
 
               {/* Boutons Search & Profil visibles sur tablette / PC */}
               <div className="hidden md:flex items-center space-x-3 md:space-x-4">
-                <button onClick={() => setShowSearchModal(true)} className="flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 md:px-4 py-2 rounded-full outline-none w-10 md:w-72 justify-center md:justify-start transition-colors shadow-inner cursor-pointer">
+                <button onClick={() => setShowSearchModal(true)} className="group flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 md:px-4 py-2 rounded-full outline-none w-10 md:w-72 justify-center md:justify-start transition-all shadow-inner cursor-pointer">
                   <SearchIcon className="w-4 h-4 shrink-0 text-[#a855f7]" />
                   <span className="hidden md:inline truncate text-white/50">{t.searchPlaceholder}</span>
+                  <Mic className="w-3.5 h-3.5 text-[#c084fc]/50 group-hover:text-[#c084fc] shrink-0 ml-auto hidden md:inline transition-colors" />
                 </button>
 
                 <div 
@@ -1110,9 +1099,10 @@ export default function App() {
             </>
           ) : (
             <>
-              <button onClick={() => setShowSearchModal(true)} className="flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 md:px-4 py-2 rounded-full outline-none w-10 md:w-72 justify-center md:justify-start transition-colors shadow-inner cursor-pointer">
+              <button onClick={() => setShowSearchModal(true)} className="group flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 md:px-4 py-2 rounded-full outline-none w-10 md:w-72 justify-center md:justify-start transition-all shadow-inner cursor-pointer">
                 <SearchIcon className="w-4 h-4 shrink-0 text-[#a855f7]" />
                 <span className="hidden md:inline truncate text-white/50">{t.searchPlaceholder}</span>
+                <Mic className="w-3.5 h-3.5 text-[#c084fc]/50 group-hover:text-[#c084fc] shrink-0 ml-auto hidden md:inline transition-colors" />
               </button>
 
               {/* Profil / Connexion Button (PC & Tablette) */}

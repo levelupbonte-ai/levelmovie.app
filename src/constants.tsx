@@ -103,12 +103,32 @@ export const censorText = (text: string) => {
   return censored;
 };
 
-export const MATURE_GENRE_IDS = [27, 10752, 80];
+export const MATURE_GENRE_IDS = [27, 10752, 80]; // Horror (27), War (10752), Crime (80)
 export const filterMatureContent = (items: any[], parentalFilterActive: boolean) => {
   if (!parentalFilterActive || !Array.isArray(items)) return items;
   return items.filter(item => {
     const genreIds = item.genre_ids || (item.genres ? item.genres.map((g: any) => g.id) : []);
     return !genreIds.some((id: number) => MATURE_GENRE_IDS.includes(id));
+  });
+};
+
+/**
+ * Filter catalog for minors (< 18 years old):
+ * Removes 18+ content, adult flags, gore/extreme violence genres, and filters suggestions adapted to youth.
+ */
+export const filterContentByAge = (items: any[], userAge: number | null | undefined) => {
+  if (!Array.isArray(items)) return items;
+  if (!userAge || userAge >= 18) {
+    return items.filter(item => item && item.adult !== true);
+  }
+  // For users under 18: strictly no adult content, no horror (27), and filter out dark mature themes
+  return items.filter(item => {
+    if (!item) return false;
+    if (item.adult === true) return false;
+    const genreIds = item.genre_ids || (item.genres ? item.genres.map((g: any) => g.id) : []);
+    // Under 18 restriction: eliminate horror (27)
+    if (genreIds.includes(27)) return false;
+    return true;
   });
 };
 

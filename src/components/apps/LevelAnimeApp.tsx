@@ -24,6 +24,7 @@ interface LevelAnimeAppProps {
   userPhoto?: string | null;
   userName?: string;
   userEmail?: string;
+  userAge?: number | null;
   activeTab?: 'home' | 'explore' | 'releases';
   onTabChange?: (tab: 'home' | 'explore' | 'releases') => void;
   onOpenMovie?: (movie: any, mode?: string) => void;
@@ -1891,13 +1892,13 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
               />
             )}
 
-            {/* 7. Dark Fantasy & Horreur */}
-            {deduplicatedRows.cleanHorror.length > 0 && (
+            {/* 7. Dark Fantasy & Horreur (Réservé aux 18 ans et plus) */}
+            {(userAge === null || userAge === undefined || userAge >= 18) && deduplicatedRows.cleanHorror.length > 0 && (
               <AnimeRow
-                title={isFr ? 'Dark Fantasy, Horreur & Psychologique' : 'Dark Fantasy & Horror'}
+                title={isFr ? 'Dark Fantasy, Horreur & Psychologique (+18)' : 'Dark Fantasy & Horror (18+)'}
                 animes={deduplicatedRows.cleanHorror}
                 icon={<Skull className="w-4 h-4 text-rose-500" />}
-                badge="Dark & Mystique"
+                badge={isFr ? "Public averti" : "Mature"}
                 onOpenAnime={openAnimeModal}
                 onToggleWatchlist={toggleWatchlist}
                 isAddedToWatchlist={isAddedToWatchlist}

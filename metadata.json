@@ -1,6 +1,6 @@
 {
   "name": "LevelMovie",
   "description": "LevelMovie - L'Écosystème Premium de streaming et watch parties",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

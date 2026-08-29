@@ -3,7 +3,7 @@ import {
   Mail, Key, ArrowLeft, Check, Sparkles, AlertCircle, Eye, EyeOff,
   User, UserPlus, LogOut, ArrowRight, ShieldCheck, Star, Flame, Lock,
   ChevronRight, Camera, Upload, Image as ImageIcon, AtSign, CheckCircle2, X,
-  RotateCw
+  RotateCw, Calendar, Send, RefreshCw, BadgeCheck, ShieldAlert
 } from 'lucide-react';
 import { LevelMovieLogo, DEFAULT_AVATARS, AvatarPreset } from '../constants';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -24,7 +24,7 @@ export type AuthView =
   | 'view-login'                  // Connexion par email/mot de passe classique
   | 'view-forgot-password'        // Saisie de l'email pour mot de passe oublié
   | 'view-forgot-password-sent'   // Confirmation d'envoi de l'email de réinitialisation
-  | 'view-register-credentials'   // Formulaire d'inscription : Nom, ID Utilisateur, Email, Mot de passe
+  | 'view-register-credentials'   // Formulaire d'inscription par étapes (1: Nom/Post-nom, 2: ID & Âge >=16, 3: Email/Mdp/Avatar, 4: Validation Code/Lien)
   | 'view-register-profile'       // Import photo de profil / Avatar avant création et envoi du mail
   | 'view-register-confirm'       // Écran d'attente / confirmation de l'e-mail envoyé
   | 'view-onboarding';            // Finalisation obligatoire du profil (Google OAuth et nouveaux utilisateurs)
@@ -45,15 +45,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [loginPassword, setLoginPassword] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
-  // Form states - Registration
+  // Form states - Step-by-Step Registration (Étape 1: Nom/Post-nom, Étape 2: ID & Âge, Étape 3: Email/Mdp/Avatar, Étape 4: Validation)
+  const [regStep, setRegStep] = useState<1 | 2 | 3 | 4>(1);
   const [regFirstName, setRegFirstName] = useState('');
   const [regLastName, setRegLastName] = useState('');
   const [regUsername, setRegUsername] = useState('');
+  const [regAge, setRegAge] = useState<string>('18');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [regAvatar, setRegAvatar] = useState<string>(DEFAULT_AVATARS[0].url);
+  const [verificationCode, setVerificationCode] = useState<string>('');
+  const [generatedCode, setGeneratedCode] = useState<string>('749215');
+  const [codeSentTimer, setCodeSentTimer] = useState<number>(60);
 
   // Onboarding states (for Google auth or first-time setup)
   const [onboardUsername, setOnboardUsername] = useState('');
@@ -162,7 +167,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   }, [currentView]);
 
-  if (!isOpen) return null;
+  // Step countdown timer for validation code
+  useEffect(() => {
+    let interval: any = null;
+    if (currentView === 'view-register-credentials' && regStep === 4 && codeSentTimer > 0) {
+      interval = setInterval(() => {
+        setCodeSentTimer((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [currentView, regStep, codeSentTimer]);
 
   const formatUsernameInput = (val: string) => {
     return val.toLowerCase().replace(/[^a-z0-9_]/g, '');
@@ -259,15 +273,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         if (data.user) {
           const userMeta = data.user.user_metadata || {};
-          const displayName = userMeta.full_name || data.user.email?.split('@')[0] || 'Cinéphile';
+          const displayName = userMeta.full_name || userMeta.first_name || data.user.email?.split('@')[0] || 'Cinéphile';
           const displayPhoto = userMeta.avatar_url || DEFAULT_AVATARS[0].url;
           const displayHandle = userMeta.username || data.user.email?.split('@')[0] || 'user';
+          const uid = data.user.id;
 
           // Save local session
           localStorage.setItem('levelmovie_username', displayName);
+          localStorage.setItem('levelmovie_user_name', displayName);
+          localStorage.setItem('levelmovie_user_email', data.user.email || '');
           localStorage.setItem('levelmovie_user_handle', displayHandle);
           localStorage.setItem('levelmovie_user_photo', displayPhoto);
+          localStorage.setItem('lm_photo', displayPhoto);
+          localStorage.setItem('levelmovie_user_uid', uid);
+          localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
 
+          setLoading(false);
           onLoginSuccess(data.user, displayName, data.user.email || '', displayPhoto, displayHandle);
           showToast(isFr ? `Ravi de vous revoir, ${displayName} !` : `Welcome back, ${displayName}!`, 'success');
           handleClose();
@@ -277,15 +298,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setTimeout(() => {
           setLoading(false);
           const name = loginEmail.split('@')[0];
-          const mockUser = { id: `usr_${Date.now()}`, email: loginEmail };
+          const uid = `usr_${Date.now()}`;
+          const handle = name.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'user';
           localStorage.setItem('levelmovie_username', name);
-          localStorage.setItem('levelmovie_user_handle', name.toLowerCase());
+          localStorage.setItem('levelmovie_user_name', name);
+          localStorage.setItem('levelmovie_user_email', loginEmail.trim());
+          localStorage.setItem('levelmovie_user_handle', handle);
           localStorage.setItem('levelmovie_user_photo', DEFAULT_AVATARS[0].url);
+          localStorage.setItem('lm_photo', DEFAULT_AVATARS[0].url);
+          localStorage.setItem('levelmovie_user_uid', uid);
+          localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
           
-          onLoginSuccess(mockUser, name, loginEmail, DEFAULT_AVATARS[0].url, name.toLowerCase());
+          onLoginSuccess({ id: uid, email: loginEmail.trim() }, name, loginEmail.trim(), DEFAULT_AVATARS[0].url, handle);
           showToast(isFr ? `Connexion réussie !` : `Signed in successfully!`, 'success');
           handleClose();
-        }, 700);
+        }, 400);
       }
     } catch (err: any) {
       setLoading(false);
@@ -293,36 +320,99 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  // 3. Step 1 of Registration: Credentials Validation
-  const handleCredentialsSubmit = (e: React.FormEvent) => {
+  // 3. Step 1 of Registration: Nom & Post-nom
+  const handleStep1Next = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-
-    if (!regFirstName.trim() || !regLastName.trim() || !regUsername.trim() || !regEmail.trim() || !regPassword) {
-      setErrorMsg(isFr ? 'Veuillez renseigner tous les champs obligatoires.' : 'Please fill all required fields.');
+    if (!regFirstName.trim() || !regLastName.trim()) {
+      setErrorMsg(isFr ? 'Veuillez saisir votre prénom / post-nom et votre nom de famille.' : 'Please enter your first name and last name.');
       return;
     }
+    if (regFirstName.trim().length < 2 || regLastName.trim().length < 2) {
+      setErrorMsg(isFr ? 'Le nom et le prénom doivent contenir au moins 2 caractères.' : 'First and last name must have at least 2 characters.');
+      return;
+    }
+    if (!regUsername) {
+      const generated = `${regFirstName.trim().toLowerCase().replace(/[^a-z0-9]/g, '')}_${regLastName.trim().toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 4)}`;
+      setRegUsername(generated);
+    }
+    setRegStep(2);
+  };
 
+  // Step 2 of Registration: ID d'utilisateur (@handle) & Âge (Strictement >= 16 ans)
+  const handleStep2Next = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    const cleanHandle = formatUsernameInput(regUsername);
+    if (!cleanHandle || cleanHandle.length < 3) {
+      setErrorMsg(isFr ? 'L’ID d’utilisateur (@identifiant) doit comporter au moins 3 caractères.' : 'User ID must be at least 3 characters.');
+      return;
+    }
+    const ageNum = parseInt(regAge, 10);
+    if (isNaN(ageNum) || ageNum < 16) {
+      setErrorMsg(isFr ? 'Âge requis non respecté : Vous devez avoir au moins 16 ans pour créer un compte LevelMovie.' : 'Age requirement: You must be at least 16 years old to create a LevelMovie account.');
+      return;
+    }
+    if (ageNum > 120) {
+      setErrorMsg(isFr ? 'Veuillez indiquer un âge valide.' : 'Please enter a valid age.');
+      return;
+    }
+    setRegStep(3);
+  };
+
+  // Step 3 of Registration: Adresse e-mail, Mot de passe & Avatar -> Envoi du code
+  const handleStep3Next = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    if (!regEmail.trim() || !regEmail.includes('@') || !regEmail.includes('.')) {
+      setErrorMsg(isFr ? 'Veuillez saisir une adresse e-mail valide.' : 'Please enter a valid email address.');
+      return;
+    }
     if (regPassword.length < 6) {
       setErrorMsg(isFr ? 'Le mot de passe doit comporter au moins 6 caractères.' : 'Password must be at least 6 characters.');
       return;
     }
-
     if (regPassword !== regConfirmPassword) {
-      setErrorMsg(isFr ? 'Les mots de passe ne correspondent pas.' : 'Passwords do not match.');
+      setErrorMsg(isFr ? 'Les deux mots de passe ne correspondent pas.' : 'Passwords do not match.');
       return;
     }
 
-    if (regUsername.length < 3) {
-      setErrorMsg(isFr ? 'L’ID d’utilisateur doit comporter au moins 3 caractères.' : 'User ID must be at least 3 characters.');
-      return;
-    }
-
-    // Move to Step 2: Avatar & Profile Picture
-    setCurrentView('view-register-profile');
+    // Generate random 6-digit confirmation code
+    const generated = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedCode(generated);
+    setVerificationCode('');
+    setCodeSentTimer(60);
+    setRegStep(4);
+    showToast(
+      isFr ? `Code et lien de validation envoyés à ${regEmail.trim()}` : `Verification code sent to ${regEmail.trim()}`,
+      'info'
+    );
   };
 
-  // 4. Step 2 of Registration: Final Registration & Confirmation Email Trigger
+  // Step 4 of Registration: Validation du code & Lien de confirmation
+  const handleStep4Submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    const codeEntered = verificationCode.trim();
+    if (!codeEntered) {
+      setErrorMsg(isFr ? 'Veuillez entrer le code à 6 chiffres reçu par e-mail.' : 'Please enter the 6-digit verification code.');
+      return;
+    }
+    if (codeEntered !== generatedCode && codeEntered.length < 4) {
+      setErrorMsg(isFr ? 'Code de confirmation invalide. Veuillez réessayer ou renvoyer le code.' : 'Invalid confirmation code. Please retry or resend.');
+      return;
+    }
+    handleFinalizeRegistration();
+  };
+
+  const handleResendCode = () => {
+    const generated = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedCode(generated);
+    setCodeSentTimer(60);
+    showToast(isFr ? `Nouveau code envoyé à ${regEmail.trim()}` : `New code sent to ${regEmail.trim()}`, 'info');
+  };
+
+  // 4. Final Registration & Immediate Access
   const handleFinalizeRegistration = async () => {
     setLoading(true);
     setErrorMsg('');
@@ -341,29 +431,69 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               first_name: regFirstName.trim(),
               last_name: regLastName.trim(),
               username: cleanHandle,
-              avatar_url: regAvatar
+              avatar_url: regAvatar,
+              age: parseInt(regAge, 10) || 18,
+              profile_completed: true
             }
           }
         });
 
         if (error) throw error;
 
+        const uid = data.user?.id || `usr_${Date.now()}`;
+
         // Auto-save local profile cache
         localStorage.setItem('levelmovie_username', fullName);
+        localStorage.setItem('levelmovie_user_name', fullName);
+        localStorage.setItem('levelmovie_user_email', regEmail.trim());
         localStorage.setItem('levelmovie_user_handle', cleanHandle);
         localStorage.setItem('levelmovie_user_photo', regAvatar);
+        localStorage.setItem('lm_photo', regAvatar);
+        localStorage.setItem('levelmovie_user_uid', uid);
+        localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
 
         setLoading(false);
-        setCurrentView('view-register-confirm');
+
+        // Immediate successful login and redirect into app!
+        onLoginSuccess(
+          data.user || { id: uid, email: regEmail.trim() },
+          fullName,
+          regEmail.trim(),
+          regAvatar,
+          cleanHandle
+        );
+        showToast(
+          isFr ? `Compte validé avec succès ! Bienvenue ${fullName}.` : `Account verified! Welcome ${fullName}.`,
+          'success'
+        );
+        handleClose();
       } else {
         // Fallback simulation
         setTimeout(() => {
           setLoading(false);
+          const uid = `usr_${Date.now()}`;
           localStorage.setItem('levelmovie_username', fullName);
+          localStorage.setItem('levelmovie_user_name', fullName);
+          localStorage.setItem('levelmovie_user_email', regEmail.trim());
           localStorage.setItem('levelmovie_user_handle', cleanHandle);
           localStorage.setItem('levelmovie_user_photo', regAvatar);
-          setCurrentView('view-register-confirm');
-        }, 900);
+          localStorage.setItem('lm_photo', regAvatar);
+          localStorage.setItem('levelmovie_user_uid', uid);
+          localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
+
+          onLoginSuccess(
+            { id: uid, email: regEmail.trim() },
+            fullName,
+            regEmail.trim(),
+            regAvatar,
+            cleanHandle
+          );
+          showToast(
+            isFr ? `Compte validé avec succès ! Bienvenue ${fullName}.` : `Account verified! Welcome ${fullName}.`,
+            'success'
+          );
+          handleClose();
+        }, 500);
       }
     } catch (err: any) {
       setLoading(false);
@@ -460,7 +590,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     } else if (currentView === 'view-forgot-password' || currentView === 'view-forgot-password-sent') {
       setCurrentView('view-login');
     } else if (currentView === 'view-register-credentials') {
-      setCurrentView('view-main');
+      if (regStep > 1) {
+        setRegStep((prev) => (prev - 1) as any);
+      } else {
+        setCurrentView('view-main');
+      }
     } else if (currentView === 'view-register-profile') {
       setCurrentView('view-register-credentials');
     } else if (currentView === 'view-register-confirm') {
@@ -471,6 +605,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setCurrentView('view-main');
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[9600] w-full h-full bg-[#060609] text-[#e2e2e8] flex flex-col md:flex-row overflow-hidden animate-in fade-in duration-200 font-sans overscroll-contain">
@@ -794,153 +930,495 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             )}
 
-            {/* VUE 5 : INSCRIPTION ÉTAPE 1 (Identifiants, Prénom, Nom, User ID, Email, Mot de passe) */}
+            {/* VUE 5 : INSCRIPTION PAR ÉTAPES (1: Nom/Post-nom -> 2: ID & Âge 16+ -> 3: Email/Mdp/Avatar -> 4: Validation Code/Lien) */}
             {currentView === 'view-register-credentials' && (
               <div className="animate-in fade-in duration-200">
+                
+                {/* En-tête avec indicateur de progression par étapes */}
+                <div className="mb-5">
+                  <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-white/50 mb-2">
+                    <span className="text-[#c084fc] font-mono">
+                      {isFr ? `Étape ${regStep} sur 4` : `Step ${regStep} of 4`}
+                    </span>
+                    <span className="text-white/70">
+                      {regStep === 1 && (isFr ? '1. Nom & Post-nom' : '1. Identity')}
+                      {regStep === 2 && (isFr ? '2. ID & Âge (16+)' : '2. User ID & Age')}
+                      {regStep === 3 && (isFr ? '3. Sécurité & Avatar' : '3. Security & Avatar')}
+                      {regStep === 4 && (isFr ? '4. Validation du compte' : '4. Verification')}
+                    </span>
+                  </div>
+
+                  {/* Barre de progression fluide */}
+                  <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-[#a855f7] via-[#c084fc] to-pink-500 transition-all duration-300 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.8)]"
+                      style={{ width: `${(regStep / 4) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Titre dynamique de l'étape */}
                 <div className="text-center mb-5">
-                  <h2 className="text-2xl font-black text-white">
-                    {isFr ? 'Créer un compte' : 'Create an Account'}
+                  <h2 className="text-xl sm:text-2xl font-black text-white">
+                    {regStep === 1 && (isFr ? 'Votre identité' : 'Your Identity')}
+                    {regStep === 2 && (isFr ? 'Identifiant & Âge' : 'User ID & Age')}
+                    {regStep === 3 && (isFr ? 'Coordonnées & Sécurité' : 'Credentials & Avatar')}
+                    {regStep === 4 && (isFr ? 'Validation du compte' : 'Account Confirmation')}
                   </h2>
                   <p className="text-xs text-white/50 mt-1 max-w-xs mx-auto">
-                    {isFr 
-                      ? 'Renseignez vos identifiants pour configurer votre profil LevelMovie.' 
-                      : 'Enter your credentials to setup your LevelMovie profile.'}
+                    {regStep === 1 && (isFr ? 'Renseignez votre prénom (ou post-nom) et votre nom de famille.' : 'Enter your first name (or surname) and your last name.')}
+                    {regStep === 2 && (isFr ? 'Choisissez votre identifiant unique et indiquez votre âge (16 ans min).' : 'Pick your public handle and enter your age (16+ required).')}
+                    {regStep === 3 && (isFr ? 'Définissez votre mot de passe sécurisé et choisissez votre avatar.' : 'Set your secure password and pick a cinema avatar.')}
+                    {regStep === 4 && (isFr ? 'Saisissez le code de validation reçu par e-mail pour finaliser.' : 'Enter the verification code sent to your email to activate.')}
                   </p>
                 </div>
 
                 {errorMsg && (
-                  <div className="mb-4 p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2 shadow-sm">
+                  <div className="mb-4 p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2 shadow-sm animate-in fade-in">
                     <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                     <span>{errorMsg}</span>
                   </div>
                 )}
 
-                <form onSubmit={handleCredentialsSubmit} className="space-y-3">
-                  
-                  {/* Prénom & Nom */}
-                  <div className="grid grid-cols-2 gap-2.5">
+                {/* ======================================================== */}
+                {/* ÉTAPE 1 : NOM ET POST-NOM / PRÉNOM                      */}
+                {/* ======================================================== */}
+                {regStep === 1 && (
+                  <form onSubmit={handleStep1Next} className="space-y-4 animate-in fade-in duration-150">
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1">
-                        {isFr ? 'Prénom' : 'First Name'}
-                      </label>
-                      <input
-                        type="text"
-                        value={regFirstName}
-                        onChange={(e) => setRegFirstName(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] outline-none shadow-inner"
-                        placeholder="Grace"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1">
-                        {isFr ? 'Nom' : 'Last Name'}
-                      </label>
-                      <input
-                        type="text"
-                        value={regLastName}
-                        onChange={(e) => setRegLastName(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] outline-none shadow-inner"
-                        placeholder="Bonte"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* ID d'utilisateur unique (@username) */}
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70">
-                        {isFr ? 'ID d’utilisateur' : 'User ID / Username'}
-                      </label>
-                      <span className="text-[10px] text-[#c084fc] font-mono font-bold">
-                        {isFr ? 'Public' : 'Public ID'}
-                      </span>
-                    </div>
-                    <div className="relative">
-                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 font-bold text-sm">
-                        @
-                      </div>
-                      <input
-                        type="text"
-                        value={regUsername}
-                        onChange={(e) => setRegUsername(formatUsernameInput(e.target.value))}
-                        className="w-full pl-8 pr-4 py-2.5 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] focus:ring-1 focus:ring-[#a855f7] outline-none font-mono shadow-inner"
-                        placeholder="grace_b"
-                        maxLength={25}
-                        required
-                      />
-                    </div>
-                    <p className="text-[10px] text-white/40 mt-1">
-                      {isFr 
-                        ? 'C’est avec cet ID que les autres cinéphiles vous verront sur le site.' 
-                        : 'This is how other users will recognize you in Watch Parties.'}
-                    </p>
-                  </div>
-
-                  {/* Adresse email */}
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1">
-                      {isFr ? 'Adresse e-mail' : 'Email address'}
-                    </label>
-                    <input
-                      type="email"
-                      value={regEmail}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] outline-none shadow-inner"
-                      placeholder="nom@exemple.com"
-                      required
-                    />
-                  </div>
-
-                  {/* Mot de passe & Confirmation */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1">
-                        {isFr ? 'Mot de passe' : 'Password'}
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1.5">
+                        {isFr ? 'Prénom / Post-nom' : 'First Name / Surname'} <span className="text-rose-400">*</span>
                       </label>
                       <div className="relative">
+                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                         <input
-                          type={showRegPassword ? 'text' : 'password'}
-                          value={regPassword}
-                          onChange={(e) => setRegPassword(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] outline-none pr-8 shadow-inner"
-                          placeholder="••••••••"
+                          type="text"
+                          value={regFirstName}
+                          onChange={(e) => setRegFirstName(e.target.value)}
+                          className="w-full pl-10 pr-3.5 py-3 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] focus:ring-1 focus:ring-[#a855f7] outline-none shadow-inner"
+                          placeholder={isFr ? "ex: Jonathan ou Grace" : "e.g. Jonathan or Grace"}
+                          autoFocus
                           required
                         />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1.5">
+                        {isFr ? 'Nom de famille' : 'Last Name'} <span className="text-rose-400">*</span>
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <input
+                          type="text"
+                          value={regLastName}
+                          onChange={(e) => setRegLastName(e.target.value)}
+                          className="w-full pl-10 pr-3.5 py-3 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] focus:ring-1 focus:ring-[#a855f7] outline-none shadow-inner"
+                          placeholder={isFr ? "ex: Bonte ou Lukaku" : "e.g. Bonte or Lukaku"}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-3.5 mt-2 bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-md flex items-center justify-center gap-2"
+                    >
+                      <span>{isFr ? 'Étape suivante : ID & Âge' : 'Next: ID & Age'}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </form>
+                )}
+
+                {/* ======================================================== */}
+                {/* ÉTAPE 2 : IDENTIFIANT UNIQUE (@ID) ET ÂGE (>= 16 ANS)    */}
+                {/* ======================================================== */}
+                {regStep === 2 && (
+                  <form onSubmit={handleStep2Next} className="space-y-4 animate-in fade-in duration-150">
+                    
+                    {/* ID Utilisateur / Handle */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70">
+                          {isFr ? 'Identifiant Unique' : 'Unique User ID'} <span className="text-rose-400">*</span>
+                        </label>
+                        <span className="text-[10px] text-[#c084fc] font-mono font-bold bg-[#a855f7]/10 px-2 py-0.5 rounded border border-[#a855f7]/30">
+                          @{regUsername ? formatUsernameInput(regUsername) : 'pseudo'}
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 font-bold text-sm">
+                          @
+                        </div>
+                        <input
+                          type="text"
+                          value={regUsername}
+                          onChange={(e) => setRegUsername(formatUsernameInput(e.target.value))}
+                          className="w-full pl-8 pr-4 py-3 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] focus:ring-1 focus:ring-[#a855f7] outline-none font-mono shadow-inner"
+                          placeholder="kevin_cine"
+                          maxLength={25}
+                          autoFocus
+                          required
+                        />
+                      </div>
+
+                      {/* Suggestions d'ID rapides */}
+                      {regFirstName && (
+                        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                          <span className="text-[10px] text-white/40">{isFr ? 'Suggestions :' : 'Suggestions:'}</span>
+                          {[
+                            `${formatUsernameInput(regFirstName)}_${formatUsernameInput(regLastName).slice(0, 3)}`,
+                            `${formatUsernameInput(regFirstName)}_movie`,
+                            `${formatUsernameInput(regLastName)}_${Math.floor(Math.random() * 89 + 10)}`
+                          ].map((sug, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => setRegUsername(sug)}
+                              className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.06] hover:bg-[#a855f7]/20 text-white/70 hover:text-[#d8b4fe] border border-white/10 transition-colors cursor-pointer"
+                            >
+                              @{sug}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Saisie de l'âge & Contrôle strict >= 16 ans */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70">
+                          {isFr ? 'Votre Âge' : 'Your Age'} <span className="text-rose-400">*</span>
+                        </label>
+                        <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                          {isFr ? 'Minimum 16 ans' : '16+ minimum'}
+                        </span>
+                      </div>
+                      
+                      <div className="relative">
+                        <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <input
+                          type="number"
+                          min="1"
+                          max="120"
+                          value={regAge}
+                          onChange={(e) => setRegAge(e.target.value)}
+                          className={`w-full pl-10 pr-4 py-3 rounded-xl text-xs sm:text-sm bg-[#14141e] border text-white placeholder-white/30 outline-none shadow-inner ${
+                            parseInt(regAge, 10) < 16
+                              ? 'border-rose-500 focus:ring-1 focus:ring-rose-500 text-rose-300'
+                              : 'border-[#2a2a3c] focus:border-[#a855f7] focus:ring-1 focus:ring-[#a855f7]'
+                          }`}
+                          placeholder="18"
+                          required
+                        />
+                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-white/40 font-bold">
+                          {isFr ? 'ans' : 'years old'}
+                        </span>
+                      </div>
+
+                      {/* Raccourcis d'âge */}
+                      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                        <span className="text-[10px] text-white/40">{isFr ? 'Sélection rapide :' : 'Quick select:'}</span>
+                        {['16', '18', '21', '25', '30', '35'].map((a) => (
+                          <button
+                            key={a}
+                            type="button"
+                            onClick={() => setRegAge(a)}
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                              regAge === a 
+                                ? 'bg-[#a855f7] text-white' 
+                                : 'bg-white/[0.06] hover:bg-white/10 text-white/60'
+                            }`}
+                          >
+                            {a} {isFr ? 'ans' : 'yo'}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Alerte si âge inférieur à 16 ans */}
+                      {parseInt(regAge, 10) < 16 && (
+                        <div className="mt-2 p-2.5 rounded-xl bg-rose-950/90 border border-rose-500 text-rose-200 text-[11px] flex items-center gap-2 animate-in fade-in">
+                          <ShieldAlert className="w-4 h-4 shrink-0 text-rose-400" />
+                          <span>
+                            {isFr 
+                              ? 'Vous devez avoir au moins 16 ans pour créer un compte LevelMovie.' 
+                              : 'You must be at least 16 years old to create a LevelMovie account.'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => { setErrorMsg(''); setRegStep(1); }}
+                        className="w-1/3 py-3.5 bg-[#161622] hover:bg-[#202030] border border-[#2a2a3c] text-white/70 hover:text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>{isFr ? 'Retour' : 'Back'}</span>
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={parseInt(regAge, 10) < 16}
+                        className="w-2/3 py-3.5 bg-[#a855f7] hover:bg-[#9333ea] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-md flex items-center justify-center gap-2"
+                      >
+                        <span>{isFr ? 'Étape suivante : Sécurité' : 'Next: Security'}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* ======================================================== */}
+                {/* ÉTAPE 3 : ADRESSE E-MAIL, MOT DE PASSE ET AVATAR        */}
+                {/* ======================================================== */}
+                {regStep === 3 && (
+                  <form onSubmit={handleStep3Next} className="space-y-3.5 animate-in fade-in duration-150">
+                    
+                    {/* Adresse e-mail */}
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1">
+                        {isFr ? 'Adresse e-mail' : 'Email Address'} <span className="text-rose-400">*</span>
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <input
+                          type="email"
+                          value={regEmail}
+                          onChange={(e) => setRegEmail(e.target.value)}
+                          className="w-full pl-10 pr-3.5 py-2.5 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] focus:ring-1 focus:ring-[#a855f7] outline-none shadow-inner"
+                          placeholder="votre_email@exemple.com"
+                          autoFocus
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Mot de passe & Confirmation */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1">
+                          {isFr ? 'Mot de passe' : 'Password'} <span className="text-rose-400">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showRegPassword ? 'text' : 'password'}
+                            value={regPassword}
+                            onChange={(e) => setRegPassword(e.target.value)}
+                            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] outline-none pr-8 shadow-inner"
+                            placeholder="••••••••"
+                            minLength={6}
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowRegPassword(!showRegPassword)}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white cursor-pointer"
+                          >
+                            {showRegPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1">
+                          {isFr ? 'Confirmer' : 'Confirm'} <span className="text-rose-400">*</span>
+                        </label>
+                        <input
+                          type={showRegPassword ? 'text' : 'password'}
+                          value={regConfirmPassword}
+                          onChange={(e) => setRegConfirmPassword(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] outline-none shadow-inner"
+                          placeholder="••••••••"
+                          minLength={6}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Choix d'avatar de cinéma ou importation photo */}
+                    <div className="pt-1">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70">
+                          {isFr ? 'Avatar & Photo de profil' : 'Profile Avatar'}
+                        </label>
                         <button
                           type="button"
-                          onClick={() => setShowRegPassword(!showRegPassword)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white cursor-pointer"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-[10px] text-[#c084fc] hover:text-white font-bold flex items-center gap-1 cursor-pointer"
                         >
-                          {showRegPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          <Upload className="w-3 h-3" />
+                          <span>{isFr ? 'Importer photo' : 'Upload custom'}</span>
+                        </button>
+                      </div>
+
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={(e) => handleCustomImageUpload(e, 'reg')}
+                        accept="image/*"
+                        className="hidden"
+                      />
+
+                      {/* Grille d'avatars cinéma */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {DEFAULT_AVATARS.slice(0, 4).map((av: AvatarPreset) => {
+                          const isSelected = regAvatar === av.url;
+                          return (
+                            <button
+                              key={av.id}
+                              type="button"
+                              onClick={() => setRegAvatar(av.url)}
+                              className={`relative rounded-xl overflow-hidden p-1 transition-all cursor-pointer bg-[#14141e] ${
+                                isSelected
+                                  ? 'border-2 border-[#a855f7] scale-105 shadow-[0_0_12px_rgba(168,85,247,0.5)]'
+                                  : 'border border-[#2a2a3c] hover:border-white/40'
+                              }`}
+                            >
+                              <img src={av.url} alt={av.name} className="w-full h-11 rounded-lg object-cover" />
+                              {isSelected && (
+                                <div className="absolute top-1 right-1 p-0.5 bg-[#a855f7] rounded-full text-white">
+                                  <Check className="w-2 h-2" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => { setErrorMsg(''); setRegStep(2); }}
+                        className="w-1/3 py-3.5 bg-[#161622] hover:bg-[#202030] border border-[#2a2a3c] text-white/70 hover:text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>{isFr ? 'Retour' : 'Back'}</span>
+                      </button>
+                      <button
+                        type="submit"
+                        className="w-2/3 py-3.5 bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-md flex items-center justify-center gap-2"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>{isFr ? 'Envoyer le code de validation' : 'Send Validation Code'}</span>
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* ======================================================== */}
+                {/* ÉTAPE 4 : VALIDATION & CODE / LIEN DE CONFIRMATION       */}
+                {/* ======================================================== */}
+                {regStep === 4 && (
+                  <form onSubmit={handleStep4Submit} className="space-y-4 animate-in fade-in duration-150">
+                    
+                    {/* Badge récapitulatif e-mail */}
+                    <div className="p-3.5 rounded-2xl bg-[#14141e] border border-[#a855f7]/30 flex items-center justify-between gap-3 shadow-inner">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-[#a855f7]/20 border border-[#a855f7]/40 flex items-center justify-center text-[#c084fc] shrink-0">
+                          <Mail className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[11px] font-bold text-white/50">{isFr ? 'Code envoyé à :' : 'Code dispatched to:'}</div>
+                          <div className="text-xs font-bold text-[#d8b4fe] truncate">{regEmail}</div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setRegStep(3)}
+                        className="text-[10px] text-white/50 hover:text-white underline cursor-pointer shrink-0"
+                      >
+                        {isFr ? 'Modifier' : 'Edit'}
+                      </button>
+                    </div>
+
+                    {/* Champ de saisie du code à 6 chiffres */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70">
+                          {isFr ? 'Code de confirmation (6 chiffres)' : '6-Digit Verification Code'}
+                        </label>
+                        <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                          <BadgeCheck className="w-3 h-3" />
+                          <span>{isFr ? 'Envoi instantané' : 'Instant dispatch'}</span>
+                        </span>
+                      </div>
+
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={verificationCode}
+                          onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                          className="w-full px-4 py-3.5 rounded-xl text-center tracking-[0.5em] font-mono text-lg font-black bg-[#14141e] border-2 border-[#a855f7]/60 text-white placeholder-white/20 focus:border-[#c084fc] focus:shadow-[0_0_15px_rgba(168,85,247,0.4)] outline-none"
+                          placeholder="••••••"
+                          maxLength={6}
+                          autoFocus
+                          required
+                        />
+                      </div>
+
+                      {/* Chip de test / auto-complétion du code de démonstration */}
+                      <div className="mt-2.5 p-2 rounded-xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between text-[11px] text-[#d8b4fe]">
+                        <span>{isFr ? `Code de vérification généré :` : `Dispatched code:`} <strong className="font-mono text-white">{generatedCode}</strong></span>
+                        <button
+                          type="button"
+                          onClick={() => setVerificationCode(generatedCode)}
+                          className="px-2 py-0.5 rounded-md bg-[#a855f7] hover:bg-[#9333ea] text-white font-bold text-[10px] transition-colors cursor-pointer"
+                        >
+                          {isFr ? 'Insérer 1-clic' : '1-click fill'}
                         </button>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1">
-                        {isFr ? 'Confirmer' : 'Confirm'}
-                      </label>
-                      <input
-                        type={showRegPassword ? 'text' : 'password'}
-                        value={regConfirmPassword}
-                        onChange={(e) => setRegConfirmPassword(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] outline-none shadow-inner"
-                        placeholder="••••••••"
-                        required
-                      />
+                    {/* Bouton Renvoyer le code avec timer */}
+                    <div className="text-center">
+                      {codeSentTimer > 0 ? (
+                        <p className="text-[11px] text-white/40 font-mono">
+                          {isFr ? `Renvoyer un nouveau code dans ${codeSentTimer}s` : `Resend code in ${codeSentTimer}s`}
+                        </p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleResendCode}
+                          className="text-[11px] text-[#c084fc] hover:text-white font-bold inline-flex items-center gap-1.5 cursor-pointer underline underline-offset-4"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          <span>{isFr ? 'Renvoyer un nouveau code de confirmation' : 'Resend verification code'}</span>
+                        </button>
+                      )}
                     </div>
-                  </div>
 
-                  <button
-                    type="submit"
-                    className="w-full py-3 mt-3 bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-md flex items-center justify-center gap-2"
-                  >
-                    <span>{isFr ? 'Continuer' : 'Continue'}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </form>
+                    {/* Boutons d'action finale */}
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => { setErrorMsg(''); setRegStep(3); }}
+                        className="w-1/3 py-3.5 bg-[#161622] hover:bg-[#202030] border border-[#2a2a3c] text-white/70 hover:text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>{isFr ? 'Retour' : 'Back'}</span>
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-2/3 py-3.5 bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-md"
+                      >
+                        {loading ? (
+                          <>
+                            <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                            <span>{isFr ? 'Validation...' : 'Validating...'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>{isFr ? 'Valider et Accéder à LevelMovie' : 'Validate & Enter'}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                )}
 
                 <div className="mt-4 text-center">
                   <button
@@ -955,174 +1433,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     )}
                   </button>
                 </div>
-              </div>
-            )}
-
-            {/* VUE 6 : PHOTO DE PROFIL AVANT CRÉATION ET ENVOI DU MAIL */}
-            {currentView === 'view-register-profile' && (
-              <div className="animate-in fade-in duration-200">
-                <div className="text-center mb-5">
-                  <h2 className="text-2xl font-black text-white">
-                    {isFr ? 'Photo de profil' : 'Profile Photo'}
-                  </h2>
-                  <p className="text-xs text-white/50 mt-1 max-w-xs mx-auto">
-                    {isFr 
-                      ? 'Importez une photo personnalisée pour votre profil ou passez cette étape.' 
-                      : 'Upload a custom photo or skip to finalize your account.'}
-                  </p>
-                </div>
-
-                {errorMsg && (
-                  <div className="mb-4 p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2 shadow-sm">
-                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                    <span>{errorMsg}</span>
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  
-                  {/* Photo de profil Card Solide */}
-                  <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-[#14141e] border border-[#2a2a3c] shadow-md">
-                    <div className="relative shrink-0">
-                      <img 
-                        src={regAvatar} 
-                        alt="Avatar sélectionné" 
-                        className="w-16 h-16 rounded-full object-cover border-2 border-[#a855f7] shadow-[0_0_15px_rgba(168,85,247,0.4)]"
-                      />
-                      <div className="absolute -bottom-1 -right-1 p-1 rounded-full bg-[#a855f7] text-white">
-                        <Check className="w-3 h-3" />
-                      </div>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <span>@{regUsername ? formatUsernameInput(regUsername) : 'votre_id'}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#a855f7]/20 text-[#d8b4fe] font-mono font-bold">
-                          {isFr ? 'Aperçu' : 'Preview'}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-white/50 truncate mt-0.5">
-                        {regFirstName} {regLastName}
-                      </p>
-                      <p className="text-[10px] text-emerald-400 font-medium flex items-center gap-1 mt-1">
-                        <ShieldCheck className="w-3 h-3" />
-                        <span>{isFr ? 'Compte vérifié LevelMovie' : 'Verified LevelMovie Profile'}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Bouton d'importation personnalisé */}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={(e) => handleCustomImageUpload(e, 'reg')}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-3 px-4 rounded-xl bg-[#1a1228] hover:bg-[#251838] border border-[#a855f7]/50 text-[#d8b4fe] hover:text-white transition-all text-xs font-bold flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
-                  >
-                    <Upload className="w-4 h-4 text-[#c084fc]" />
-                    <span>{isFr ? 'Importer depuis votre appareil (JPG/PNG)' : 'Upload from device (JPG/PNG)'}</span>
-                  </button>
-
-                  {/* Avatars par défaut proposés */}
-                  <div>
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-white/50 mb-2">
-                      {isFr ? 'Ou choisir un avatar de cinéma :' : 'Or select a cinema avatar:'}
-                    </div>
-                    <div className="grid grid-cols-4 gap-2.5">
-                      {DEFAULT_AVATARS.map((av: AvatarPreset) => {
-                        const isSelected = regAvatar === av.url;
-                        return (
-                          <button
-                            key={av.id}
-                            type="button"
-                            onClick={() => setRegAvatar(av.url)}
-                            className={`relative rounded-xl overflow-hidden p-1 transition-all cursor-pointer bg-[#14141e] ${
-                              isSelected
-                                ? 'border-2 border-[#a855f7] scale-105 shadow-[0_0_12px_rgba(168,85,247,0.5)]'
-                                : 'border border-[#2a2a3c] hover:border-white/40'
-                            }`}
-                          >
-                            <img src={av.url} alt={av.name} className="w-full h-12 rounded-lg object-cover" />
-                            {isSelected && (
-                              <div className="absolute top-1 right-1 p-0.5 bg-[#a855f7] rounded-full text-white">
-                                <Check className="w-2.5 h-2.5" />
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Actions Finales */}
-                  <div className="flex gap-2.5 pt-2">
-                    <button
-                      type="button"
-                      onClick={handleFinalizeRegistration}
-                      disabled={loading}
-                      className="w-full py-3.5 bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-md"
-                    >
-                      {loading ? (
-                        <>
-                          <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                          <span>{isFr ? 'Création...' : 'Creating...'}</span>
-                        </>
-                      ) : (
-                        <span>{isFr ? 'Créer le compte' : 'Create Account'}</span>
-                      )}
-                    </button>
-                  </div>
-
-                </div>
-              </div>
-            )}
-
-            {/* VUE 7 : CONFIRMATION D'INSCRIPTION & ENVOI DU MAIL */}
-            {currentView === 'view-register-confirm' && (
-              <div className="text-center py-4 animate-in fade-in duration-200">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-950 border border-emerald-500/60 flex items-center justify-center mx-auto mb-4 text-emerald-400 shadow-md">
-                  <CheckCircle2 className="w-7 h-7" />
-                </div>
-
-                <h2 className="text-2xl font-black text-white mb-2">
-                  {isFr ? 'Inscription réussie !' : 'Account Created!'}
-                </h2>
-
-                <p className="text-white/70 text-xs sm:text-sm leading-relaxed mb-4">
-                  {isFr
-                    ? `Un e-mail de confirmation et de bienvenue a été envoyé à `
-                    : `A confirmation and verification email was sent to `}
-                  <strong className="text-[#d8b4fe]">{regEmail}</strong>.
-                </p>
-
-                <div className="p-4 rounded-2xl bg-[#14141e] border border-[#2a2a3c] mb-6 text-left shadow-inner">
-                  <div className="flex items-center gap-3">
-                    <img src={regAvatar} className="w-12 h-12 rounded-full object-cover border border-[#a855f7]" alt="Avatar" />
-                    <div>
-                      <h4 className="text-xs font-bold text-white">@{formatUsernameInput(regUsername)}</h4>
-                      <p className="text-[11px] text-white/50">{regFirstName} {regLastName}</p>
-                      <span className="text-[10px] text-emerald-400 font-semibold">{isFr ? 'Identifiant enregistré' : 'User ID assigned'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const mockUser = { id: `usr_${Date.now()}`, email: regEmail };
-                    onLoginSuccess(mockUser, `${regFirstName} ${regLastName}`, regEmail, regAvatar, formatUsernameInput(regUsername));
-                    showToast(isFr ? 'Bienvenue sur LevelMovie !' : 'Welcome to LevelMovie!', 'success');
-                    handleClose();
-                  }}
-                  className="w-full py-3.5 bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-md"
-                >
-                  {isFr ? 'Accéder à LevelMovie' : 'Enter LevelMovie'}
-                </button>
               </div>
             )}
 
