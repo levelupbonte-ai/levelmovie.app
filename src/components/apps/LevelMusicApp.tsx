@@ -18,6 +18,7 @@ interface LevelMusicAppProps {
   onClose?: () => void;
   lang?: string;
   user?: any;
+  onRequireAuth?: () => void;
 }
 
 interface Track {
@@ -58,7 +59,8 @@ const CATEGORIES = [
 
 const fmt = (s: number) => {
   if (!s || isNaN(s)) return '0:00';
-  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
   return `${m}:${sec < 10 ? '0' : ''}${sec}`;
 };
 
@@ -71,21 +73,20 @@ const shuffle = <T,>(arr: T[]): T[] => {
   return a;
 };
 
-const fetchMusic = async (term: string, limit = 20): Promise<Track[]> => {
+const fetchMusic = async (term: string, limit = 25): Promise<Track[]> => {
   try {
-    const t = term.replace(/[^\w\s\-]/g, ' ');
-    const r = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(t)}&entity=song&limit=${limit}`);
-    if (!r.ok) return [];
-    const d = await r.json();
-    return (d.results || []).map((x: any) => ({
+    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=${limit}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.results || []).map((x: any) => ({
       id: x.trackId,
       name: x.trackName,
       artist: x.artistName,
       album: x.collectionName,
-      image: x.artworkUrl100?.replace('100x100bb', '600x600bb') || '',
-      imageLg: x.artworkUrl100?.replace('100x100bb', '1000x1000bb') || '',
+      image: x.artworkUrl100,
+      imageLg: x.artworkUrl100?.replace('100x100bb', '600x600bb'),
       previewUrl: x.previewUrl,
-      duration: x.trackTimeMillis ? x.trackTimeMillis / 1000 : 30,
+      duration: 30, // 30s official sample
       trackViewUrl: x.trackViewUrl,
       genre: x.primaryGenreName,
     })).filter((x: Track) => x.previewUrl);
@@ -94,7 +95,7 @@ const fetchMusic = async (term: string, limit = 20): Promise<Track[]> => {
   }
 };
 
-export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: initialLang = 'fr', user }) => {
+export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: initialLang = 'fr', user, onRequireAuth }) => {
   const [appLang, setAppLang] = useState<string>(localStorage.getItem('lm_lang') || initialLang);
   const isFr = appLang === 'fr';
 
@@ -107,9 +108,37 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
   const [progress, setProgress] = useState(0);
   const [curTime, setCurTime] = useState(0);
   const [duration, setDuration] = useState(30);
-  const [volume, setVolume] = useState(0.85);
+
+  // Volume with local storage persistence
+  const [volume, setVolume] = useState<number>(() => {
+    try {
+      const v = localStorage.getItem('lm_volume');
+      if (v !== null) return parseFloat(v);
+    } catch {}
+    return 0.85;
+  });
+  const [isMuted, setIsMuted] = useState(false);
+  const prevVolumeRef = useRef(0.85);
+
   const [shuffleOn, setShuffleOn] = useState(false);
   const [repeatMode, setRepeatMode] = useState<'none' | 'all' | 'one'>('none');
+
+  // Audio Refs to prevent recreation of audio on mode changes
+  const volumeRef = useRef(volume);
+  const isMutedRef = useRef(isMuted);
+  const repeatModeRef = useRef(repeatMode);
+  const shuffleOnRef = useRef(shuffleOn);
+  const queueRef = useRef<Track[]>([]);
+  const queueIdxRef = useRef(0);
+  const isPlayingRef = useRef(false);
+
+  useEffect(() => { volumeRef.current = volume; }, [volume]);
+  useEffect(() => { isMutedRef.current = isMuted; }, [isMuted]);
+  useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
+  useEffect(() => { shuffleOnRef.current = shuffleOn; }, [shuffleOn]);
+  useEffect(() => { queueRef.current = queue; }, [queue]);
+  useEffect(() => { queueIdxRef.current = queueIdx; }, [queueIdx]);
+  useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
 
   // UI state
   const [view, setView] = useState<'home' | 'search' | 'library' | 'artist'>('home');
@@ -162,37 +191,93 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
     setTimeout(() => setToastMsg(null), 3000);
   };
 
-  // Init Audio Element
-  useEffect(() => {
-    audioRef.current = new Audio();
+  // Play a track helper
+  const internalPlay = useCallback((t: Track, q?: Track[], idx = 0) => {
+    setCurrentTrack(t);
+    const newQ = q || [t];
+    setQueue(newQ);
+    setQueueIdx(idx);
+
     const audio = audioRef.current;
+    if (t.previewUrl && audio) {
+      audio.src = t.previewUrl;
+      const targetVol = isMutedRef.current ? 0 : volumeRef.current;
+      audio.volume = targetVol;
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    }
+    setIsPlaying(true);
+
+    setRecentlyPlayed(prev => {
+      const filtered = prev.filter(x => x.id !== t.id);
+      const updated = [t, ...filtered].slice(0, 30);
+      localStorage.setItem('lm_recent', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  // Single persistent Audio element (DOES NOT RE-INIT ON REPEAT/SHUFFLE CHANGES)
+  useEffect(() => {
+    const audio = new Audio();
+    audioRef.current = audio;
 
     const onTime = () => {
       setCurTime(audio.currentTime);
-      if (audio.duration) {
+      if (audio.duration && !isNaN(audio.duration)) {
         setDuration(audio.duration);
         setProgress((audio.currentTime / audio.duration) * 100);
+
+        // FADE-OUT EFFECT ON 30-SECOND PREVIEWS (Smoothly attenuates volume in the last 3.5 seconds)
+        const fadeDuration = 3.5;
+        const timeLeft = audio.duration - audio.currentTime;
+        const currentTargetVol = isMutedRef.current ? 0 : volumeRef.current;
+
+        if (timeLeft <= fadeDuration && audio.duration > 5) {
+          const fadeFactor = Math.max(0, timeLeft / fadeDuration);
+          audio.volume = Math.max(0, Math.min(1, currentTargetVol * fadeFactor));
+        } else {
+          audio.volume = currentTargetVol;
+        }
       }
     };
 
     const onEnd = () => {
-      if (repeatMode === 'one') {
+      const mode = repeatModeRef.current;
+      const currentQ = queueRef.current;
+      const currentIdx = queueIdxRef.current;
+      const isShuffle = shuffleOnRef.current;
+
+      if (mode === 'one') {
+        // Repeat current track seamlessly
         audio.currentTime = 0;
+        audio.volume = isMutedRef.current ? 0 : volumeRef.current;
         audio.play().catch(() => {});
+      } else if (isShuffle && currentQ.length > 0) {
+        // Pick random track
+        const nextIdx = Math.floor(Math.random() * currentQ.length);
+        internalPlay(currentQ[nextIdx], currentQ, nextIdx);
+      } else if (currentIdx < currentQ.length - 1 || mode === 'all') {
+        // Next track in queue (or loop back to start if mode is all)
+        if (currentQ.length > 0) {
+          const nextIdx = (currentIdx + 1) % currentQ.length;
+          internalPlay(currentQ[nextIdx], currentQ, nextIdx);
+        } else {
+          setIsPlaying(false);
+        }
       } else {
         setIsPlaying(false);
-        playNext();
       }
     };
 
     audio.addEventListener('timeupdate', onTime);
     audio.addEventListener('ended', onEnd);
+
     return () => {
       audio.pause();
       audio.removeEventListener('timeupdate', onTime);
       audio.removeEventListener('ended', onEnd);
     };
-  }, [repeatMode]);
+  }, [internalPlay]);
 
   // Load from Supabase on start
   useEffect(() => {
@@ -249,41 +334,27 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
 
   // Playback handlers
   const playTrack = useCallback((t: Track, q: Track[] | null = null, idx = 0) => {
-    setCurrentTrack(t);
-    const newQ = q || [t];
-    setQueue(newQ);
-    setQueueIdx(idx);
-    if (t.previewUrl && audioRef.current) {
-      audioRef.current.src = t.previewUrl;
-      audioRef.current.volume = volume;
-      audioRef.current.play().catch(() => {});
-    }
-    setIsPlaying(true);
-    setRecentlyPlayed(prev => {
-      const filtered = prev.filter(x => x.id !== t.id);
-      const updated = [t, ...filtered].slice(0, 30);
-      localStorage.setItem('lm_recent', JSON.stringify(updated));
-      return updated;
-    });
-  }, [volume]);
+    internalPlay(t, q || [t], idx);
+  }, [internalPlay]);
 
   const togglePlay = useCallback((e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (!audioRef.current || !currentTrack) return;
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
       audioRef.current.play().catch(() => {});
+      setIsPlaying(true);
     }
-    setIsPlaying(p => !p);
   }, [isPlaying, currentTrack]);
 
   const playNext = useCallback((e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (!queue.length) return;
     const nextIdx = shuffleOn ? Math.floor(Math.random() * queue.length) : (queueIdx + 1) % queue.length;
-    playTrack(queue[nextIdx], queue, nextIdx);
-  }, [queue, queueIdx, shuffleOn, playTrack]);
+    internalPlay(queue[nextIdx], queue, nextIdx);
+  }, [queue, queueIdx, shuffleOn, internalPlay]);
 
   const playPrev = useCallback(() => {
     if (!audioRef.current || !queue.length) return;
@@ -292,8 +363,8 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
       return;
     }
     const prevIdx = (queueIdx - 1 + queue.length) % queue.length;
-    playTrack(queue[prevIdx], queue, prevIdx);
-  }, [queue, queueIdx, playTrack]);
+    internalPlay(queue[prevIdx], queue, prevIdx);
+  }, [queue, queueIdx, internalPlay]);
 
   const handleSeek = (time: number) => {
     if (!audioRef.current) return;
@@ -302,10 +373,42 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
     if (duration > 0) setProgress((time / duration) * 100);
   };
 
+  const handleVolumeChange = (newVal: number) => {
+    setVolume(newVal);
+    localStorage.setItem('lm_volume', String(newVal));
+    if (isMuted && newVal > 0) {
+      setIsMuted(false);
+    }
+    if (audioRef.current) {
+      audioRef.current.volume = newVal;
+    }
+  };
+
+  const toggleMute = () => {
+    if (isMuted) {
+      const restored = prevVolumeRef.current || 0.85;
+      setIsMuted(false);
+      setVolume(restored);
+      if (audioRef.current) audioRef.current.volume = restored;
+    } else {
+      prevVolumeRef.current = volume;
+      setIsMuted(true);
+      setVolume(0);
+      if (audioRef.current) audioRef.current.volume = 0;
+    }
+  };
+
   const isLiked = (id: number | string) => liked.some(x => x.id === id);
 
   const toggleLike = async (t: Track, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    // Auth Check
+    if (!user || user.isGuest) {
+      showToast(isFr ? "Connexion requise pour sauvegarder vos favoris." : "Sign in required to save favorites.");
+      onRequireAuth?.();
+      return;
+    }
+
     const already = isLiked(t.id);
     const updated = already ? liked.filter(x => x.id !== t.id) : [t, ...liked];
     setLiked(updated);
@@ -315,6 +418,12 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
   };
 
   const handleCreatePlaylist = async () => {
+    // Auth Check
+    if (!user || user.isGuest) {
+      showToast(isFr ? "Connexion requise pour créer des playlists." : "Sign in required to create playlists.");
+      onRequireAuth?.();
+      return;
+    }
     if (!newPlaylistName.trim()) return;
     const pl = { id: Date.now().toString(), name: newPlaylistName.trim(), tracks: optionsTrack ? [optionsTrack] : [] };
     const updated = [...playlists, pl];
@@ -390,7 +499,7 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
         </div>
       )}
 
-      {/* Sources Sheet */}
+      {/* Sources Sheet (Version Complète) */}
       {sourcesTrack && (
         <div 
           className="fixed inset-0 z-[9800] flex items-end justify-center bg-black/70 backdrop-blur-sm p-4"
@@ -407,21 +516,17 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
             <p className="text-xs text-white/50 mb-3">{sourcesTrack.name} — {sourcesTrack.artist}</p>
             <div className="space-y-2">
               {[
-                { name: 'Apple Music', url: sourcesTrack.trackViewUrl, color: 'from-pink-500 to-red-500' },
-                { name: 'YouTube', url: `https://www.youtube.com/results?search_query=${encodeURIComponent(sourcesTrack.artist + ' ' + sourcesTrack.name)}`, color: 'from-red-600 to-red-700' },
-                { name: 'Spotify', url: `https://open.spotify.com/search/${encodeURIComponent(sourcesTrack.artist + ' ' + sourcesTrack.name)}`, color: 'from-emerald-500 to-green-600' },
-                { name: 'Deezer', url: `https://www.deezer.com/search/${encodeURIComponent(sourcesTrack.artist + ' ' + sourcesTrack.name)}`, color: 'from-purple-500 to-indigo-600' }
-              ].filter(l => Boolean(l.url)).map((link, idx) => (
+                { name: 'YouTube', url: `https://www.youtube.com/results?search_query=${encodeURIComponent(sourcesTrack.artist + ' ' + sourcesTrack.name)}`, color: 'from-red-600 to-red-700', direct: true },
+                { name: 'Spotify', url: `https://open.spotify.com/search/${encodeURIComponent(sourcesTrack.artist + ' ' + sourcesTrack.name)}`, color: 'from-emerald-500 to-green-600', direct: true },
+                { name: 'Apple Music', url: sourcesTrack.trackViewUrl || `https://music.apple.com/search?term=${encodeURIComponent(sourcesTrack.artist + ' ' + sourcesTrack.name)}`, color: 'from-pink-500 to-red-500', direct: true },
+                { name: 'Deezer', url: `https://www.deezer.com/search/${encodeURIComponent(sourcesTrack.artist + ' ' + sourcesTrack.name)}`, color: 'from-purple-500 to-indigo-600', direct: true }
+              ].map((link, idx) => (
                 <button
                   key={idx}
                   onClick={() => {
                     setSourcesTrack(null);
-                    setInAppBrowserData({
-                      url: link.url!,
-                      title: `${sourcesTrack.name} — ${sourcesTrack.artist} (${link.name})`,
-                      source: link.name,
-                      img: sourcesTrack.imageLg || sourcesTrack.image
-                    });
+                    // Open directly in a safe popup or tab to prevent CORS 404 proxy blocks
+                    window.open(link.url, '_blank', 'noopener,noreferrer');
                   }}
                   className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer text-left"
                 >
@@ -429,9 +534,12 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
                     <div className={`w-8 h-8 rounded-lg bg-gradient-to-tr ${link.color} flex items-center justify-center font-bold text-xs text-white shadow-md`}>
                       {link.name.charAt(0)}
                     </div>
-                    <span className="text-xs font-semibold text-white">Écouter sur {link.name}</span>
+                    <div>
+                      <span className="text-xs font-semibold text-white">Écouter sur {link.name}</span>
+                      <span className="block text-[10px] text-white/40">{isFr ? 'Application / Web' : 'App / Web'}</span>
+                    </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-white/40" />
+                  <ExternalLink className="w-4 h-4 text-white/40" />
                 </button>
               ))}
             </div>
@@ -449,131 +557,169 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
             className="w-full max-w-md bg-[#161722] rounded-3xl p-6 border border-white/10 shadow-2xl space-y-3"
             onClick={e => e.stopPropagation()}
           >
+            <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-2" />
             <div className="flex items-center gap-3 pb-3 border-b border-white/10">
               <img src={optionsTrack.image} alt="" className="w-12 h-12 rounded-xl object-cover" />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-white truncate">{optionsTrack.name}</div>
-                <div className="text-xs text-blue-400 truncate">{optionsTrack.artist}</div>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-sm font-bold text-white truncate">{optionsTrack.name}</h4>
+                <p className="text-xs text-white/50 truncate">{optionsTrack.artist}</p>
               </div>
             </div>
-            <div className="space-y-1 pt-1">
-              <button
-                onClick={() => { toggleLike(optionsTrack); setOptionsTrack(null); }}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-xs font-semibold transition-colors"
-              >
-                <Heart className={`w-4 h-4 ${isLiked(optionsTrack.id) ? 'fill-blue-500 text-blue-500' : 'text-white/70'}`} />
-                <span>{isLiked(optionsTrack.id) ? (isFr ? 'Retirer des favoris' : 'Remove from favorites') : (isFr ? 'Ajouter aux favoris' : 'Add to favorites')}</span>
-              </button>
-              <button
-                onClick={() => { setPlaylistModal(true); }}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-xs font-semibold transition-colors"
-              >
-                <ListPlus className="w-4 h-4 text-white/70" />
-                <span>{isFr ? 'Ajouter à une playlist' : 'Add to playlist'}</span>
-              </button>
-              <button
-                onClick={() => { openArtist(optionsTrack); }}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-xs font-semibold transition-colors"
-              >
-                <Mic2 className="w-4 h-4 text-white/70" />
-                <span>{isFr ? "Voir l'artiste" : 'View artist'}</span>
-              </button>
-              <button
-                onClick={() => { shareTrack(optionsTrack); setOptionsTrack(null); }}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-xs font-semibold transition-colors text-blue-400"
-              >
-                <Share2 className="w-4 h-4" />
-                <span>{isFr ? 'Partager le titre' : 'Share track'}</span>
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                toggleLike(optionsTrack);
+                setOptionsTrack(null);
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-xs font-semibold text-white/90"
+            >
+              <Heart className={`w-4 h-4 ${isLiked(optionsTrack.id) ? 'text-blue-500 fill-blue-500' : 'text-white/60'}`} />
+              <span>{isLiked(optionsTrack.id) ? (isFr ? 'Retirer des favoris' : 'Remove from favorites') : (isFr ? 'Ajouter aux favoris' : 'Add to favorites')}</span>
+            </button>
+            <button
+              onClick={() => {
+                setOptionsTrack(null);
+                setSourcesTrack(optionsTrack);
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-xs font-semibold text-white/90"
+            >
+              <ExternalLink className="w-4 h-4 text-white/60" />
+              <span>{isFr ? 'Écouter la version complète' : 'Listen full track'}</span>
+            </button>
+            <button
+              onClick={() => {
+                openArtist(optionsTrack);
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-xs font-semibold text-white/90"
+            >
+              <Mic2 className="w-4 h-4 text-white/60" />
+              <span>{isFr ? "Voir l'artiste" : 'View artist'}</span>
+            </button>
+            <button
+              onClick={() => {
+                shareTrack(optionsTrack);
+                setOptionsTrack(null);
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-xs font-semibold text-white/90"
+            >
+              <Share2 className="w-4 h-4 text-white/60" />
+              <span>{isFr ? 'Partager' : 'Share'}</span>
+            </button>
           </div>
         </div>
       )}
 
-      {/* Top Gradient Accent Line */}
-      <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 opacity-90 shrink-0 shadow-[0_0_20px_rgba(59,130,246,0.5)]" />
+      {/* Top Header */}
+      <header className="h-14 px-4 bg-[#07080d]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between shrink-0 z-20">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-600/30">
+            <Music className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <span className="text-sm font-black tracking-tight text-white flex items-center gap-1.5">
+              LevelMusic
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-mono">30s HD</span>
+            </span>
+          </div>
+        </div>
 
-      {/* Main Scrollable View Area */}
+        <div className="flex items-center gap-2">
+          {(!user || user.isGuest) && (
+            <button
+              onClick={onRequireAuth}
+              className="px-2.5 py-1 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold shadow-md cursor-pointer"
+            >
+              {isFr ? 'Connexion' : 'Sign in'}
+            </button>
+          )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 pb-28">
-        
+
         {/* VIEW 1: HOME */}
         {view === 'home' && (
-          <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in">
-            <div>
-              <h1 className="text-2xl font-black text-white">
-                {isFr ? 'Qu’écoute-t-on aujourd’hui ?' : 'What are we listening to today?'}
-              </h1>
-              <p className="text-xs text-white/50 mt-0.5">
-                {isFr ? 'Exploration musicale et hits mondiaux en streaming' : 'Explore worldwide releases and playlists'}
-              </p>
+          <div className="space-y-6 max-w-5xl mx-auto">
+            {/* Quick Hero Banner */}
+            <div className="p-6 rounded-3xl bg-gradient-to-br from-blue-900/40 via-indigo-950/30 to-purple-950/20 border border-blue-500/20 relative overflow-hidden">
+              <div className="relative z-10 max-w-md space-y-2">
+                <span className="px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-bold uppercase tracking-wider">
+                  {isFr ? 'Stream Illimité' : 'Unlimited Stream'}
+                </span>
+                <h1 className="text-2xl font-black text-white leading-tight">
+                  {isFr ? 'Découvrez la musique en extraits HD 30s' : 'Explore music with HD 30s snippets'}
+                </h1>
+                <p className="text-xs text-white/60">
+                  {isFr ? 'Fondu audio intelligent, lecteur continu sans coupure et synchronisation cloud.' : 'Smart audio fade-out, continuous gapless playback, and cloud sync.'}
+                </p>
+              </div>
             </div>
 
             {/* Recently Played */}
             {recentlyPlayed.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-500" />
-                  <span>{isFr ? 'Écoutés récemment' : 'Recently Played'}</span>
+                  <Clock className="w-4 h-4 text-blue-400" />
+                  <span>{isFr ? 'Écoutés Récemment' : 'Recently Played'}</span>
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                  {recentlyPlayed.slice(0, 6).map((t, idx) => (
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                  {recentlyPlayed.slice(0, 10).map((t, idx) => (
                     <div
                       key={t.id}
                       onClick={() => playTrack(t, recentlyPlayed, idx)}
-                      className="group p-2.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-blue-500/30 transition-all cursor-pointer space-y-2"
+                      className="w-28 shrink-0 space-y-1.5 cursor-pointer group"
                     >
-                      <div className="relative aspect-square rounded-xl overflow-hidden bg-black/40">
-                        <img src={t.image} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
-                            <Play className="w-4 h-4 fill-white text-white ml-0.5" />
-                          </div>
+                      <div className="w-28 h-28 rounded-2xl overflow-hidden relative shadow-lg bg-white/5 border border-white/10 group-hover:scale-102 transition-transform">
+                        <img src={t.image} alt="" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Play className="w-6 h-6 text-white fill-white" />
                         </div>
                       </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold text-white truncate">{t.name}</div>
-                        <div className="text-[10px] text-white/50 truncate">{t.artist}</div>
-                      </div>
+                      <div className="text-[11px] font-bold text-white truncate">{t.name}</div>
+                      <div className="text-[10px] text-white/50 truncate">{t.artist}</div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Catalog Categories */}
-            {homeLoading && homeRows.length === 0 ? (
+            {/* Category Rows */}
+            {homeLoading ? (
               <div className="py-20 flex flex-col items-center justify-center gap-3">
-                <div className="w-7 h-7 rounded-full border-2 border-blue-500/20 border-t-blue-500 animate-spin" />
-                <span className="text-xs text-white/50 font-semibold">{isFr ? 'Chargement du catalogue...' : 'Loading catalog...'}</span>
+                <div className="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                <span className="text-xs text-white/40">{isFr ? 'Chargement des tendances...' : 'Loading hits...'}</span>
               </div>
             ) : (
-              homeRows.map((cat) => (
-                <div key={cat.id} className="space-y-3">
+              homeRows.map(row => (
+                <div key={row.id} className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-white">{isFr ? cat.title : cat.titleEn}</h3>
-                    <button
-                      onClick={() => { setSearchQ(cat.term); setView('search'); }}
-                      className="text-xs font-bold text-blue-400 hover:text-blue-300"
-                    >
-                      {isFr ? 'Voir tout' : 'See all'}
-                    </button>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full" style={{ background: row.color }} />
+                      <span>{isFr ? row.title : row.titleEn}</span>
+                    </h3>
                   </div>
-                  <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2">
-                    {cat.data.map((t: Track, idx: number) => (
+                  <div className="flex gap-3.5 overflow-x-auto pb-2 scrollbar-none">
+                    {row.data.map((t: Track, idx: number) => (
                       <div
                         key={t.id}
-                        onClick={() => playTrack(t, cat.data, idx)}
-                        className="w-36 shrink-0 group p-2.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-blue-500/30 transition-all cursor-pointer space-y-2"
+                        onClick={() => playTrack(t, row.data, idx)}
+                        className="w-32 shrink-0 space-y-2 cursor-pointer group"
                       >
-                        <div className="relative aspect-square rounded-xl overflow-hidden bg-black/40">
-                          <img src={t.image} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
-                              <Play className="w-4 h-4 fill-white text-white ml-0.5" />
-                            </div>
+                        <div className="w-32 h-32 rounded-2xl overflow-hidden relative shadow-lg bg-white/5 border border-white/10 group-hover:scale-102 transition-transform">
+                          <img src={t.image} alt="" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Play className="w-7 h-7 text-white fill-white" />
                           </div>
                         </div>
-                        <div className="min-w-0">
+                        <div>
                           <div className="text-xs font-bold text-white truncate">{t.name}</div>
                           <div className="text-[10px] text-white/50 truncate">{t.artist}</div>
                         </div>
@@ -583,91 +729,80 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
                 </div>
               ))
             )}
-
           </div>
         )}
 
         {/* VIEW 2: SEARCH */}
         {view === 'search' && (
-          <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in">
+          <div className="space-y-4 max-w-5xl mx-auto">
             <div className="relative">
-              <Search className="w-4 h-4 text-white/40 absolute left-4 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-white/40 absolute left-4 top-3.5" />
               <input
                 type="text"
-                autoFocus
                 value={searchQ}
                 onChange={e => setSearchQ(e.target.value)}
-                placeholder={isFr ? 'Artistes, titres, albums...' : 'Artists, tracks, albums...'}
-                className="w-full bg-[#13141f] border border-white/10 rounded-2xl py-3.5 pl-11 pr-10 text-sm text-white outline-none focus:border-blue-500 transition-colors"
+                placeholder={isFr ? 'Rechercher un titre, artiste, genre...' : 'Search songs, artists, genres...'}
+                className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-sm text-white placeholder-white/40 outline-none focus:border-blue-500/60 transition-colors"
               />
               {searchQ && (
-                <button
-                  onClick={() => setSearchQ('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
-                >
+                <button onClick={() => setSearchQ('')} className="absolute right-3 top-3 text-white/40 hover:text-white">
                   <X className="w-4 h-4" />
                 </button>
               )}
             </div>
 
-            {!searchQ && (
-              <div className="space-y-4">
-                <h4 className="text-xs font-bold text-white/50 uppercase tracking-wider">
-                  {isFr ? 'Parcourir par genre' : 'Browse by genre'}
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {CATEGORIES.map(c => (
-                    <button
-                      key={c.id}
-                      onClick={() => setSearchQ(c.term)}
-                      style={{ backgroundColor: c.color }}
-                      className="p-4 rounded-2xl font-bold text-xs text-white text-left shadow-md hover:scale-102 transition-transform cursor-pointer"
-                    >
-                      {isFr ? c.title : c.titleEn}
-                    </button>
-                  ))}
-                </div>
+            {searching ? (
+              <div className="py-16 flex justify-center">
+                <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
               </div>
-            )}
-
-            {searchQ && (
-              <div className="space-y-3">
-                {searching ? (
-                  <div className="py-16 flex justify-center">
-                    <div className="w-7 h-7 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-                  </div>
-                ) : searchResults.length > 0 ? (
-                  searchResults.map((t, idx) => (
-                    <div
-                      key={t.id}
-                      onClick={() => playTrack(t, searchResults, idx)}
-                      className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/5 transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <img src={t.image} alt="" className="w-10 h-10 rounded-lg object-cover" />
-                        <div className="min-w-0">
-                          <div className={`text-xs font-bold truncate ${currentTrack?.id === t.id ? 'text-blue-400' : 'text-white'}`}>
-                            {t.name}
-                          </div>
-                          <div className="text-[10px] text-white/50 truncate">{t.artist}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono text-white/40">{fmt(t.duration)}</span>
-                        <button
-                          onClick={e => { e.stopPropagation(); setOptionsTrack(t); }}
-                          className="p-1.5 rounded-full text-white/40 hover:text-white"
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
+            ) : searchResults.length > 0 ? (
+              <div className="space-y-1">
+                {searchResults.map((t, idx) => (
+                  <div
+                    key={t.id}
+                    onClick={() => playTrack(t, searchResults, idx)}
+                    className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img src={t.image} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                      <div className="min-w-0">
+                        <div className={`text-xs font-bold truncate ${currentTrack?.id === t.id ? 'text-blue-400' : 'text-white'}`}>{t.name}</div>
+                        <div className="text-[10px] text-white/50 truncate">{t.artist}</div>
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="py-16 text-center text-white/40 text-xs font-semibold">
-                    {isFr ? 'Aucun résultat trouvé.' : 'No results found.'}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={e => { e.stopPropagation(); toggleLike(t); }}
+                        className="p-1.5 text-white/40 hover:text-blue-400"
+                      >
+                        <Heart className={`w-4 h-4 ${isLiked(t.id) ? 'fill-blue-500 text-blue-500' : ''}`} />
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); setOptionsTrack(t); }}
+                        className="p-1.5 text-white/40 hover:text-white"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                )}
+                ))}
+              </div>
+            ) : searchQ ? (
+              <div className="py-12 text-center text-xs text-white/40">
+                {isFr ? 'Aucun résultat trouvé.' : 'No results found.'}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                {CATEGORIES.slice(0, 12).map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSearchQ(cat.term)}
+                    className="p-4 rounded-2xl text-left font-bold text-xs text-white shadow-md hover:scale-102 transition-transform"
+                    style={{ background: `linear-gradient(135deg, ${cat.color}dd, ${cat.color}66)` }}
+                  >
+                    {isFr ? cat.title : cat.titleEn}
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -675,8 +810,21 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
 
         {/* VIEW 3: LIBRARY */}
         {view === 'library' && (
-          <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in">
-            <h1 className="text-2xl font-black text-white">{isFr ? 'Ma Bibliothèque' : 'My Library'}</h1>
+          <div className="space-y-6 max-w-5xl mx-auto">
+            {/* Auth notice if guest */}
+            {(!user || user.isGuest) && (
+              <div className="p-4 rounded-2xl bg-blue-950/40 border border-blue-500/30 flex items-center justify-between gap-3">
+                <div className="text-xs text-blue-200">
+                  {isFr ? 'Connectez-vous pour synchroniser vos favoris sur tous vos appareils.' : 'Sign in to sync your library across all devices.'}
+                </div>
+                <button
+                  onClick={onRequireAuth}
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shrink-0 cursor-pointer"
+                >
+                  {isFr ? 'Se connecter' : 'Sign in'}
+                </button>
+              </div>
+            )}
 
             {/* Liked songs */}
             <div className="space-y-3">
@@ -724,7 +872,7 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
                 </h3>
                 <button
                   onClick={() => setPlaylistModal(true)}
-                  className="flex items-center gap-1 text-xs font-bold text-blue-400 hover:text-blue-300"
+                  className="flex items-center gap-1 text-xs font-bold text-blue-400 hover:text-blue-300 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>{isFr ? 'Créer' : 'Create'}</span>
@@ -768,7 +916,7 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
           <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in">
             <button
               onClick={() => setView(prevView)}
-              className="flex items-center gap-2 text-xs font-bold text-white/60 hover:text-white"
+              className="flex items-center gap-2 text-xs font-bold text-white/60 hover:text-white cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>{isFr ? 'Retour' : 'Back'}</span>
@@ -842,14 +990,14 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
       {currentTrack && playerOpen && (
         <div className="fixed inset-0 z-[9500] bg-[#07080d] flex flex-col p-6 overflow-hidden animate-in slide-in-from-bottom duration-300">
           <div className="flex items-center justify-between">
-            <button onClick={() => setPlayerOpen(false)} className="p-2 text-white/70 hover:text-white">
+            <button onClick={() => setPlayerOpen(false)} className="p-2 text-white/70 hover:text-white cursor-pointer">
               <ChevronDown className="w-6 h-6" />
             </button>
             <div className="text-center">
               <span className="text-[10px] font-mono uppercase tracking-widest text-white/40">{isFr ? 'EN LECTURE' : 'NOW PLAYING'}</span>
               <div className="text-xs font-bold text-white max-w-[200px] truncate">{currentTrack.album || currentTrack.artist}</div>
             </div>
-            <button onClick={() => setOptionsTrack(currentTrack)} className="p-2 text-white/70 hover:text-white">
+            <button onClick={() => setOptionsTrack(currentTrack)} className="p-2 text-white/70 hover:text-white cursor-pointer">
               <MoreHorizontal className="w-5 h-5" />
             </button>
           </div>
@@ -863,7 +1011,7 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
                 <h2 className="text-xl font-bold text-white truncate">{currentTrack.name}</h2>
                 <p className="text-xs font-semibold text-blue-400 mt-0.5">{currentTrack.artist}</p>
               </div>
-              <button onClick={() => toggleLike(currentTrack)} className="p-1">
+              <button onClick={() => toggleLike(currentTrack)} className="p-1 cursor-pointer">
                 <Heart className={`w-6 h-6 ${isLiked(currentTrack.id) ? 'fill-blue-500 text-blue-500' : 'text-white/40'}`} />
               </button>
             </div>
@@ -890,51 +1038,52 @@ export const LevelMusicApp: React.FC<LevelMusicAppProps> = ({ onClose, lang: ini
             {/* Controls */}
             <div className="flex items-center justify-between">
               <button
-                onClick={() => setShuffleOn(!shuffleOn)}
-                className={`p-2 transition-colors ${shuffleOn ? 'text-blue-500' : 'text-white/40'}`}
+                onClick={() => setShuffleOn(prev => !prev)}
+                className={`p-2 transition-colors cursor-pointer ${shuffleOn ? 'text-blue-500' : 'text-white/40'}`}
+                title={shuffleOn ? (isFr ? 'Lecture aléatoire activée' : 'Shuffle on') : (isFr ? 'Lecture aléatoire désactivée' : 'Shuffle off')}
               >
                 <Shuffle className="w-5 h-5" />
               </button>
-              <button onClick={playPrev} className="p-2 text-white hover:scale-110 transition-transform">
+              <button onClick={playPrev} className="p-2 text-white hover:scale-110 transition-transform cursor-pointer">
                 <SkipBack className="w-6 h-6 fill-current" />
               </button>
               <button
                 onClick={togglePlay}
-                className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-xl hover:scale-105 transition-transform"
+                className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-xl hover:scale-105 transition-transform cursor-pointer"
               >
                 {isPlaying ? <Pause className="w-7 h-7 fill-white" /> : <Play className="w-7 h-7 fill-white ml-1" />}
               </button>
-              <button onClick={playNext} className="p-2 text-white hover:scale-110 transition-transform">
+              <button onClick={playNext} className="p-2 text-white hover:scale-110 transition-transform cursor-pointer">
                 <SkipForward className="w-6 h-6 fill-current" />
               </button>
               <button
                 onClick={() => setRepeatMode(m => m === 'none' ? 'all' : m === 'all' ? 'one' : 'none')}
-                className={`p-2 transition-colors ${repeatMode !== 'none' ? 'text-blue-500' : 'text-white/40'}`}
+                className={`p-2 transition-colors cursor-pointer ${repeatMode !== 'none' ? 'text-blue-500' : 'text-white/40'}`}
+                title={repeatMode === 'one' ? (isFr ? 'Répéter ce titre' : 'Repeat 1') : repeatMode === 'all' ? (isFr ? 'Répéter la liste' : 'Repeat all') : (isFr ? 'Pas de répétition' : 'No repeat')}
               >
                 {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
               </button>
             </div>
 
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center gap-2 w-28">
-                <Volume2 className="w-4 h-4 text-white/40" />
+            {/* Volume control slider + Full track button */}
+            <div className="flex items-center justify-between pt-2 gap-4">
+              <div className="flex items-center gap-2 flex-1 max-w-[140px]">
+                <button onClick={toggleMute} className="p-1 text-white/50 hover:text-white cursor-pointer shrink-0">
+                  {isMuted || volume === 0 ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4" />}
+                </button>
                 <input
                   type="range"
                   min="0"
                   max="1"
                   step="0.01"
-                  value={volume}
-                  onChange={e => {
-                    const v = parseFloat(e.target.value);
-                    setVolume(v);
-                    if (audioRef.current) audioRef.current.volume = v;
-                  }}
-                  className="w-full h-1 bg-white/20 rounded-full appearance-none outline-none accent-white cursor-pointer"
+                  value={isMuted ? 0 : volume}
+                  onChange={e => handleVolumeChange(parseFloat(e.target.value))}
+                  className="w-full h-1.5 bg-white/20 rounded-full appearance-none outline-none accent-blue-500 cursor-pointer"
                 />
               </div>
               <button
                 onClick={() => setSourcesTrack(currentTrack)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold transition-colors"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold transition-colors cursor-pointer shrink-0"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>{isFr ? 'Version Complète' : 'Listen Full'}</span>

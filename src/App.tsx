@@ -1531,6 +1531,8 @@ export default function App() {
         isOpen={showExternalApps}
         onClose={() => setShowExternalApps(false)}
         lang={lang}
+        user={user}
+        onRequireAuth={() => setShowLoginModal(true)}
         showToast={showToast}
       />
 

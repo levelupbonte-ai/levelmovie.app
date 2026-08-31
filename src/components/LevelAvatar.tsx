@@ -42,7 +42,7 @@ export const LevelAvatar: React.FC<LevelAvatarProps> = ({
   const preset = DEFAULT_AVATARS.find(p => p.id === avatar);
   const isCustomImage = avatar && (avatar.startsWith('data:') || avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('blob:'));
   const isPresetId = avatar && (preset !== undefined || avatar.startsWith('avatar-'));
-  const resolvedAvatarId = preset ? preset.id : (avatar && avatar.startsWith('avatar-') ? avatar : 'avatar-hugo');
+  const resolvedAvatarId = preset ? preset.id : (avatar && avatar.startsWith('avatar-') ? avatar : 'avatar-angel');
 
   // Pick deterministic gradient
   const charCode = safeName.charCodeAt(0) || 0;

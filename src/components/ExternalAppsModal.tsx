@@ -31,6 +31,7 @@ interface ExternalAppsModalProps {
   onClose: () => void;
   lang: string;
   user?: any;
+  onRequireAuth?: () => void;
   showToast?: (msg: string, type?: string) => void;
 }
 
@@ -39,6 +40,7 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
   onClose,
   lang,
   user,
+  onRequireAuth,
   showToast
 }) => {
   const isFr = lang === 'fr';
@@ -216,6 +218,16 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
         {/* Right: Quick actions */}
         <div className="flex items-center gap-2 shrink-0">
           
+          {/* Quick Login if Guest */}
+          {(!user || user.isGuest) && (
+            <button
+              onClick={onRequireAuth}
+              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md cursor-pointer transition-all active:scale-95"
+            >
+              {isFr ? 'Connexion' : 'Sign in'}
+            </button>
+          )}
+
           {/* Home / Hub Button (No bubble, sleek header action) */}
           {currentApp && (
             <button
@@ -265,7 +277,7 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
 
       {currentAppId === 'level-music' && (
         <div key={`app-music-${refreshKey}`} className="flex-1 w-full h-full overflow-hidden">
-          <LevelMusicApp onClose={() => setCurrentAppId(null)} lang={lang} user={user} />
+          <LevelMusicApp onClose={() => setCurrentAppId(null)} lang={lang} user={user} onRequireAuth={onRequireAuth} />
         </div>
       )}
 
@@ -283,7 +295,7 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
 
       {currentAppId === 'level-reviews' && (
         <div key={`app-reviews-${refreshKey}`} className="flex-1 w-full h-full overflow-hidden">
-          <LevelReviewsApp onClose={() => setCurrentAppId(null)} lang={lang} user={user} />
+          <LevelReviewsApp onClose={() => setCurrentAppId(null)} lang={lang} user={user} onRequireAuth={onRequireAuth} />
         </div>
       )}
 

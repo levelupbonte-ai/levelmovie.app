@@ -447,76 +447,76 @@ export interface AvatarPreset {
 
 export const DEFAULT_AVATARS: AvatarPreset[] = [
   {
-    id: 'avatar-hugo',
-    name: 'Hugo',
-    category: 'Cinéma',
-    gradient: 'from-[#6366f1] to-[#312e81]'
+    id: 'avatar-angel',
+    name: 'Angel',
+    category: 'Arabe',
+    gradient: 'from-[#0284c7] to-[#1e3a8a]'
   },
   {
-    id: 'avatar-camille',
-    name: 'Camille',
-    category: 'Réalisatrice',
-    gradient: 'from-[#f43f5e] to-[#881337]'
-  },
-  {
-    id: 'avatar-alexandre',
-    name: 'Alexandre',
-    category: 'VIP',
-    gradient: 'from-[#d97706] to-[#78350f]'
-  },
-  {
-    id: 'avatar-sarah',
-    name: 'Sarah',
-    category: 'Urbain',
+    id: 'avatar-marco',
+    name: 'Marco',
+    category: 'Afro',
     gradient: 'from-[#059669] to-[#064e3b]'
   },
   {
-    id: 'avatar-marcus',
-    name: 'Marcus',
-    category: 'Créateur',
-    gradient: 'from-[#9333ea] to-[#4c1d95]'
+    id: 'avatar-cherubin',
+    name: 'Chérubin',
+    category: 'Afro',
+    gradient: 'from-[#d97706] to-[#78350f]'
+  },
+  {
+    id: 'avatar-sun',
+    name: 'Sun',
+    category: 'Asiatique',
+    gradient: 'from-[#0ea5e9] to-[#0369a1]'
+  },
+  {
+    id: 'avatar-illane',
+    name: 'Illane',
+    category: 'Afro',
+    gradient: 'from-[#ec4899] to-[#881337]'
   },
   {
     id: 'avatar-lea',
     name: 'Léa',
-    category: 'Chic',
-    gradient: 'from-[#3b82f6] to-[#1e3a8a]'
-  },
-  {
-    id: 'avatar-lucas',
-    name: 'Lucas',
-    category: 'Aventurier',
-    gradient: 'from-[#0ea5e9] to-[#0369a1]'
-  },
-  {
-    id: 'avatar-ines',
-    name: 'Inès',
-    category: 'Rétro',
-    gradient: 'from-[#f97316] to-[#9a3412]'
-  },
-  {
-    id: 'avatar-yanis',
-    name: 'Yanis',
-    category: 'Scénariste',
-    gradient: 'from-[#10b981] to-[#065f46]'
-  },
-  {
-    id: 'avatar-chloe',
-    name: 'Chloé',
-    category: 'Dynamique',
-    gradient: 'from-[#ec4899] to-[#9d174d]'
-  },
-  {
-    id: 'avatar-david',
-    name: 'David',
-    category: 'Producteur',
-    gradient: 'from-[#334155] to-[#0f172a]'
-  },
-  {
-    id: 'avatar-emma',
-    name: 'Emma',
-    category: 'Artiste',
+    category: 'Européen',
     gradient: 'from-[#8b5cf6] to-[#4c1d95]'
+  },
+  {
+    id: 'avatar-lex',
+    name: 'Lex',
+    category: 'Afro',
+    gradient: 'from-[#9333ea] to-[#3b0764]'
+  },
+  {
+    id: 'avatar-aben',
+    name: 'Aben',
+    category: 'Afro',
+    gradient: 'from-[#dc2626] to-[#7f1d1d]'
+  },
+  {
+    id: 'avatar-mohamed',
+    name: 'Mohamed',
+    category: 'Arabe',
+    gradient: 'from-[#2563eb] to-[#1e293b]'
+  },
+  {
+    id: 'avatar-christ',
+    name: 'Christ',
+    category: 'Afro / Métis',
+    gradient: 'from-[#4f46e5] to-[#1e1b4b]'
+  },
+  {
+    id: 'avatar-sophie',
+    name: 'Sophie',
+    category: 'Métisse',
+    gradient: 'from-[#f97316] to-[#9d174d]'
+  },
+  {
+    id: 'avatar-alexa',
+    name: 'Alexa',
+    category: 'Asiatique',
+    gradient: 'from-[#06b6d4] to-[#0f766e]'
   }
 ];
 
