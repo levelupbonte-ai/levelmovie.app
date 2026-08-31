@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X, Settings, Bookmark, Clapperboard, LayoutGrid, HelpCircle,
   Film, Tv, Users, LogOut, User, ChevronRight, ExternalLink,
-  Compass, Calendar
+  Compass, Calendar, Crown, Zap
 } from 'lucide-react';
-import { LevelMovieLogo, DonaStar, TikTokHomeIcon } from '../constants';
+import { LevelMovieLogo, DonaStar, TikTokHomeIcon, getWeeklyVipStatus, VipStatusInfo } from '../constants';
+import { LevelAvatar } from './LevelAvatar';
 
 interface AppSidebarProps {
   isOpen: boolean;
@@ -53,6 +54,14 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   lang,
   t
 }) => {
+  const [vipInfo, setVipInfo] = useState<VipStatusInfo>(() => getWeeklyVipStatus());
+
+  useEffect(() => {
+    if (isOpen) {
+      setVipInfo(getWeeklyVipStatus());
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -87,23 +96,33 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
         {/* Scrollable Center Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
           
-          {/* User Account Section (Simple & Clean, No Heavy Bubbles) */}
+          {/* User Account Section with VIP Badge */}
           <div className="pb-3 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                {userPhoto ? (
-                  <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" />
-                ) : user ? (
-                  <span className="text-sm font-black text-[#a855f7]">
-                    {(userName || 'U').charAt(0).toUpperCase()}
-                  </span>
+              <div className="relative shrink-0">
+                {user ? (
+                  <LevelAvatar avatar={user.avatar || (user.user_metadata && user.user_metadata.avatar)} name={userName || 'Cinéphile'} size="md" isVip={vipInfo.isVip} />
                 ) : (
-                  <User className="w-5 h-5 text-white/40" />
+                  <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                    <User className="w-5 h-5 text-white/40" />
+                  </div>
+                )}
+                {vipInfo.isVip && (
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full flex items-center justify-center shadow-md border border-black">
+                    <Crown className="w-2.5 h-2.5 text-black fill-black" />
+                  </div>
                 )}
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-bold text-white truncate">
-                  {userName || t.defaultUser}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-white truncate">
+                    {userName || t.defaultUser}
+                  </span>
+                  {vipInfo.isVip && (
+                    <span className="px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[9px] font-black tracking-wider flex items-center gap-0.5">
+                      <Crown className="w-2.5 h-2.5 fill-amber-400" /> VIP
+                    </span>
+                  )}
                 </div>
                 {user && userHandle ? (
                   <div className="text-[11px] text-[#c084fc] font-mono font-medium truncate">
@@ -114,6 +133,14 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                     {user ? (userEmail || 'ID: ' + (user.uid || user.id || 'usr_member')) : (lang === 'fr' ? 'Mode Invité' : 'Guest Mode')}
                   </div>
                 )}
+                {/* Weekly progress indicator */}
+                <div className="text-[10px] text-white/40 mt-0.5 flex items-center gap-1 font-mono">
+                  {vipInfo.isVip ? (
+                    <span className="text-amber-400 font-bold">{lang === 'fr' ? '👑 Membre VIP Actif' : '👑 VIP Member Active'}</span>
+                  ) : (
+                    <span>{vipInfo.weeklyLoginsCount}/4j {lang === 'fr' ? 'connectés cette sem.' : 'days logged this week'}</span>
+                  )}
+                </div>
               </div>
             </div>
 

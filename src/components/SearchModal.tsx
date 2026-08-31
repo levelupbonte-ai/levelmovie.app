@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, X, Film, Tv, Star, Flame, History, Trash2, Clock, 
-  Sparkles, User, Copy, Check, Users, ShieldCheck, Play,
-  Mic, MicOff, Volume2, AlertCircle, Radio
+  Sparkles, User, Copy, Check, Users, ShieldCheck, Play
 } from 'lucide-react';
 import { BASE_URL, IMAGE_BASE_URL, API_KEY } from '../constants';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { LevelMovieImage } from './LevelMovieImage';
+import { LevelAvatar } from './LevelAvatar';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -45,16 +45,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   const [userResults, setUserResults] = useState<UserProfileResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  // Web Speech API Voice Search State
-  const [isListening, setIsListening] = useState(false);
-  const [speechTranscript, setSpeechTranscript] = useState('');
-  const [speechError, setSpeechError] = useState<string | null>(null);
-  const recognitionRef = useRef<any>(null);
-
-  const isSpeechSupported = typeof window !== 'undefined' && (
-    'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
-  );
 
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try {
@@ -105,107 +95,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     }
   ];
 
-  // Stop voice recognition when modal closes or unmounts
-  const stopVoiceSearch = () => {
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (_) {}
-      recognitionRef.current = null;
-    }
-    setIsListening(false);
-  };
-
-  // Toggle Web Speech API voice search with reliable language switching
-  const toggleVoiceSearch = (overrideLang?: string) => {
-    if (!isSpeechSupported) {
-      const msg = lang === 'fr' 
-        ? 'La reconnaissance vocale Web Speech API n’est pas supportée sur ce navigateur.' 
-        : 'Web Speech API is not supported on this browser.';
-      if (showToast) showToast(msg, 'error');
-      setSpeechError(msg);
-      return;
-    }
-
-    if (isListening && !overrideLang) {
-      stopVoiceSearch();
-      return;
-    }
-
-    // Stop existing instance before restarting with new language
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (_) {}
-    }
-
-    try {
-      const SpeechRecognitionConstructor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      const recognition = new SpeechRecognitionConstructor();
-
-      const targetLang = overrideLang || (lang === 'fr' ? 'fr-FR' : 'en-US');
-      recognition.lang = targetLang;
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 1;
-
-      recognition.onstart = () => {
-        setIsListening(true);
-        setSpeechError(null);
-        setSpeechTranscript('');
-      };
-
-      recognition.onresult = (event: any) => {
-        let interimText = '';
-        let finalText = '';
-
-        for (let i = 0; i < event.results.length; ++i) {
-          const trans = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalText += (finalText ? ' ' : '') + trans;
-          } else {
-            interimText += (interimText ? ' ' : '') + trans;
-          }
-        }
-
-        const spoken = (finalText || interimText).trim();
-        if (spoken) {
-          setSpeechTranscript(spoken);
-          setQuery(spoken);
-          setSearchMode('catalog');
-        }
-      };
-
-      recognition.onerror = (e: any) => {
-        console.warn('Web Speech API recognition error:', e.error);
-        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-          setIsListening(false);
-          const msg = lang === 'fr' 
-            ? 'Accès au micro refusé. Veuillez autoriser le microphone.' 
-            : 'Microphone access denied. Please allow microphone permissions.';
-          setSpeechError(msg);
-          if (showToast) showToast(msg, 'error');
-        } else if (e.error === 'no-speech') {
-          // Keep listening or allow natural pause
-        } else {
-          setIsListening(false);
-          setSpeechError(lang === 'fr' ? 'Erreur de saisie vocale. Réessayez ou écrivez.' : 'Speech error. Try again or type.');
-        }
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-      recognition.start();
-    } catch (err: any) {
-      console.warn('Speech recognition start failed:', err);
-      setIsListening(false);
-      setSpeechError(err.message || 'Speech error');
-    }
-  };
-
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
@@ -220,13 +109,10 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         window.history.replaceState({}, '', url.pathname + '?' + url.searchParams.toString() + url.hash);
       } catch (_) {}
     } else {
-      stopVoiceSearch();
       setQuery('');
       setResults([]);
       setUserResults([]);
       setSearchMode('catalog');
-      setSpeechTranscript('');
-      setSpeechError(null);
       try {
         const url = new URL(window.location.href);
         if (url.searchParams.get('modal') === 'search') {
@@ -238,9 +124,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         }
       } catch (_) {}
     }
-    return () => {
-      stopVoiceSearch();
-    };
   }, [isOpen]);
 
   // Debounced search logic for both Catalog & Users
@@ -413,18 +296,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       <div className="w-full border-b border-white/10 bg-[#0c0d16]/90 backdrop-blur-xl px-4 sm:px-8 py-3.5 shrink-0 space-y-3">
         <div className="max-w-6xl mx-auto flex items-center gap-3">
           
-          {/* Main Input Field with Inline Voice Wave & Language Selector */}
-          <div className={`flex-1 flex items-center gap-2 rounded-xl px-3.5 py-2.5 transition-all duration-300 ${
-            isListening 
-              ? 'bg-[#1a0f2e] border-2 border-[#c084fc] shadow-[0_0_25px_rgba(168,85,247,0.35)] ring-2 ring-[#a855f7]/40'
-              : 'bg-white/[0.04] border border-white/10 focus-within:border-[#a855f7]/60'
-          }`}>
-            {isListening ? (
-              <div className="flex items-center gap-1 shrink-0 text-red-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-              </div>
-            ) : searchMode === 'catalog' ? (
+          {/* Main Input Field */}
+          <div className="flex-1 flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 bg-white/[0.04] border border-white/10 focus-within:border-[#a855f7]/60 transition-all duration-200">
+            {searchMode === 'catalog' ? (
               <Search className="w-4 h-4 text-[#c084fc] shrink-0" />
             ) : (
               <User className="w-4 h-4 text-[#c084fc] shrink-0" />
@@ -436,95 +310,22 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={
-                isListening
-                  ? (lang === 'fr' ? 'Dites un titre (ex: One Piece, Dune, Inception)...' : 'Say a title (e.g. Inception, Avatar, Dune)...')
-                  : searchMode === 'catalog'
-                    ? (lang === 'fr' ? 'Rechercher un film, une série, un anime...' : 'Search movies, TV shows, anime...')
-                    : (lang === 'fr' ? 'Rechercher un utilisateur par son ID ou pseudo...' : 'Search user by ID or username...')
+                searchMode === 'catalog'
+                  ? (lang === 'fr' ? 'Rechercher un film, une série, un anime...' : 'Search movies, TV shows, anime...')
+                  : (lang === 'fr' ? 'Rechercher un utilisateur par son ID ou pseudo...' : 'Search user by ID or username...')
               }
               className="flex-1 bg-transparent text-xs sm:text-sm font-normal text-white placeholder-white/40 outline-none min-w-0"
             />
 
-            {/* Inline Audio Waveform when listening */}
-            {isListening && (
-              <div className="flex items-center gap-0.5 px-2 py-1 rounded-md bg-[#a855f7]/20 border border-[#c084fc]/30 shrink-0">
-                <span className="w-0.5 bg-red-400 rounded-full animate-[pulse_0.4s_ease-in-out_infinite] h-2.5" />
-                <span className="w-0.5 bg-[#c084fc] rounded-full animate-[pulse_0.6s_ease-in-out_infinite] h-4" />
-                <span className="w-0.5 bg-pink-400 rounded-full animate-[pulse_0.3s_ease-in-out_infinite] h-2" />
-                <span className="w-0.5 bg-[#a855f7] rounded-full animate-[pulse_0.5s_ease-in-out_infinite] h-3.5" />
-                <span className="w-0.5 bg-red-400 rounded-full animate-[pulse_0.4s_ease-in-out_infinite] h-2" />
-                <span className="text-[10px] font-bold text-[#e9d5ff] ml-1.5 hidden sm:inline uppercase">
-                  {lang === 'fr' ? 'Écoute...' : 'Listening...'}
-                </span>
-              </div>
-            )}
-
-            {/* Language toggle for speech recognition */}
-            <div className="flex items-center bg-white/[0.06] rounded-lg p-0.5 shrink-0 border border-white/5">
-              <button
-                type="button"
-                onClick={() => {
-                  if (isListening) toggleVoiceSearch('fr-FR');
-                }}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
-                  lang === 'fr' 
-                    ? 'bg-[#a855f7] text-white shadow-sm' 
-                    : 'text-white/40 hover:text-white'
-                }`}
-                title="Langue française (fr-FR)"
-              >
-                FR
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (isListening) toggleVoiceSearch('en-US');
-                }}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
-                  lang !== 'fr' 
-                    ? 'bg-[#a855f7] text-white shadow-sm' 
-                    : 'text-white/40 hover:text-white'
-                }`}
-                title="English language (en-US)"
-              >
-                EN
-              </button>
-            </div>
-
             {query && (
               <button
-                onClick={() => {
-                  setQuery('');
-                  setSpeechTranscript('');
-                }}
+                onClick={() => setQuery('')}
                 className="p-1 text-white/40 hover:text-white transition-colors cursor-pointer shrink-0"
                 title={lang === 'fr' ? 'Effacer' : 'Clear'}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
-
-            {/* Web Speech API Microphone Button */}
-            <button
-              type="button"
-              onClick={() => toggleVoiceSearch()}
-              className={`p-1.5 rounded-lg transition-all flex items-center justify-center cursor-pointer outline-none shrink-0 ${
-                isListening
-                  ? 'bg-red-500 text-white shadow-[0_0_12px_rgba(239,68,68,0.8)] scale-105'
-                  : 'text-[#c084fc] hover:text-white hover:bg-white/10'
-              }`}
-              title={
-                isListening
-                  ? (lang === 'fr' ? 'Arrêter la recherche vocale' : 'Stop voice search')
-                  : (lang === 'fr' ? 'Recherche vocale (Web Speech API)' : 'Voice search (Web Speech API)')
-              }
-            >
-              {isListening ? (
-                <Mic className="w-4 h-4 text-white animate-pulse" />
-              ) : (
-                <Mic className="w-4 h-4" />
-              )}
-            </button>
           </div>
 
           {/* Clean Close Button */}
@@ -536,23 +337,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
-
-        {/* Speech Error Banner if any */}
-        {speechError && (
-          <div className="max-w-6xl mx-auto p-2.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs flex items-center justify-between gap-2 animate-in fade-in">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-              <span>{speechError}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setSpeechError(null)}
-              className="text-white/60 hover:text-white p-1 cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
 
         {/* Search Mode Switcher Tabs */}
         <div className="max-w-6xl mx-auto flex items-center gap-2">
@@ -621,17 +405,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     >
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <div className="w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                            {usr.avatar ? (
-                              <img src={usr.avatar} alt={usr.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-sm font-black text-[#a855f7]">
-                                {usr.name.charAt(0).toUpperCase()}
-                              </span>
-                            )}
-                          </div>
+                          <LevelAvatar name={usr.name} size="md" />
                           {usr.isOnline && (
-                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#090a10]" />
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#090a10]" />
                           )}
                         </div>
 

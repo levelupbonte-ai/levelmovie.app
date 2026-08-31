@@ -5,6 +5,7 @@ import {
   ArrowLeft, Calendar, ShieldAlert
 } from 'lucide-react';
 import { DEFAULT_AVATARS, AvatarPreset, LevelMovieLogo } from '../constants';
+import { LevelAvatar } from './LevelAvatar';
 import { supabase, isSupabaseConfigured, syncUserProfileSupabase } from '../lib/supabase';
 
 export interface MandatoryProfileCompletionProps {
@@ -35,7 +36,7 @@ export const MandatoryProfileCompletionModal: React.FC<MandatoryProfileCompletio
   const userMeta = user?.user_metadata || {};
   const initialName = userMeta.full_name || userMeta.name || user?.email?.split('@')[0] || '';
   const initialEmail = user?.email || userMeta.email || '';
-  const initialPhoto = userMeta.avatar_url || userMeta.picture || user?.photoURL || DEFAULT_AVATARS[0].url;
+  const initialPhoto = userMeta.avatar_url || userMeta.picture || user?.photoURL || DEFAULT_AVATARS[0].id;
 
   const deriveHandle = (raw: string) => {
     return raw
@@ -79,7 +80,7 @@ export const MandatoryProfileCompletionModal: React.FC<MandatoryProfileCompletio
       const meta = user.user_metadata || {};
       const name = meta.full_name || meta.name || user.email?.split('@')[0] || 'Cinéphile';
       const email = user.email || meta.email || '';
-      const photo = meta.avatar_url || meta.picture || user.photoURL || DEFAULT_AVATARS[0].url;
+      const photo = meta.avatar_url || meta.picture || user.photoURL || DEFAULT_AVATARS[0].id;
       const handle = deriveHandle(meta.username || email.split('@')[0] || name || 'cinephile');
       const userAge = meta.age ? String(meta.age) : '18';
 
@@ -459,59 +460,59 @@ export const MandatoryProfileCompletionModal: React.FC<MandatoryProfileCompletio
               />
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#14141e] border border-white/10 space-y-3 shadow-inner">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 flex items-center gap-1.5">
-                <Camera className="w-3.5 h-3.5 text-[#c084fc]" />
-                <span>{isFr ? 'Photo de profil personnelle' : 'Profile Picture'}</span>
-              </label>
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70">
+                  {isFr ? 'Choisis ton avatar' : 'Choose your avatar'}
+                </label>
+                <span className="text-[10px] text-[#c084fc] font-bold">
+                  {DEFAULT_AVATARS.find(a => a.id === avatarUrl)?.name || (isFr ? 'Sélectionné' : 'Selected')}
+                </span>
+              </div>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileInputChange}
-                className="hidden"
-              />
-
-              {/* Zone d'importation épurée */}
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed transition-all cursor-pointer group ${
-                  isDragging
-                    ? 'border-[#a855f7] bg-[#a855f7]/10'
-                    : 'border-[#2a2a3c] hover:border-[#a855f7] bg-white/[0.02]'
-                }`}
-              >
-                {avatarUrl ? (
-                  <div className="relative">
-                    <img 
-                      src={avatarUrl} 
-                      alt="Avatar" 
-                      className="w-20 h-20 rounded-full object-cover border-2 border-[#a855f7] shadow-lg group-hover:scale-105 transition-transform" 
-                    />
-                    <div className="absolute -bottom-1 -right-1 p-1.5 bg-[#a855f7] text-white rounded-full shadow-md">
-                      <Camera className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/50 group-hover:text-[#c084fc] group-hover:border-[#a855f7]/50 transition-colors">
-                    <Upload className="w-6 h-6" />
-                  </div>
-                )}
-
-                <div className="text-center">
-                  <span className="text-xs font-bold text-white group-hover:text-[#c084fc] transition-colors block">
-                    {avatarUrl 
-                      ? (isFr ? 'Cliquez ou glissez pour changer de photo' : 'Click or drop to change photo')
-                      : (isFr ? 'Importer votre photo' : 'Upload your photo')}
+              {/* Aperçu du profil */}
+              <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-[#14141e] border border-[#2a2a3c] shadow-inner mb-3">
+                <LevelAvatar avatar={avatarUrl} name={fullName || username || 'Cinéphile'} size="lg" />
+                <div className="min-w-0 flex-1">
+                  <span className="text-sm font-black text-white block truncate">
+                    {fullName || username || 'Cinéphile'}
                   </span>
-                  <span className="text-[10px] text-white/40 mt-0.5 block">
-                    {isFr ? 'PNG, JPG ou WEBP (max 5 Mo)' : 'PNG, JPG or WEBP (up to 5MB)'}
+                  <span className="text-xs text-[#d8b4fe] font-mono">
+                    @{username}
                   </span>
                 </div>
+              </div>
+
+              {/* Grille Avatars SVG Pro */}
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-[160px] overflow-y-auto p-1 custom-scrollbar">
+                {DEFAULT_AVATARS.map((item) => {
+                  const isSelected = avatarUrl === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setAvatarUrl(item.id)}
+                      className={`relative group flex flex-col items-center justify-center p-2 rounded-xl border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#22163b] border-[#c084fc] shadow-[0_0_12px_rgba(192,132,252,0.35)] scale-105'
+                          : 'bg-[#14141e] border-white/10 hover:border-white/30 hover:bg-[#1a1a28]'
+                      }`}
+                      title={item.name}
+                    >
+                      <div className="transform transition-transform group-hover:scale-110">
+                        <LevelAvatar avatar={item.id} name={item.name} size="md" />
+                      </div>
+                      <span className="text-[9px] font-bold text-white/80 mt-1.5 truncate max-w-full text-center">
+                        {item.name}
+                      </span>
+                      {isSelected && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#c084fc] text-black flex items-center justify-center text-[9px] font-black shadow-sm">
+                          ✓
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -534,6 +535,7 @@ export const MandatoryProfileCompletionModal: React.FC<MandatoryProfileCompletio
             </button>
           </form>
         )}
+
 
         {/* Bouton Retour Intelligent */}
         <div className="w-full flex flex-col gap-2 mt-4 pt-3 border-t border-[#1e1e2e]">

@@ -110,6 +110,217 @@ export const setLowDataModeState = (enabled: boolean): void => {
   window.dispatchEvent(new CustomEvent('levelmovie_low_data_change', { detail: { enabled } }));
 };
 
+// =========================================================================
+// VIP & ASSIDUITE HEBDOMADAIRE (4 CONNEXIONS PAR SEMAINE = STATUT VIP)
+// =========================================================================
+export interface VipStatusInfo {
+  isVip: boolean;
+  weeklyLoginsCount: number;
+  targetLogins: number;
+  currentWeekKey: string;
+  loggedDays: string[]; // YYYY-MM-DD
+  weekDays: Array<{
+    dateStr: string;
+    dayNameFr: string;
+    dayNameEn: string;
+    dayShortFr: string;
+    dayShortEn: string;
+    active: boolean;
+    isToday: boolean;
+  }>;
+  progressPercent: number;
+  donaDailyLimit: number;
+  donaUsedToday: number;
+  donaRemainingToday: number;
+}
+
+const getMondayDateOfCurrentWeek = (): Date => {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - (day === 0 ? 6 : day - 1); // Adjust for Sunday (0) -> 6
+  const monday = new Date(d);
+  monday.setDate(diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+};
+
+export const getCurrentWeekKey = (): string => {
+  const monday = getMondayDateOfCurrentWeek();
+  const year = monday.getFullYear();
+  const month = String(monday.getMonth() + 1).padStart(2, '0');
+  const day = String(monday.getDate()).padStart(2, '0');
+  return `week_${year}_${month}_${day}`;
+};
+
+export const getTodayDateString = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+export const getWeeklyVipStatus = (): VipStatusInfo => {
+  if (typeof window === 'undefined') {
+    return {
+      isVip: false,
+      weeklyLoginsCount: 1,
+      targetLogins: 4,
+      currentWeekKey: 'week_default',
+      loggedDays: [],
+      weekDays: [],
+      progressPercent: 25,
+      donaDailyLimit: 15,
+      donaUsedToday: 0,
+      donaRemainingToday: 15,
+    };
+  }
+
+  const weekKey = getCurrentWeekKey();
+  const storageKey = `levelmovie_logins_${weekKey}`;
+  let loggedDays: string[] = [];
+
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (raw) {
+      loggedDays = JSON.parse(raw);
+    }
+  } catch (_) {
+    loggedDays = [];
+  }
+
+  const todayStr = getTodayDateString();
+  const daysFr = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+  const daysEn = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const shortFr = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  const shortEn = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  const monday = getMondayDateOfCurrentWeek();
+  const weekDays = [];
+
+  for (let i = 0; i < 7; i++) {
+    const current = new Date(monday);
+    current.setDate(monday.getDate() + i);
+    const y = current.getFullYear();
+    const m = String(current.getMonth() + 1).padStart(2, '0');
+    const d = String(current.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${d}`;
+
+    weekDays.push({
+      dateStr,
+      dayNameFr: daysFr[i],
+      dayNameEn: daysEn[i],
+      dayShortFr: shortFr[i],
+      dayShortEn: shortEn[i],
+      active: loggedDays.includes(dateStr),
+      isToday: dateStr === todayStr,
+    });
+  }
+
+  const weeklyLoginsCount = loggedDays.length;
+  const targetLogins = 4;
+  const isPermanentVip = localStorage.getItem('levelmovie_vip_pass') === 'true';
+  const isVip = isPermanentVip || weeklyLoginsCount >= targetLogins;
+
+  // Calculate Dona quotas
+  const donaUsedStorageKey = `levelmovie_dona_usage_${todayStr}`;
+  let donaUsedToday = 0;
+  try {
+    donaUsedToday = parseInt(localStorage.getItem(donaUsedStorageKey) || '0', 10);
+    if (isNaN(donaUsedToday) || donaUsedToday < 0) donaUsedToday = 0;
+  } catch (_) {
+    donaUsedToday = 0;
+  }
+
+  // Quota VIP = 150 requêtes/jour | Quota Nouveau/Standard = 15 requêtes/jour
+  const donaDailyLimit = isVip ? 150 : 15;
+  const donaRemainingToday = Math.max(0, donaDailyLimit - donaUsedToday);
+  const progressPercent = Math.min(100, Math.round((weeklyLoginsCount / targetLogins) * 100));
+
+  return {
+    isVip,
+    weeklyLoginsCount,
+    targetLogins,
+    currentWeekKey: weekKey,
+    loggedDays,
+    weekDays,
+    progressPercent,
+    donaDailyLimit,
+    donaUsedToday,
+    donaRemainingToday,
+  };
+};
+
+export const recordWeeklyLogin = (): { isNewDay: boolean; isVipNow: boolean; info: VipStatusInfo } => {
+  if (typeof window === 'undefined') {
+    return { isNewDay: false, isVipNow: false, info: getWeeklyVipStatus() };
+  }
+
+  const weekKey = getCurrentWeekKey();
+  const storageKey = `levelmovie_logins_${weekKey}`;
+  const todayStr = getTodayDateString();
+  let loggedDays: string[] = [];
+
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (raw) {
+      loggedDays = JSON.parse(raw);
+    }
+  } catch (_) {
+    loggedDays = [];
+  }
+
+  let isNewDay = false;
+  if (!loggedDays.includes(todayStr)) {
+    loggedDays.push(todayStr);
+    localStorage.setItem(storageKey, JSON.stringify(loggedDays));
+    isNewDay = true;
+  }
+
+  const isVipNow = loggedDays.length >= 4 || localStorage.getItem('levelmovie_vip_pass') === 'true';
+  if (isVipNow) {
+    localStorage.setItem('levelmovie_vip_pass', 'true');
+  }
+
+  const info = getWeeklyVipStatus();
+  window.dispatchEvent(new CustomEvent('levelmovie_vip_status_change', { detail: info }));
+
+  return { isNewDay, isVipNow, info };
+};
+
+export const recordDonaUsage = (): { used: number; remaining: number; limit: number; canProceed: boolean } => {
+  if (typeof window === 'undefined') return { used: 0, remaining: 15, limit: 15, canProceed: true };
+  const todayStr = getTodayDateString();
+  const donaUsedStorageKey = `levelmovie_dona_usage_${todayStr}`;
+  const vipInfo = getWeeklyVipStatus();
+
+  let currentUsed = 0;
+  try {
+    currentUsed = parseInt(localStorage.getItem(donaUsedStorageKey) || '0', 10);
+    if (isNaN(currentUsed)) currentUsed = 0;
+  } catch (_) {
+    currentUsed = 0;
+  }
+
+  const nextUsed = currentUsed + 1;
+  localStorage.setItem(donaUsedStorageKey, String(nextUsed));
+
+  const limit = vipInfo.donaDailyLimit;
+  const remaining = Math.max(0, limit - nextUsed);
+  const canProceed = currentUsed < limit;
+
+  window.dispatchEvent(new CustomEvent('levelmovie_dona_quota_change', {
+    detail: { used: nextUsed, remaining, limit, isVip: vipInfo.isVip }
+  }));
+
+  return {
+    used: nextUsed,
+    remaining,
+    limit,
+    canProceed,
+  };
+};
+
 export const getPosterImageUrl = (path?: string | null, lowData: boolean = isLowDataMode()): string => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
@@ -230,57 +441,95 @@ export const getHoursUntilMidnight = () => {
 export interface AvatarPreset {
   id: string;
   name: string;
-  url: string;
   category: string;
+  gradient: string;
+  iconName: 'clapper' | 'film' | 'popcorn' | 'crown' | 'sparkles' | 'shield' | 'bot' | 'skull' | 'flame' | 'gamepad' | 'sword' | 'camera';
 }
 
 export const DEFAULT_AVATARS: AvatarPreset[] = [
   {
-    id: 'avatar-popcorn',
-    name: 'Popcorn VIP',
-    url: 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?auto=format&fit=crop&w=200&q=80',
-    category: 'Cinema'
-  },
-  {
     id: 'avatar-director',
-    name: 'Cinéaste / Director',
-    url: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=200&q=80',
-    category: 'Cinema'
+    name: 'Cinéaste Pro',
+    category: 'Cinema',
+    gradient: 'from-[#e50914] to-[#991b1b]',
+    iconName: 'clapper'
   },
   {
-    id: 'avatar-cyberpunk',
-    name: 'Neon Cyberpunk',
-    url: 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=200&q=80',
-    category: 'Sci-Fi'
+    id: 'avatar-popcorn',
+    name: 'Master Popcorn',
+    category: 'Cinema',
+    gradient: 'from-[#f59e0b] to-[#ea580c]',
+    iconName: 'popcorn'
   },
   {
-    id: 'avatar-galaxy',
-    name: 'Cosmic Voyager',
-    url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=200&q=80',
-    category: 'Sci-Fi'
+    id: 'avatar-crown',
+    name: 'Souverain VIP',
+    category: 'VIP',
+    gradient: 'from-[#d97706] to-[#b45309]',
+    iconName: 'crown'
   },
   {
-    id: 'avatar-synthwave',
-    name: 'Retro Sunset',
-    url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=200&q=80',
-    category: 'Retro'
+    id: 'avatar-sparkles',
+    name: 'Star Lumière',
+    category: 'Action',
+    gradient: 'from-[#9333ea] to-[#6366f1]',
+    iconName: 'sparkles'
   },
   {
-    id: 'avatar-hero',
-    name: 'Dark Hero',
-    url: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=200&q=80',
-    category: 'Hero'
+    id: 'avatar-shield',
+    name: 'Gardien Cosmique',
+    category: 'Action',
+    gradient: 'from-[#2563eb] to-[#0284c7]',
+    iconName: 'shield'
   },
   {
-    id: 'avatar-anime',
-    name: 'Anime Shinobi',
-    url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=200&q=80',
-    category: 'Anime'
+    id: 'avatar-bot',
+    name: 'Cyber Cyborg',
+    category: 'Sci-Fi',
+    gradient: 'from-[#059669] to-[#0d9488]',
+    iconName: 'bot'
   },
   {
-    id: 'avatar-gold',
-    name: 'Gold Star VIP',
-    url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=200&q=80',
-    category: 'VIP'
+    id: 'avatar-skull',
+    name: 'Ombre Mystique',
+    category: 'Horror',
+    gradient: 'from-[#4c1d95] to-[#1e1b4b]',
+    iconName: 'skull'
+  },
+  {
+    id: 'avatar-flame',
+    name: 'Flamme Phénix',
+    category: 'Fantasy',
+    gradient: 'from-[#dc2626] to-[#f97316]',
+    iconName: 'flame'
+  },
+  {
+    id: 'avatar-gamepad',
+    name: 'Pixel Gamer',
+    category: 'Gaming',
+    gradient: 'from-[#7c3aed] to-[#db2777]',
+    iconName: 'gamepad'
+  },
+  {
+    id: 'avatar-sword',
+    name: 'Guerrier Épique',
+    category: 'Fantasy',
+    gradient: 'from-[#0284c7] to-[#4f46e5]',
+    iconName: 'sword'
+  },
+  {
+    id: 'avatar-film',
+    name: 'Studio Archive',
+    category: 'Cinema',
+    gradient: 'from-[#334155] to-[#0f172a]',
+    iconName: 'film'
+  },
+  {
+    id: 'avatar-camera',
+    name: 'Cadreur 4K',
+    category: 'Cinema',
+    gradient: 'from-[#0f766e] to-[#0369a1]',
+    iconName: 'camera'
   }
 ];
+

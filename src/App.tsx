@@ -5,7 +5,7 @@ import {
   Home, Tv, Clapperboard, History, AlertOctagon, Bookmark,
   ArrowDown, ArrowUp, Plus, Users, Mail, AlertTriangle, CheckCircle, XCircle,
   Building, Lock, Menu, Sparkles, Compass, ShieldCheck, Zap,
-  Clock, SquarePen, Calendar, Mic
+  Clock, SquarePen, Calendar
 } from 'lucide-react';
 import {
   doc, setDoc, getDoc, deleteDoc, collection, addDoc, onSnapshot, query, orderBy, limit, getDocs, arrayUnion,
@@ -30,6 +30,7 @@ import { SupportModal } from './components/SupportModal';
 import { SearchModal } from './components/SearchModal';
 import { AuthModal, AuthView } from './components/AuthModal';
 import { MandatoryProfileCompletionModal } from './components/MandatoryProfileCompletionModal';
+import { LevelAvatar } from './components/LevelAvatar';
 import { DonaModal } from './components/DonaModal';
 import { CinematicPosterWall } from './components/CinematicPosterWall';
 import { FooterDisclaimer } from './components/FooterDisclaimer';
@@ -1153,7 +1154,6 @@ export default function App() {
                 <button onClick={() => setShowSearchModal(true)} className="group flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 md:px-4 py-2 rounded-full outline-none w-10 md:w-72 justify-center md:justify-start transition-all shadow-inner cursor-pointer">
                   <SearchIcon className="w-4 h-4 shrink-0 text-[#a855f7]" />
                   <span className="hidden md:inline truncate text-white/50">{t.searchPlaceholder}</span>
-                  <Mic className="w-3.5 h-3.5 text-[#c084fc]/50 group-hover:text-[#c084fc] shrink-0 ml-auto hidden md:inline transition-colors" />
                 </button>
 
                 <div 
@@ -1167,17 +1167,13 @@ export default function App() {
                   }}
                   title={user ? defaultUserName : (lang === 'fr' ? 'Connexion' : 'Log In')}
                 >
-                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#151520] flex items-center justify-center overflow-hidden border border-[#a855f7]/40 shadow-inner shrink-0">
+                  <div className="shrink-0">
                     {user ? (
-                      userPhoto ? (
-                        <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" />
-                      ) : (
-                        <span className="text-[12px] md:text-[13px] font-black text-[#a855f7]">
-                          {defaultUserName.charAt(0).toUpperCase()}
-                        </span>
-                      )
+                      <LevelAvatar name={defaultUserName} size="sm" />
                     ) : (
-                      <UserIcon className="w-4 h-4 text-[#a855f7]" />
+                      <div className="w-8 h-8 rounded-full bg-[#151520] flex items-center justify-center border border-[#a855f7]/40 shadow-inner">
+                        <UserIcon className="w-4 h-4 text-[#a855f7]" />
+                      </div>
                     )}
                   </div>
                   <div className="hidden md:block min-w-0">
@@ -1193,7 +1189,6 @@ export default function App() {
               <button onClick={() => setShowSearchModal(true)} className="group flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 md:px-4 py-2 rounded-full outline-none w-10 md:w-72 justify-center md:justify-start transition-all shadow-inner cursor-pointer">
                 <SearchIcon className="w-4 h-4 shrink-0 text-[#a855f7]" />
                 <span className="hidden md:inline truncate text-white/50">{t.searchPlaceholder}</span>
-                <Mic className="w-3.5 h-3.5 text-[#c084fc]/50 group-hover:text-[#c084fc] shrink-0 ml-auto hidden md:inline transition-colors" />
               </button>
 
               {/* Profil / Connexion Button (PC & Tablette) */}
@@ -1208,17 +1203,13 @@ export default function App() {
                 }}
                 title={user ? defaultUserName : (lang === 'fr' ? 'Connexion' : 'Log In')}
               >
-                <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#151520] flex items-center justify-center overflow-hidden border border-[#a855f7]/40 shadow-inner shrink-0">
+                <div className="shrink-0">
                   {user ? (
-                    userPhoto ? (
-                      <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" />
-                    ) : (
-                      <span className="text-[12px] md:text-[13px] font-black text-[#a855f7]">
-                        {defaultUserName.charAt(0).toUpperCase()}
-                      </span>
-                    )
+                    <LevelAvatar name={defaultUserName} size="sm" />
                   ) : (
-                    <UserIcon className="w-4 h-4 text-[#a855f7]" />
+                    <div className="w-8 h-8 rounded-full bg-[#151520] flex items-center justify-center border border-[#a855f7]/40 shadow-inner">
+                      <UserIcon className="w-4 h-4 text-[#a855f7]" />
+                    </div>
                   )}
                 </div>
                 <div className="hidden md:block min-w-0">
@@ -1490,6 +1481,7 @@ export default function App() {
           onOpenDona={() => {
             setCurrentCategory('dona');
           }}
+          onOpenExternalApps={() => setShowExternalApps(true)}
         />
       )}
 

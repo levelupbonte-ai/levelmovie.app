@@ -2,9 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, ArrowUp, X, Clock, Plus, Play, Star, 
   Trash2, ChevronRight, Film, Popcorn, Flame, Shuffle, Clapperboard, Users,
-  Search, Compass, Bell
+  Search, Compass, Bell, Crown, Zap, ShieldCheck
 } from 'lucide-react';
-import { BASE_URL, API_KEY, DonaStar } from '../constants';
+import { 
+  BASE_URL, API_KEY, DonaStar, getWeeklyVipStatus, recordDonaUsage, 
+  VipStatusInfo, recordWeeklyLogin 
+} from '../constants';
 
 interface DonaModalProps {
   isOpen: boolean;
@@ -63,6 +66,39 @@ export const DonaModal: React.FC<DonaModalProps> = ({
   const [showPlusMenu, setShowPlusMenu] = useState(false);
   const [savedConversations, setSavedConversations] = useState<SavedConversation[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string>(() => `session_${Date.now()}`);
+
+  // VIP & Quota State
+  const [vipInfo, setVipInfo] = useState<VipStatusInfo>(() => getWeeklyVipStatus());
+
+  useEffect(() => {
+    // Refresh VIP and Quota on mount / focus
+    setVipInfo(getWeeklyVipStatus());
+
+    const handleVipChange = (e: any) => {
+      if (e?.detail) setVipInfo(e.detail);
+      else setVipInfo(getWeeklyVipStatus());
+    };
+
+    const handleQuotaChange = (e: any) => {
+      if (e?.detail) {
+        setVipInfo(prev => ({
+          ...prev,
+          donaUsedToday: e.detail.used,
+          donaRemainingToday: e.detail.remaining,
+          donaDailyLimit: e.detail.limit,
+          isVip: e.detail.isVip ?? prev.isVip,
+        }));
+      }
+    };
+
+    window.addEventListener('levelmovie_vip_status_change', handleVipChange);
+    window.addEventListener('levelmovie_dona_quota_change', handleQuotaChange);
+
+    return () => {
+      window.removeEventListener('levelmovie_vip_status_change', handleVipChange);
+      window.removeEventListener('levelmovie_dona_quota_change', handleQuotaChange);
+    };
+  }, [isOpen]);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -350,6 +386,33 @@ export const DonaModal: React.FC<DonaModalProps> = ({
     const newMsgs = [...messages, userMsg];
     setMessages(newMsgs);
     setInputVal('');
+
+    // Check VIP Quota limit for standard users
+    const currentVip = getWeeklyVipStatus();
+    if (!currentVip.isVip && currentVip.donaRemainingToday <= 0) {
+      const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const limitNoticeMsg: Message = {
+        id: `dona_limit_${Date.now()}`,
+        sender: 'dona',
+        text: isFr
+          ? `🔒 **Limite quotidienne de nouveau membre atteinte** (${currentVip.donaDailyLimit}/${currentVip.donaDailyLimit} messages aujourd'hui).\n\n👑 **Passez en Statut VIP Illimité gratuitement !**\nPour débloquer **150 messages par jour** et le badge VIP exclusif, connectez-vous au moins **4 fois par semaine** sur LevelMovie.\n\n📊 Votre assiduité actuelle : **${currentVip.weeklyLoginsCount}/4 jours connectés** cette semaine.\n\n*(Votre quota standard se réinitialise automatiquement chaque nuit à 00h00).*`
+          : `🔒 **Daily standard member quota reached** (${currentVip.donaDailyLimit}/${currentVip.donaDailyLimit} messages today).\n\n👑 **Unlock Unlimited VIP Status for free!**\nTo unlock **150 messages per day** and the exclusive VIP badge, log in at least **4 times a week** to LevelMovie.\n\n📊 Your weekly progress: **${currentVip.weeklyLoginsCount}/4 days logged in** this week.\n\n*(Your free quota resets every midnight).*`,
+        time: botTime
+      };
+      const finalMsgs = [...newMsgs, limitNoticeMsg];
+      setMessages(finalMsgs);
+      persistSession(finalMsgs, currentSessionId);
+      if (showToast) {
+        showToast(
+          isFr ? `⭐ Limite atteinte. Connectez-vous 4j/semaine pour le VIP illimité !` : `⭐ Quota reached. Log in 4 days/week for VIP access!`,
+          'info'
+        );
+      }
+      return;
+    }
+
+    // Deduct Dona quota
+    recordDonaUsage();
     setIsTyping(true);
 
     try {
@@ -536,18 +599,42 @@ export const DonaModal: React.FC<DonaModalProps> = ({
       {/* ======================================================== */}
       {/* BARRE D'ACTIONS PC AVEC ÉTOILE DE DONA & LEVEL IA */}
       {/* ======================================================== */}
-      <div className="hidden md:flex h-12 px-6 lg:px-10 bg-[#07070d]/95 border-b border-white/5 items-center justify-between shrink-0 z-30 backdrop-blur-md">
+      <div className="flex h-13 px-4 sm:px-6 lg:px-10 bg-[#07070d]/95 border-b border-white/5 items-center justify-between shrink-0 z-30 backdrop-blur-md">
         
-        {/* Titre avec DonaStar */}
-        <div className="flex items-center gap-2.5">
-          <DonaStar className="w-5 h-5 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" />
-          <span className="text-[13px] font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#e9d5ff] via-[#c084fc] to-[#a855f7]">
-            Dona
-          </span>
+        {/* Titre avec DonaStar & Badge VIP */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <DonaStar className="w-5 h-5 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" />
+            <span className="text-[13px] font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#e9d5ff] via-[#c084fc] to-[#a855f7]">
+              Dona
+            </span>
+          </div>
+
+          {/* Badge VIP / Quota Statut */}
+          {vipInfo.isVip ? (
+            <div 
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-amber-500/10 border border-amber-400/40 text-amber-300 text-[10px] sm:text-[11px] font-bold shadow-[0_0_12px_rgba(251,191,36,0.15)] select-none"
+              title={isFr ? "Membre VIP Actif : 150 requêtes Dona par jour et réponses prioritaires" : "VIP Active: 150 Dona queries per day"}
+            >
+              <Crown className="w-3 h-3 text-amber-400 shrink-0 fill-amber-400/30" />
+              <span>VIP ACTIF</span>
+              <span className="text-white/40 hidden sm:inline">• {vipInfo.donaRemainingToday} restants</span>
+            </div>
+          ) : (
+            <div 
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-white/80 text-[10px] sm:text-[11px] select-none"
+              title={isFr ? `Connectez-vous 4 fois cette semaine pour débloquer le VIP illimité (Actuel : ${vipInfo.weeklyLoginsCount}/4 jours)` : `Log in 4 days this week to unlock VIP (Current: ${vipInfo.weeklyLoginsCount}/4 days)`}
+            >
+              <Zap className="w-3 h-3 text-purple-400 shrink-0" />
+              <span>{vipInfo.donaRemainingToday}/{vipInfo.donaDailyLimit} <span className="hidden sm:inline">messages</span></span>
+              <span className="text-white/30">•</span>
+              <span className="text-[#c084fc] font-bold">{vipInfo.weeklyLoginsCount}/4j VIP</span>
+            </div>
+          )}
         </div>
 
         {/* Boutons d'actions : Horloge (Historique) & Nouveau (+) */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           {/* BOUTON 1 : Historique (Horloge) */}
           <button
             type="button"
@@ -560,7 +647,7 @@ export const DonaModal: React.FC<DonaModalProps> = ({
             title={isFr ? 'Historique des conversations' : 'Chat History'}
           >
             <Clock className="w-3.5 h-3.5 text-[#c084fc]" />
-            <span>{isFr ? 'Historique' : 'History'}</span>
+            <span className="hidden sm:inline">{isFr ? 'Historique' : 'History'}</span>
             {savedConversations.length > 0 && (
               <span className="text-[9px] px-1.5 bg-[#a855f7]/40 rounded font-mono font-bold text-white">
                 {savedConversations.length}
@@ -576,7 +663,7 @@ export const DonaModal: React.FC<DonaModalProps> = ({
             title={isFr ? 'Nouvelle discussion' : 'New conversation'}
           >
             <Plus className="w-3.5 h-3.5 text-[#a855f7]" />
-            <span>{isFr ? 'Nouveau' : 'New'}</span>
+            <span className="hidden sm:inline">{isFr ? 'Nouveau' : 'New'}</span>
           </button>
         </div>
       </div>
@@ -689,11 +776,76 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                 <p className="text-lg sm:text-xl font-bold text-[#c084fc] tracking-wide mb-2">
                   {isFr ? "Comment puis-je vous aider ?" : "How can I help you today?"}
                 </p>
-                <p className="text-white/45 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+                <p className="text-white/45 text-xs sm:text-sm max-w-md mx-auto leading-relaxed mb-6">
                   {isFr 
                     ? "Je peux créer vos Watch Parties, programmer des rappels de sortie, lancer vos films ou chercher dans tout le catalogue."
                     : "I can create Watch Parties, set movie release reminders, stream titles, or search the entire catalog for you."}
                 </p>
+
+                {/* Carte Statut VIP / Assiduité */}
+                <div className={`w-full max-w-md p-3.5 rounded-2xl border transition-all text-left ${
+                  vipInfo.isVip
+                    ? 'bg-gradient-to-r from-amber-950/30 via-purple-950/20 to-black border-amber-400/30 shadow-[0_0_20px_rgba(251,191,36,0.1)]'
+                    : 'bg-white/[0.03] border-white/10 hover:border-white/20'
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {vipInfo.isVip ? (
+                        <Crown className="w-4 h-4 text-amber-400 fill-amber-400/20" />
+                      ) : (
+                        <Sparkles className="w-4 h-4 text-[#c084fc]" />
+                      )}
+                      <span className="text-xs font-black uppercase tracking-wider text-white">
+                        {vipInfo.isVip 
+                          ? (isFr ? "Statut VIP Actif 👑" : "VIP Status Active 👑")
+                          : (isFr ? "Programme Fidélité VIP" : "VIP Loyalty Program")}
+                      </span>
+                    </div>
+
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      vipInfo.isVip 
+                        ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
+                        : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                    }`}>
+                      {vipInfo.isVip ? (isFr ? "150 requêtes/jour" : "150 queries/day") : `${vipInfo.donaRemainingToday}/${vipInfo.donaDailyLimit} aujourd'hui`}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-white/60 leading-relaxed mb-2.5">
+                    {vipInfo.isVip
+                      ? (isFr 
+                          ? "Vous bénéficiez du quota étendu et des réponses prioritaires grâce à vos 4+ connexions cette semaine." 
+                          : "You enjoy extended quota and priority AI execution thanks to your 4+ weekly logins.")
+                      : (isFr 
+                          ? "Connectez-vous au moins 4 fois par semaine pour débloquer automatiquement le badge VIP et Dona en illimité !" 
+                          : "Log in at least 4 times a week to unlock the VIP badge and unlimited Dona access automatically!")}
+                  </p>
+
+                  {/* Barre d'avancement des 7 jours de la semaine */}
+                  <div className="flex items-center justify-between gap-1 pt-1">
+                    {vipInfo.weekDays.map((wd, i) => (
+                      <div 
+                        key={i} 
+                        className={`flex-1 py-1 px-0.5 rounded-lg text-center text-[9px] font-bold border transition-all ${
+                          wd.active
+                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+                            : wd.isToday
+                            ? 'bg-white/10 border-purple-500/50 text-purple-300'
+                            : 'bg-white/[0.02] border-white/5 text-white/30'
+                        }`}
+                        title={`${isFr ? wd.dayNameFr : wd.dayNameEn} : ${wd.active ? (isFr ? 'Connecté ✓' : 'Logged in ✓') : (isFr ? 'Non connecté' : 'Not logged in')}`}
+                      >
+                        <div>{isFr ? wd.dayShortFr : wd.dayShortEn}</div>
+                        <div className="text-[8px] mt-0.5">{wd.active ? '✓' : '·'}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-white/40 mt-2 font-mono">
+                    <span>{isFr ? 'Assiduité :' : 'Progress:'} {vipInfo.weeklyLoginsCount}/4 {isFr ? 'jours requis' : 'days required'}</span>
+                    <span className={vipInfo.isVip ? 'text-amber-400 font-bold' : 'text-[#c084fc]'}>{vipInfo.progressPercent}%</span>
+                  </div>
+                </div>
               </div>
             ) : (
               /* AFFICHAGE DES MESSAGES */

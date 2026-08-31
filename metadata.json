@@ -1,6 +1,6 @@
 {
   "name": "LevelMovie",
   "description": "LevelMovie — Streaming Films & Séries HD Gratuit | LevelUp Ecosystem",
-  "requestFramePermissions": ["microphone"],
+  "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import Parser from 'rss-parser';
+import { Resend } from 'resend';
 
 dotenv.config();
 
@@ -806,6 +807,102 @@ app.post('/api/report-server', (req, res) => {
     res.json({ success: true });
   }
 });
+
+// Resend OTP Email Verification Dispatcher
+app.post('/api/send-otp', async (req, res) => {
+  const { email, code, username } = req.body || {};
+  if (!email || !code) {
+    return res.status(400).json({ error: 'Email and verification code are required', success: false });
+  }
+
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!resendKey) {
+    console.log(`[OTP Engine] RESEND_API_KEY not configured. Simulation code for ${email}: ${code}`);
+    return res.json({
+      success: true,
+      simulated: true,
+      message: 'Code généré et prêt pour la vérification.'
+    });
+  }
+
+  try {
+    const resend = new Resend(resendKey);
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'LevelMovie <onboarding@resend.dev>';
+    
+    const { data, error } = await resend.emails.send({
+      from: fromEmail,
+      to: [email],
+      subject: `🎬 Ton code de confirmation LevelMovie : ${code}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { margin:0; padding:0; background-color: #07080f; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+          </style>
+        </head>
+        <body style="margin: 0; padding: 40px 15px; background-color: #07080f; color: #ffffff;">
+          <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; background: #11121d; border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 24px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.7);">
+            <!-- Header Banner -->
+            <tr>
+              <td align="center" style="padding: 35px 25px 20px 25px; background: linear-gradient(180deg, rgba(168, 85, 247, 0.15) 0%, transparent 100%);">
+                <div style="font-size: 26px; font-weight: 900; letter-spacing: 2px; color: #c084fc; text-shadow: 0 2px 10px rgba(192,132,252,0.4);">
+                  LEVELMOVIE
+                </div>
+                <div style="font-size: 11px; font-weight: bold; color: rgba(255,255,255,0.5); letter-spacing: 3px; margin-top: 4px;">
+                  LEVELUP ECOSYSTEM
+                </div>
+              </td>
+            </tr>
+            <!-- Main Content -->
+            <tr>
+              <td style="padding: 10px 35px 30px 35px; text-align: center;">
+                <h2 style="font-size: 22px; font-weight: 800; color: #ffffff; margin: 0 0 12px 0;">Vérification de sécurité</h2>
+                <p style="font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.7); margin: 0 0 25px 0;">
+                  Bonjour <strong style="color: #ffffff;">${username || 'Cinéphile'}</strong>,<br/>
+                  Utilise le code de confirmation suivant pour valider la création de ton compte sur <strong>LevelMovie</strong> :
+                </p>
+
+                <!-- Code Block -->
+                <div style="background: rgba(168, 85, 247, 0.12); border: 2px dashed #a855f7; border-radius: 16px; padding: 20px; margin: 0 auto 25px auto; max-width: 320px;">
+                  <div style="font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 36px; font-weight: 900; letter-spacing: 10px; color: #ffffff; text-shadow: 0 0 15px rgba(168, 85, 247, 0.6);">
+                    ${code}
+                  </div>
+                </div>
+
+                <p style="font-size: 12px; color: rgba(255, 255, 255, 0.45); margin: 0; line-height: 1.5;">
+                  ⏱️ Ce code est valable pendant <strong>10 minutes</strong>.<br/>
+                  Si tu n'es pas à l'origine de cette demande, ignore simplement cet e-mail.
+                </p>
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td align="center" style="padding: 20px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); font-size: 11px; color: rgba(255,255,255,0.35);">
+                © 2026 LevelUp Ecosystem &middot; Streaming Ultra HD Sécurisé
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `
+    });
+
+    if (error) {
+      console.error('[Resend Error]:', error);
+      return res.status(500).json({ error: error.message, success: false });
+    }
+
+    console.log(`[OTP Engine] Email successfully dispatched to ${email} (ID: ${data?.id})`);
+    return res.json({ success: true, id: data?.id });
+
+  } catch (err: any) {
+    console.error('[Resend Exception]:', err);
+    return res.status(500).json({ error: err.message, success: false });
+  }
+});
+
 
 // Weather search endpoint (Open-Meteo Geocoding / WeatherAPI)
 app.get('/api/weather-search', async (req, res) => {

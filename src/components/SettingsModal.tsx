@@ -6,9 +6,10 @@ import {
   ArrowUp, ArrowDown, Camera, FileText, Sparkles,
   Users, Bot, ShoppingBag, Play, RefreshCw, Key,
   Check, Volume2, Bell, Eye, EyeOff, Film, Tv, Radio,
-  Copy, Zap, HelpCircle, AlertTriangle
+  Copy, Zap, HelpCircle, AlertTriangle, Crown, Calendar
 } from 'lucide-react';
-import { isLowDataMode, setLowDataModeState } from '../constants';
+import { isLowDataMode, setLowDataModeState, getWeeklyVipStatus, VipStatusInfo } from '../constants';
+import { LevelAvatar } from './LevelAvatar';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -236,11 +237,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     ];
   });
 
-  // LevelUp Store / Code promo state
-  const [promoCode, setPromoCode] = useState('');
-  const [isVipActive, setIsVipActive] = useState(() => {
-    return localStorage.getItem('levelmovie_vip_pass') === 'true';
-  });
+  // LevelUp VIP & Loyalty state
+  const [vipInfo, setVipInfo] = useState<VipStatusInfo>(() => getWeeklyVipStatus());
+  const isVipActive = vipInfo.isVip;
+
+  useEffect(() => {
+    setVipInfo(getWeeklyVipStatus());
+    const handleVipChange = (e: any) => {
+      if (e?.detail) setVipInfo(e.detail);
+      else setVipInfo(getWeeklyVipStatus());
+    };
+    window.addEventListener('levelmovie_vip_status_change', handleVipChange);
+    return () => {
+      window.removeEventListener('levelmovie_vip_status_change', handleVipChange);
+    };
+  }, [isOpen]);
 
   // Streaming states (Servers order & fallback)
   const [autoFallback, setAutoFallback] = useState(() => {
@@ -386,19 +397,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       localStorage.removeItem('levelmovie_paused_items');
       localStorage.removeItem('levelmovie_library_parties');
       showToast(lang === 'fr' ? 'Bibliothèque entièrement vidée.' : 'Entire library cleared.', 'success');
-    }
-  };
-
-  const handleRedeemCode = () => {
-    const clean = promoCode.trim().toUpperCase();
-    if (!clean) return;
-    if (clean === 'VIP2026' || clean === 'LEVELUP' || clean === 'CINEMA' || clean === 'PROPASS') {
-      setIsVipActive(true);
-      localStorage.setItem('levelmovie_vip_pass', 'true');
-      setPromoCode('');
-      showToast(lang === 'fr' ? '🎉 Pass VIP LevelUp activé avec succès !' : '🎉 LevelUp VIP Pass activated!', 'success');
-    } else {
-      showToast(lang === 'fr' ? 'Code invalide ou expiré.' : 'Invalid or expired promo code.', 'error');
     }
   };
 
@@ -731,49 +729,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="space-y-4">
               {/* Carte Photo & Identifiant avec Copie */}
               <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-5 shadow-sm">
-                <input
-                  type="file"
-                  ref={importFileRef}
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    if (file.size > 5 * 1024 * 1024) {
-                      showToast(lang === 'fr' ? 'L\'image dépasse 5 Mo' : 'Image exceeds 5MB', 'error');
-                      return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      const res = reader.result as string;
-                      setCustomAvatar(res);
-                      localStorage.setItem('levelmovie_custom_avatar', res);
-                      localStorage.setItem('levelmovie_user_photo', res);
-                      localStorage.setItem('lm_photo', res);
-                      showToast(lang === 'fr' ? 'Photo de profil mise à jour !' : 'Profile photo updated!', 'success');
-                    };
-                    reader.readAsDataURL(file);
-                  }}
-                  className="hidden"
-                />
-
-                <div className="relative group shrink-0 self-center sm:self-auto">
-                  <div className="w-20 h-20 bg-[#151624] border-2 border-white/20 rounded-2xl overflow-hidden flex items-center justify-center shadow-md">
-                    {customAvatar || userPhoto ? (
-                      <img src={customAvatar || userPhoto || ''} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-2xl font-black text-[#c084fc]">
-                        {(userName || 'U')[0].toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <button 
-                    type="button"
-                    onClick={() => importFileRef.current?.click()}
-                    className="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    title={lang === 'fr' ? 'Importer une photo' : 'Upload a photo'}
-                  >
-                    <Camera className="w-6 h-6 text-white" />
-                  </button>
+                <div className="shrink-0 self-center sm:self-auto flex flex-col items-center gap-1.5">
+                  <LevelAvatar name={userName || 'Cinéphile'} size="xl" isVip={isVipActive} />
+                  <span className="text-[9px] font-mono text-white/40 tracking-wider">LEVEL AVATAR</span>
                 </div>
                 
                 <div className="flex-1 min-w-0">
@@ -781,9 +739,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <label className="text-[10px] text-[#a855f7] uppercase font-black tracking-widest block">
                       {lang === 'fr' ? 'Identifiant Unique' : 'Identifier (Read-only)'}
                     </label>
-                    {isVipActive && (
-                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                        <Sparkles className="w-2.5 h-2.5" /> VIP
+                    {isVipActive ? (
+                      <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-purple-500/20 text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(251,191,36,0.2)] flex items-center gap-1">
+                        <Crown className="w-3 h-3 text-amber-400 fill-amber-400/30" /> MEMBRE VIP
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-[#c084fc] bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                        {vipInfo.weeklyLoginsCount}/4j VIP
                       </span>
                     )}
                   </div>
@@ -1542,45 +1504,91 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
 
             <div className="space-y-4">
-              {/* VIP Activation Card */}
-              <div className="bg-gradient-to-r from-purple-950/40 via-purple-900/20 to-black/40 border border-purple-500/30 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3 relative overflow-hidden">
+              {/* VIP Loyalty & Weekly Activity Tracker Card */}
+              <div className="bg-gradient-to-r from-purple-950/40 via-purple-900/20 to-black/40 border border-purple-500/30 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4 relative overflow-hidden">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-white flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    <span>{lang === 'fr' ? 'Clé d’activation VIP & Accès Privilège' : 'VIP License & Privilege Access'}</span>
+                    <Crown className="w-4 h-4 text-amber-400 fill-amber-400/20" />
+                    <span>{lang === 'fr' ? 'Statut VIP & Programme de Fidélité Hebdomadaire' : 'VIP Status & Weekly Loyalty Program'}</span>
                   </span>
-                  {isVipActive ? (
-                    <span className="text-xs font-black text-amber-300 bg-amber-400/15 border border-amber-400/40 px-3 py-1 rounded-full shadow-[0_0_12px_rgba(251,191,36,0.25)] flex items-center gap-1.5">
-                      <Check className="w-3.5 h-3.5" />
-                      VIP PRO ACTIF
+                  {vipInfo.isVip ? (
+                    <span className="text-xs font-black text-amber-300 bg-amber-400/15 border border-amber-400/40 px-3 py-1 rounded-full shadow-[0_0_12px_rgba(251,191,36,0.25)] flex items-center gap-1.5 animate-pulse">
+                      <Crown className="w-3.5 h-3.5 fill-amber-400" />
+                      VIP ACTIF
                     </span>
                   ) : (
-                    <span className="text-[10px] font-mono font-semibold text-white/40 bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
-                      Standard
+                    <span className="text-xs font-bold text-[#c084fc] bg-purple-500/15 border border-purple-500/30 px-3 py-1 rounded-full flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5" />
+                      {vipInfo.weeklyLoginsCount}/4 jours VIP
                     </span>
                   )}
                 </div>
+
                 <p className="text-xs text-white/70 leading-relaxed">
                   {lang === 'fr' 
-                    ? 'Débloquez le routage haute priorité, la bande passante sans compression et la certification communautaire.' 
-                    : 'Unlock high-priority stream routing, lossless audio feeds and certified community badges.'}
+                    ? 'Plus besoin de clé d’accès ! Connectez-vous simplement au moins 4 fois par semaine pour obtenir automatiquement le Statut VIP, le badge sur votre profil et un quota d’utilisation Dona décuplé (150 requêtes/jour).' 
+                    : 'No license key required! Simply log in at least 4 times a week to automatically unlock VIP status, the profile badge, and an extended Dona AI quota (150 queries/day).'}
                 </p>
 
-                <div className="flex gap-2 pt-1">
-                  <input
-                    type="text"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    placeholder={lang === 'fr' ? 'Clé de licence (ex: VIP2026, CINEMA)' : 'License key (e.g. VIP2026, CINEMA)'}
-                    className="flex-1 bg-black/60 border border-white/20 focus:border-[#a855f7] rounded-xl text-white text-xs px-4 py-2.5 outline-none uppercase font-mono tracking-wider transition-colors shadow-inner"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRedeemCode}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#a855f7] to-[#7c3aed] hover:from-[#9333ea] hover:to-[#6d28d9] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-98 cursor-pointer shrink-0"
-                  >
-                    {lang === 'fr' ? 'Activer' : 'Redeem'}
-                  </button>
+                {/* Calendrier d'assiduité 7 jours */}
+                <div className="p-3 bg-black/50 border border-white/10 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-white/80">
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-[#c084fc]" />
+                      {lang === 'fr' ? 'Connexions de la semaine en cours' : 'This week\'s logins'}
+                    </span>
+                    <span className={vipInfo.isVip ? 'text-amber-400 font-black' : 'text-purple-300'}>
+                      {vipInfo.weeklyLoginsCount} / 4 {lang === 'fr' ? 'jours requis' : 'days needed'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1.5 pt-1">
+                    {vipInfo.weekDays.map((wd, idx) => (
+                      <div
+                        key={idx}
+                        className={`p-2 rounded-lg text-center border transition-all ${
+                          wd.active
+                            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
+                            : wd.isToday
+                            ? 'bg-[#a855f7]/20 border-[#a855f7]/60 text-purple-200'
+                            : 'bg-white/[0.02] border-white/5 text-white/30'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold">{lang === 'fr' ? wd.dayShortFr : wd.dayShortEn}</div>
+                        <div className="text-[11px] mt-1 font-black">
+                          {wd.active ? '✓' : wd.isToday ? '•' : '—'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden mt-2">
+                    <div 
+                      className={`h-full transition-all duration-500 rounded-full ${
+                        vipInfo.isVip
+                          ? 'bg-gradient-to-r from-amber-400 to-amber-300'
+                          : 'bg-gradient-to-r from-purple-500 to-[#c084fc]'
+                      }`}
+                      style={{ width: `${vipInfo.progressPercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Avantages VIP list */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/5">
+                    <Bot className="w-4 h-4 text-purple-400 shrink-0" />
+                    <span className="text-[11px] text-white/80">
+                      {lang === 'fr' ? 'Dona IA : 150 msg/j (vs 15/j standard)' : 'Dona AI: 150 msg/day (vs 15 standard)'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/5">
+                    <Crown className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span className="text-[11px] text-white/80">
+                      {lang === 'fr' ? 'Badge VIP exclusif sur votre profil' : 'Exclusive VIP badge on profile'}
+                    </span>
+                  </div>
                 </div>
               </div>
 

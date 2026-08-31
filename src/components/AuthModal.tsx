@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Mail, Key, ArrowLeft, Check, Sparkles, AlertCircle, Eye, EyeOff,
-  User, UserPlus, LogOut, ArrowRight, Star, Camera,
-  Upload, CheckCircle2, Calendar, RefreshCw, BadgeCheck, ShieldAlert
+  User, UserPlus, LogOut, LogIn, ArrowRight, Star, Camera,
+  Upload, CheckCircle2, Calendar, RefreshCw, BadgeCheck, ShieldAlert, Crown
 } from 'lucide-react';
-import { LevelMovieLogo, DEFAULT_AVATARS, AvatarPreset } from '../constants';
+import { LevelMovieLogo, DEFAULT_AVATARS, AvatarPreset, recordWeeklyLogin } from '../constants';
+import { LevelAvatar } from './LevelAvatar';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export type AuthView = 
   | 'view-main'
+  | 'view-register-choice'
   | 'view-login'
   | 'view-forgot-password'
   | 'view-forgot-password-sent'
@@ -57,7 +59,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [regFullName, setRegFullName] = useState('');
-  const [regAvatar, setRegAvatar] = useState<string>(DEFAULT_AVATARS[0].url);
+  const [regAvatar, setRegAvatar] = useState<string>(DEFAULT_AVATARS[0].id);
   const [verificationCode, setVerificationCode] = useState<string>('');
   const [generatedCode, setGeneratedCode] = useState<string>('749215');
   const [codeSentTimer, setCodeSentTimer] = useState<number>(60);
@@ -67,7 +69,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [onboardUsername, setOnboardUsername] = useState('');
   const [onboardAge, setOnboardAge] = useState<string>('18');
   const [onboardFullName, setOnboardFullName] = useState('');
-  const [onboardAvatar, setOnboardAvatar] = useState<string>(DEFAULT_AVATARS[0].url);
+  const [onboardAvatar, setOnboardAvatar] = useState<string>(DEFAULT_AVATARS[0].id);
 
   // UI & Loading states
   const [loading, setLoading] = useState(false);
@@ -88,7 +90,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const url = new URL(window.location.href);
       if (view === 'view-login') {
         url.searchParams.set('auth', 'login');
-      } else if (view === 'view-register-credentials') {
+      } else if (view === 'view-register-choice' || view === 'view-register-credentials') {
         url.searchParams.set('auth', 'register');
       } else if (view === 'view-forgot-password' || view === 'view-forgot-password-sent') {
         url.searchParams.set('auth', 'forgot-password');
@@ -271,7 +273,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           setOnboardFullName('Cinéphile');
           setOnboardUsername('cine_vip');
           setOnboardAge('18');
-          setOnboardAvatar(DEFAULT_AVATARS[0].url);
+          setOnboardAvatar(DEFAULT_AVATARS[0].id);
           setOnboardStep(1);
           navigateToView('view-onboarding');
         }, 400);
@@ -305,7 +307,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         if (data.user) {
           const userMeta = data.user.user_metadata || {};
           const displayName = userMeta.full_name || userMeta.first_name || data.user.email?.split('@')[0] || 'Cinéphile';
-          const displayPhoto = userMeta.avatar_url || DEFAULT_AVATARS[0].url;
+          const displayPhoto = userMeta.avatar_url || DEFAULT_AVATARS[0].id;
           const displayHandle = userMeta.username || data.user.email?.split('@')[0] || 'user';
           const age = userMeta.age ? parseInt(userMeta.age, 10) : 18;
           const uid = data.user.id;
@@ -320,9 +322,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           localStorage.setItem('levelmovie_user_uid', uid);
           localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
 
+          // Record weekly activity for VIP loyalty
+          const vip = recordWeeklyLogin();
+
           setLoading(false);
           onLoginSuccess(data.user, displayName, data.user.email || '', displayPhoto, displayHandle, age);
-          showToast(isFr ? `Ravi de vous revoir, ${displayName} !` : `Welcome back, ${displayName}!`, 'success');
+          if (vip.isVipNow || vip.info.isVip) {
+            showToast(isFr ? `👑 Bienvenue, ${displayName} ! Statut VIP Actif (${vip.info.weeklyLoginsCount}/4j)` : `👑 Welcome back, ${displayName}! VIP Active (${vip.info.weeklyLoginsCount}/4d)`, 'success');
+          } else {
+            showToast(isFr ? `Ravi de vous revoir, ${displayName} ! (${vip.info.weeklyLoginsCount}/4j connectés cette semaine)` : `Welcome back, ${displayName}! (${vip.info.weeklyLoginsCount}/4 days logged in this week)`, 'success');
+          }
           handleClose();
         }
       } else {
@@ -336,17 +345,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           localStorage.setItem('levelmovie_user_name', name);
           localStorage.setItem('levelmovie_user_email', loginEmail.trim());
           localStorage.setItem('levelmovie_user_handle', handle);
-          localStorage.setItem('levelmovie_user_photo', DEFAULT_AVATARS[0].url);
-          localStorage.setItem('lm_photo', DEFAULT_AVATARS[0].url);
+          localStorage.setItem('levelmovie_user_photo', DEFAULT_AVATARS[0].id);
+          localStorage.setItem('lm_photo', DEFAULT_AVATARS[0].id);
           localStorage.setItem('levelmovie_user_age', String(age));
           localStorage.setItem('levelmovie_user_uid', uid);
           localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
           
-          onLoginSuccess({ id: uid, email: loginEmail.trim() }, name, loginEmail.trim(), DEFAULT_AVATARS[0].url, handle, age);
-          showToast(isFr ? `Connexion réussie !` : `Signed in successfully!`, 'success');
+          // Record weekly activity for VIP loyalty
+          const vip = recordWeeklyLogin();
+
+          onLoginSuccess({ id: uid, email: loginEmail.trim() }, name, loginEmail.trim(), DEFAULT_AVATARS[0].id, handle, age);
+          if (vip.isVipNow || vip.info.isVip) {
+            showToast(isFr ? `👑 Connexion réussie ! Statut VIP Actif (${vip.info.weeklyLoginsCount}/4j)` : `👑 Signed in! VIP Active (${vip.info.weeklyLoginsCount}/4d)`, 'success');
+          } else {
+            showToast(isFr ? `Connexion réussie ! (${vip.info.weeklyLoginsCount}/4j connectés cette semaine)` : `Signed in successfully! (${vip.info.weeklyLoginsCount}/4 days this week)`, 'success');
+          }
           handleClose();
         }, 300);
       }
+
     } catch (err: any) {
       setLoading(false);
       setErrorMsg(err.message || (isFr ? 'Identifiants incorrects.' : 'Invalid credentials.'));
@@ -402,7 +419,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setRegStep(4);
   };
 
-  // Étape 4: Profil (Nom & Avatar) -> Envoie vers validation
+  // Dispatch verification email via Resend API
+  const sendOtpEmail = async (codeToSend: string) => {
+    try {
+      const targetEmail = regEmail.trim();
+      const name = regFullName.trim() || regUsername.trim() || 'Cinéphile';
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: targetEmail,
+          code: codeToSend,
+          username: name
+        })
+      });
+      const data = await res.json();
+      if (!data.success && data.error) {
+        console.warn('[OTP Notice]:', data.error);
+      }
+    } catch (err) {
+      console.warn('[OTP Notice]: Network warning', err);
+    }
+  };
+
+  // Étape 4: Profil (Nom & Avatar) -> Envoie le code par Resend vers validation
   const handleRegStep4 = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -416,6 +456,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setGeneratedCode(generated);
     setVerificationCode('');
     setCodeSentTimer(60);
+    sendOtpEmail(generated);
+    showToast(isFr ? `Code de vérification envoyé à ${regEmail.trim()}` : `Verification code dispatched to ${regEmail.trim()}`, 'info');
     setRegStep(5);
   };
 
@@ -424,12 +466,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     setErrorMsg('');
     const codeEntered = verificationCode.trim();
-    if (!codeEntered) {
-      setErrorMsg(isFr ? 'Entrez le code à 6 chiffres.' : 'Enter the 6-digit code.');
+    if (!codeEntered || codeEntered.length !== 6) {
+      setErrorMsg(isFr ? 'Veuillez saisir les 6 chiffres du code.' : 'Please enter all 6 digits of the code.');
       return;
     }
-    if (codeEntered !== generatedCode && codeEntered.length < 4) {
-      setErrorMsg(isFr ? 'Code invalide.' : 'Invalid code.');
+    if (codeEntered !== generatedCode) {
+      setErrorMsg(isFr ? 'Code de confirmation incorrect.' : 'Incorrect confirmation code.');
       return;
     }
     handleFinalizeRegistration();
@@ -439,8 +481,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const generated = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedCode(generated);
     setCodeSentTimer(60);
-    showToast(isFr ? `Nouveau code envoyé` : `New code dispatched`, 'info');
+    sendOtpEmail(generated);
+    showToast(isFr ? `Nouveau code envoyé à ${regEmail.trim()}` : `New code dispatched to ${regEmail.trim()}`, 'info');
   };
+
 
   // Final Registration Persistence
   const handleFinalizeRegistration = async () => {
@@ -482,6 +526,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         localStorage.setItem('levelmovie_user_uid', uid);
         localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
 
+        // Record weekly activity
+        recordWeeklyLogin();
+
         setLoading(false);
         onLoginSuccess(
           data.user || { id: uid, email: regEmail.trim() },
@@ -506,6 +553,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           localStorage.setItem('levelmovie_user_age', String(ageNum));
           localStorage.setItem('levelmovie_user_uid', uid);
           localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
+
+          // Record weekly activity
+          recordWeeklyLogin();
 
           onLoginSuccess(
             { id: uid, email: regEmail.trim() },
@@ -610,6 +660,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       localStorage.setItem('levelmovie_user_age', String(ageNum));
       localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
 
+      // Record weekly activity
+      recordWeeklyLogin();
+
       setLoading(false);
       onLoginSuccess(
         onboardingUser || { id: uid, email: 'google_user' },
@@ -632,6 +685,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setErrorMsg('');
     if (currentView === 'view-main') {
       handleClose();
+    } else if (currentView === 'view-register-choice') {
+      navigateToView('view-main');
     } else if (currentView === 'view-login') {
       navigateToView('view-main');
     } else if (currentView === 'view-forgot-password' || currentView === 'view-forgot-password-sent') {
@@ -640,7 +695,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       if (regStep > 1) {
         setRegStep((prev) => (prev - 1) as any);
       } else {
-        navigateToView('view-main');
+        navigateToView('view-register-choice');
       }
     } else if (currentView === 'view-onboarding') {
       if (onboardStep > 1) {
@@ -677,7 +732,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           
           <div className="w-full relative">
             
-            {/* VUE 1 : CHOIX PRINCIPAL */}
+            {/* VUE 1 : ACCUEIL - EXACTEMENT 3 BOUTONS */}
             {currentView === 'view-main' && (
               <div className="animate-in fade-in duration-150">
                 
@@ -692,7 +747,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <p className="text-white/60 text-xs sm:text-sm px-2 leading-relaxed">
                     {isFr 
                       ? 'Accédez à votre espace cinéma, salons Watch Party et favoris.' 
-                      : 'Access cinema streaming, synchronized rooms, and watchlists.'}
+                       : 'Access cinema streaming, synchronized rooms, and watchlists.'}
                   </p>
                 </div>
 
@@ -703,46 +758,61 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </div>
                 )}
 
-                {/* Boutons d'accès directs */}
+                {/* 3 BOUTONS PRO ACCUEIL */}
                 <div className="space-y-3">
                   
-                  {/* Google */}
+                  {/* BOUTON 1: JE SUIS NOUVEAU - CRÉER UN COMPTE */}
                   <button
                     type="button"
-                    onClick={handleGoogleAuth}
-                    disabled={loading}
-                    className="w-full flex items-center justify-center px-4 py-3.5 bg-white hover:bg-gray-100 text-gray-900 rounded-xl font-bold transition-all shadow-md cursor-pointer active:scale-95 text-xs sm:text-sm"
+                    onClick={() => navigateToView('view-register-choice')}
+                    className="w-full group flex items-center justify-between p-3.5 sm:p-4 bg-[#7e22ce] hover:bg-[#6b21a8] text-white rounded-xl font-bold transition-all border border-[#a855f7]/50 shadow-md cursor-pointer active:scale-[0.99]"
                   >
-                    <svg className="h-4 w-4 mr-3 shrink-0" viewBox="0 0 24 24">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                    <span>{isFr ? 'Continuer avec Google' : 'Continue with Google'}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-black/25 flex items-center justify-center text-white shrink-0">
+                        <UserPlus className="w-4 h-4" />
+                      </div>
+                      <div className="text-left">
+                        <span className="block text-sm font-bold text-white tracking-tight">
+                          {isFr ? 'Je suis nouveau' : "I'm new here"}
+                        </span>
+                        <span className="block text-[11px] text-white/70 font-normal">
+                          {isFr ? 'Créer un compte' : 'Create an account'}
+                        </span>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-white/70 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
                   </button>
 
-                  {/* Se connecter avec Email */}
+                  {/* BOUTON 2: J'AI DÉJÀ UN COMPTE - CONNEXION */}
                   <button
                     type="button"
                     onClick={() => navigateToView('view-login')}
-                    className="w-full flex items-center justify-center px-4 py-3.5 bg-[#161622] hover:bg-[#202030] text-white rounded-xl font-bold transition-all border border-[#2a2a3c] shadow-sm cursor-pointer active:scale-95 text-xs sm:text-sm"
+                    className="w-full group flex items-center justify-between p-3.5 sm:p-4 bg-[#14141e] hover:bg-[#1a1a28] text-white rounded-xl font-bold transition-all border border-[#2a2a3c] hover:border-[#a855f7]/50 shadow-sm cursor-pointer active:scale-[0.99]"
                   >
-                    <Mail className="w-4 h-4 mr-3 text-[#a855f7]" />
-                    <span>{isFr ? "Se connecter avec l'e-mail" : 'Sign in with email'}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-[#1e1430] border border-[#a855f7]/30 flex items-center justify-center text-[#c084fc] shrink-0">
+                        <LogIn className="w-4 h-4" />
+                      </div>
+                      <div className="text-left">
+                        <span className="block text-sm font-bold text-white tracking-tight">
+                          {isFr ? "J'ai déjà un compte" : 'I already have an account'}
+                        </span>
+                        <span className="block text-[11px] text-white/50 font-normal">
+                          {isFr ? 'Se connecter' : 'Sign in'}
+                        </span>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-[#c084fc] group-hover:translate-x-0.5 transition-all shrink-0" />
                   </button>
 
-                  {/* Créer un compte */}
+                  {/* BOUTON 3: SORTIR */}
                   <button
                     type="button"
-                    onClick={() => { 
-                      setRegStep(1);
-                      navigateToView('view-register-credentials'); 
-                    }}
-                    className="w-full flex items-center justify-center px-4 py-3.5 bg-[#1c122c] hover:bg-[#27183e] text-[#d8b4fe] hover:text-white rounded-xl font-bold transition-all border border-[#a855f7]/50 shadow-sm cursor-pointer active:scale-95 text-xs sm:text-sm"
+                    onClick={handleClose}
+                    className="w-full flex items-center justify-center gap-2 p-3 bg-[#0d0d14] hover:bg-[#14141e] text-white/60 hover:text-white rounded-xl font-medium transition-all border border-white/10 hover:border-white/20 cursor-pointer active:scale-[0.99] text-xs"
                   >
-                    <UserPlus className="w-4 h-4 mr-3 text-[#c084fc]" />
-                    <span>{isFr ? 'Créer un compte' : 'Create an account'}</span>
+                    <LogOut className="w-3.5 h-3.5 text-white/40" />
+                    <span>{isFr ? 'Sortir' : 'Exit'}</span>
                   </button>
 
                 </div>
@@ -750,28 +820,156 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             )}
 
-            {/* VUE 2 : CONNEXION */}
-            {currentView === 'view-login' && (
+            {/* VUE 1.5 : CHOIX DU MOYEN DE CRÉATION DE COMPTE */}
+            {currentView === 'view-register-choice' && (
               <div className="animate-in fade-in duration-150">
+                
+                {/* En-tête */}
                 <div className="text-center mb-6">
-                  <h2 className="text-2xl font-black text-white">
-                    {isFr ? 'Connexion' : 'Sign In'}
+                  <div className="w-10 h-10 rounded-xl bg-[#1e1430] border border-[#a855f7]/40 flex items-center justify-center mx-auto mb-2.5 text-[#c084fc]">
+                    <UserPlus className="w-5 h-5" />
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    {isFr ? 'Créer un compte' : 'Create Account'}
                   </h2>
-                  <p className="text-xs text-white/50 mt-1">
-                    {isFr ? 'Entrez vos identifiants pour continuer' : 'Enter your credentials to continue'}
+                  <p className="text-xs text-white/60 mt-1 max-w-xs mx-auto">
+                    {isFr 
+                      ? 'Choisissez votre méthode d’inscription :' 
+                      : 'Choose your preferred signup method:'}
                   </p>
                 </div>
 
                 {errorMsg && (
-                  <div className="mb-4 p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2">
+                  <div className="mb-4 p-3 rounded-lg bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                     <span>{errorMsg}</span>
                   </div>
                 )}
 
-                <form onSubmit={handleLoginSubmit} className="space-y-4">
+                <div className="space-y-3">
+                  
+                  {/* OPTION 1 : GOOGLE (PRO SANS BULLE) */}
+                  <button
+                    type="button"
+                    onClick={handleGoogleAuth}
+                    disabled={loading}
+                    className="w-full group flex items-center justify-between p-3.5 bg-white hover:bg-neutral-100 text-neutral-900 rounded-xl font-bold transition-all border border-white shadow-sm cursor-pointer active:scale-[0.99]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-neutral-50 flex items-center justify-center shrink-0 border border-neutral-200">
+                        <svg className="h-4 w-4" viewBox="0 0 24 24">
+                          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <span className="block text-xs sm:text-sm font-bold text-neutral-900 tracking-tight">
+                          {isFr ? 'Continuer avec Google' : 'Continue with Google'}
+                        </span>
+                        <span className="block text-[11px] text-neutral-500 font-normal">
+                          {isFr ? 'Direct • Sans code de validation' : 'Instant • No email code required'}
+                        </span>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-neutral-900 group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </button>
+
+                  {/* OPTION 2 : ADRESSE E-MAIL / GMAIL CLASSIQUE */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRegStep(1);
+                      navigateToView('view-register-credentials');
+                    }}
+                    className="w-full group flex items-center justify-between p-3.5 bg-[#14141e] hover:bg-[#1a1a28] text-white rounded-xl font-bold transition-all border border-[#2a2a3c] hover:border-[#a855f7]/60 shadow-sm cursor-pointer active:scale-[0.99]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#1e1430] border border-[#a855f7]/40 flex items-center justify-center text-[#c084fc] shrink-0">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <div className="text-left">
+                        <span className="block text-xs sm:text-sm font-bold text-white tracking-tight">
+                          {isFr ? 'Inscription par E-mail / Gmail' : 'Sign up with Email / Gmail'}
+                        </span>
+                        <span className="block text-[11px] text-white/50 font-normal">
+                          {isFr ? 'Création de mot de passe & code de sécurité' : 'Password setup & security verification'}
+                        </span>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-[#c084fc] group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </button>
+
+                </div>
+
+                {/* Lien connexion */}
+                <div className="mt-5 text-center">
+                  <button
+                    type="button"
+                    onClick={() => navigateToView('view-login')}
+                    className="text-xs text-white/60 hover:text-white transition-colors cursor-pointer"
+                  >
+                    {isFr ? (
+                      <>Vous avez déjà un compte ? <span className="text-[#c084fc] font-bold">Se connecter</span></>
+                    ) : (
+                      <>Already have an account? <span className="text-[#c084fc] font-bold">Sign in</span></>
+                    )}
+                  </button>
+                </div>
+
+              </div>
+            )}
+
+            {/* VUE 2 : CONNEXION (2 SYSTÈMES : GOOGLE OU EMAIL) */}
+            {currentView === 'view-login' && (
+              <div className="animate-in fade-in duration-150">
+                <div className="text-center mb-6">
+                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    {isFr ? 'Connexion' : 'Sign In'}
+                  </h2>
+                  <p className="text-xs text-white/50 mt-1">
+                    {isFr ? 'Identifiez-vous pour accéder à vos contenus :' : 'Sign in to access your contents:'}
+                  </p>
+                </div>
+
+                {errorMsg && (
+                  <div className="mb-4 p-3 rounded-lg bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
+
+                {/* SYSTÈME 1 : GOOGLE PRO SANS BULLE */}
+                <div className="mb-4">
+                  <button
+                    type="button"
+                    onClick={handleGoogleAuth}
+                    disabled={loading}
+                    className="w-full flex items-center justify-center px-4 py-3 bg-white hover:bg-neutral-100 text-neutral-900 rounded-xl font-bold transition-all border border-white shadow-sm cursor-pointer active:scale-[0.99] text-xs sm:text-sm"
+                  >
+                    <svg className="h-4 w-4 mr-2.5 shrink-0" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    <span>{isFr ? 'Continuer avec Google' : 'Continue with Google'}</span>
+                  </button>
+                </div>
+
+                {/* SÉPARATEUR */}
+                <div className="relative my-4 flex items-center justify-center">
+                  <div className="w-full border-t border-white/10" />
+                  <span className="absolute px-3 bg-[#0c0c12] text-[10px] font-bold uppercase tracking-wider text-white/40">
+                    {isFr ? 'ou avec identifiants e-mail' : 'or with email credentials'}
+                  </span>
+                </div>
+
+                {/* SYSTÈME 2 : FORMULAIRE E-MAIL */}
+                <form onSubmit={handleLoginSubmit} className="space-y-3.5">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-white/70 mb-1.5">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1">
                       {isFr ? 'E-mail' : 'Email'}
                     </label>
                     <input
@@ -786,8 +984,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </div>
 
                   <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-white/70">
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70">
                         {isFr ? 'Mot de passe' : 'Password'}
                       </label>
                       <button
@@ -833,16 +1031,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div className="mt-5 text-center">
                   <button
                     type="button"
-                    onClick={() => { 
-                      setRegStep(1);
-                      navigateToView('view-register-credentials'); 
-                    }}
+                    onClick={() => navigateToView('view-register-choice')}
                     className="text-xs text-white/60 hover:text-white transition-colors cursor-pointer"
                   >
                     {isFr ? (
-                      <>Pas de compte ? <span className="text-[#c084fc] font-bold">Créer un compte</span></>
+                      <>Nouveau sur LevelMovie ? <span className="text-[#c084fc] font-bold">Créer un compte</span></>
                     ) : (
-                      <>No account? <span className="text-[#c084fc] font-bold">Create one</span></>
+                      <>New to LevelMovie? <span className="text-[#c084fc] font-bold">Create account</span></>
                     )}
                   </button>
                 </div>
@@ -1170,7 +1365,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </form>
                 )}
 
-                {/* ÉTAPE 4 : PROFIL & AVATAR */}
+                {/* ÉTAPE 4 : PROFIL & AVATAR EMOJI NETFLIX */}
                 {regStep === 4 && (
                   <form onSubmit={handleRegStep4} className="space-y-4">
                     <div>
@@ -1192,52 +1387,62 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     </div>
 
                     <div>
-                      <div className="mb-2">
+                      <div className="flex justify-between items-center mb-2">
                         <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70">
-                          {isFr ? 'Photo de profil' : 'Profile Picture'}
+                          {isFr ? 'Choisis ton avatar cinéma' : 'Choose your avatar'}
                         </label>
+                        <span className="text-[10px] text-[#c084fc] font-bold">
+                          {DEFAULT_AVATARS.find(a => a.id === regAvatar)?.name || (isFr ? 'Personnalisé' : 'Custom')}
+                        </span>
                       </div>
 
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={(e) => handleCustomImageUpload(e, 'reg')}
-                        accept="image/*"
-                        className="hidden"
-                      />
-
-                      {/* Zone d'importation de photo personnelle */}
-                      <div 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-[#14141e] border-2 border-dashed border-[#2a2a3c] hover:border-[#a855f7] transition-all cursor-pointer group shadow-inner"
-                      >
-                        {regAvatar ? (
-                          <div className="relative">
-                            <img 
-                              src={regAvatar} 
-                              alt="Avatar" 
-                              className="w-20 h-20 rounded-full object-cover border-2 border-[#a855f7] shadow-lg group-hover:scale-105 transition-transform" 
-                            />
-                            <div className="absolute -bottom-1 -right-1 p-1.5 bg-[#a855f7] text-white rounded-full shadow-md">
-                              <Camera className="w-3.5 h-3.5" />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/50 group-hover:text-[#c084fc] group-hover:border-[#a855f7]/50 transition-colors">
-                            <Upload className="w-6 h-6" />
-                          </div>
-                        )}
-                        
-                        <div className="text-center">
-                          <span className="text-xs font-bold text-white group-hover:text-[#c084fc] transition-colors block">
-                            {regAvatar 
-                              ? (isFr ? 'Cliquez pour remplacer votre photo' : 'Click to change photo')
-                              : (isFr ? 'Importer une photo depuis votre appareil' : 'Upload photo from device')}
+                      {/* Aperçu du profil sélectionné */}
+                      <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-[#14141e] border border-[#2a2a3c] shadow-inner mb-3">
+                        <LevelAvatar 
+                          avatar={regAvatar} 
+                          name={regFullName || regUsername || 'Cinéphile'} 
+                          size="lg" 
+                        />
+                        <div className="min-w-0 flex-1">
+                          <span className="text-sm font-black text-white block truncate">
+                            {regFullName || regUsername || 'Cinéphile'}
                           </span>
-                          <span className="text-[10px] text-white/40 mt-0.5 block">
-                            {isFr ? 'Formats PNG, JPG ou WEBP (max 5 Mo)' : 'PNG, JPG, or WEBP (up to 5MB)'}
+                          <span className="text-xs text-[#d8b4fe] font-mono">
+                            @{regUsername || 'cinephile'}
                           </span>
                         </div>
+                      </div>
+
+                      {/* Grille Avatars SVG Pro */}
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 max-h-[190px] overflow-y-auto p-1 custom-scrollbar">
+                        {DEFAULT_AVATARS.map((item) => {
+                          const isSelected = regAvatar === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setRegAvatar(item.id)}
+                              className={`relative group flex flex-col items-center justify-center p-2 rounded-xl border transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-[#22163b] border-[#a855f7] shadow-[0_0_12px_rgba(168,85,247,0.35)] scale-105'
+                                  : 'bg-[#14141e] border-[#222232] hover:border-white/30 hover:bg-[#1a1a28]'
+                              }`}
+                              title={item.name}
+                            >
+                              <div className="transform transition-transform group-hover:scale-110">
+                                <LevelAvatar avatar={item.id} name={item.name} size="md" />
+                              </div>
+                              <span className="text-[9px] font-bold text-white/80 mt-1.5 truncate max-w-full text-center">
+                                {item.name}
+                              </span>
+                              {isSelected && (
+                                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#a855f7] text-white flex items-center justify-center text-[9px] font-black shadow-sm">
+                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -1251,7 +1456,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </form>
                 )}
 
-                {/* ÉTAPE 5 : VALIDATION & CODE */}
+                {/* ÉTAPE 5 : VALIDATION & CODE VIA RESEND */}
                 {regStep === 5 && (
                   <form onSubmit={handleRegStep5Submit} className="space-y-4">
                     
@@ -1275,71 +1480,119 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       </button>
                     </div>
 
-                    {/* Champ Code */}
+                    {/* Champ Code 6 chiffres avec 6 cases distinctes */}
                     <div>
-                      <div className="flex justify-between items-center mb-1.5">
+                      <div className="flex justify-between items-center mb-2">
                         <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70">
-                          {isFr ? 'Code de confirmation' : '6-Digit Code'}
+                          {isFr ? 'Code de confirmation (6 chiffres)' : 'Confirmation Code (6 digits)'}
                         </label>
                         <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
                           <BadgeCheck className="w-3 h-3" />
-                          <span>{isFr ? 'Sécurisé' : 'Secure'}</span>
+                          <span>{isFr ? 'E-mail Sécurisé' : 'Secure Email'}</span>
                         </span>
                       </div>
 
-                      <input
-                        type="text"
-                        value={verificationCode}
-                        onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
-                        className="w-full px-4 py-3.5 rounded-xl text-center tracking-[0.5em] font-mono text-lg font-black bg-[#14141e] border-2 border-[#a855f7]/60 text-white placeholder-white/20 focus:border-[#c084fc] outline-none"
-                        placeholder="••••••"
-                        maxLength={6}
-                        autoFocus
-                        required
-                      />
+                      {/* 6 Discrete Input Boxes */}
+                      <div className="grid grid-cols-6 gap-2 sm:gap-2.5">
+                        {[0, 1, 2, 3, 4, 5].map((index) => {
+                          const digit = verificationCode[index] || '';
+                          return (
+                            <input
+                              key={index}
+                              id={`otp-input-${index}`}
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={1}
+                              value={digit}
+                              autoFocus={index === 0}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                if (!val) {
+                                  const arr = verificationCode.split('');
+                                  arr[index] = '';
+                                  setVerificationCode(arr.join(''));
+                                  return;
+                                }
+                                const char = val.charAt(val.length - 1);
+                                const arr = (verificationCode.padEnd(6, ' ')).split('');
+                                arr[index] = char;
+                                const newCode = arr.join('').trimEnd();
+                                setVerificationCode(newCode.slice(0, 6));
 
-                      {/* Chip 1-clic pour le code */}
-                      <div className="mt-2.5 p-2 rounded-xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between text-[11px] text-[#d8b4fe]">
-                        <span>{isFr ? `Code :` : `Code:`} <strong className="font-mono text-white">{generatedCode}</strong></span>
-                        <button
-                          type="button"
-                          onClick={() => setVerificationCode(generatedCode)}
-                          className="px-2 py-0.5 rounded-md bg-[#a855f7] hover:bg-[#9333ea] text-white font-bold text-[10px] transition-colors cursor-pointer"
-                        >
-                          {isFr ? 'Insérer 1-clic' : '1-click fill'}
-                        </button>
+                                if (index < 5) {
+                                  const nextInput = document.getElementById(`otp-input-${index + 1}`) as HTMLInputElement | null;
+                                  nextInput?.focus();
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Backspace') {
+                                  if (!verificationCode[index] && index > 0) {
+                                    const prevInput = document.getElementById(`otp-input-${index - 1}`) as HTMLInputElement | null;
+                                    prevInput?.focus();
+                                  }
+                                } else if (e.key === 'ArrowLeft' && index > 0) {
+                                  const prevInput = document.getElementById(`otp-input-${index - 1}`) as HTMLInputElement | null;
+                                  prevInput?.focus();
+                                } else if (e.key === 'ArrowRight' && index < 5) {
+                                  const nextInput = document.getElementById(`otp-input-${index + 1}`) as HTMLInputElement | null;
+                                  nextInput?.focus();
+                                }
+                              }}
+                              onPaste={(e) => {
+                                e.preventDefault();
+                                const pasted = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+                                if (pasted) {
+                                  setVerificationCode(pasted);
+                                  const lastIndex = Math.min(pasted.length, 5);
+                                  const targetInput = document.getElementById(`otp-input-${lastIndex}`) as HTMLInputElement | null;
+                                  targetInput?.focus();
+                                }
+                              }}
+                              className={`w-full aspect-square text-center font-mono text-lg sm:text-xl font-black rounded-xl border-2 transition-all outline-none ${
+                                digit
+                                  ? 'bg-[#1e1b38] border-[#c084fc] text-white shadow-[0_0_12px_rgba(168,85,247,0.3)]'
+                                  : 'bg-[#14141e] border-white/10 text-white/40 focus:border-[#a855f7]/80 focus:bg-white/[0.04]'
+                              }`}
+                            />
+                          );
+                        })}
                       </div>
+
+                      <p className="text-[11px] text-white/40 text-center mt-2.5">
+                        {isFr ? 'Vérifie ta boîte de réception ou tes spams.' : 'Check your inbox or spam folder.'}
+                      </p>
                     </div>
 
                     {/* Renvoi de code */}
-                    <div className="text-center">
+                    <div className="text-center pt-1">
                       {codeSentTimer > 0 ? (
                         <p className="text-[11px] text-white/40 font-mono">
-                          {isFr ? `Renvoyer dans ${codeSentTimer}s` : `Resend in ${codeSentTimer}s`}
+                          {isFr ? `Renvoyer le code dans ${codeSentTimer}s` : `Resend code in ${codeSentTimer}s`}
                         </p>
                       ) : (
                         <button
                           type="button"
                           onClick={handleResendCode}
-                          className="text-[11px] text-[#c084fc] hover:text-white font-bold inline-flex items-center gap-1.5 cursor-pointer underline underline-offset-4"
+                          className="text-xs text-[#c084fc] hover:text-white font-bold cursor-pointer transition-colors inline-flex items-center gap-1.5"
                         >
-                          <RefreshCw className="w-3 h-3" />
-                          <span>{isFr ? 'Renvoyer un nouveau code' : 'Resend code'}</span>
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>{isFr ? 'Renvoyer un nouveau code' : 'Resend new code'}</span>
                         </button>
                       )}
                     </div>
 
                     <button
                       type="submit"
-                      disabled={loading || verificationCode.length < 4}
-                      className="w-full py-3.5 mt-2 bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-md"
+                      disabled={loading || verificationCode.length !== 6}
+                      className="w-full py-4 mt-2 bg-[#a855f7] hover:bg-[#9333ea] disabled:opacity-40 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-md flex items-center justify-center gap-2"
                     >
                       {loading ? (
                         <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
                       ) : (
                         <>
                           <CheckCircle2 className="w-4 h-4" />
-                          <span>{isFr ? 'Finaliser l’inscription' : 'Finalize Account'}</span>
+                          <span>{isFr ? 'Valider et créer mon compte' : 'Confirm & Create Account'}</span>
                         </>
                       )}
                     </button>
@@ -1456,30 +1709,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 {/* Onboard 3: Profil & Finalisation */}
                 {onboardStep === 3 && (
                   <form onSubmit={handleOnboardingSubmit} className="space-y-4">
-                    <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-[#14141e] border border-[#2a2a3c] shadow-inner">
-                      <img 
-                        src={onboardAvatar} 
-                        alt="Avatar" 
-                        className="w-12 h-12 rounded-full object-cover border-2 border-[#a855f7]"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <input
-                          type="file"
-                          ref={onboardFileInputRef}
-                          onChange={(e) => handleCustomImageUpload(e, 'onboard')}
-                          accept="image/*"
-                          className="hidden"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => onboardFileInputRef.current?.click()}
-                          className="text-xs text-[#c084fc] hover:text-white font-bold underline cursor-pointer"
-                        >
-                          {isFr ? 'Changer la photo' : 'Change photo'}
-                        </button>
-                      </div>
-                    </div>
-
                     <div>
                       <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1">
                         {isFr ? 'Nom d’affichage' : 'Display Name'}
@@ -1488,10 +1717,70 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         type="text"
                         value={onboardFullName}
                         onChange={(e) => setOnboardFullName(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] outline-none shadow-inner"
+                        className="w-full px-4 py-3 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] outline-none shadow-inner"
                         placeholder="Grace Bonte"
                         required
                       />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70">
+                          {isFr ? 'Choisis ton avatar profil' : 'Choose your avatar'}
+                        </label>
+                        <span className="text-[10px] text-[#c084fc] font-bold">
+                          {DEFAULT_AVATARS.find(a => a.id === onboardAvatar)?.name || (isFr ? 'Profil Cinéma' : 'Movie Profile')}
+                        </span>
+                      </div>
+
+                      {/* Aperçu du profil sélectionné */}
+                      <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-[#14141e] border border-[#2a2a3c] shadow-inner mb-3">
+                        <LevelAvatar 
+                          avatar={onboardAvatar} 
+                          name={onboardFullName || onboardUsername || 'Cinéphile'} 
+                          size="lg" 
+                        />
+                        <div className="min-w-0 flex-1">
+                          <span className="text-sm font-black text-white block truncate">
+                            {onboardFullName || onboardUsername || 'Cinéphile'}
+                          </span>
+                          <span className="text-xs text-[#d8b4fe] font-mono">
+                            @{onboardUsername || 'cinephile'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Grille Avatars SVG Pro */}
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 max-h-[180px] overflow-y-auto p-1 custom-scrollbar">
+                        {DEFAULT_AVATARS.map((item) => {
+                          const isSelected = onboardAvatar === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setOnboardAvatar(item.id)}
+                              className={`group relative flex flex-col items-center justify-center p-2 rounded-xl border transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-[#2b1842] border-[#a855f7] ring-1 ring-[#a855f7]/60 shadow-[0_0_12px_rgba(168,85,247,0.35)] scale-105'
+                                  : 'bg-[#12121c] border-[#222232] hover:border-white/30 hover:bg-[#1a1a28]'
+                              }`}
+                              title={item.name}
+                            >
+                              <div className="transform transition-transform group-hover:scale-110">
+                                <LevelAvatar avatar={item.id} name={item.name} size="md" />
+                              </div>
+                              <span className="text-[9px] font-bold text-white/70 mt-1.5 truncate max-w-full text-center">
+                                {item.name}
+                              </span>
+                              {isSelected && (
+                                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#a855f7] flex items-center justify-center text-white text-[9px] shadow-sm">
+                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     <button
@@ -1516,8 +1805,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* ======================================================== */}
           {/* BOUTON RETOUR INTELLIGENT UNIQUE EN BAS                   */}
           {/* ======================================================== */}
-          <div className="w-full flex flex-col gap-2 mt-6 pt-4 border-t border-[#1e1e2e]">
-            {currentView !== 'view-main' ? (
+          {currentView !== 'view-main' && (
+            <div className="w-full flex flex-col gap-2 mt-6 pt-4 border-t border-[#1e1e2e]">
               <button
                 type="button"
                 onClick={handleSmartBack}
@@ -1526,17 +1815,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <ArrowLeft className="w-3.5 h-3.5 text-[#c084fc]" />
                 <span>{isFr ? 'Retour' : 'Back'}</span>
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleClose}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#181824] hover:bg-[#222232] text-white border border-[#2d2d42] hover:border-[#a855f7]/60 transition-all text-xs font-black uppercase tracking-wider cursor-pointer active:scale-95 shadow-md"
-              >
-                <LogOut className="w-4 h-4 text-[#a855f7]" />
-                <span>{isFr ? 'Sortir' : 'Exit'}</span>
-              </button>
-            )}
-          </div>
+            </div>
+          )}
 
         </div>
 

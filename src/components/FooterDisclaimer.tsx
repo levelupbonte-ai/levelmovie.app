@@ -1,5 +1,5 @@
 import React from 'react';
-import { LevelMovieLogo } from '../constants';
+import { LevelMovieLogo, DonaStar } from '../constants';
 import { 
   Shield, 
   FileText, 
@@ -7,8 +7,6 @@ import {
   Tv, 
   Sparkles, 
   Users, 
-  Bot, 
-  Key, 
   LogIn, 
   UserPlus, 
   Bookmark, 
@@ -30,6 +28,7 @@ interface FooterDisclaimerProps {
   onNavigateCategory?: (cat: string) => void;
   onSearchQuery?: (query: string) => void;
   onOpenDona?: () => void;
+  onOpenExternalApps?: () => void;
 }
 
 export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({
@@ -40,7 +39,8 @@ export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({
   onOpenAuth,
   onNavigateCategory,
   onSearchQuery,
-  onOpenDona
+  onOpenDona,
+  onOpenExternalApps
 }) => {
   const isFr = lang === 'fr';
 
@@ -219,16 +219,6 @@ export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({
               <li>
                 <button
                   type="button"
-                  onClick={() => onOpenAuth?.('view-key')}
-                  className="hover:text-white hover:translate-x-0.5 transition-all text-left flex items-center gap-1.5"
-                >
-                  <Key className="w-3 h-3 text-purple-400" />
-                  <span>{isFr ? "Activer avec Clé LVL" : "Activate with LVL Key"}</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
                   onClick={() => handleLink(() => onNavigateCategory?.('watchlist'))}
                   className="hover:text-white hover:translate-x-0.5 transition-all text-left flex items-center gap-1.5"
                 >
@@ -252,14 +242,24 @@ export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({
           {/* Col 4: Fonctionnalités & Écosystème */}
           <div className="space-y-3.5">
             <p className="font-bold text-sm text-white tracking-wide flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-400" />
+              <DonaStar className="w-4 h-4" />
               {isFr ? "Fonctionnalités & IA" : "Features & AI"}
             </p>
             <ul className="space-y-2.5 text-white/60">
               <li>
                 <button
                   type="button"
-                  onClick={() => handleLink(() => onNavigateCategory?.('parties'))}
+                  onClick={() => handleLink(() => onOpenDona?.())}
+                  className="hover:text-white hover:translate-x-0.5 transition-all text-left flex items-center gap-1.5 font-medium text-white/90 group"
+                >
+                  <DonaStar className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                  <span className="text-[#c084fc] group-hover:text-white">{isFr ? "Dona IA (Conseils Cinéma)" : "Dona AI Assistant"}</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => handleLink(() => onNavigateCategory?.('party'))}
                   className="hover:text-white hover:translate-x-0.5 transition-all text-left flex items-center gap-1.5"
                 >
                   <Users className="w-3 h-3 text-purple-400" />
@@ -269,17 +269,7 @@ export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({
               <li>
                 <button
                   type="button"
-                  onClick={() => handleLink(() => onOpenDona?.())}
-                  className="hover:text-white hover:translate-x-0.5 transition-all text-left flex items-center gap-1.5"
-                >
-                  <Bot className="w-3 h-3 text-purple-400" />
-                  <span>{isFr ? "Dona IA (Conseils Cinéma)" : "Dona AI Assistant"}</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => handleLink(() => onNavigateCategory?.('music'))}
+                  onClick={() => handleLink(() => onOpenExternalApps ? onOpenExternalApps() : onNavigateCategory?.('music'))}
                   className="hover:text-white hover:translate-x-0.5 transition-all text-left"
                 >
                   <span>LevelMusic (Lecteur Audio HD)</span>
@@ -369,9 +359,21 @@ export const FooterDisclaimer: React.FC<FooterDisclaimerProps> = ({
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/5 text-[11px]">
             <p>© 2026 LevelUp Ecosystem &middot; LevelMovie. Tous droits réservés.</p>
             <div className="flex items-center gap-4">
-              <a href="/terms" target="_blank" className="hover:text-white transition-colors">/terms</a>
+              <button 
+                type="button"
+                onClick={() => onOpenLegal?.('terms')}
+                className="hover:text-white transition-colors cursor-pointer"
+              >
+                /terms
+              </button>
               <span>•</span>
-              <a href="/privacy" target="_blank" className="hover:text-white transition-colors">/privacy</a>
+              <button 
+                type="button"
+                onClick={() => onOpenLegal?.('privacy')}
+                className="hover:text-white transition-colors cursor-pointer"
+              >
+                /privacy
+              </button>
               <span>•</span>
               <span className="text-purple-400 font-medium">Build 2026.1 &middot; Ultra HD Fast Engine</span>
             </div>
