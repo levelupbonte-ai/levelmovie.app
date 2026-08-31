@@ -15,7 +15,8 @@ import {
 } from './lib/firebase-stub';
 import {
   API_KEY, BASE_URL, IMAGE_BASE_URL, LevelMovieLogo, DonaStar, WatchPartySVG,
-  censorText, filterMatureContent, getDailySeed, getWeekSeed, getHoursUntilMidnight, APP_ID
+  censorText, filterMatureContent, getDailySeed, getWeekSeed, getHoursUntilMidnight, APP_ID,
+  isLowDataMode, setLowDataModeState
 } from './constants';
 import { i18n, globalStyles } from './i18n';
 import { Banner } from './components/Banner';
@@ -138,6 +139,28 @@ export default function App() {
   const [partyId, setPartyId] = useState<string | null>(null);
   const [partyData, setPartyData] = useState<any>(null);
   const [activePartyCode, setActivePartyCode] = useState<string | null>(null);
+  const [lowDataMode, setLowDataMode] = useState<boolean>(() => isLowDataMode());
+
+  useEffect(() => {
+    if (lowDataMode) {
+      document.documentElement.classList.add('low-data-mode');
+    } else {
+      document.documentElement.classList.remove('low-data-mode');
+    }
+  }, [lowDataMode]);
+
+  useEffect(() => {
+    const handleLowDataChange = (e: any) => {
+      if (typeof e?.detail?.enabled === 'boolean') {
+        setLowDataMode(e.detail.enabled);
+      }
+    };
+    window.addEventListener('levelmovie_low_data_change', handleLowDataChange);
+    return () => {
+      window.removeEventListener('levelmovie_low_data_change', handleLowDataChange);
+    };
+  }, []);
+
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   const [lastSeenNotifTs, setLastSeenNotifTs] = useState(parseInt(localStorage.getItem('lm_last_seen_notif') || '0', 10));
@@ -257,6 +280,32 @@ export default function App() {
     const hashStr = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
     const hashParams = new URLSearchParams(hashStr);
     const searchParams = new URLSearchParams(window.location.search);
+
+    // Deep-linking / SEO Search Query Handling (?search=Naruto or ?q=One+Piece)
+    const initialSearch = searchParams.get('search') || searchParams.get('q');
+    if (initialSearch) {
+      setSearchQuery(initialSearch);
+      setShowSearchModal(true);
+    }
+
+    // Deep-linking Category Handling (?category=anime / movies / series / dona)
+    const initialCategory = searchParams.get('category');
+    if (initialCategory) {
+      setCurrentCategory(initialCategory);
+    }
+
+    // Deep-linking Auth Handling (?auth=login / ?auth=signup / ?auth=key)
+    const initialAuth = searchParams.get('auth');
+    if (initialAuth === 'login') {
+      setAuthModalInitialView('view-login');
+      setShowLoginModal(true);
+    } else if (initialAuth === 'signup') {
+      setAuthModalInitialView('view-signup');
+      setShowLoginModal(true);
+    } else if (initialAuth === 'key') {
+      setAuthModalInitialView('view-key');
+      setShowLoginModal(true);
+    }
 
     const oauthError = hashParams.get('error') || searchParams.get('error');
     const oauthErrorDesc = hashParams.get('error_description') || searchParams.get('error_description');
@@ -1380,7 +1429,7 @@ export default function App() {
         </div>
       ) : (
         <>
-          <Banner url={buildUrlNoFilter('/trending/all/week')} onPlay={() => openModal(heroMovie, 'play')} onInfo={() => openModal(heroMovie, 'info')} setHero={setHeroMovie} heroMovie={heroMovie} t={t} pageSeed={pageSeed} parentalFilter={parentalFilter} />
+          <Banner url={buildUrlNoFilter('/trending/all/week')} onPlay={() => openModal(heroMovie, 'play')} onInfo={() => openModal(heroMovie, 'info')} setHero={setHeroMovie} heroMovie={heroMovie} t={t} pageSeed={pageSeed} parentalFilter={parentalFilter} lowDataMode={lowDataMode} />
 
           <main className="pb-24 relative z-20 space-y-8 md:space-y-10 mt-6 md:-mt-10">
             <AlgoRow
@@ -1414,15 +1463,32 @@ export default function App() {
         </>
       )}
 
-      {/* PIED DE PAGE & AVERTISSEMENT LÉGAL AGRÉGATEUR PRO (UNIQUEMENT TOUT EN BAS DE L'ACCUEIL) */}
-      {currentCategory === 'home' && (
+      {/* PIED DE PAGE & SOUS-LIENS STYLE NETFLIX / AMAZON PRIME */}
+      {!selectedMovie && (
         <FooterDisclaimer
           lang={lang}
           onOpenSupport={() => setShowSupport(true)}
-          onOpenSettings={() => setShowSettings(true)}
+          onOpenSettings={(tab) => {
+            if (tab) setSettingsTab(tab);
+            setShowSettings(true);
+          }}
           onOpenLegal={(doc) => {
             setLegalDocType(doc);
             setShowLegalModal(true);
+          }}
+          onOpenAuth={(view) => {
+            setAuthModalInitialView(view);
+            setShowLoginModal(true);
+          }}
+          onNavigateCategory={(cat) => {
+            setCurrentCategory(cat);
+          }}
+          onSearchQuery={(q) => {
+            setSearchQuery(q);
+            setShowSearchModal(true);
+          }}
+          onOpenDona={() => {
+            setCurrentCategory('dona');
           }}
         />
       )}
@@ -1511,6 +1577,8 @@ export default function App() {
           setParentalFilter(val);
           syncPreferencesToDb({ parentalFilter: val });
         }}
+        lowDataMode={lowDataMode}
+        setLowDataMode={setLowDataMode}
         onOpenLogin={() => setShowLoginModal(true)}
         onOpenLogout={() => setShowLogoutConfirm(true)}
         onOpenDona={() => { setShowSettings(false); setCurrentCategory('dona'); }}

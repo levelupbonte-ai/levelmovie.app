@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { Play, Info, Star } from 'lucide-react';
-import { BASE_URL, IMAGE_ORIGINAL, LevelMovieLogo, filterMatureContent, filterContentByAge } from '../constants';
+import { BASE_URL, getBackdropImageUrl, LevelMovieLogo, filterMatureContent, filterContentByAge } from '../constants';
 
-export function Banner({ url, onPlay, onInfo, setHero, heroMovie, t, pageSeed, parentalFilter, userAge }: {
+export function Banner({ url, onPlay, onInfo, setHero, heroMovie, t, pageSeed, parentalFilter, userAge, lowDataMode = false }: {
   url: string;
   onPlay: () => void;
   onInfo: () => void;
@@ -12,6 +12,7 @@ export function Banner({ url, onPlay, onInfo, setHero, heroMovie, t, pageSeed, p
   pageSeed: number;
   parentalFilter: boolean;
   userAge?: number | null;
+  lowDataMode?: boolean;
 }) {
   useEffect(() => {
     const fetchMovie = async () => {
@@ -43,7 +44,7 @@ export function Banner({ url, onPlay, onInfo, setHero, heroMovie, t, pageSeed, p
       style={{
         backgroundSize: 'cover',
         backgroundPosition: '50% 20%',
-        backgroundImage: `url("${IMAGE_ORIGINAL}${heroMovie.backdrop_path}")`
+        backgroundImage: `url("${getBackdropImageUrl(heroMovie.backdrop_path, lowDataMode, true)}")`
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-r from-[#060608] via-[#060608]/75 to-transparent w-full md:w-[80%]"></div>

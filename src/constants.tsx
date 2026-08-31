@@ -83,7 +83,47 @@ export const APP_ID = (typeof (window as any).__app_id !== 'undefined' ? (window
 export const API_KEY = import.meta.env.VITE_TMDB_API_KEY || '027cc951d888c64e5f15dcb853c7347a';
 export const BASE_URL = 'https://api.themoviedb.org/3';
 export const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+export const IMAGE_LOW_RES_URL = 'https://image.tmdb.org/t/p/w185';
+export const IMAGE_MEDIUM_RES_URL = 'https://image.tmdb.org/t/p/w300';
 export const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
+export const IMAGE_HERO_LOW = 'https://image.tmdb.org/t/p/w780';
+
+export const isLowDataMode = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const saved = localStorage.getItem('levelmovie_low_data_mode');
+  if (saved !== null) return saved === 'true';
+  // Check browser network saveData header hint
+  if (typeof navigator !== 'undefined' && (navigator as any).connection?.saveData === true) {
+    return true;
+  }
+  return false;
+};
+
+export const setLowDataModeState = (enabled: boolean): void => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('levelmovie_low_data_mode', String(enabled));
+  if (enabled) {
+    document.documentElement.classList.add('low-data-mode');
+  } else {
+    document.documentElement.classList.remove('low-data-mode');
+  }
+  window.dispatchEvent(new CustomEvent('levelmovie_low_data_change', { detail: { enabled } }));
+};
+
+export const getPosterImageUrl = (path?: string | null, lowData: boolean = isLowDataMode()): string => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `${lowData ? IMAGE_LOW_RES_URL : IMAGE_BASE_URL}${path}`;
+};
+
+export const getBackdropImageUrl = (path?: string | null, lowData: boolean = isLowDataMode(), isHero: boolean = false): string => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  if (isHero) {
+    return `${lowData ? IMAGE_HERO_LOW : IMAGE_ORIGINAL}${path}`;
+  }
+  return `${lowData ? IMAGE_LOW_RES_URL : IMAGE_BASE_URL}${path}`;
+};
 
 export const formatTimeEstimate = (ms: number) => {
   const totalSeconds = Math.floor(ms / 1000);

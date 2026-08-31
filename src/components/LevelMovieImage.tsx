@@ -29,14 +29,26 @@ export const LevelMovieImage: React.FC<LevelMovieImageProps> = ({
   const [hasError, setHasError] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Optimize TMDB image resolution dynamically when Low Data Mode is active
+  const resolvedSrc = React.useMemo(() => {
+    if (!src) return src;
+    if (typeof document !== 'undefined' && document.documentElement.classList.contains('low-data-mode')) {
+      return src
+        .replace('/t/p/w500', '/t/p/w185')
+        .replace('/t/p/w300', '/t/p/w185')
+        .replace('/t/p/original', '/t/p/w780');
+    }
+    return src;
+  }, [src]);
+
   // Reset error state if src changes
   useEffect(() => {
     setHasError(false);
     setIsLoaded(false);
-  }, [src]);
+  }, [resolvedSrc]);
 
   const brandColor = brandTheme === 'red' ? '#ef4444' : brandTheme === 'cyan' ? '#06b6d4' : '#a855f7';
-  const shouldShowFallback = !src || hasError;
+  const shouldShowFallback = !resolvedSrc || hasError;
 
   if (shouldShowFallback) {
     return (
@@ -52,17 +64,18 @@ export const LevelMovieImage: React.FC<LevelMovieImageProps> = ({
   return (
     <div className={containerClassName} onClick={onClick}>
       <img
-        src={src}
+        src={resolvedSrc}
         alt={alt}
         loading={loading}
+        decoding="async"
         draggable={draggable}
         onError={() => setHasError(true)}
         onLoad={() => setIsLoaded(true)}
-        className={`${className} ${!isLoaded ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        className={`${className} ${!isLoaded ? 'opacity-0' : 'opacity-100'} transition-opacity duration-200`}
       />
       {!isLoaded && (
-        <div className="absolute inset-0 bg-[#0b0c13] animate-pulse flex items-center justify-center">
-          <LevelMovieLogo className="w-7 h-7 opacity-20" color={brandColor} />
+        <div className="absolute inset-0 bg-[#0d0e18] flex items-center justify-center pointer-events-none">
+          <LevelMovieLogo className="w-6 h-6 opacity-20" color={brandColor} />
         </div>
       )}
     </div>

@@ -1,22 +1,198 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" prefix="og: https://ogp.me/ns#">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
+    
+    <!-- Titre et métadonnées SEO principales -->
     <title>LevelMovie — Streaming Films & Séries HD Gratuit | LevelUp Ecosystem</title>
-    <meta name="description" content="Regardez des milliers de films, séries et animes en streaming HD gratuitement sans pub intrusive sur LevelMovie. Propulsé par LevelUp Ecosystem." />
-    <meta property="og:title" content="LevelMovie — Streaming Films & Séries HD Gratuit | LevelUp Ecosystem" />
-    <meta property="og:description" content="Regardez des milliers de films, séries et animes en streaming HD gratuitement sans pub intrusive sur LevelMovie. Propulsé par LevelUp Ecosystem." />
-    <meta property="og:image" content="/icon.svg" />
+    <meta name="title" content="LevelMovie — Streaming Films & Séries HD Gratuit | LevelUp Ecosystem" />
+    <meta name="description" content="Regardez des milliers de films, séries et animes (Naruto, One Piece, Jujutsu Kaisen, Demon Slayer) en streaming HD sans pub intrusive sur LevelMovie. Watch Party en direct et IA intégrée." />
+    <meta name="keywords" content="levelmovie, levelmovie streaming, naruto levelmovie, one piece levelmovie, streaming film gratuit, streaming séries hd, anime streaming vf vostfr, watch party streaming, dona ia, netflix gratuit, regarder naruto shippuden, regarder one piece streaming" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="author" content="LevelUp Ecosystem" />
+    <meta name="application-name" content="LevelMovie" />
+    <meta name="theme-color" content="#a855f7" />
+
+    <!-- Canonical & Liens d'indexation alternatifs -->
+    <link rel="canonical" href="https://levelup-ecosystem.com/" />
+    <link rel="alternate" href="https://levelup-ecosystem.com/terms" title="Conditions d'utilisation" />
+    <link rel="alternate" href="https://levelup-ecosystem.com/privacy" title="Politique de confidentialité" />
+    <link rel="alternate" hreflang="fr" href="https://levelup-ecosystem.com/" />
+    <link rel="alternate" hreflang="en" href="https://levelup-ecosystem.com/?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://levelup-ecosystem.com/" />
+
+    <!-- Open Graph / Facebook / WhatsApp / Discord / LinkedIn -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://levelup-ecosystem.com" />
+    <meta property="og:site_name" content="LevelMovie" />
+    <meta property="og:url" content="https://levelup-ecosystem.com/" />
+    <meta property="og:title" content="LevelMovie — Streaming Films & Séries HD Gratuit | LevelUp Ecosystem" />
+    <meta property="og:description" content="Regardez des milliers de films, séries et animes en streaming HD gratuitement. Watch Party synchronisée, lecteur multi-serveurs et IA cinématographique Dona." />
+    <meta property="og:image" content="https://levelup-ecosystem.com/icon.svg" />
+    <meta property="og:image:secure_url" content="https://levelup-ecosystem.com/icon.svg" />
+    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Logo officiel LevelMovie — LevelUp Ecosystem" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale:alternate" content="en_US" />
+
+    <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@LevelUpEco" />
+    <meta name="twitter:creator" content="@LevelUpEco" />
+    <meta name="twitter:url" content="https://levelup-ecosystem.com/" />
+    <meta name="twitter:title" content="LevelMovie — Streaming Films & Séries HD Gratuit" />
+    <meta name="twitter:description" content="Découvrez le meilleur du cinéma et des animes en streaming HD sans pub intrusive. Watch Party synchronisée et intelligence artificielle." />
+    <meta name="twitter:image" content="https://levelup-ecosystem.com/icon.svg" />
+    <meta name="twitter:image:alt" content="LevelMovie Streaming HD" />
+
+    <!-- Favicons & App Icons -->
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icon.svg" />
-    <meta name="theme-color" content="#a855f7" />
+
+    <!-- Polices typographiques -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Schema.org JSON-LD Structured Data pour Google Search / Sitelinks / Sitelinks Searchbox -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://levelup-ecosystem.com/#website",
+          "url": "https://levelup-ecosystem.com/",
+          "name": "LevelMovie",
+          "alternateName": ["Level Movie", "LevelUp Movie", "LevelUp Ecosystem"],
+          "description": "Agrégateur cinématographique et plateforme de streaming HD gratuit de films, séries et animes sans pub intrusive.",
+          "inLanguage": "fr-FR",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://levelup-ecosystem.com/?search={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://levelup-ecosystem.com/#organization",
+          "name": "LevelUp Ecosystem",
+          "url": "https://levelup-ecosystem.com/",
+          "logo": "https://levelup-ecosystem.com/icon.svg",
+          "email": "levelup.ia0@gmail.com",
+          "sameAs": [
+            "https://levelup-ecosystem.com/terms",
+            "https://levelup-ecosystem.com/privacy"
+          ]
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "@id": "https://levelup-ecosystem.com/#navigation",
+          "name": [
+            "Films HD",
+            "Séries TV",
+            "Animes Populaires",
+            "Watch Party",
+            "Dona IA Assistant",
+            "Connexion (Sign In)",
+            "Inscription (Sign Up)",
+            "Conditions d'utilisation (Terms)",
+            "Politique de confidentialité (Privacy)"
+          ],
+          "url": [
+            "https://levelup-ecosystem.com/?category=movies",
+            "https://levelup-ecosystem.com/?category=series",
+            "https://levelup-ecosystem.com/?category=anime",
+            "https://levelup-ecosystem.com/?category=parties",
+            "https://levelup-ecosystem.com/?category=dona",
+            "https://levelup-ecosystem.com/?auth=login",
+            "https://levelup-ecosystem.com/?auth=signup",
+            "https://levelup-ecosystem.com/terms",
+            "https://levelup-ecosystem.com/privacy"
+          ]
+        },
+        {
+          "@type": "ItemList",
+          "name": "Titres & Animes Populaires sur LevelMovie",
+          "description": "Index des œuvres et animes disponibles en streaming sur LevelMovie",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "item": {
+                "@type": "TVSeries",
+                "name": "Naruto & Naruto Shippuden",
+                "alternateName": "Naruto Shippuden",
+                "description": "Suivez les aventures du ninja Naruto Uzumaki en streaming HD VF et VOSTFR sur LevelMovie.",
+                "url": "https://levelup-ecosystem.com/?search=Naruto",
+                "genre": ["Animation", "Action", "Aventure"]
+              }
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "item": {
+                "@type": "TVSeries",
+                "name": "One Piece",
+                "description": "Luffy et l'équipage du Chapeau de Paille à la recherche du trésor ultime en streaming HD sur LevelMovie.",
+                "url": "https://levelup-ecosystem.com/?search=One+Piece",
+                "genre": ["Animation", "Action", "Aventure"]
+              }
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "item": {
+                "@type": "TVSeries",
+                "name": "Jujutsu Kaisen",
+                "description": "Combattez les fléaux aux côtés de Yuji Itadori et Satoru Gojo en streaming HD sur LevelMovie.",
+                "url": "https://levelup-ecosystem.com/?search=Jujutsu+Kaisen",
+                "genre": ["Animation", "Action", "Fantastique"]
+              }
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "item": {
+                "@type": "TVSeries",
+                "name": "L'Attaque des Titans (Shingeki no Kyojin)",
+                "description": "L'humanité face aux Titans mystérieux en streaming HD sur LevelMovie.",
+                "url": "https://levelup-ecosystem.com/?search=Attaque+des+Titans",
+                "genre": ["Animation", "Action", "Drame"]
+              }
+            },
+            {
+              "@type": "ListItem",
+              "position": 5,
+              "item": {
+                "@type": "TVSeries",
+                "name": "Demon Slayer (Kimetsu no Yaiba)",
+                "description": "Tanjiro Kamado pourfendeur de démons en streaming HD sur LevelMovie.",
+                "url": "https://levelup-ecosystem.com/?search=Demon+Slayer",
+                "genre": ["Animation", "Action", "Fantasy"]
+              }
+            },
+            {
+              "@type": "ListItem",
+              "position": 6,
+              "item": {
+                "@type": "TVSeries",
+                "name": "Solo Leveling",
+                "description": "L'éveil du plus puissant des chasseurs Sung Jinwoo en streaming HD sur LevelMovie.",
+                "url": "https://levelup-ecosystem.com/?search=Solo+Leveling",
+                "genre": ["Animation", "Action", "Fantasy"]
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body class="bg-[#060608] text-white overflow-x-hidden">
     <div id="root"></div>

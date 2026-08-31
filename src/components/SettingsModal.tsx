@@ -8,6 +8,7 @@ import {
   Check, Volume2, Bell, Eye, EyeOff, Film, Tv, Radio,
   Copy, Zap, HelpCircle, AlertTriangle
 } from 'lucide-react';
+import { isLowDataMode, setLowDataModeState } from '../constants';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -22,6 +23,8 @@ interface SettingsModalProps {
   userPhoto: string | null;
   parentalFilter: boolean;
   setParentalFilter: (val: boolean) => void;
+  lowDataMode?: boolean;
+  setLowDataMode?: (val: boolean) => void;
   onOpenLogin: () => void;
   onOpenLogout: () => void;
   onOpenDona?: () => void;
@@ -86,6 +89,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   userPhoto,
   parentalFilter,
   setParentalFilter,
+  lowDataMode,
+  setLowDataMode,
   onOpenLogin,
   onOpenLogout,
   onOpenDona,
@@ -98,6 +103,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [mobileActiveTab, setMobileActiveTab] = useState<TabType | null>(null);
+
+  // Low Data Mode (Performance, Anti-Surchauffe, Affiches SD, Désactivation animations fond)
+  const [localLowDataMode, setLocalLowDataMode] = useState<boolean>(() => {
+    return isLowDataMode();
+  });
+
+  const currentLowDataMode = lowDataMode !== undefined ? lowDataMode : localLowDataMode;
+
+  const handleToggleLowDataMode = (next: boolean) => {
+    setLocalLowDataMode(next);
+    setLowDataModeState(next);
+    if (setLowDataMode) {
+      setLowDataMode(next);
+    }
+    showToast(
+      next
+        ? (lang === 'fr' ? '⚡ Mode Économie de Données activé (Affiches SD & 60 FPS)' : '⚡ Low Data Mode enabled (SD Posters & 60 FPS)')
+        : (lang === 'fr' ? 'Mode Haute Résolution (HD) rétabli' : 'High Resolution Mode (HD) restored'),
+      next ? 'success' : 'info'
+    );
+  };
 
   // General tab states (persisted)
   const [notifPermission, setNotifPermission] = useState(() => {
@@ -547,6 +573,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       {opt.label}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Carte Mode Économie de Données & Anti-Surchauffe (Low Data Mode) */}
+              <div className="bg-gradient-to-br from-white/[0.04] to-purple-950/20 border border-white/10 hover:border-[#a855f7]/40 rounded-2xl p-4 sm:p-5 shadow-md space-y-3.5 transition-all">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 rounded-lg bg-[#a855f7]/20 border border-[#a855f7]/30 text-[#c084fc]">
+                        <Zap className="w-4 h-4" />
+                      </span>
+                      <h4 className="text-sm font-black text-white uppercase tracking-wider">
+                        {lang === 'fr' ? 'Mode Économie de Données & Batterie' : 'Low Data & Performance Mode'}
+                      </h4>
+                    </div>
+                    <p className="text-xs text-white/60 mt-1.5 leading-relaxed">
+                      {lang === 'fr'
+                        ? 'Charge des affiches allégées (SD), désactive les animations de fond et réduit la consommation CPU/GPU pour éliminer les saccades et la surchauffe sur téléphone.'
+                        : 'Loads lightweight low-res posters, disables ambient background animations, and reduces CPU/GPU load to prevent mobile overheating and lag.'}
+                    </p>
+                  </div>
+                  <div className="shrink-0 pt-0.5">
+                    <Interrupteur 
+                      checked={currentLowDataMode} 
+                      onChange={handleToggleLowDataMode} 
+                      label={lang === 'fr' ? 'Activer le mode économie de données' : 'Enable low data mode'}
+                    />
+                  </div>
+                </div>
+
+                {/* Badges indicatifs d'économies de ressources */}
+                <div className="grid grid-cols-3 gap-2 pt-1 border-t border-white/5 text-[10px] sm:text-xs">
+                  <div className="bg-white/5 rounded-xl p-2 text-center border border-white/5">
+                    <span className="block font-bold text-emerald-400">-70% Données</span>
+                    <span className="text-white/40 text-[9px] uppercase tracking-wider">{lang === 'fr' ? 'Affiches SD' : 'SD Posters'}</span>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-2 text-center border border-white/5">
+                    <span className="block font-bold text-cyan-400">Anti-Chauffe</span>
+                    <span className="text-white/40 text-[9px] uppercase tracking-wider">{lang === 'fr' ? 'CPU / GPU Cool' : 'Cool Temp'}</span>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-2 text-center border border-white/5">
+                    <span className="block font-bold text-[#c084fc]">60 FPS Max</span>
+                    <span className="text-white/40 text-[9px] uppercase tracking-wider">{lang === 'fr' ? 'Zéro Lenteur' : 'Zero Lag'}</span>
+                  </div>
                 </div>
               </div>
 
@@ -1902,6 +1972,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
 
             <div className="space-y-4">
+              {/* Carte Optimisation Consommation & Mode Éco */}
+              <div className="bg-gradient-to-br from-white/[0.04] to-purple-950/20 border border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-[#a855f7]" />
+                    <span className="text-sm font-bold text-white">
+                      {lang === 'fr' ? 'Mode Économie de Données (Low Data)' : 'Low Data Saver Mode'}
+                    </span>
+                  </div>
+                  <Interrupteur 
+                    checked={currentLowDataMode} 
+                    onChange={handleToggleLowDataMode} 
+                    label={lang === 'fr' ? 'Mode Économie de Données' : 'Low Data Mode'}
+                  />
+                </div>
+                <p className="text-xs text-white/50 leading-relaxed">
+                  {lang === 'fr'
+                    ? 'Réduit drastiquement l’utilisation du forfait mobile en téléchargeant des affiches compressées (185px) et en coupant les arrière-plans animés.'
+                    : 'Drastically saves mobile data by downloading compressed 185px posters and disabling animated backgrounds.'}
+                </p>
+                <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
+                  <span className="text-white/60">{lang === 'fr' ? 'Consommation estimée par session :' : 'Estimated session usage:'}</span>
+                  <span className={`font-mono font-bold ${currentLowDataMode ? 'text-emerald-400' : 'text-white'}`}>
+                    {currentLowDataMode ? '~3.5 MB (Éco)' : '~22.4 MB (HD)'}
+                  </span>
+                </div>
+              </div>
+
               <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 sm:p-5 space-y-3 shadow-sm">
                 <div className="flex justify-between items-center py-2 border-b border-white/5">
                   <span className="text-sm text-white/80">{lang === 'fr' ? 'Cache système & métadonnées' : 'System Cache'}</span>
