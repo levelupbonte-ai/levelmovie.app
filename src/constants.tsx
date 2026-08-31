@@ -443,93 +443,80 @@ export interface AvatarPreset {
   name: string;
   category: string;
   gradient: string;
-  iconName: 'clapper' | 'film' | 'popcorn' | 'crown' | 'sparkles' | 'shield' | 'bot' | 'skull' | 'flame' | 'gamepad' | 'sword' | 'camera';
 }
 
 export const DEFAULT_AVATARS: AvatarPreset[] = [
   {
-    id: 'avatar-director',
-    name: 'Cinéaste Pro',
-    category: 'Cinema',
-    gradient: 'from-[#e50914] to-[#991b1b]',
-    iconName: 'clapper'
+    id: 'avatar-hugo',
+    name: 'Hugo',
+    category: 'Cinéma',
+    gradient: 'from-[#6366f1] to-[#312e81]'
   },
   {
-    id: 'avatar-popcorn',
-    name: 'Master Popcorn',
-    category: 'Cinema',
-    gradient: 'from-[#f59e0b] to-[#ea580c]',
-    iconName: 'popcorn'
+    id: 'avatar-camille',
+    name: 'Camille',
+    category: 'Réalisatrice',
+    gradient: 'from-[#f43f5e] to-[#881337]'
   },
   {
-    id: 'avatar-crown',
-    name: 'Souverain VIP',
+    id: 'avatar-alexandre',
+    name: 'Alexandre',
     category: 'VIP',
-    gradient: 'from-[#d97706] to-[#b45309]',
-    iconName: 'crown'
+    gradient: 'from-[#d97706] to-[#78350f]'
   },
   {
-    id: 'avatar-sparkles',
-    name: 'Star Lumière',
-    category: 'Action',
-    gradient: 'from-[#9333ea] to-[#6366f1]',
-    iconName: 'sparkles'
+    id: 'avatar-sarah',
+    name: 'Sarah',
+    category: 'Urbain',
+    gradient: 'from-[#059669] to-[#064e3b]'
   },
   {
-    id: 'avatar-shield',
-    name: 'Gardien Cosmique',
-    category: 'Action',
-    gradient: 'from-[#2563eb] to-[#0284c7]',
-    iconName: 'shield'
+    id: 'avatar-marcus',
+    name: 'Marcus',
+    category: 'Créateur',
+    gradient: 'from-[#9333ea] to-[#4c1d95]'
   },
   {
-    id: 'avatar-bot',
-    name: 'Cyber Cyborg',
-    category: 'Sci-Fi',
-    gradient: 'from-[#059669] to-[#0d9488]',
-    iconName: 'bot'
+    id: 'avatar-lea',
+    name: 'Léa',
+    category: 'Chic',
+    gradient: 'from-[#3b82f6] to-[#1e3a8a]'
   },
   {
-    id: 'avatar-skull',
-    name: 'Ombre Mystique',
-    category: 'Horror',
-    gradient: 'from-[#4c1d95] to-[#1e1b4b]',
-    iconName: 'skull'
+    id: 'avatar-lucas',
+    name: 'Lucas',
+    category: 'Aventurier',
+    gradient: 'from-[#0ea5e9] to-[#0369a1]'
   },
   {
-    id: 'avatar-flame',
-    name: 'Flamme Phénix',
-    category: 'Fantasy',
-    gradient: 'from-[#dc2626] to-[#f97316]',
-    iconName: 'flame'
+    id: 'avatar-ines',
+    name: 'Inès',
+    category: 'Rétro',
+    gradient: 'from-[#f97316] to-[#9a3412]'
   },
   {
-    id: 'avatar-gamepad',
-    name: 'Pixel Gamer',
-    category: 'Gaming',
-    gradient: 'from-[#7c3aed] to-[#db2777]',
-    iconName: 'gamepad'
+    id: 'avatar-yanis',
+    name: 'Yanis',
+    category: 'Scénariste',
+    gradient: 'from-[#10b981] to-[#065f46]'
   },
   {
-    id: 'avatar-sword',
-    name: 'Guerrier Épique',
-    category: 'Fantasy',
-    gradient: 'from-[#0284c7] to-[#4f46e5]',
-    iconName: 'sword'
+    id: 'avatar-chloe',
+    name: 'Chloé',
+    category: 'Dynamique',
+    gradient: 'from-[#ec4899] to-[#9d174d]'
   },
   {
-    id: 'avatar-film',
-    name: 'Studio Archive',
-    category: 'Cinema',
-    gradient: 'from-[#334155] to-[#0f172a]',
-    iconName: 'film'
+    id: 'avatar-david',
+    name: 'David',
+    category: 'Producteur',
+    gradient: 'from-[#334155] to-[#0f172a]'
   },
   {
-    id: 'avatar-camera',
-    name: 'Cadreur 4K',
-    category: 'Cinema',
-    gradient: 'from-[#0f766e] to-[#0369a1]',
-    iconName: 'camera'
+    id: 'avatar-emma',
+    name: 'Emma',
+    category: 'Artiste',
+    gradient: 'from-[#8b5cf6] to-[#4c1d95]'
   }
 ];
 

@@ -761,55 +761,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 {/* 3 BOUTONS PRO ACCUEIL */}
                 <div className="space-y-3">
                   
-                  {/* BOUTON 1: JE SUIS NOUVEAU - CRÉER UN COMPTE */}
+                  {/* BOUTON 1: CRÉER UN COMPTE */}
                   <button
                     type="button"
                     onClick={() => navigateToView('view-register-choice')}
-                    className="w-full group flex items-center justify-between p-3.5 sm:p-4 bg-[#7e22ce] hover:bg-[#6b21a8] text-white rounded-xl font-bold transition-all border border-[#a855f7]/50 shadow-md cursor-pointer active:scale-[0.99]"
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#9333ea] hover:bg-[#7e22ce] text-white rounded-xl font-bold transition-all shadow-md active:scale-[0.99] cursor-pointer text-sm"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-black/25 flex items-center justify-center text-white shrink-0">
-                        <UserPlus className="w-4 h-4" />
-                      </div>
-                      <div className="text-left">
-                        <span className="block text-sm font-bold text-white tracking-tight">
-                          {isFr ? 'Je suis nouveau' : "I'm new here"}
-                        </span>
-                        <span className="block text-[11px] text-white/70 font-normal">
-                          {isFr ? 'Créer un compte' : 'Create an account'}
-                        </span>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-white/70 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+                    <UserPlus className="w-4 h-4 shrink-0" />
+                    <span>{isFr ? 'Créer un compte' : 'Create an account'}</span>
                   </button>
 
-                  {/* BOUTON 2: J'AI DÉJÀ UN COMPTE - CONNEXION */}
+                  {/* BOUTON 2: CONNEXION */}
                   <button
                     type="button"
                     onClick={() => navigateToView('view-login')}
-                    className="w-full group flex items-center justify-between p-3.5 sm:p-4 bg-[#14141e] hover:bg-[#1a1a28] text-white rounded-xl font-bold transition-all border border-[#2a2a3c] hover:border-[#a855f7]/50 shadow-sm cursor-pointer active:scale-[0.99]"
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#14141e] hover:bg-[#1a1a28] text-white rounded-xl font-bold transition-all border border-[#2a2a3c] hover:border-[#a855f7]/50 active:scale-[0.99] cursor-pointer text-sm"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-[#1e1430] border border-[#a855f7]/30 flex items-center justify-center text-[#c084fc] shrink-0">
-                        <LogIn className="w-4 h-4" />
-                      </div>
-                      <div className="text-left">
-                        <span className="block text-sm font-bold text-white tracking-tight">
-                          {isFr ? "J'ai déjà un compte" : 'I already have an account'}
-                        </span>
-                        <span className="block text-[11px] text-white/50 font-normal">
-                          {isFr ? 'Se connecter' : 'Sign in'}
-                        </span>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-[#c084fc] group-hover:translate-x-0.5 transition-all shrink-0" />
+                    <LogIn className="w-4 h-4 text-[#c084fc] shrink-0" />
+                    <span>{isFr ? 'Se connecter' : 'Sign in'}</span>
                   </button>
 
                   {/* BOUTON 3: SORTIR */}
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="w-full flex items-center justify-center gap-2 p-3 bg-[#0d0d14] hover:bg-[#14141e] text-white/60 hover:text-white rounded-xl font-medium transition-all border border-white/10 hover:border-white/20 cursor-pointer active:scale-[0.99] text-xs"
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-transparent hover:bg-white/5 text-white/50 hover:text-white rounded-xl font-medium transition-all text-xs cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5 text-white/40" />
                     <span>{isFr ? 'Sortir' : 'Exit'}</span>
@@ -826,9 +802,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 
                 {/* En-tête */}
                 <div className="text-center mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-[#1e1430] border border-[#a855f7]/40 flex items-center justify-center mx-auto mb-2.5 text-[#c084fc]">
-                    <UserPlus className="w-5 h-5" />
-                  </div>
                   <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
                     {isFr ? 'Créer un compte' : 'Create Account'}
                   </h2>
@@ -848,57 +821,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                 <div className="space-y-3">
                   
-                  {/* OPTION 1 : GOOGLE (PRO SANS BULLE) */}
+                  {/* OPTION 1 : GOOGLE (PRO, SANS BULLE) */}
                   <button
                     type="button"
                     onClick={handleGoogleAuth}
                     disabled={loading}
-                    className="w-full group flex items-center justify-between p-3.5 bg-white hover:bg-neutral-100 text-neutral-900 rounded-xl font-bold transition-all border border-white shadow-sm cursor-pointer active:scale-[0.99]"
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-white hover:bg-neutral-100 text-neutral-900 rounded-xl font-bold transition-all border border-white shadow-sm active:scale-[0.99] cursor-pointer text-xs sm:text-sm"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-neutral-50 flex items-center justify-center shrink-0 border border-neutral-200">
-                        <svg className="h-4 w-4" viewBox="0 0 24 24">
-                          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                        </svg>
-                      </div>
-                      <div className="text-left">
-                        <span className="block text-xs sm:text-sm font-bold text-neutral-900 tracking-tight">
-                          {isFr ? 'Continuer avec Google' : 'Continue with Google'}
-                        </span>
-                        <span className="block text-[11px] text-neutral-500 font-normal">
-                          {isFr ? 'Direct • Sans code de validation' : 'Instant • No email code required'}
-                        </span>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-neutral-900 group-hover:translate-x-0.5 transition-all shrink-0" />
+                    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    <span>{isFr ? 'Continuer avec Google' : 'Continue with Google'}</span>
                   </button>
 
-                  {/* OPTION 2 : ADRESSE E-MAIL / GMAIL CLASSIQUE */}
+                  {/* OPTION 2 : ADRESSE E-MAIL */}
                   <button
                     type="button"
                     onClick={() => {
                       setRegStep(1);
                       navigateToView('view-register-credentials');
                     }}
-                    className="w-full group flex items-center justify-between p-3.5 bg-[#14141e] hover:bg-[#1a1a28] text-white rounded-xl font-bold transition-all border border-[#2a2a3c] hover:border-[#a855f7]/60 shadow-sm cursor-pointer active:scale-[0.99]"
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#14141e] hover:bg-[#1a1a28] text-white rounded-xl font-bold transition-all border border-[#2a2a3c] hover:border-[#a855f7]/60 active:scale-[0.99] cursor-pointer text-xs sm:text-sm"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#1e1430] border border-[#a855f7]/40 flex items-center justify-center text-[#c084fc] shrink-0">
-                        <Mail className="w-4 h-4" />
-                      </div>
-                      <div className="text-left">
-                        <span className="block text-xs sm:text-sm font-bold text-white tracking-tight">
-                          {isFr ? 'Inscription par E-mail / Gmail' : 'Sign up with Email / Gmail'}
-                        </span>
-                        <span className="block text-[11px] text-white/50 font-normal">
-                          {isFr ? 'Création de mot de passe & code de sécurité' : 'Password setup & security verification'}
-                        </span>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-[#c084fc] group-hover:translate-x-0.5 transition-all shrink-0" />
+                    <Mail className="w-4 h-4 text-[#c084fc] shrink-0" />
+                    <span>{isFr ? 'S’inscrire avec une adresse e-mail' : 'Sign up with email'}</span>
                   </button>
 
                 </div>
