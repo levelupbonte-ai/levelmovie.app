@@ -101,7 +101,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             <div className="flex items-center gap-3 min-w-0">
               <div className="relative shrink-0">
                 {user ? (
-                  <LevelAvatar avatar={user.avatar || (user.user_metadata && user.user_metadata.avatar)} name={userName || 'Cinéphile'} size="md" isVip={vipInfo.isVip} />
+                  <LevelAvatar avatar={userPhoto || user.avatar || (user.user_metadata && user.user_metadata.avatar_url) || user.photoURL} name={userName || 'Cinéphile'} size="md" isVip={vipInfo.isVip} />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
                     <User className="w-5 h-5 text-white/40" />

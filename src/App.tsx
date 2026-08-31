@@ -1169,7 +1169,7 @@ export default function App() {
                 >
                   <div className="shrink-0">
                     {user ? (
-                      <LevelAvatar name={defaultUserName} size="sm" />
+                      <LevelAvatar avatar={userPhoto} name={defaultUserName} size="sm" />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-[#151520] flex items-center justify-center border border-[#a855f7]/40 shadow-inner">
                         <UserIcon className="w-4 h-4 text-[#a855f7]" />
@@ -1205,7 +1205,7 @@ export default function App() {
               >
                 <div className="shrink-0">
                   {user ? (
-                    <LevelAvatar name={defaultUserName} size="sm" />
+                    <LevelAvatar avatar={userPhoto} name={defaultUserName} size="sm" />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-[#151520] flex items-center justify-center border border-[#a855f7]/40 shadow-inner">
                       <UserIcon className="w-4 h-4 text-[#a855f7]" />

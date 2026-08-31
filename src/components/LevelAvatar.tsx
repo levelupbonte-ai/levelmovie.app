@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DEFAULT_AVATARS } from '../constants';
 import { HumanAvatarSvg } from './HumanAvatars';
 
@@ -35,14 +35,16 @@ export const LevelAvatar: React.FC<LevelAvatarProps> = ({
   isVip = false,
   onClick,
 }) => {
+  const [imgError, setImgError] = useState(false);
   const safeName = (name || 'C').trim();
   const initial = safeName.charAt(0).toUpperCase();
 
-  // Check if avatar ID matches a preset or is a human avatar ID
-  const preset = DEFAULT_AVATARS.find(p => p.id === avatar);
-  const isCustomImage = avatar && (avatar.startsWith('data:') || avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('blob:'));
+  // Check if avatar matches a preset
+  const preset = DEFAULT_AVATARS.find(p => p.id === avatar || p.image === avatar);
+  const isDirectImageUrl = avatar && (avatar.startsWith('data:') || avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('blob:'));
+  const effectiveImageUrl = isDirectImageUrl ? avatar : preset?.image;
   const isPresetId = avatar && (preset !== undefined || avatar.startsWith('avatar-'));
-  const resolvedAvatarId = preset ? preset.id : (avatar && avatar.startsWith('avatar-') ? avatar : 'avatar-angel');
+  const resolvedAvatarId = preset ? preset.id : (avatar && avatar.startsWith('avatar-') ? avatar : 'avatar-3d-01');
 
   // Pick deterministic gradient
   const charCode = safeName.charCodeAt(0) || 0;
@@ -63,16 +65,18 @@ export const LevelAvatar: React.FC<LevelAvatarProps> = ({
       className={`relative inline-flex items-center justify-center rounded-full overflow-hidden font-black text-white shadow-md select-none border border-white/20 shrink-0 transition-transform active:scale-95 ${sizeClasses} ${onClick ? 'cursor-pointer hover:scale-105 hover:border-white/50' : ''} ${className}`}
       title={preset?.name || safeName}
     >
-      {/* 1. Custom uploaded photo */}
-      {isCustomImage ? (
+      {/* 1. 3D Image Portrait (Direct URL or Preset 3D URL) */}
+      {effectiveImageUrl && !imgError ? (
         <img
-          src={avatar!}
+          src={effectiveImageUrl}
           alt={safeName}
           referrerPolicy="no-referrer"
-          className="w-full h-full object-cover rounded-full"
+          loading="lazy"
+          onError={() => setImgError(true)}
+          className="w-full h-full object-cover rounded-full bg-[#14141e]"
         />
       ) : isPresetId ? (
-        /* 2. Stylized Human Vector Portrait */
+        /* 2. Stylized Vector Portrait Fallback */
         <HumanAvatarSvg id={resolvedAvatarId} className="w-full h-full object-cover" />
       ) : (
         /* 3. Gradient + Initial fallback */
@@ -92,3 +96,4 @@ export const LevelAvatar: React.FC<LevelAvatarProps> = ({
     </div>
   );
 };
+

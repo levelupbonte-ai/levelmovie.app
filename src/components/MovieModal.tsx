@@ -11,6 +11,7 @@ import {
   BASE_URL, IMAGE_BASE_URL, IMAGE_ORIGINAL, API_KEY, LevelMovieLogo, WatchPartySVG,
   copyToClipboardFallback, formatTimeEstimate
 } from '../constants';
+import { LevelAvatar } from './LevelAvatar';
 
 export function MovieModal({
   movie, mode, onClose, onSelectSimilar, t, lang, user, userPhoto, defaultUserName,
@@ -1668,8 +1669,12 @@ export function MovieModal({
 
                 return (
                   <div key={i} className="flex items-start w-full group cursor-pointer hover:bg-white/[0.04] p-1.5 -mx-1 rounded-xl transition-colors chat-msg">
-                    <div onClick={(e) => { e.stopPropagation(); if (msg.uid !== user?.uid) openMemberMenu(msg); }} className="w-6 h-6 rounded-full bg-[#181824] flex items-center justify-center font-black text-[10px] text-[#c084fc] mr-2.5 shrink-0 border border-purple-500/20 shadow-sm mt-0.5 hover:opacity-80">
-                      {msg.name?.charAt(0).toUpperCase() || '?'}
+                    <div onClick={(e) => { e.stopPropagation(); if (msg.uid !== user?.uid) openMemberMenu(msg); }} className="mr-2.5 shrink-0 mt-0.5 hover:opacity-80 transition-opacity">
+                      <LevelAvatar 
+                        avatar={msg.photo || (msg.uid === user?.uid ? userPhoto : undefined)} 
+                        name={msg.name} 
+                        size="xs" 
+                      />
                     </div>
 
                     <div className="flex-1 text-[12px] md:text-[13px] leading-snug break-words pt-0.5" onClick={() => { if (msg.uid !== user?.uid) setReplyingTo({ name: msg.name, text: msg.text }); }}>
