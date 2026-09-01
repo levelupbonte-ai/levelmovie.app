@@ -16,6 +16,7 @@ interface AppSidebarProps {
   onOpenExternalApps: () => void;
   onOpenSupport: () => void;
   onOpenDona?: () => void;
+  onOpenAvatarPicker?: () => void;
   onNavigateCategory: (cat: string, subTab?: string) => void;
   onOpenLogin: () => void;
   onOpenLogout: () => void;
@@ -40,6 +41,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   onOpenExternalApps,
   onOpenSupport,
   onOpenDona,
+  onOpenAvatarPicker,
   onNavigateCategory,
   onOpenLogin,
   onOpenLogout,
@@ -101,7 +103,21 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             <div className="flex items-center gap-3 min-w-0">
               <div className="relative shrink-0">
                 {user ? (
-                  <LevelAvatar avatar={userPhoto || user.avatar || (user.user_metadata && user.user_metadata.avatar_url) || user.photoURL} name={userName || 'Cinéphile'} size="md" isVip={vipInfo.isVip} />
+                  <div 
+                    onClick={() => {
+                      if (onOpenAvatarPicker) {
+                        onClose();
+                        onOpenAvatarPicker();
+                      }
+                    }}
+                    className="cursor-pointer group relative"
+                    title={lang === 'fr' ? 'Changer d\'avatar 3D' : 'Change 3D Avatar'}
+                  >
+                    <LevelAvatar avatar={userPhoto || user.avatar || (user.user_metadata && user.user_metadata.avatar_url) || user.photoURL} name={userName || 'Cinéphile'} size="md" isVip={vipInfo.isVip} />
+                    <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="text-[10px] text-white">✨</span>
+                    </div>
+                  </div>
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
                     <User className="w-5 h-5 text-white/40" />

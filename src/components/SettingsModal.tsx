@@ -30,6 +30,7 @@ interface SettingsModalProps {
   onOpenLogout: () => void;
   onOpenDona?: () => void;
   onOpenLegal?: (doc: 'terms' | 'privacy') => void;
+  onOpenAvatarPicker?: () => void;
   watchlistCount: number;
   historyCount: number;
   onNavigateCategory: (cat: string) => void;
@@ -96,6 +97,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenLogout,
   onOpenDona,
   onOpenLegal,
+  onOpenAvatarPicker,
   watchlistCount,
   historyCount,
   onNavigateCategory,
@@ -729,9 +731,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="space-y-4">
               {/* Carte Photo & Identifiant avec Copie */}
               <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-5 shadow-sm">
-                <div className="shrink-0 self-center sm:self-auto flex flex-col items-center gap-1.5">
-                  <LevelAvatar name={userName || 'Cinéphile'} size="xl" isVip={isVipActive} />
-                  <span className="text-[9px] font-mono text-white/40 tracking-wider">LEVEL AVATAR</span>
+                <div className="shrink-0 self-center sm:self-auto flex flex-col items-center gap-2">
+                  <div 
+                    onClick={() => {
+                      if (onOpenAvatarPicker) onOpenAvatarPicker();
+                    }}
+                    className="relative group cursor-pointer"
+                    title={lang === 'fr' ? 'Changer votre avatar' : 'Change your avatar'}
+                  >
+                    <LevelAvatar avatar={customAvatar || userPhoto} name={userName || 'Cinéphile'} size="xl" isVip={isVipActive} />
+                    <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                      <Sparkles className="w-5 h-5 text-purple-300" />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onOpenAvatarPicker) onOpenAvatarPicker();
+                    }}
+                    className="text-[10px] font-bold text-[#c084fc] hover:text-white px-2.5 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/25 transition-all cursor-pointer shadow-sm flex items-center gap-1"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span>{lang === 'fr' ? 'Changer d\'avatar 3D' : 'Change 3D Avatar'}</span>
+                  </button>
                 </div>
                 
                 <div className="flex-1 min-w-0">
@@ -771,14 +793,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       {copiedId ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white/70" />}
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => importFileRef.current?.click()}
-                    className="text-xs text-[#c084fc] hover:text-white font-bold inline-flex items-center gap-1.5 cursor-pointer underline underline-offset-2"
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>{lang === 'fr' ? 'Importer une photo depuis l\'appareil' : 'Upload photo from device'}</span>
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => importFileRef.current?.click()}
+                      className="text-xs text-[#c084fc] hover:text-white font-bold inline-flex items-center gap-1.5 cursor-pointer underline underline-offset-2"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{lang === 'fr' ? 'Importer une photo' : 'Upload photo'}</span>
+                    </button>
+                    {onOpenAvatarPicker && (
+                      <button
+                        type="button"
+                        onClick={onOpenAvatarPicker}
+                        className="text-xs text-white/70 hover:text-[#c084fc] font-bold inline-flex items-center gap-1.5 cursor-pointer underline underline-offset-2"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#c084fc]" />
+                        <span>{lang === 'fr' ? 'Galerie 3D (36+)' : '3D Gallery (36+)'}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 

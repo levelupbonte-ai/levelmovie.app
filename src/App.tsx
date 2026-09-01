@@ -33,6 +33,7 @@ import { MandatoryProfileCompletionModal } from './components/MandatoryProfileCo
 import { LevelAvatar } from './components/LevelAvatar';
 import { DonaModal } from './components/DonaModal';
 import { CinematicPosterWall } from './components/CinematicPosterWall';
+import { AvatarPickerModal } from './components/AvatarPickerModal';
 import { FooterDisclaimer } from './components/FooterDisclaimer';
 import { LegalModal, LegalDocType } from './components/LegalModal';
 import { NetworkOfflineManager } from './components/NetworkOfflineManager';
@@ -182,6 +183,19 @@ export default function App() {
   const [isPartyMinimized, setIsPartyMinimized] = useState(false);
   const [createPartyMovie, setCreatePartyMovie] = useState<any>(null);
   const [customRoomName, setCustomRoomName] = useState("");
+  const [showAvatarPickerModal, setShowAvatarPickerModal] = useState(false);
+
+  useEffect(() => {
+    const handleAvatarChange = (e: any) => {
+      if (e?.detail?.avatar) {
+        setUserPhoto(e.detail.avatar);
+      }
+    };
+    window.addEventListener('levelmovie_avatar_change', handleAvatarChange);
+    return () => {
+      window.removeEventListener('levelmovie_avatar_change', handleAvatarChange);
+    };
+  }, []);
 
   const [showSplash, setShowSplash] = useState(true);
   const [splashStep, setSplashStep] = useState(0);
@@ -1007,9 +1021,6 @@ export default function App() {
       <div className={`fixed inset-0 z-[9999] bg-[#060608] flex items-center justify-center flex-col overflow-hidden transition-opacity duration-500 ${splashStep === 2 ? 'opacity-0' : 'opacity-100'}`}>
         <style>{globalStyles}</style>
 
-        {/* Dynamic Movie Catalog Poster Wall in background */}
-        <CinematicPosterWall opacity={0.30} />
-
         <div className={`splash-text relative z-10 flex flex-col items-center px-4 w-full max-w-lg mx-auto ${splashStep === 1 ? 'active' : ''} ${splashStep >= 2 ? 'exit' : ''}`}>
           {/* Logo with purple glow */}
           <div className="relative mb-5">
@@ -1506,6 +1517,7 @@ export default function App() {
         onOpenExternalApps={() => setShowExternalApps(true)}
         onOpenSupport={() => setShowSupport(true)}
         onOpenDona={() => { setShowSidebar(false); setCurrentCategory('dona'); }}
+        onOpenAvatarPicker={() => { setShowSidebar(false); setShowAvatarPickerModal(true); }}
         onNavigateCategory={(cat, subTab) => {
           setCurrentCategory(cat);
           if (subTab) {
@@ -1576,6 +1588,7 @@ export default function App() {
         onOpenLogin={() => setShowLoginModal(true)}
         onOpenLogout={() => setShowLogoutConfirm(true)}
         onOpenDona={() => { setShowSettings(false); setCurrentCategory('dona'); }}
+        onOpenAvatarPicker={() => { setShowAvatarPickerModal(true); }}
         onOpenLegal={(doc) => {
           setLegalDocType(doc);
           setShowLegalModal(true);
@@ -1585,6 +1598,18 @@ export default function App() {
         onNavigateCategory={(cat) => setCurrentCategory(cat)}
         showToast={showToast}
         t={t}
+      />
+
+      {/* MODAL AVATARS 3D REALISTES & PERSONNALISATION */}
+      <AvatarPickerModal
+        isOpen={showAvatarPickerModal}
+        onClose={() => setShowAvatarPickerModal(false)}
+        currentAvatar={userPhoto}
+        onSelectAvatar={(newAvatar) => {
+          setUserPhoto(newAvatar);
+        }}
+        lang={lang}
+        showToast={showToast}
       />
 
       {/* MODAL JURIDIQUE : CONDITIONS GÉNÉRALES & CONFIDENTIALITÉ */}
