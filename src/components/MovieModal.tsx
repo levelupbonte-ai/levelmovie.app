@@ -54,8 +54,6 @@ export function MovieModal({
   const [reportNote, setReportNote] = useState<string>('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [selectedServer, setSelectedServer] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('lm_now_playing') || 'null');
@@ -63,7 +61,6 @@ export function MovieModal({
     } catch (e) {}
     return 'vidsrc_me';
   });
-  const [pendingServer, setPendingServer] = useState('vidsrc_me');
   const [iframeLoading, setIframeLoading] = useState(true);
   const [kbOffset, setKbOffset] = useState(0);
 
@@ -246,6 +243,37 @@ export function MovieModal({
     }
   };
 
+  // Track visual viewport on mobile so that when the virtual keyboard opens,
+  // the movie iframe stays anchored and fully visible at the top above the keyboard.
+  const [theaterVpHeight, setTheaterVpHeight] = useState<number | null>(null);
+  const [isKeyboardActive, setIsKeyboardActive] = useState(false);
+
+  useEffect(() => {
+    if (partyId && partyData && !isMinimized) {
+      const updateVp = () => {
+        if (window.visualViewport) {
+          setTheaterVpHeight(window.visualViewport.height);
+          const isKb = window.innerHeight - window.visualViewport.height > 100;
+          setIsKeyboardActive(isKb);
+        }
+      };
+      updateVp();
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', updateVp);
+        window.visualViewport.addEventListener('scroll', updateVp);
+      }
+      return () => {
+        if (window.visualViewport) {
+          window.visualViewport.removeEventListener('resize', updateVp);
+          window.visualViewport.removeEventListener('scroll', updateVp);
+        }
+      };
+    } else {
+      setTheaterVpHeight(null);
+      setIsKeyboardActive(false);
+    }
+  }, [partyId, partyData, isMinimized]);
+
   const handleSendViaGmail = (recipient?: string) => {
     const roomTitle = partyData?.roomName || partyData?.title || (movie?.title || movie?.name) || 'Salon Privé';
     const shareUrl = `${window.location.origin}/?party=${partyId}`;
@@ -337,16 +365,11 @@ export function MovieModal({
 
   useEffect(() => {
     if (mode === 'play' || partyId) {
-      if (!disclaimerAccepted && !partyId) {
-        setShowDisclaimer(true);
-      } else {
-        setModalMode('play');
-        if (partyId) setDisclaimerAccepted(true);
-      }
+      setModalMode('play');
     } else {
       setModalMode('info');
     }
-  }, [mode, partyId, disclaimerAccepted]);
+  }, [mode, partyId]);
 
   useEffect(() => {
     let timer: any;
@@ -691,14 +714,9 @@ export function MovieModal({
   };
 
   const handlePlayRequest = (serverId: string) => {
-    if (!disclaimerAccepted && !partyId) {
-      setPendingServer(serverId);
-      setShowDisclaimer(true);
-    } else {
-      if (selectedServer !== serverId) setIframeLoading(true);
-      setSelectedServer(serverId);
-      setModalMode('play');
-    }
+    if (selectedServer !== serverId) setIframeLoading(true);
+    setSelectedServer(serverId);
+    setModalMode('play');
   };
 
   const handlePlayEpisode = (season: number, episode: number) => {
@@ -720,12 +738,7 @@ export function MovieModal({
     setSelectedEpisode(episode);
     setIframeLoading(true);
     setShowEpisodesPanel(false);
-    if (!disclaimerAccepted) {
-      setPendingServer(selectedServer);
-      setShowDisclaimer(true);
-    } else {
-      setModalMode('play');
-    }
+    setModalMode('play');
   };
 
   const getFormatRuntime = () => {
@@ -867,12 +880,16 @@ export function MovieModal({
                 top: pipPos ? `${pipPos.y}px` : undefined,
                 touchAction: 'none',
               }
-            : { paddingTop: 'env(safe-area-inset-top, 0px)' }
+            : {
+                paddingTop: 'env(safe-area-inset-top, 0px)',
+                height: theaterVpHeight ? `${theaterVpHeight}px` : '100dvh',
+                maxHeight: theaterVpHeight ? `${theaterVpHeight}px` : '100dvh',
+              }
         }
         className={
           isMinimized
             ? `${pipPos ? '' : 'bottom-24 md:bottom-6 right-4 md:right-6'} fixed z-[8000] w-[240px] md:w-[320px] rounded-2xl overflow-hidden shadow-[0_15px_50px_rgba(0,0,0,0.85)] border border-[#a855f7]/40 bg-[#0c0c12] animate-in fade-in zoom-in duration-200 select-none cursor-grab active:cursor-grabbing`
-            : "fixed inset-0 z-[8000] bg-[#060608] flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden"
+            : "fixed inset-0 z-[8000] bg-[#060608] flex flex-col lg:flex-row w-full overflow-hidden"
         }
       >
 
@@ -880,7 +897,17 @@ export function MovieModal({
         {memberMenu && (
           <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setMemberMenu(null)}>
             <div className="bg-[#151520] border border-[#a855f7]/30 rounded-2xl p-5 max-w-xs w-full text-center shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
-              <h3 className="text-white font-black text-sm uppercase tracking-widest mb-4">Gérer {memberMenu.name}</h3>
+              <div className="flex flex-col items-center gap-2.5 mb-4">
+                <LevelAvatar 
+                  avatar={memberMenu.photo || (memberMenu.uid === user?.uid ? userPhoto : undefined)} 
+                  name={memberMenu.name} 
+                  size="lg" 
+                />
+                <div>
+                  <h3 className="text-white font-black text-sm uppercase tracking-wider">{memberMenu.name}</h3>
+                  <span className="text-[10px] text-white/40 font-mono">ID: {String(memberMenu.uid).substring(0, 12)}</span>
+                </div>
+              </div>
               <div className="flex flex-col gap-2">
                 {partyData.muted?.some((m: any) => m.uid === memberMenu.uid) ? (
                   <button onClick={() => handleUnmuteUser(memberMenu)} className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-bold uppercase transition-colors outline-none cursor-pointer">{t.unmuteUser}</button>
@@ -1287,9 +1314,15 @@ export function MovieModal({
             ? "w-full flex flex-col relative bg-black" 
             : isChatHidden
               ? "w-full flex-1 flex flex-col shrink-0 relative z-[60] bg-black shadow-2xl h-full min-h-[100dvh]"
-              : "w-full lg:flex-1 flex flex-col shrink-0 lg:shrink relative z-[60] bg-black shadow-2xl h-auto max-h-[60vh] lg:max-h-full"
+              : "w-full lg:flex-1 flex flex-col shrink-0 lg:shrink sticky top-0 lg:relative z-[60] bg-black shadow-2xl h-auto"
         }>
-          <div className={isMinimized ? "w-full aspect-video bg-black relative flex items-center justify-center group" : isChatHidden ? "w-full flex-1 bg-black relative border-b border-white/5 z-40 flex items-center justify-center group" : "w-full aspect-video lg:aspect-auto lg:flex-1 bg-black relative border-b border-white/5 z-40 flex items-center justify-center group"}>
+          <div className={
+            isMinimized 
+              ? "w-full aspect-video bg-black relative flex items-center justify-center group shrink-0" 
+              : isChatHidden 
+                ? "w-full flex-1 bg-black relative border-b border-white/5 z-40 flex items-center justify-center group" 
+                : `w-full ${isKeyboardActive ? 'h-[150px] sm:h-[190px]' : 'aspect-video'} lg:aspect-auto lg:flex-1 bg-black relative border-b border-white/5 z-40 flex items-center justify-center group shrink-0 transition-all`
+          }>
             <iframe key={iframeSrc} className={`absolute inset-0 w-full h-full bg-transparent z-10 transition-opacity duration-500 ${iframeLoading ? 'opacity-0' : 'opacity-100'}`} src={iframeSrc} onLoad={() => setIframeLoading(false)} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
 
             {iframeLoading && (
@@ -1388,7 +1421,7 @@ export function MovieModal({
           </div>
 
           {!isMinimized && (
-            <div className="w-full bg-[#0a0a0f] p-2.5 md:p-3.5 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-30 flex flex-col md:flex-row items-center justify-between gap-2 md:gap-3 relative border-t border-white/10">
+            <div className={`w-full bg-[#0a0a0f] ${isKeyboardActive ? 'hidden lg:flex' : 'flex'} p-2.5 md:p-3.5 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-30 flex-col md:flex-row items-center justify-between gap-2 md:gap-3 relative border-t border-white/10`}>
               <div className="flex items-center justify-between w-full md:w-auto gap-2 md:gap-3 shrink-0 min-w-0">
                 <div className="flex items-center gap-2 md:gap-3 min-w-0">
                   <div className="w-8 h-8 md:w-9 md:h-9 bg-[#a855f7]/20 rounded-xl flex items-center justify-center border border-[#a855f7]/30 shrink-0">
@@ -1613,6 +1646,7 @@ export function MovieModal({
               {partyData.members?.map((m: any) => {
                 const isMHost = m.uid === partyData.hostUid;
                 const isMMod = partyData.mods?.includes(m.uid);
+                const memberAvatar = m.photo || (m.uid === user?.uid ? userPhoto : undefined);
                 return (
                   <div 
                     key={m.uid} 
@@ -1620,9 +1654,12 @@ export function MovieModal({
                     className={`relative group flex items-center shrink-0 ${m.uid !== user?.uid ? 'cursor-pointer hover:scale-105' : ''} transition-transform`}
                     title={`${m.name || 'Membre'}${isMHost ? ' (Hôte)' : isMMod ? ' (Modérateur)' : ''}`}
                   >
-                    <div className={`w-7 h-7 rounded-full bg-[#181824] flex items-center justify-center font-black text-[11px] text-[#c084fc] border-[2px] shadow-sm overflow-hidden ${isMHost ? 'border-[#a855f7] shadow-[0_0_8px_rgba(168,85,247,0.5)]' : (isMMod ? 'border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'border-white/20')}`}>
-                      {m.name?.charAt(0).toUpperCase() || '?'}
-                    </div>
+                    <LevelAvatar
+                      avatar={memberAvatar}
+                      name={m.name}
+                      size="xs"
+                      className={`border-[2px] ${isMHost ? '!border-[#a855f7] shadow-[0_0_8px_rgba(168,85,247,0.5)]' : (isMMod ? '!border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : '!border-white/20')}`}
+                    />
                     {isMHost && <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#a855f7] rounded-full border border-[#111116] flex items-center justify-center"><Star className="w-2 h-2 fill-white text-white"/></div>}
                     {isMMod && !isMHost && <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 rounded-full border border-[#111116] flex items-center justify-center"><ShieldCheck className="w-2 h-2 fill-white text-white"/></div>}
                   </div>
@@ -1632,13 +1669,15 @@ export function MovieModal({
 
             {/* Fil des Messages */}
             <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5 no-scrollbar bg-gradient-to-t from-black/90 via-black/50 to-transparent min-h-0">
-              <div className="bg-gradient-to-r from-purple-900/20 via-purple-600/10 to-transparent border border-purple-500/25 p-2.5 rounded-2xl mb-2 flex gap-2.5 items-start shrink-0 shadow-inner">
-                <ShieldCheck className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
-                <div className="text-[10px] md:text-[11px] text-purple-200/90 leading-snug">
-                  <strong className="font-black uppercase tracking-wider block text-purple-300 mb-0.5">{t.partyInfoPinTitle}</strong>
-                  {t.partyInfoPinText}
+              {!isKeyboardActive && (
+                <div className="bg-gradient-to-r from-purple-900/20 via-purple-600/10 to-transparent border border-purple-500/25 p-2.5 rounded-2xl mb-2 flex gap-2.5 items-start shrink-0 shadow-inner">
+                  <ShieldCheck className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+                  <div className="text-[10px] md:text-[11px] text-purple-200/90 leading-snug">
+                    <strong className="font-black uppercase tracking-wider block text-purple-300 mb-0.5">{t.partyInfoPinTitle}</strong>
+                    {t.partyInfoPinText}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {partyData.messages?.filter((msg: any) => !partyData.muted?.some((m: any) => m.uid === msg.uid)).map((msg: any, i: number) => {
                 if (msg.isSystem) {
@@ -1739,11 +1778,12 @@ export function MovieModal({
                       setReplyingTo(null);
                     }
                   }}
-                  onFocus={(e) => {
+                  onFocus={() => {
+                    window.scrollTo(0, 0);
                     setTimeout(() => {
-                      e.target.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                      chatEndRef.current?.scrollIntoView();
-                    }, 300);
+                      window.scrollTo(0, 0);
+                      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                    }, 80);
                   }}
                   placeholder="Écrire un message en direct..."
                   className="w-full bg-transparent pl-3 pr-2 py-2 text-xs md:text-sm text-white placeholder-white/40 outline-none font-medium"
@@ -1774,29 +1814,6 @@ export function MovieModal({
   // MODAL STANDARD (FILM CLASSIQUE EN PLEIN ÉCRAN TOTAL)
   return (
     <div className="fixed inset-0 z-[8000] bg-[#0a0a0f] flex flex-col overflow-x-hidden overflow-y-auto no-scrollbar animate-in fade-in duration-300">
-      {showDisclaimer && (
-        <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#0a0a0f] border border-[#a855f7]/30 rounded-3xl p-6 md:p-8 max-w-xl w-full shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-in zoom-in duration-300">
-            <h3 className="text-xl md:text-2xl font-black text-white mb-4 uppercase tracking-widest flex items-center gap-3 border-b border-white/10 pb-4">
-              <AlertTriangle className="text-red-500 w-8 h-8" /> {t.warningTitle}
-            </h3>
-            <div className="bg-gradient-to-r from-purple-900/40 to-pink-900/40 border border-[#a855f7]/50 p-5 rounded-2xl mb-6 shadow-[0_0_20px_rgba(168,85,247,0.15)]">
-              <h4 className="text-white font-black text-sm md:text-base mb-2 tracking-widest">{t.recommendationTitle}</h4>
-              <p className="text-white/80 text-xs md:text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: t.recommendationText }}></p>
-            </div>
-            <p className="text-white/60 text-[10px] md:text-xs leading-relaxed mb-6 text-justify">{t.warningDisclaimer}</p>
-            <label className="flex items-start gap-3 cursor-pointer mb-8 bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition-colors shadow-sm outline-none">
-              <input type="checkbox" checked={disclaimerAccepted} onChange={(e) => setDisclaimerAccepted(e.target.checked)} className="mt-0.5 w-5 h-5 accent-[#a855f7] cursor-pointer" />
-              <span className="text-white/90 text-xs md:text-sm font-bold leading-tight">{t.disclaimerCheckbox}</span>
-            </label>
-            <div className="flex justify-end gap-3 border-t border-white/10 pt-6">
-              <button onClick={() => setShowDisclaimer(false)} className="px-6 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest text-white/50 hover:text-white hover:bg-white/5 transition-colors outline-none cursor-pointer">{t.cancel}</button>
-              <button disabled={!disclaimerAccepted} onClick={() => { setShowDisclaimer(false); setSelectedServer(pendingServer); setModalMode('play'); }} className="px-8 py-3 bg-[#a855f7] text-white rounded-xl font-black text-[11px] uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-500 transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] outline-none cursor-pointer">{t.acceptPlay}</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="w-full flex-1 flex flex-col bg-[#0a0a0f] z-10 relative min-h-screen">
         <div className="safe-top-header w-full bg-black/60 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-4 md:px-10 pb-3 md:pb-4 shrink-0 sticky top-0 z-[60] shadow-md">
           <div className="flex items-center gap-2">

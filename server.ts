@@ -1,4 +1,5 @@
 import express from 'express';
+import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -6,6 +7,7 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import Parser from 'rss-parser';
 import { Resend } from 'resend';
+import { setupPartyEngine } from './server/partyEngine';
 
 dotenv.config();
 
@@ -797,6 +799,95 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Geo Region & San Diego Availability Check Endpoint
+app.get('/api/geo-check', async (req, res) => {
+  try {
+    const forwarded = req.headers['x-forwarded-for'];
+    const clientIp = typeof forwarded === 'string'
+      ? forwarded.split(',')[0].trim()
+      : (req.socket.remoteAddress || '');
+
+    const queryBypass = req.query.bypass || req.query.city || req.query.region;
+    if (queryBypass && String(queryBypass).toLowerCase().includes('sandiego')) {
+      return res.json({
+        allowed: true,
+        city: 'San Diego',
+        region: 'California',
+        country: 'US',
+        isSanDiego: true,
+      });
+    }
+
+    // Support des coordonnées GPS directes
+    const clientLat = parseFloat(String(req.query.lat || ''));
+    const clientLon = parseFloat(String(req.query.lon || ''));
+    if (!isNaN(clientLat) && !isNaN(clientLon)) {
+      const inSdCoordinates = clientLat >= 32.40 && clientLat <= 33.55 &&
+                              clientLon >= -117.65 && clientLon <= -116.30;
+      if (inSdCoordinates) {
+        return res.json({
+          allowed: true,
+          city: 'San Diego',
+          region: 'California',
+          country: 'US',
+          isSanDiego: true,
+        });
+      }
+    }
+
+    const clientTz = String(req.query.tz || '');
+
+    if (clientIp && clientIp !== '127.0.0.1' && clientIp !== '::1' && !clientIp.startsWith('10.') && !clientIp.startsWith('192.168.')) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2500);
+        const geoRes = await fetch(`https://ipwho.is/${encodeURIComponent(clientIp)}`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        if (geoRes.ok) {
+          const geoData: any = await geoRes.json();
+          const city = String(geoData.city || '').toLowerCase();
+          const postal = String(geoData.postal || '');
+          const region = String(geoData.region || '').toLowerCase();
+          
+          const sdCities = [
+            'san diego', 'la jolla', 'chula vista', 'oceanside', 'escondido', 
+            'carlsbad', 'el cajon', 'vista', 'san marcos', 'encinitas', 
+            'national city', 'la mesa', 'santee', 'poway', 'imperial beach', 
+            'lemon grove', 'coronado', 'solana beach', 'del mar', 'spring valley'
+          ];
+
+          const isCityMatch = sdCities.some(sdc => city.includes(sdc));
+          const isZipMatch = postal.startsWith('919') || postal.startsWith('920') || postal.startsWith('921');
+          
+          // Détection relais mobile : IP routée par Phoenix/AZ mais avec fuseau America/Los_Angeles
+          const isMobileRouteFromSd = (city.includes('phoenix') || region.includes('arizona')) && 
+            clientTz === 'America/Los_Angeles';
+
+          const isSanDiego = isCityMatch || isZipMatch || isMobileRouteFromSd;
+
+          return res.json({
+            allowed: isSanDiego,
+            city: geoData.city || null,
+            region: geoData.region || null,
+            country: geoData.country || null,
+            isSanDiego,
+          });
+        }
+      } catch (e) {}
+    }
+
+    res.json({
+      allowed: false,
+      ip: clientIp,
+      isSanDiego: false,
+    });
+  } catch (err) {
+    res.json({ allowed: false, isSanDiego: false });
+  }
+});
+
 // Server Ads & Issue Reporting Endpoint
 app.post('/api/report-server', (req, res) => {
   try {
@@ -1294,6 +1385,11 @@ Lorsque tu mentionnes des films, séries, actions ou fonctionnalités, intègre 
 // VITE MIDDLEWARE & STATIC SERVING
 // =========================================================================
 async function startServer() {
+  const httpServer = http.createServer(app);
+
+  // Mount real-time Watch Party WebSocket & REST Engine
+  setupPartyEngine(app, httpServer);
+
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -1308,7 +1404,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`🎬 LevelMovie Full-Stack Server active on http://0.0.0.0:${PORT}`);
   });
 }

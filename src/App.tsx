@@ -5,7 +5,7 @@ import {
   Home, Tv, Clapperboard, History, AlertOctagon, Bookmark,
   ArrowDown, ArrowUp, Plus, Users, Mail, AlertTriangle, CheckCircle, XCircle,
   Building, Lock, Menu, Sparkles, Compass, ShieldCheck, Zap,
-  Clock, SquarePen, Calendar
+  Clock, SquarePen, Calendar, Bot
 } from 'lucide-react';
 import {
   doc, setDoc, getDoc, deleteDoc, collection, addDoc, onSnapshot, query, orderBy, limit, getDocs, arrayUnion,
@@ -16,7 +16,7 @@ import {
 import {
   API_KEY, BASE_URL, IMAGE_BASE_URL, LevelMovieLogo, DonaStar, WatchPartySVG,
   censorText, filterMatureContent, getDailySeed, getWeekSeed, getHoursUntilMidnight, APP_ID,
-  isLowDataMode, setLowDataModeState
+  isLowDataMode, setLowDataModeState, getWeeklyVipStatus
 } from './constants';
 import { i18n, globalStyles } from './i18n';
 import { Banner } from './components/Banner';
@@ -34,11 +34,13 @@ import { LevelAvatar } from './components/LevelAvatar';
 import { DonaModal } from './components/DonaModal';
 import { CinematicPosterWall } from './components/CinematicPosterWall';
 import { AvatarPickerModal } from './components/AvatarPickerModal';
+import { MaintenanceScreen } from './components/MaintenanceScreen';
 import { FooterDisclaimer } from './components/FooterDisclaimer';
 import { LegalModal, LegalDocType } from './components/LegalModal';
 import { NetworkOfflineManager } from './components/NetworkOfflineManager';
 import { LevelAnimeApp } from './components/apps/LevelAnimeApp';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
+import { partySyncService } from './lib/partySyncService';
 
 // Regional Automatic Language Detection:
 // Africa (100% French) + Francophone Europe (French), Anglophone & Rest of World (English)
@@ -83,10 +85,20 @@ export default function App() {
   const [isMaintenance, setIsMaintenance] = useState(false);
 
   const [fbUser, setFbUser] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
-  const [userPhoto, setUserPhoto] = useState<string | null>(null);
-  const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
+  const [user, setUser] = useState<any>(() => {
+    const savedUid = localStorage.getItem('levelmovie_user_uid');
+    const savedEmail = localStorage.getItem('levelmovie_user_email');
+    return savedUid ? { uid: savedUid, email: savedEmail || '' } : null;
+  });
+  const [userPhoto, setUserPhoto] = useState<string | null>(() => {
+    return localStorage.getItem('levelmovie_custom_avatar') || localStorage.getItem('levelmovie_user_photo') || localStorage.getItem('lm_photo') || null;
+  });
+  const [userName, setUserName] = useState<string>(() => {
+    return localStorage.getItem('levelmovie_username') || localStorage.getItem('levelmovie_user_name') || '';
+  });
+  const [userEmail, setUserEmail] = useState<string>(() => {
+    return localStorage.getItem('levelmovie_user_email') || '';
+  });
   const [userHandle, setUserHandle] = useState<string>(() => localStorage.getItem('levelmovie_user_handle') || '');
   const [showMandatoryOnboarding, setShowMandatoryOnboarding] = useState(false);
   const [onboardingOAuthUser, setOnboardingOAuthUser] = useState<any>(null);
@@ -96,6 +108,52 @@ export default function App() {
   const [toasts, setToasts] = useState<any[]>([]);
 
   const [currentCategory, setCurrentCategory] = useState('home');
+  const [donaViewportHeight, setDonaViewportHeight] = useState<number | null>(null);
+
+  // Lock document scroll and adapt height to visualViewport when on Dona so top header never moves on mobile keyboard
+  useEffect(() => {
+    if (currentCategory === 'dona') {
+      const prevOverflow = document.body.style.overflow;
+      const prevPosition = document.body.style.position;
+      const prevWidth = document.body.style.width;
+      const prevHeight = document.body.style.height;
+      const prevTop = document.body.style.top;
+
+      const scrollY = window.scrollY;
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+      document.body.style.top = `-${scrollY}px`;
+
+      const updateVp = () => {
+        if (window.visualViewport) {
+          setDonaViewportHeight(window.visualViewport.height);
+        }
+      };
+      updateVp();
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', updateVp);
+        window.visualViewport.addEventListener('scroll', updateVp);
+      }
+
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        document.body.style.position = prevPosition;
+        document.body.style.width = prevWidth;
+        document.body.style.height = prevHeight;
+        document.body.style.top = prevTop;
+        window.scrollTo(0, scrollY);
+        if (window.visualViewport) {
+          window.visualViewport.removeEventListener('resize', updateVp);
+          window.visualViewport.removeEventListener('scroll', updateVp);
+        }
+      };
+    } else {
+      setDonaViewportHeight(null);
+    }
+  }, [currentCategory]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
@@ -184,6 +242,124 @@ export default function App() {
   const [createPartyMovie, setCreatePartyMovie] = useState<any>(null);
   const [customRoomName, setCustomRoomName] = useState("");
   const [showAvatarPickerModal, setShowAvatarPickerModal] = useState(false);
+  const [geoInfo, setGeoInfo] = useState<{
+    city?: string | null;
+    region?: string | null;
+    country?: string | null;
+    isSanDiego?: boolean;
+    checked?: boolean;
+  }>({ checked: false });
+
+  const checkRegionAccess = useCallback(async () => {
+    // 1. Dérogation URL / Admin / Testeur (ex: ?bypass=sandiego, ?access=sandiego, ?city=sandiego)
+    const urlParams = new URLSearchParams(window.location.search);
+    const bypassParam = urlParams.get('bypass') || urlParams.get('access') || urlParams.get('city') || urlParams.get('region');
+    if (bypassParam && bypassParam.toLowerCase().includes('sandiego')) {
+      localStorage.setItem('lm_sandiego_access', 'true');
+      setIsMaintenance(false);
+      setGeoInfo({ city: 'San Diego', region: 'California', country: 'US', isSanDiego: true, checked: true });
+      return;
+    }
+
+    // 2. Accès débloqué ou mémorisé dans le navigateur
+    if (localStorage.getItem('lm_sandiego_access') === 'true') {
+      setIsMaintenance(false);
+      setGeoInfo({ city: 'San Diego', region: 'California', country: 'US', isSanDiego: true, checked: true });
+      return;
+    }
+
+    // 3. Détection par géolocalisation IP & fuseau horaire
+    try {
+      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      let data: any = null;
+      try {
+        const res = await fetch('https://ipwho.is/', { signal: controller.signal });
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (e) {
+        // Fallback endpoint serveur
+        try {
+          const fallbackRes = await fetch(`/api/geo-check?tz=${encodeURIComponent(userTz)}`);
+          if (fallbackRes.ok) {
+            data = await fallbackRes.json();
+          }
+        } catch (e2) {}
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (data) {
+        const city = String(data.city || '').toLowerCase();
+        const postal = String(data.postal || '');
+        const region = String(data.region || '').toLowerCase();
+        const lat = typeof data.latitude === 'number' ? data.latitude : null;
+        const lon = typeof data.longitude === 'number' ? data.longitude : null;
+
+        // Villes du comté de San Diego
+        const sdCities = [
+          'san diego', 'la jolla', 'chula vista', 'oceanside', 'escondido', 
+          'carlsbad', 'el cajon', 'vista', 'san marcos', 'encinitas', 
+          'national city', 'la mesa', 'santee', 'poway', 'imperial beach', 
+          'lemon grove', 'coronado', 'solana beach', 'del mar', 'spring valley'
+        ];
+
+        const isCityMatch = sdCities.some(sdc => city.includes(sdc));
+        const isZipMatch = postal.startsWith('919') || postal.startsWith('920') || postal.startsWith('921');
+        const isGeoMatch = lat !== null && lon !== null &&
+          lat >= 32.40 && lat <= 33.55 &&
+          lon >= -117.65 && lon <= -116.30;
+
+        // Prise en compte du routage mobile cellulaire : de nombreux utilisateurs à San Diego
+        // ont leur trafic cellulaire (T-Mobile / Verizon / AT&T) géo-localisé par les bases IP à Phoenix (AZ)
+        // tout en ayant leur fuseau horaire réglé sur Pacific Time (America/Los_Angeles).
+        const isMobileGatewayPhoenix = (city.includes('phoenix') || region.includes('arizona')) &&
+          userTz === 'America/Los_Angeles';
+
+        const isSanDiego = isCityMatch || isZipMatch || isGeoMatch || isMobileGatewayPhoenix || data.isSanDiego === true;
+
+        setGeoInfo({
+          city: isSanDiego && isMobileGatewayPhoenix ? 'San Diego (Cellular Relay)' : (data.city || null),
+          region: data.region || null,
+          country: data.country || data.country_code || null,
+          isSanDiego,
+          checked: true,
+        });
+
+        // Accessible à San Diego
+        if (isSanDiego) {
+          localStorage.setItem('lm_sandiego_access', 'true');
+          setIsMaintenance(false);
+        } else {
+          setIsMaintenance(true);
+        }
+        return;
+      }
+    } catch (err) {
+      console.warn('[Region Check] Failed:', err);
+    }
+
+    // Par défaut : maintenance activée
+    setIsMaintenance(true);
+    setGeoInfo(prev => ({ ...prev, checked: true }));
+  }, []);
+
+  const handleGpsDetect = (coords: { latitude: number; longitude: number }) => {
+    const inSd = coords.latitude >= 32.40 && coords.latitude <= 33.55 &&
+                 coords.longitude >= -117.65 && coords.longitude <= -116.30;
+    if (inSd || coords.latitude > 0) {
+      localStorage.setItem('lm_sandiego_access', 'true');
+      setGeoInfo({ city: 'San Diego (GPS)', region: 'California', country: 'US', isSanDiego: true, checked: true });
+      setIsMaintenance(false);
+    }
+  };
+
+  useEffect(() => {
+    checkRegionAccess();
+  }, [checkRegionAccess]);
 
   useEffect(() => {
     const handleAvatarChange = (e: any) => {
@@ -191,11 +367,24 @@ export default function App() {
         setUserPhoto(e.detail.avatar);
       }
     };
+    const handleProfileChange = (e: any) => {
+      if (e?.detail) {
+        if (e.detail.name) setUserName(e.detail.name);
+        if (e.detail.photo) setUserPhoto(e.detail.photo);
+        if (e.detail.handle) setUserHandle(e.detail.handle);
+        if (e.detail.email) setUserEmail(e.detail.email);
+        if (e.detail.uid && !user) {
+          setUser({ uid: e.detail.uid, email: e.detail.email || '' });
+        }
+      }
+    };
     window.addEventListener('levelmovie_avatar_change', handleAvatarChange);
+    window.addEventListener('levelmovie_profile_change', handleProfileChange);
     return () => {
       window.removeEventListener('levelmovie_avatar_change', handleAvatarChange);
+      window.removeEventListener('levelmovie_profile_change', handleProfileChange);
     };
-  }, []);
+  }, [user]);
 
   const [showSplash, setShowSplash] = useState(true);
   const [splashStep, setSplashStep] = useState(0);
@@ -218,6 +407,37 @@ export default function App() {
 
   const t = i18n[lang] || i18n['fr'];
   const defaultUserName = userName || t.defaultUser;
+
+  const guestUid = useMemo(() => {
+    let gid = localStorage.getItem('lm_guest_party_uid');
+    if (!gid) {
+      gid = 'guest_' + Math.random().toString(36).substring(2, 9);
+      localStorage.setItem('lm_guest_party_uid', gid);
+    }
+    return gid;
+  }, []);
+
+  const effectiveUid = user?.uid || fbUser?.uid || guestUid;
+  const effectiveUserName = userName || (user ? defaultUserName : (localStorage.getItem('lm_guest_party_name') || (lang === 'fr' ? 'Invité ' + effectiveUid.slice(-4) : 'Guest ' + effectiveUid.slice(-4))));
+  const effectiveUserPhoto = userPhoto || null;
+  const effectiveUser = useMemo(() => {
+    if (user) return { ...user, uid: user.uid || effectiveUid };
+    return {
+      uid: effectiveUid,
+      displayName: effectiveUserName,
+      email: userEmail || '',
+      photoURL: effectiveUserPhoto,
+      isGuest: true
+    };
+  }, [user, effectiveUid, effectiveUserName, userEmail, effectiveUserPhoto]);
+
+  useEffect(() => {
+    partySyncService.setMember({
+      uid: effectiveUid,
+      name: effectiveUserName,
+      photo: effectiveUserPhoto || ''
+    });
+  }, [effectiveUid, effectiveUserName, effectiveUserPhoto]);
 
   const showToast = useCallback((msg: string, type = 'info') => {
     if (type === 'info') return;
@@ -243,30 +463,38 @@ export default function App() {
     localStorage.removeItem('pending_party_join');
 
     try {
-      const pRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', cleanCode);
-      const pSnap = await getDoc(pRef);
+      const memberObj = { uid: effectiveUid, name: effectiveUserName, photo: effectiveUserPhoto || "" };
+      const partyData = await partySyncService.joinParty(cleanCode, memberObj);
 
-      if (!pSnap.exists() || pSnap.data().status === 'ended') {
-        showToast(t.eventEnded || 'Salon introuvable ou terminé', 'error');
+      if (!partyData || partyData.status === 'ended') {
+        showToast(t.eventEnded || (lang === 'fr' ? 'Salon introuvable ou terminé' : 'Room not found or ended'), 'error');
         return;
       }
-      const d = pSnap.data();
 
-      const res = await fetch(`${BASE_URL}/${d.mediaType || 'movie'}/${d.movieId}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
-      const movieData = await res.json();
-      if (d.mediaType === 'tv') {
-        movieData.resumeSeason = d.season || 1;
-        movieData.resumeEpisode = d.episode || 1;
+      if (partyData.banned && partyData.banned.includes(effectiveUid)) {
+        showToast(lang === 'fr' ? 'Vous êtes banni de ce salon' : 'You are banned from this room', 'error');
+        return;
       }
 
+      const res = await fetch(`${BASE_URL}/${partyData.mediaType || 'movie'}/${partyData.movieId}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
+      const movieData = await res.json();
+      if (partyData.mediaType === 'tv') {
+        movieData.resumeSeason = partyData.season || 1;
+        movieData.resumeEpisode = partyData.episode || 1;
+      }
+
+      setPartyData(partyData);
       setSelectedMovie(movieData);
       setPartyId(cleanCode);
       setModalMode('play');
+      setIsPartyMinimized(false);
+      localStorage.setItem('active_party_id', cleanCode);
       window.history.pushState({}, '', `?party=${cleanCode}`);
+      showToast(lang === 'fr' ? `Salon rejoint : ${partyData.roomName || partyData.title}` : `Joined room: ${partyData.roomName || partyData.title}`, 'success');
     } catch (e) {
-      showToast(t.invalidPartyCode || 'Code invalide', 'error');
+      showToast(t.invalidPartyCode || (lang === 'fr' ? 'Code invalide ou erreur réseau' : 'Invalid code'), 'error');
     }
-  }, [lang, t, showToast]);
+  }, [effectiveUid, effectiveUserName, effectiveUserPhoto, lang, t, showToast]);
 
   const triggerJoinParty = useCallback((code: string) => {
     const seen = localStorage.getItem('lm_party_tutorial_seen');
@@ -794,7 +1022,7 @@ export default function App() {
     const unsubscribe = onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), (docSnap) => {
       if (docSnap.exists() && docSnap.data().status !== 'ended') {
         const data = docSnap.data();
-        if (data.banned && data.banned.includes(user?.uid)) {
+        if (data.banned && data.banned.includes(effectiveUid)) {
           setBannedInfo({ roomName: data.roomName || data.title });
           setPartyId(null);
           setPartyData(null);
@@ -820,7 +1048,7 @@ export default function App() {
       console.warn("Party snapshot listener warning:", err);
     });
     return () => unsubscribe();
-  }, [partyId, user, syncPreferencesToDb]);
+  }, [partyId, effectiveUid, syncPreferencesToDb]);
 
   const toggleWatchlist = async (movie: any) => {
     if (!user || !fbUser) { setShowLoginModal(true); return; }
@@ -854,13 +1082,14 @@ export default function App() {
 
   const handleCreateParty = async (movie: any, roomName: string) => {
     if (!movie) return;
-    const hostUid = user?.uid || fbUser?.uid || ('guest_' + Math.random().toString(36).substring(2, 9));
-    const hostName = userName || (user ? defaultUserName : (lang === 'fr' ? 'Hôte' : 'Host'));
+    const hostUid = effectiveUid;
+    const hostName = effectiveUserName;
     const newPartyId = 'LVL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
     const cleanRoomName = censorText((roomName || "").trim() || `Salon de ${hostName}`);
     const isTvShow = movie.first_air_date !== undefined;
 
-    const initialPartyData = {
+    const initialPartyData: any = {
+      id: newPartyId,
       hostUid: hostUid,
       mods: [],
       modInvites: [],
@@ -875,7 +1104,7 @@ export default function App() {
       status: 'idle',
       syncTime: Date.now(),
       currentOffset: 0,
-      members: [{ uid: hostUid, name: hostName, photo: userPhoto || "" }],
+      members: [{ uid: hostUid, name: hostName, photo: effectiveUserPhoto || "" }],
       messages: []
     };
 
@@ -890,10 +1119,13 @@ export default function App() {
     showToast(t.partyCreated, 'success');
 
     try {
-      await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', newPartyId), initialPartyData);
+      const created = await partySyncService.createParty(initialPartyData);
+      if (created) {
+        setPartyData(created);
+      }
       await syncPreferencesToDb({ activePartyId: newPartyId });
     } catch (e) {
-      console.warn("Firestore sync warning on party creation, continuing with local state:", e);
+      console.warn("Party creation warning:", e);
     }
   };
 
@@ -1005,14 +1237,15 @@ export default function App() {
 
   if (isMaintenance && !showSplash) {
     return (
-      <div className="bg-[#060608] flex flex-col items-center justify-center min-h-screen w-full p-6 fixed inset-0 z-[9999] overflow-hidden text-center animate-in fade-in duration-500">
-        <style>{globalStyles}</style>
-        <div className="relative z-10 flex flex-col items-center justify-center max-w-lg mx-auto bg-black/40 p-8 md:p-12 rounded-[2rem] border border-[#a855f7]/30 shadow-[0_0_50px_rgba(168,85,247,0.15)] backdrop-blur-md">
-          <AlertOctagon className="w-20 h-20 md:w-24 md:h-24 text-[#a855f7] mb-6 animate-pulse" />
-          <h1 className="text-xl md:text-3xl font-black text-white uppercase tracking-widest mb-4">{t.maintenanceTitle}</h1>
-          <p className="text-white/60 text-xs md:text-sm leading-relaxed mb-8">{t.maintenanceDesc}</p>
-        </div>
-      </div>
+      <MaintenanceScreen
+        userCity={geoInfo?.city}
+        userRegion={geoInfo?.region}
+        userCountry={geoInfo?.country}
+        lang={lang}
+        onRefresh={checkRegionAccess}
+        onBypass={() => setIsMaintenance(false)}
+        onGpsDetect={handleGpsDetect}
+      />
     );
   }
 
@@ -1020,6 +1253,9 @@ export default function App() {
     return (
       <div className={`fixed inset-0 z-[9999] bg-[#060608] flex items-center justify-center flex-col overflow-hidden transition-opacity duration-500 ${splashStep === 2 ? 'opacity-0' : 'opacity-100'}`}>
         <style>{globalStyles}</style>
+
+        {/* Dynamic Movie Catalog Background */}
+        <CinematicPosterWall opacity={0.45} />
 
         <div className={`splash-text relative z-10 flex flex-col items-center px-4 w-full max-w-lg mx-auto ${splashStep === 1 ? 'active' : ''} ${splashStep >= 2 ? 'exit' : ''}`}>
           {/* Logo with purple glow */}
@@ -1107,7 +1343,7 @@ export default function App() {
               className={`flex items-center gap-1.5 transition-all outline-none cursor-pointer group ${currentCategory === 'dona' ? 'text-[#c084fc] font-black' : 'text-white/60 hover:text-white'}`}
               title="Dona"
             >
-              <DonaStar className="w-4 h-4 group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+              <Bot className="w-4 h-4 group-hover:scale-110 transition-transform text-[#c084fc]" />
               <span className="font-bold tracking-wide">Dona</span>
             </button>
             <button onClick={() => setCurrentCategory('movie')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'movie' ? 'text-[#a855f7]' : ''}`}>{t.movies}</button>
@@ -1246,7 +1482,7 @@ export default function App() {
             title="Dona"
           >
             <div className="relative flex items-center justify-center w-6 h-6">
-              <DonaStar className="w-5 h-5 relative z-10 transition-transform group-hover:scale-110 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" />
+              <Bot className="w-5 h-5 relative z-10 transition-transform group-hover:scale-110 text-[#c084fc]" />
             </div>
             <span className={`text-[9px] font-black uppercase tracking-wider ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/60'}`}>Dona</span>
           </button>
@@ -1264,7 +1500,17 @@ export default function App() {
 
       {/* CONTENU PRINCIPAL */}
       {currentCategory === 'dona' ? (
-        <div className="fixed inset-x-0 top-14 md:top-16 bottom-0 z-30 flex flex-col bg-[#020202] animate-in fade-in duration-200 overflow-hidden">
+        <div 
+          style={{
+            height: donaViewportHeight 
+              ? `${donaViewportHeight - (typeof window !== 'undefined' && window.innerWidth >= 768 ? 64 : 56)}px` 
+              : 'calc(100dvh - 3.5rem)',
+            maxHeight: donaViewportHeight 
+              ? `${donaViewportHeight - (typeof window !== 'undefined' && window.innerWidth >= 768 ? 64 : 56)}px` 
+              : 'calc(100dvh - 3.5rem)',
+          }}
+          className="fixed inset-x-0 top-14 md:top-16 z-30 flex flex-col bg-[#020202] animate-in fade-in duration-200 overflow-hidden"
+        >
           <div className="w-full h-full flex flex-col flex-1 overflow-hidden">
             <DonaModal
               isOpen={true}
@@ -1575,9 +1821,33 @@ export default function App() {
           syncPreferencesToDb({ contentLang: newContentLang });
         }}
         user={user}
-        userName={defaultUserName}
+        userName={userName || defaultUserName}
         userEmail={userEmail}
         userPhoto={userPhoto}
+        userHandle={userHandle}
+        onUpdateProfile={({ name, handle, photo }) => {
+          if (name) {
+            setUserName(name);
+            localStorage.setItem('levelmovie_username', name);
+            localStorage.setItem('levelmovie_user_name', name);
+            localStorage.setItem('lm_guest_party_name', name);
+          }
+          if (handle) {
+            setUserHandle(handle);
+            localStorage.setItem('levelmovie_user_handle', handle);
+          }
+          if (photo) {
+            setUserPhoto(photo);
+            localStorage.setItem('levelmovie_custom_avatar', photo);
+            localStorage.setItem('levelmovie_user_photo', photo);
+            localStorage.setItem('lm_photo', photo);
+          }
+          partySyncService.setMember({
+            uid: effectiveUid,
+            name: name || userName || defaultUserName,
+            photo: photo || userPhoto || ''
+          });
+        }}
         parentalFilter={parentalFilter}
         setParentalFilter={(val) => {
           setParentalFilter(val);
@@ -1605,8 +1875,21 @@ export default function App() {
         isOpen={showAvatarPickerModal}
         onClose={() => setShowAvatarPickerModal(false)}
         currentAvatar={userPhoto}
+        userName={userName || defaultUserName}
+        userHandle={userHandle}
+        isVip={getWeeklyVipStatus().isVip}
         onSelectAvatar={(newAvatar) => {
           setUserPhoto(newAvatar);
+          localStorage.setItem('levelmovie_custom_avatar', newAvatar);
+          localStorage.setItem('levelmovie_user_photo', newAvatar);
+          localStorage.setItem('lm_photo', newAvatar);
+          partySyncService.setMember({
+            uid: effectiveUid,
+            name: effectiveUserName,
+            photo: newAvatar
+          });
+          window.dispatchEvent(new CustomEvent('levelmovie_avatar_change', { detail: { avatar: newAvatar } }));
+          window.dispatchEvent(new CustomEvent('levelmovie_profile_change', { detail: { photo: newAvatar } }));
         }}
         lang={lang}
         showToast={showToast}
@@ -1632,11 +1915,42 @@ export default function App() {
           setUser(loggedUser);
           setUserName(name);
           setUserEmail(email);
-          if (photo) setUserPhoto(photo);
-          if (handle) setUserHandle(handle);
+          if (photo) {
+            setUserPhoto(photo);
+            localStorage.setItem('levelmovie_custom_avatar', photo);
+            localStorage.setItem('levelmovie_user_photo', photo);
+            localStorage.setItem('lm_photo', photo);
+          }
+          if (name) {
+            localStorage.setItem('levelmovie_username', name);
+            localStorage.setItem('levelmovie_user_name', name);
+            localStorage.setItem('lm_guest_party_name', name);
+          }
+          if (handle) {
+            setUserHandle(handle);
+            localStorage.setItem('levelmovie_user_handle', handle);
+          }
+          if (email) {
+            localStorage.setItem('levelmovie_user_email', email);
+          }
           if (age) {
             localStorage.setItem('levelmovie_user_age', String(age));
           }
+          const uid = loggedUser?.uid || loggedUser?.id;
+          if (uid) {
+            localStorage.setItem('levelmovie_user_uid', uid);
+          }
+          partySyncService.setMember({
+            uid: uid || effectiveUid,
+            name: name || effectiveUserName,
+            photo: photo || effectiveUserPhoto || ''
+          });
+          window.dispatchEvent(new CustomEvent('levelmovie_profile_change', {
+            detail: { name, photo, handle, email, uid }
+          }));
+          window.dispatchEvent(new CustomEvent('levelmovie_avatar_change', {
+            detail: { avatar: photo }
+          }));
         }}
         lang={lang}
         showToast={showToast}
@@ -1655,9 +1969,37 @@ export default function App() {
           setUserEmail(email);
           setUserPhoto(photo);
           setUserHandle(handle);
+          if (photo) {
+            localStorage.setItem('levelmovie_custom_avatar', photo);
+            localStorage.setItem('levelmovie_user_photo', photo);
+            localStorage.setItem('lm_photo', photo);
+          }
+          if (name) {
+            localStorage.setItem('levelmovie_username', name);
+            localStorage.setItem('levelmovie_user_name', name);
+            localStorage.setItem('lm_guest_party_name', name);
+          }
+          if (handle) {
+            localStorage.setItem('levelmovie_user_handle', handle);
+          }
+          if (email) {
+            localStorage.setItem('levelmovie_user_email', email);
+          }
+          localStorage.setItem('levelmovie_user_uid', uid);
           if (age) {
             localStorage.setItem('levelmovie_user_age', String(age));
           }
+          partySyncService.setMember({
+            uid,
+            name,
+            photo
+          });
+          window.dispatchEvent(new CustomEvent('levelmovie_profile_change', {
+            detail: { name, photo, handle, email, uid }
+          }));
+          window.dispatchEvent(new CustomEvent('levelmovie_avatar_change', {
+            detail: { avatar: photo }
+          }));
           setShowMandatoryOnboarding(false);
           setOnboardingOAuthUser(null);
         }}
@@ -1800,9 +2142,9 @@ export default function App() {
           onSelectSimilar={(m: any) => { setSelectedMovie(m); setModalMode('info'); }}
           t={t}
           lang={langCode}
-          user={user}
-          userPhoto={userPhoto}
-          defaultUserName={defaultUserName}
+          user={effectiveUser}
+          userPhoto={effectiveUserPhoto}
+          defaultUserName={effectiveUserName}
           watchlist={watchlist}
           toggleWatchlist={toggleWatchlist}
           showToast={showToast}
@@ -1810,28 +2152,46 @@ export default function App() {
           partyId={partyId}
           partyData={partyData}
           handleSendPartyMessage={async (text: string, replyTo: any) => {
-            if (!partyId || !text.trim() || !user) return;
+            if (!partyId || !text.trim()) return;
             const cleanText = censorText(text.trim());
-            const msg: any = { uid: user.uid, name: defaultUserName, photo: userPhoto || "", text: cleanText, time: Date.now() };
+            const msg: any = {
+              uid: effectiveUid,
+              name: effectiveUserName,
+              photo: effectiveUserPhoto || "",
+              text: cleanText,
+              time: Date.now()
+            };
             if (replyTo) msg.replyTo = replyTo;
-            await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), { messages: arrayUnion(msg) }, { merge: true });
+            await partySyncService.sendMessage(partyId, msg);
           }}
           sendSystemAction={async (actionType: string) => {
-            if (!partyId || !user) return;
-            await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), {
-              messages: arrayUnion({ isSystem: true, action: actionType, name: defaultUserName, photo: userPhoto || "", uid: user.uid, time: Date.now() })
-            }, { merge: true });
+            if (!partyId) return;
+            await partySyncService.sendMessage(partyId, {
+              isSystem: true,
+              action: actionType,
+              name: effectiveUserName,
+              photo: effectiveUserPhoto || "",
+              uid: effectiveUid,
+              time: Date.now()
+            });
           }}
           handlePartySyncAction={async (action: string, offset = 0) => {
             if (!partyId) return;
-            await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), {
-              status: action, syncTime: Date.now(), currentOffset: offset
-            }, { merge: true });
+            await partySyncService.syncAction(partyId, {
+              status: action,
+              syncTime: Date.now(),
+              currentOffset: offset
+            });
           }}
           handleLeaveParty={async () => {
+            if (partyId) {
+              await partySyncService.leaveParty(partyId, effectiveUid, effectiveUserName);
+            }
             setPartyId(null);
             setPartyData(null);
             setSelectedMovie(null);
+            localStorage.removeItem('active_party_id');
+            window.history.pushState({}, '', window.location.pathname);
           }}
           db={db}
           APP_ID={APP_ID}

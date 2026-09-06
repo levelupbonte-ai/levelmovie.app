@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
   X, Settings, Bookmark, Clapperboard, LayoutGrid, HelpCircle,
   Film, Tv, Users, LogOut, User, ChevronRight, ExternalLink,
-  Compass, Calendar, Crown, Zap
+  Compass, Calendar, Crown, Zap, Bot
 } from 'lucide-react';
-import { LevelMovieLogo, DonaStar, TikTokHomeIcon, getWeeklyVipStatus, VipStatusInfo } from '../constants';
+import { LevelMovieLogo, TikTokHomeIcon, getWeeklyVipStatus, VipStatusInfo } from '../constants';
 import { LevelAvatar } from './LevelAvatar';
 
 interface AppSidebarProps {
@@ -183,7 +183,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 className="w-full py-2.5 px-3 rounded-xl hover:bg-white/5 transition-all text-left flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
-                  <DonaStar className="w-5 h-5 group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] shrink-0" />
+                  <Bot className="w-5 h-5 text-[#c084fc] group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] shrink-0" />
                   <div>
                     <div className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
                       Dona

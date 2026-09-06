@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, ArrowUp, X, Clock, Plus, Play, Star, 
   Trash2, ChevronRight, Film, Popcorn, Flame, Shuffle, Clapperboard, Users,
-  Search, Compass, Bell, Crown, Zap, ShieldCheck
+  Search, Compass, Bell, Crown, Zap, ShieldCheck, Bot
 } from 'lucide-react';
 import { 
-  BASE_URL, API_KEY, DonaStar, getWeeklyVipStatus, recordDonaUsage, 
+  BASE_URL, API_KEY, getWeeklyVipStatus, recordDonaUsage, 
   VipStatusInfo, recordWeeklyLogin 
 } from '../constants';
 
@@ -601,9 +601,9 @@ export const DonaModal: React.FC<DonaModalProps> = ({
       {/* ======================================================== */}
       <div className="hidden md:flex h-12 px-6 lg:px-10 bg-[#07070d]/95 border-b border-white/5 items-center justify-between shrink-0 z-30 backdrop-blur-md">
         
-        {/* Titre avec DonaStar */}
+        {/* Titre avec Bot */}
         <div className="flex items-center gap-2">
-          <DonaStar className="w-5 h-5 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" />
+          <Bot className="w-5 h-5 text-[#c084fc]" />
           <span className="text-[13px] font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#e9d5ff] via-[#c084fc] to-[#a855f7]">
             Dona AI
           </span>
@@ -743,11 +743,11 @@ export const DonaModal: React.FC<DonaModalProps> = ({
           {/* Flux de messages ou Ecran d'accueil initial */}
           <div className="flex-1 overflow-y-auto px-4 md:px-8 lg:px-12 py-6 space-y-6 custom-scrollbar overscroll-contain min-h-0">
             
-            {/* SI AUCUN MESSAGE : ÉCRAN D'ACCUEIL ÉPURÉ SANS COMPTEUR */}
+            {/* SI AUCUN MESSAGE : ÉCRAN D'ACCUEIL ÉPURÉ SANS ÉTOILE */}
             {messages.length === 0 ? (
               <div className="w-full max-w-2xl mx-auto my-auto py-8 sm:py-12 flex flex-col items-center justify-center text-center transition-all duration-300">
-                <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#9333ea]/30 via-purple-500/20 to-transparent border border-purple-500/30 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(168,85,247,0.25)]">
-                  <DonaStar className="w-8 h-8 drop-shadow-[0_0_12px_rgba(168,85,247,0.9)]" />
+                <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#9333ea]/20 via-purple-500/15 to-transparent border border-purple-500/25 flex items-center justify-center mb-4 shadow-[0_0_25px_rgba(168,85,247,0.15)]">
+                  <Bot className="w-8 h-8 text-[#c084fc]" />
                 </div>
 
                 <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-[0.12em] mb-2">
@@ -756,32 +756,11 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                 <p className="text-base sm:text-lg font-bold text-[#c084fc] tracking-wide mb-2">
                   {isFr ? "Comment puis-je vous aider ?" : "How can I help you today?"}
                 </p>
-                <p className="text-white/45 text-xs sm:text-sm max-w-md mx-auto leading-relaxed mb-6">
+                <p className="text-white/45 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
                   {isFr 
                     ? "Je peux créer vos Watch Parties, programmer des rappels de sortie, lancer vos films ou explorer le catalogue."
                     : "I can create Watch Parties, set movie release reminders, stream titles, or search the entire catalog for you."}
                 </p>
-
-                {/* Suggestions d'actions rapides et directes */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-lg">
-                  {plusShortcuts.slice(0, 4).map((item, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleSendMessage(item.prompt)}
-                      className="p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-purple-500/50 text-left transition-all cursor-pointer group flex items-center gap-3"
-                    >
-                      <div className="p-2 rounded-xl bg-white/5 group-hover:bg-purple-500/20 text-[#c084fc] transition-colors shrink-0">
-                        {item.icon}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-white/90 group-hover:text-white block truncate">
-                          {item.label}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
               </div>
             ) : (
               /* AFFICHAGE DES MESSAGES */
@@ -804,9 +783,9 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                     ) : (
                       /* Message Dona : Réponse fluide sans bulle encadrée */
                       <div className="flex gap-3 max-w-[95%] sm:max-w-[90%] items-start">
-                        {/* Avatar Dona : Logo pur sans bulle ni boîte de fond */}
+                        {/* Avatar Dona : Bot épuré */}
                         <div className="shrink-0 mt-1 select-none flex items-center justify-center">
-                          <DonaStar className="w-5 h-5 drop-shadow-[0_0_10px_rgba(168,85,247,0.9)]" />
+                          <Bot className="w-5 h-5 text-[#c084fc]" />
                         </div>
 
                         {/* Contenu Dona sans bulle / sans boîte de contour */}
@@ -906,7 +885,7 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                 {isTyping && (
                   <div className="flex items-center gap-3 text-white/80 py-2 px-1 animate-in fade-in duration-150">
                     <div className="shrink-0 animate-pulse">
-                      <DonaStar className="w-4 h-4 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+                      <Bot className="w-4 h-4 text-[#c084fc]" />
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-[#c084fc]/90 tracking-wide">
@@ -995,6 +974,13 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                   type="text"
                   value={inputVal}
                   onChange={(e) => setInputVal(e.target.value)}
+                  onFocus={() => {
+                    window.scrollTo(0, 0);
+                    setTimeout(() => {
+                      window.scrollTo(0, 0);
+                      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                    }, 60);
+                  }}
                   placeholder={
                     isFr 
                       ? "Pose une question à Dona" 

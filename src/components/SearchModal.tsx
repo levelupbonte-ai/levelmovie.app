@@ -64,7 +64,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     {
       id: 'usr_levelup_001',
       name: 'LevelUp Creator',
-      avatar: null,
+      avatar: 'avatar-3d-01',
       badge: 'Admin & Fondateur',
       isOnline: true,
       joinedYear: '2024'
@@ -72,7 +72,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     {
       id: 'usr_cinephile_vip',
       name: 'Sarah Cinephile',
-      avatar: null,
+      avatar: 'avatar-3d-06',
       badge: 'Membre VIP',
       isOnline: true,
       joinedYear: '2025'
@@ -80,7 +80,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     {
       id: 'usr_alex_streamer',
       name: 'Alexandre Stream',
-      avatar: null,
+      avatar: 'avatar-3d-04',
       badge: 'Streamer Partenaire',
       isOnline: false,
       joinedYear: '2025'
@@ -88,7 +88,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     {
       id: 'usr_anime_fan_42',
       name: 'Kenji Anime',
-      avatar: null,
+      avatar: 'avatar-3d-08',
       badge: 'Critique Otaku',
       isOnline: true,
       joinedYear: '2026'
@@ -166,19 +166,20 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           // Users Search Mode
           const qLower = trimmed.toLowerCase().replace('@', '');
           const localUserUid = localStorage.getItem('levelmovie_user_uid');
-          const localUserName = localStorage.getItem('levelmovie_user_name');
+          const localUserName = localStorage.getItem('levelmovie_username') || localStorage.getItem('levelmovie_user_name');
           const localUserEmail = localStorage.getItem('levelmovie_user_email');
-          const localUserPhoto = localStorage.getItem('lm_photo');
+          const localUserPhoto = localStorage.getItem('levelmovie_custom_avatar') || localStorage.getItem('levelmovie_user_photo') || localStorage.getItem('lm_photo');
+          const localUserHandle = localStorage.getItem('levelmovie_user_handle');
 
           const userPool: UserProfileResult[] = [...presetUsers];
 
-          if (localUserUid && localUserName) {
+          if (localUserUid || localUserName) {
             userPool.unshift({
-              id: localUserUid,
-              name: localUserName + ' (Moi)',
+              id: localUserUid || 'usr_moi',
+              name: (localUserName || 'Mon Profil') + (lang === 'fr' ? ' (Moi)' : ' (Me)'),
               email: localUserEmail || undefined,
               avatar: localUserPhoto,
-              badge: 'Vous',
+              badge: lang === 'fr' ? 'Votre Profil' : 'Your Profile',
               isOnline: true,
               joinedYear: '2026'
             });
@@ -188,7 +189,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             (u) =>
               u.id.toLowerCase().includes(qLower) ||
               u.name.toLowerCase().includes(qLower) ||
-              (u.email && u.email.toLowerCase().includes(qLower))
+              (u.email && u.email.toLowerCase().includes(qLower)) ||
+              (localUserHandle && localUserHandle.toLowerCase().includes(qLower) && u.badge?.includes('Profil'))
           );
 
           // If the user typed a specific ID not in presets, dynamically resolve it as a verified LevelMovie ID!
@@ -398,54 +400,93 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  {(query.trim() ? userResults : presetUsers).map((usr) => (
-                    <div
-                      key={usr.id}
-                      className="p-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 transition-all flex flex-col justify-between gap-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <LevelAvatar name={usr.name} size="md" />
-                          {usr.isOnline && (
-                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#090a10]" />
-                          )}
-                        </div>
+                  {(() => {
+                    const myUid = localStorage.getItem('levelmovie_user_uid');
+                    const myName = localStorage.getItem('levelmovie_username') || localStorage.getItem('levelmovie_user_name');
+                    const myPhoto = localStorage.getItem('levelmovie_custom_avatar') || localStorage.getItem('levelmovie_user_photo') || localStorage.getItem('lm_photo');
+                    const myEmail = localStorage.getItem('levelmovie_user_email');
+                    const myHandle = localStorage.getItem('levelmovie_user_handle');
 
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <h4 className="text-xs sm:text-sm font-bold text-white truncate">{usr.name}</h4>
-                            <ShieldCheck className="w-3.5 h-3.5 text-[#c084fc] shrink-0" />
-                          </div>
-                          <span className="text-[10px] text-white/50">{usr.badge}</span>
-                        </div>
-                      </div>
+                    const defaultUserList: UserProfileResult[] = (myUid || myName) ? [
+                      {
+                        id: myUid || 'usr_moi',
+                        name: (myName || 'Mon Profil') + (lang === 'fr' ? ' (Moi)' : ' (Me)'),
+                        email: myEmail || undefined,
+                        avatar: myPhoto,
+                        badge: lang === 'fr' ? 'Votre Profil Officiel' : 'Your Official Profile',
+                        isOnline: true,
+                        joinedYear: '2026'
+                      },
+                      ...presetUsers
+                    ] : presetUsers;
 
-                      {/* User ID with Copy Action */}
-                      <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-black/40 border border-white/5">
-                        <div className="min-w-0">
-                          <span className="text-[9px] text-white/40 block font-mono">USER ID</span>
-                          <span className="text-[11px] font-mono text-white/80 truncate block">{usr.id}</span>
-                        </div>
-                        <button
-                          onClick={(e) => handleCopyUserId(usr.id, e)}
-                          className="px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 text-[10px] font-medium text-white transition-all flex items-center gap-1 cursor-pointer shrink-0"
-                          title={lang === 'fr' ? "Copier l'ID" : "Copy ID"}
+                    const listToDisplay = query.trim() ? userResults : defaultUserList;
+
+                    return listToDisplay.map((usr) => {
+                      const isMe = usr.badge?.includes('Profil') || usr.id === myUid;
+                      return (
+                        <div
+                          key={usr.id}
+                          className={`p-4 rounded-xl border transition-all flex flex-col justify-between gap-3 ${
+                            isMe 
+                              ? 'bg-gradient-to-br from-[#a855f7]/15 to-purple-900/20 border-[#a855f7]/50 shadow-[0_0_20px_rgba(168,85,247,0.2)]'
+                              : 'bg-white/[0.03] hover:bg-white/[0.06] border-white/10 hover:border-white/20'
+                          }`}
                         >
-                          {copiedId === usr.id ? (
-                            <>
-                              <Check className="w-3 h-3 text-emerald-400" />
-                              <span className="text-emerald-400">{lang === 'fr' ? 'Copié' : 'Copied'}</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3 text-white/70" />
-                              <span>{lang === 'fr' ? 'Copier' : 'Copy'}</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                          <div className="flex items-center gap-3">
+                            <div className="relative">
+                              <LevelAvatar avatar={usr.avatar} name={usr.name} size="md" isVip={isMe || usr.badge?.includes('VIP')} />
+                              {usr.isOnline && (
+                                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#090a10]" />
+                              )}
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <h4 className="text-xs sm:text-sm font-bold text-white truncate">{usr.name}</h4>
+                                <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${isMe ? 'text-emerald-400' : 'text-[#c084fc]'}`} />
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className={`text-[10px] font-semibold ${isMe ? 'text-[#c084fc]' : 'text-white/50'}`}>
+                                  {usr.badge}
+                                </span>
+                                {isMe && myHandle && (
+                                  <span className="text-[10px] font-mono text-purple-300/80">
+                                    @{myHandle}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* User ID with Copy Action */}
+                          <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-black/40 border border-white/5">
+                            <div className="min-w-0">
+                              <span className="text-[9px] text-white/40 block font-mono">USER ID</span>
+                              <span className="text-[11px] font-mono text-white/80 truncate block">{usr.id}</span>
+                            </div>
+                            <button
+                              onClick={(e) => handleCopyUserId(usr.id, e)}
+                              className="px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 text-[10px] font-medium text-white transition-all flex items-center gap-1 cursor-pointer shrink-0"
+                              title={lang === 'fr' ? "Copier l'ID" : "Copy ID"}
+                            >
+                              {copiedId === usr.id ? (
+                                <>
+                                  <Check className="w-3 h-3 text-emerald-400" />
+                                  <span className="text-emerald-400">{lang === 'fr' ? 'Copié' : 'Copied'}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3 text-white/70" />
+                                  <span>{lang === 'fr' ? 'Copier' : 'Copy'}</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               )}
             </div>

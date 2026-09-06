@@ -22,6 +22,8 @@ interface SettingsModalProps {
   userName: string;
   userEmail: string;
   userPhoto: string | null;
+  userHandle?: string;
+  onUpdateProfile?: (data: { name?: string; handle?: string; photo?: string }) => void;
   parentalFilter: boolean;
   setParentalFilter: (val: boolean) => void;
   lowDataMode?: boolean;
@@ -89,6 +91,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   userName,
   userEmail,
   userPhoto,
+  userHandle,
+  onUpdateProfile,
   parentalFilter,
   setParentalFilter,
   lowDataMode,
@@ -152,9 +156,91 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
   const [customAvatar, setCustomAvatar] = useState(() => {
-    return localStorage.getItem('levelmovie_custom_avatar') || userPhoto || null;
+    return localStorage.getItem('levelmovie_custom_avatar') || localStorage.getItem('levelmovie_user_photo') || localStorage.getItem('lm_photo') || userPhoto || null;
   });
+  const [editDisplayName, setEditDisplayName] = useState(() => userName || localStorage.getItem('levelmovie_username') || localStorage.getItem('levelmovie_user_name') || '');
+  const [editHandle, setEditHandle] = useState(() => userHandle || localStorage.getItem('levelmovie_user_handle') || '');
+
+  useEffect(() => {
+    if (userName) setEditDisplayName(userName);
+  }, [userName]);
+
+  useEffect(() => {
+    if (userHandle) setEditHandle(userHandle);
+  }, [userHandle]);
+
+  useEffect(() => {
+    if (userPhoto) setCustomAvatar(userPhoto);
+  }, [userPhoto]);
+
+  useEffect(() => {
+    const handleAvatarEvt = (e: any) => {
+      if (e?.detail?.avatar) {
+        setCustomAvatar(e.detail.avatar);
+      }
+    };
+    const handleProfileEvt = (e: any) => {
+      if (e?.detail) {
+        if (e.detail.name) setEditDisplayName(e.detail.name);
+        if (e.detail.handle) setEditHandle(e.detail.handle);
+        if (e.detail.photo) setCustomAvatar(e.detail.photo);
+      }
+    };
+    window.addEventListener('levelmovie_avatar_change', handleAvatarEvt);
+    window.addEventListener('levelmovie_profile_change', handleProfileEvt);
+    return () => {
+      window.removeEventListener('levelmovie_avatar_change', handleAvatarEvt);
+      window.removeEventListener('levelmovie_profile_change', handleProfileEvt);
+    };
+  }, []);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast(lang === 'fr' ? 'Veuillez sélectionner un fichier image valide (JPG, PNG, WebP).' : 'Please select a valid image file.', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        setCustomAvatar(result);
+        localStorage.setItem('levelmovie_custom_avatar', result);
+        localStorage.setItem('levelmovie_user_photo', result);
+        localStorage.setItem('lm_photo', result);
+        window.dispatchEvent(new CustomEvent('levelmovie_avatar_change', { detail: { avatar: result } }));
+        window.dispatchEvent(new CustomEvent('levelmovie_profile_change', { detail: { photo: result } }));
+        if (onUpdateProfile) onUpdateProfile({ photo: result });
+        showToast(lang === 'fr' ? 'Photo de profil enregistrée avec succès !' : 'Profile picture saved successfully!', 'success');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveProfileData = () => {
+    const cleanName = editDisplayName.trim();
+    const cleanH = editHandle.trim().replace(/^@+/, '');
+    if (!cleanName) {
+      showToast(lang === 'fr' ? 'Le nom ne peut pas être vide' : 'Name cannot be empty', 'error');
+      return;
+    }
+    localStorage.setItem('levelmovie_username', cleanName);
+    localStorage.setItem('levelmovie_user_name', cleanName);
+    localStorage.setItem('lm_guest_party_name', cleanName);
+    if (cleanH) {
+      localStorage.setItem('levelmovie_user_handle', cleanH);
+    }
+    window.dispatchEvent(new CustomEvent('levelmovie_profile_change', {
+      detail: { name: cleanName, handle: cleanH, photo: customAvatar || userPhoto }
+    }));
+    if (onUpdateProfile) {
+      onUpdateProfile({ name: cleanName, handle: cleanH, photo: customAvatar || userPhoto || undefined });
+    }
+    showToast(lang === 'fr' ? 'Profil enregistré et synchronisé partout !' : 'Profile saved and synced everywhere!', 'success');
+  };
 
   // Library states
   const [expandedLibraryCategory, setExpandedLibraryCategory] = useState<string | null>('watched');
@@ -796,12 +882,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={() => importFileRef.current?.click()}
+                      onClick={() => photoInputRef.current?.click()}
                       className="text-xs text-[#c084fc] hover:text-white font-bold inline-flex items-center gap-1.5 cursor-pointer underline underline-offset-2"
                     >
                       <Upload className="w-3.5 h-3.5" />
                       <span>{lang === 'fr' ? 'Importer une photo' : 'Upload photo'}</span>
                     </button>
+                    <input 
+                      type="file" 
+                      ref={photoInputRef} 
+                      onChange={handlePhotoUpload} 
+                      accept="image/png,image/jpeg,image/webp,image/gif" 
+                      className="hidden" 
+                    />
                     {onOpenAvatarPicker && (
                       <button
                         type="button"
@@ -813,6 +906,68 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       </button>
                     )}
                   </div>
+                </div>
+              </div>
+
+              {/* Carte Édition du Profil Public (Nom & Pseudo) */}
+              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
+                <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <User className="w-4 h-4 text-[#a855f7]" />
+                      <span>{lang === 'fr' ? 'Profil Public & Visibilité' : 'Public Profile & Identity'}</span>
+                    </h4>
+                    <p className="text-[11px] text-white/40 mt-0.5">
+                      {lang === 'fr' ? 'Ce nom et cet avatar s’affichent dans les salons Watch Party, paramètres et recherches' : 'Your name and avatar appear across watch parties, rooms, settings and search'}
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    {lang === 'fr' ? 'Actif partout' : 'Active everywhere'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Nom complet / Nom d'affichage */}
+                  <div>
+                    <label className="text-[10px] text-white/60 uppercase font-black tracking-widest block mb-1.5">
+                      {lang === 'fr' ? 'Nom d’affichage' : 'Display Name'}
+                    </label>
+                    <input 
+                      type="text" 
+                      value={editDisplayName}
+                      onChange={(e) => setEditDisplayName(e.target.value)}
+                      placeholder={lang === 'fr' ? 'Votre nom ou pseudo' : 'Your name'}
+                      className="w-full bg-white/5 border border-white/10 focus:border-[#a855f7] rounded-xl text-white text-sm px-3.5 py-2.5 outline-none font-medium transition-colors"
+                    />
+                  </div>
+
+                  {/* Handle (@pseudo) */}
+                  <div>
+                    <label className="text-[10px] text-white/60 uppercase font-black tracking-widest block mb-1.5">
+                      {lang === 'fr' ? 'Identifiant (@pseudo)' : 'Username (@handle)'}
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 font-mono text-sm">@</span>
+                      <input 
+                        type="text" 
+                        value={editHandle}
+                        onChange={(e) => setEditHandle(e.target.value.replace(/^@+/, ''))}
+                        placeholder={lang === 'fr' ? 'identifiant' : 'username'}
+                        className="w-full bg-white/5 border border-white/10 focus:border-[#a855f7] rounded-xl text-white text-sm pl-8 pr-3.5 py-2.5 outline-none font-mono font-medium transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="button"
+                    onClick={handleSaveProfileData}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] hover:opacity-90 text-white font-bold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all cursor-pointer active:scale-95 flex items-center gap-2"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{lang === 'fr' ? 'Enregistrer le profil' : 'Save Profile'}</span>
+                  </button>
                 </div>
               </div>
 
