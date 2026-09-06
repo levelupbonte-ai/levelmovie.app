@@ -30,6 +30,7 @@ interface LevelAnimeAppProps {
   onOpenMovie?: (movie: any, mode?: string) => void;
   showToast?: (msg: string, type?: string) => void;
   onNavigateHome?: () => void;
+  onStartParty?: (movie: any) => void;
 }
 
 const formatMetric = (num: number) => {
@@ -386,6 +387,7 @@ interface AnimeModalProps {
   isAddedToWatchlist: (id: number) => boolean;
   toggleWatchlist: (anime: any, e?: React.MouseEvent) => void;
   onSelectAnotherAnime: (anime: any, mode?: 'info' | 'play' | 'trailer') => void;
+  onStartParty?: (movie: any) => void;
 }
 
 const AnimeModal: React.FC<AnimeModalProps> = ({
@@ -395,7 +397,8 @@ const AnimeModal: React.FC<AnimeModalProps> = ({
   onClose,
   isAddedToWatchlist,
   toggleWatchlist,
-  onSelectAnotherAnime
+  onSelectAnotherAnime,
+  onStartParty
 }) => {
   const [characters, setCharacters] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<any[]>([]);
@@ -515,6 +518,43 @@ const AnimeModal: React.FC<AnimeModalProps> = ({
     }
   };
 
+  const handleHostPartyEpisode = (seasonNum: number, episodeNum: number, epName?: string) => {
+    const rawTitle = anime.title_english || anime.title || 'Anime';
+    const cleanTitle = `${rawTitle} - S${seasonNum} E${episodeNum}${epName ? ` (${epName})` : ''}`;
+    const poster = anime.images?.webp?.large_image_url || anime.images?.jpg?.large_image_url;
+
+    const partyMovie = {
+      id: tmdbId || anime.mal_id || 1000,
+      mal_id: anime.mal_id,
+      title: cleanTitle,
+      name: cleanTitle,
+      poster_path: null,
+      customPoster: poster,
+      backdrop_path: null,
+      first_air_date: '2024-01-01',
+      media_type: 'tv',
+      mediaType: 'tv',
+      resumeSeason: seasonNum,
+      resumeEpisode: episodeNum,
+      season: seasonNum,
+      episode: episodeNum,
+      animeData: anime,
+      customStreamUrl: `https://vidsrc.cc/v2/embed/tv/${tmdbId || 1000}/${seasonNum}/${episodeNum}?autoPlay=true`
+    };
+
+    onClose();
+    if (onStartParty) {
+      onStartParty(partyMovie);
+    }
+  };
+
+  const handleHostPartyMain = () => {
+    const s = activeEpisode?.s || selectedSeason || 1;
+    const e = activeEpisode?.e || 1;
+    const currentEp = episodes.find(ep => ep.episode_number === e);
+    handleHostPartyEpisode(s, e, currentEp?.name);
+  };
+
   return (
     <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-xl flex flex-col overflow-y-auto custom-scrollbar animate-in fade-in duration-300">
       
@@ -590,13 +630,21 @@ const AnimeModal: React.FC<AnimeModalProps> = ({
                 <p className="text-xs md:text-sm text-white/70 line-clamp-3">
                   {anime.synopsis}
                 </p>
-                <div className="flex items-center gap-3 pt-2">
+                <div className="flex items-center gap-3 pt-2 flex-wrap">
                   <button
                     onClick={() => setLocalMode('play')}
                     className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-lg active:scale-95"
                   >
                     <Play className="w-4 h-4 fill-white" />
                     <span>{isFr ? 'Lancer le streaming' : 'Play Stream'}</span>
+                  </button>
+                  <button
+                    onClick={handleHostPartyMain}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(168,85,247,0.35)] active:scale-95 transition-all"
+                    title={isFr ? 'Lancer une Watch Party pour cet anime' : 'Host a Watch Party for this anime'}
+                  >
+                    <Users className="w-4 h-4" />
+                    <span>{isFr ? 'Créer un salon' : 'Host Party'}</span>
                   </button>
                   {trailerKey && (
                     <button
@@ -667,23 +715,47 @@ const AnimeModal: React.FC<AnimeModalProps> = ({
               {episodes.map(ep => {
                 const isActive = activeEpisode?.s === selectedSeason && activeEpisode?.e === ep.episode_number;
                 return (
-                  <button
+                  <div
                     key={ep.id}
-                    onClick={() => {
-                      setActiveEpisode({ s: selectedSeason, e: ep.episode_number });
-                      setLocalMode('play');
-                    }}
-                    className={`p-2.5 rounded-xl border text-left transition-colors cursor-pointer ${
+                    className={`p-2.5 rounded-xl border flex flex-col justify-between transition-colors relative group/ep ${
                       isActive
-                        ? 'bg-red-600/20 border-red-500 text-white'
+                        ? 'bg-red-600/20 border-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.2)]'
                         : 'bg-[#10121a] border-white/5 hover:border-white/20 text-white/80'
                     }`}
                   >
-                    <div className="text-[10px] font-bold text-red-400 uppercase">
-                      Épisode {ep.episode_number}
-                    </div>
-                    <div className="text-xs font-semibold truncate mt-0.5">{ep.name}</div>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveEpisode({ s: selectedSeason, e: ep.episode_number });
+                        setLocalMode('play');
+                      }}
+                      className="text-left w-full cursor-pointer outline-none flex-1"
+                    >
+                      <div className="text-[10px] font-bold text-red-400 uppercase">
+                        Épisode {ep.episode_number}
+                      </div>
+                      <div className="text-xs font-semibold truncate mt-0.5" title={ep.name}>
+                        {ep.name}
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleHostPartyEpisode(selectedSeason, ep.episode_number, ep.name);
+                      }}
+                      className="mt-2 pt-1.5 border-t border-white/10 flex items-center justify-between text-[10px] font-bold text-[#c084fc] hover:text-white transition-colors cursor-pointer group/partybtn"
+                      title={isFr ? `Lancer un salon Watch Party pour l'épisode ${ep.episode_number}` : `Host Watch Party for Episode ${ep.episode_number}`}
+                    >
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3 h-3 text-[#a855f7]" />
+                        <span>{isFr ? 'Salon' : 'Party'}</span>
+                      </span>
+                      <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-[#a855f7]/20 border border-[#a855f7]/30 group-hover/partybtn:bg-[#a855f7] group-hover/partybtn:text-white transition-colors font-black">
+                        Host
+                      </span>
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -714,10 +786,19 @@ const AnimeModal: React.FC<AnimeModalProps> = ({
           <div className="flex flex-col gap-2 w-full md:w-auto shrink-0">
             <button
               onClick={() => setLocalMode(localMode === 'play' ? 'info' : 'play')}
-              className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+              className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 transition-all"
             >
               <Play className="w-4 h-4 fill-white" />
               <span>{localMode === 'play' ? (isFr ? 'Mode Détails' : 'Details Mode') : (isFr ? 'Regarder' : 'Stream Now')}</span>
+            </button>
+
+            <button
+              onClick={handleHostPartyMain}
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600/30 to-pink-600/30 hover:from-purple-600 hover:to-pink-600 text-purple-200 hover:text-white border border-[#a855f7]/50 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all active:scale-95"
+              title={isFr ? 'Lancer une Watch Party en direct' : 'Host a live Watch Party'}
+            >
+              <Users className="w-4 h-4 text-purple-400" />
+              <span>{isFr ? 'Créer un salon' : 'Host Party'}</span>
             </button>
 
             <button
@@ -813,7 +894,8 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
   onTabChange,
   onOpenMovie,
   showToast,
-  onNavigateHome
+  onNavigateHome,
+  onStartParty
 }) => {
   const isFr = lang === 'fr';
 
@@ -1203,6 +1285,53 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
   };
 
   const isAddedToWatchlist = (id: number) => watchlist.some(a => a.mal_id === id);
+
+  // Release Reminders (Opt-in for 'remind me when released' notifications for specific anime episodes)
+  const [releaseReminders, setReleaseReminders] = useState<number[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('anime_release_reminders') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  const toggleReleaseReminder = (anime: any, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    const animeId = anime.mal_id || anime.id;
+    const title = anime.title_english || anime.title || 'Anime';
+    const isReminded = releaseReminders.includes(animeId);
+    let next: number[];
+    if (isReminded) {
+      next = releaseReminders.filter(id => id !== animeId);
+      if (showToast) {
+        showToast(
+          isFr 
+            ? `Rappel désactivé pour « ${title} »`
+            : `Release reminder removed for "${title}"`,
+          'info'
+        );
+      }
+    } else {
+      next = [...releaseReminders, animeId];
+      if (showToast) {
+        showToast(
+          isFr 
+            ? `🔔 Rappel activé : vous serez averti(e) dès la sortie du prochain épisode de « ${title} » !`
+            : `🔔 Reminder set: you'll be notified when the next episode of "${title}" drops!`,
+          'success'
+        );
+      }
+    }
+    setReleaseReminders(next);
+    try {
+      localStorage.setItem('anime_release_reminders', JSON.stringify(next));
+    } catch {}
+  };
+
+  const isAnimeReminded = (id: number) => releaseReminders.includes(id);
 
   const handleSurpriseMe = async () => {
     setShowSurprise(true);
@@ -1687,10 +1816,18 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
                           <span>{anime.broadcast?.time || '18:00 JST'}</span>
                         </div>
 
-                        {/* Top Right: Status / Score */}
-                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-md text-yellow-400 text-[10px] font-bold border border-white/10">
-                          <Star className="w-2.5 h-2.5 fill-yellow-400" />
-                          <span>{anime.score ? anime.score.toFixed(1) : '8.2'}</span>
+                        {/* Top Right: Status / Score & Reminder Badge */}
+                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                          {isAnimeReminded(anime.mal_id || anime.id) && (
+                            <div className="flex items-center gap-1 bg-amber-500 text-black px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shadow-[0_0_10px_rgba(245,158,11,0.5)]">
+                              <BellRing className="w-2.5 h-2.5 fill-black" />
+                              <span>{isFr ? 'Rappel' : 'Notif'}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-md text-yellow-400 text-[10px] font-bold border border-white/10">
+                            <Star className="w-2.5 h-2.5 fill-yellow-400" />
+                            <span>{anime.score ? anime.score.toFixed(1) : '8.2'}</span>
+                          </div>
                         </div>
 
                         {/* Bottom Thumbnail Overlay: Title & Ep */}
@@ -1752,6 +1889,27 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
                             title={isFr ? "Détails de l'animé" : "Anime Details"}
                           >
                             <Info className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => toggleReleaseReminder(anime, e)}
+                            className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                              isAnimeReminded(anime.mal_id || anime.id)
+                                ? 'bg-amber-500/20 border-amber-400/60 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                                : 'bg-white/5 hover:bg-white/15 border-white/10 text-white/50 hover:text-white'
+                            }`}
+                            title={
+                              isAnimeReminded(anime.mal_id || anime.id)
+                                ? (isFr ? "Rappel activé (cliquer pour désactiver l'alerte)" : "Reminder active (click to remove)")
+                                : (isFr ? "M'avertir de la sortie du prochain épisode" : "Remind me when this episode is released")
+                            }
+                          >
+                            {isAnimeReminded(anime.mal_id || anime.id) ? (
+                              <BellRing className="w-4 h-4 text-amber-400 animate-pulse fill-amber-400/20" />
+                            ) : (
+                              <Bell className="w-4 h-4" />
+                            )}
                           </button>
 
                           <button
@@ -2042,6 +2200,7 @@ export const LevelAnimeApp: React.FC<LevelAnimeAppProps> = ({
           isAddedToWatchlist={isAddedToWatchlist}
           toggleWatchlist={toggleWatchlist}
           onSelectAnotherAnime={(a, mode) => openAnimeModal(a, mode || 'info')}
+          onStartParty={onStartParty}
         />
       )}
 

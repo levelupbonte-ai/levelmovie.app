@@ -417,10 +417,33 @@ export function MovieModal({
     }
     const searchUsers = async () => {
       try {
+        const queryTrimmed = friendSearchQuery.trim();
+        if (!queryTrimmed) return;
+
+        // Query server database users endpoint first
+        try {
+          const res = await fetch(`/api/users/search?q=${encodeURIComponent(queryTrimmed)}`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json.users && json.users.length > 0) {
+              setFriendResults(json.users.map((u: any) => ({
+                uid: u.uid,
+                name: u.name,
+                email: u.email,
+                photo: u.photo || null,
+                handle: u.handle
+              })));
+              return;
+            }
+          }
+        } catch (err) {
+          console.warn('API user search error:', err);
+        }
+
         const q = collectionGroup(db, 'security');
         const snaps = await getDocs(q);
         const results: any[] = [];
-        const queryLower = friendSearchQuery.trim().toLowerCase();
+        const queryLower = queryTrimmed.toLowerCase();
 
         snaps.forEach(docSnap => {
           const data = docSnap.data();
@@ -428,7 +451,7 @@ export function MovieModal({
           const userUid = data.uid || data.key;
 
           if (userUid && userNameStr.toLowerCase().includes(queryLower)) {
-            results.push({ uid: userUid, name: userNameStr, email: data.owner || data.email, photo: null });
+            results.push({ uid: userUid, name: userNameStr, email: data.owner || data.email, photo: data.photo || data.photoURL || null });
           }
         });
 
@@ -1105,10 +1128,11 @@ export function MovieModal({
                     {friendResults.map((friend: any) => (
                       <div key={friend.uid} className="flex items-center justify-between bg-white/5 p-2 rounded-lg">
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-6 h-6 rounded-full bg-[#151520] flex items-center justify-center font-black text-[#a855f7] text-[10px] shrink-0 border border-[#a855f7]/30">
-                            {friend.name?.charAt(0).toUpperCase() || '?'}
+                          <LevelAvatar avatar={friend.photo} name={friend.name} size="xs" className="shrink-0" />
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs text-white font-bold truncate">{friend.name}</span>
+                            {friend.handle && <span className="text-[10px] text-white/40 truncate">@{friend.handle}</span>}
                           </div>
-                          <span className="text-xs text-white font-bold truncate">{friend.name}</span>
                         </div>
                         {friend.uid !== user?.uid && (
                           <div className="flex items-center gap-1">

@@ -7,13 +7,17 @@ interface NetworkOfflineManagerProps {
   onOpenWatchlist?: () => void;
   onOpenHistory?: () => void;
   showToast?: (msg: string, type?: string) => void;
+  onStatusChange?: (isOffline: boolean) => void;
+  openDetailTrigger?: number;
 }
 
 export function NetworkOfflineManager({
   lang,
   onOpenWatchlist,
   onOpenHistory,
-  showToast
+  showToast,
+  onStatusChange,
+  openDetailTrigger
 }: NetworkOfflineManagerProps) {
   // Strict Real Disconnection check: only true if browser is really offline (wifi turned off or zero network)
   const [isOffline, setIsOffline] = useState<boolean>(() => {
@@ -126,6 +130,27 @@ export function NetworkOfflineManager({
       window.removeEventListener('offline', handleOffline);
     };
   }, [isFr, showToast]);
+
+  // Synchronize state with parent header/component
+  useEffect(() => {
+    onStatusChange?.(isOffline);
+  }, [isOffline, onStatusChange]);
+
+  // Trigger full detail modal when requested from UI header
+  useEffect(() => {
+    if (openDetailTrigger && openDetailTrigger > 0) {
+      setShowDetailModal(true);
+    }
+  }, [openDetailTrigger]);
+
+  // Initial toast if application loads while already offline
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      if (showToast) {
+        showToast(isFr ? 'Mode hors-ligne : Connexion réseau indisponible' : 'Offline mode: Network connection unavailable', 'error');
+      }
+    }
+  }, []);
 
   // If online or user explicitly skipped/dismissed banner and modal isn't open
   if (!isOffline && !showDetailModal) {

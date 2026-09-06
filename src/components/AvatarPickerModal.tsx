@@ -5,6 +5,7 @@ import {
 import { DEFAULT_AVATARS, AvatarPreset } from '../constants';
 import { LevelAvatar } from './LevelAvatar';
 import { supabase, isSupabaseConfigured, syncUserProfileSupabase } from '../lib/supabase';
+import { persistAvatarGlobally } from '../services/avatarService';
 
 interface AvatarPickerModalProps {
   isOpen: boolean;
@@ -48,8 +49,7 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({
     { id: '3D Homme', label: isFr ? '3D Hommes' : '3D Men', count: DEFAULT_AVATARS.filter(a => a.category === '3D Homme').length },
     { id: '3D Femme', label: isFr ? '3D Femmes' : '3D Women', count: DEFAULT_AVATARS.filter(a => a.category === '3D Femme').length },
     { id: '3D Cinéma', label: isFr ? '3D Cinéma & Héros' : '3D Cinema & Heroes', count: DEFAULT_AVATARS.filter(a => a.category === '3D Cinéma').length },
-    { id: '3D VIP', label: isFr ? '3D VIP & Prestige' : '3D VIP & Prestige', count: DEFAULT_AVATARS.filter(a => a.category === '3D VIP').length },
-    { id: '3D Futuriste', label: isFr ? '3D Cyber & Futuriste' : '3D Cyber & Futuristic', count: DEFAULT_AVATARS.filter(a => a.category === '3D Futuriste').length },
+    { id: '3D Futuriste', label: isFr ? '3D Cyber & Spéciaux' : '3D Cyber & Specials', count: DEFAULT_AVATARS.filter(a => a.category === '3D Futuriste').length },
   ];
 
   const filteredAvatars = useMemo(() => {
@@ -88,40 +88,25 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({
 
   const handleConfirmSave = async () => {
     try {
-      // 1. LocalStorage update
-      localStorage.setItem('levelmovie_custom_avatar', selectedAvatar);
-      localStorage.setItem('levelmovie_user_photo', selectedAvatar);
-      localStorage.setItem('lm_photo', selectedAvatar);
+      // Resolve direct image path if a preset was selected
+      const effectivePhoto = DEFAULT_AVATARS.find(a => a.id === selectedAvatar)?.image || selectedAvatar;
 
-      // 2. Dispatch custom event for immediate global propagation
-      window.dispatchEvent(new CustomEvent('levelmovie_avatar_change', { detail: { avatar: selectedAvatar } }));
+      // 1. Enregistrement persistant en Base de Données (Server DB + Firestore + Supabase) + LocalStorage + Événements
+      await persistAvatarGlobally(null, effectivePhoto, {
+        name: userName,
+        handle: userHandle,
+        isVip
+      });
 
-      // 3. Supabase Sync if active
-      if (isSupabaseConfigured && supabase) {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            await syncUserProfileSupabase(user.id, {
-              email: user.email || '',
-              displayName: userName,
-              username: userHandle || '',
-              photoURL: selectedAvatar,
-              profile_completed: true
-            });
-          }
-        } catch (err) {
-          console.warn('Avatar picker supabase sync notice:', err);
-        }
-      }
-
-      onSelectAvatar(selectedAvatar);
+      onSelectAvatar(effectivePhoto);
       if (showToast) {
-        showToast(isFr ? 'Avatar appliqué partout sur votre profil !' : 'Avatar applied globally to your profile!', 'success');
+        showToast(isFr ? 'Avatar 3D enregistré en base de données et synchronisé partout !' : '3D Avatar saved to database and synced everywhere!', 'success');
       }
       onClose();
     } catch (e) {
       console.error('Error saving avatar:', e);
-      onSelectAvatar(selectedAvatar);
+      const fallbackPhoto = DEFAULT_AVATARS.find(a => a.id === selectedAvatar)?.image || selectedAvatar;
+      onSelectAvatar(fallbackPhoto);
       onClose();
     }
   };

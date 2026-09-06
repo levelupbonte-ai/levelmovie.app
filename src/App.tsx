@@ -5,7 +5,7 @@ import {
   Home, Tv, Clapperboard, History, AlertOctagon, Bookmark,
   ArrowDown, ArrowUp, Plus, Users, Mail, AlertTriangle, CheckCircle, XCircle,
   Building, Lock, Menu, Sparkles, Compass, ShieldCheck, Zap,
-  Clock, SquarePen, Calendar, Bot
+  Clock, SquarePen, Calendar, Bot, WifiOff, Loader2
 } from 'lucide-react';
 import {
   doc, setDoc, getDoc, deleteDoc, collection, addDoc, onSnapshot, query, orderBy, limit, getDocs, arrayUnion,
@@ -108,6 +108,10 @@ export default function App() {
   const [toasts, setToasts] = useState<any[]>([]);
 
   const [currentCategory, setCurrentCategory] = useState('home');
+  const [isNetworkOffline, setIsNetworkOffline] = useState<boolean>(() => {
+    return typeof navigator !== 'undefined' ? !navigator.onLine : false;
+  });
+  const [openOfflineDetailTrigger, setOpenOfflineDetailTrigger] = useState<number>(0);
   const [donaViewportHeight, setDonaViewportHeight] = useState<number | null>(null);
 
   // Lock document scroll and adapt height to visualViewport when on Dona so top header never moves on mobile keyboard
@@ -174,6 +178,7 @@ export default function App() {
   const [showSupport, setShowSupport] = useState(false);
   const [settingsTab, setSettingsTab] = useState('account');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const [watchlist, setWatchlist] = useState<number[]>([]);
   const [watchlistData, setWatchlistData] = useState<any[]>([]);
@@ -998,7 +1003,35 @@ export default function App() {
           if (pref.contentLang) { setContentLang(pref.contentLang); localStorage.setItem('levelmovie_content_lang', pref.contentLang); }
           if (pref.parentalFilter !== undefined) setParentalFilter(pref.parentalFilter);
           if (pref.parentalPin !== undefined) setParentalPin(pref.parentalPin);
+          if (pref.customAvatar || pref.photoURL || pref.photo) {
+            const av = pref.customAvatar || pref.photoURL || pref.photo;
+            setUserPhoto(av);
+            localStorage.setItem('levelmovie_custom_avatar', av);
+            localStorage.setItem('levelmovie_user_photo', av);
+            localStorage.setItem('lm_photo', av);
+          }
         }
+
+        try {
+          const profileSnap = await getDoc(doc(db, "artifacts", APP_ID, "users", user.uid, "public", "profile"));
+          if (profileSnap.exists()) {
+            const profileData = profileSnap.data();
+            if (profileData.photo) {
+              setUserPhoto(profileData.photo);
+              localStorage.setItem('levelmovie_custom_avatar', profileData.photo);
+              localStorage.setItem('levelmovie_user_photo', profileData.photo);
+              localStorage.setItem('lm_photo', profileData.photo);
+            }
+            if (profileData.name && !userName) {
+              setUserName(profileData.name);
+              localStorage.setItem('levelmovie_username', profileData.name);
+            }
+            if (profileData.handle && !userHandle) {
+              setUserHandle(profileData.handle);
+              localStorage.setItem('levelmovie_user_handle', profileData.handle);
+            }
+          }
+        } catch (e) {}
 
         const histSnap = await getDoc(doc(db, "artifacts", APP_ID, "users", user.uid, "history", "recent"));
         if (histSnap.exists() && histSnap.data().items) {
@@ -1169,9 +1202,29 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    if (isSupabaseConfigured && supabase) {
-      try { await supabase.auth.signOut(); } catch (e) {}
-    }
+    setIsLoggingOut(true);
+    setShowLogoutConfirm(false);
+    setShowSettings(false);
+    setShowSidebar(false);
+
+    try {
+      if (isSupabaseConfigured && supabase) {
+        await Promise.race([
+          supabase.auth.signOut(),
+          new Promise(res => setTimeout(res, 800))
+        ]);
+      }
+    } catch (e) {}
+
+    try {
+      if (auth) {
+        await signOut(auth);
+      }
+    } catch (e) {}
+
+    // Add a gentle loading delay so the user clearly sees the logout process
+    await new Promise(res => setTimeout(res, 850));
+
     localStorage.removeItem('levelmovie_user_uid');
     localStorage.removeItem('levelmovie_user_name');
     localStorage.removeItem('levelmovie_user_email');
@@ -1185,11 +1238,9 @@ export default function App() {
     setSelectedMovie(null);
     setPartyId(null);
     setPartyData(null);
-    setShowSettings(false);
-    setShowSidebar(false);
-    setShowLogoutConfirm(false);
     setCurrentCategory('home');
     setShowLoginModal(false);
+    setIsLoggingOut(false);
     showToast(lang === 'fr' ? 'Déconnexion réussie' : 'Logged out', 'success');
   };
 
@@ -1306,105 +1357,105 @@ export default function App() {
     <div className="bg-main text-white min-h-screen">
       <style>{globalStyles}</style>
 
-      {/* HEADER */}
-      <header className={`safe-top-header fixed top-0 w-full z-50 transition-all duration-500 ease-in-out flex items-center justify-between px-4 md:px-10 pb-3 md:pb-4 ${isScrolled ? 'bg-black/80 backdrop-blur-2xl border-b border-white/5 shadow-xl' : 'bg-gradient-to-b from-[#060608] via-[#060608]/90 to-transparent'}`}>
-        <div className="flex items-center space-x-3 md:space-x-8">
-          <div 
-            className="flex items-center cursor-pointer outline-none group transition-transform active:scale-95 select-none" 
-            onClick={() => {
-              if (currentCategory === 'anime') {
-                setAnimeSubTab('home');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                showToast(lang === 'fr' ? 'Actualisation du catalogue LevelAnime...' : 'Refreshing LevelAnime catalog...', 'info');
-              } else {
-                setCurrentCategory('home');
-                setPageSeed((prev) => prev + 1);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                showToast(lang === 'fr' ? 'Nouveautés & actualisation du catalogue...' : 'Discovering new releases & refreshing catalog...', 'info');
-              }
-            }}
-            title={currentCategory === 'anime' ? (lang === 'fr' ? 'Actualiser le catalogue LevelAnime' : 'Refresh LevelAnime catalog') : (lang === 'fr' ? 'Actualiser le catalogue LevelMovie' : 'Refresh LevelMovie catalog')}
-          >
-            {/* Mobile ONLY: Logo Icon (No text) */}
-            <div className="md:hidden flex items-center justify-center p-1">
-              <LevelMovieLogo className="w-7 h-7 transition-transform group-hover:scale-110" color={currentCategory === 'anime' ? '#ef4444' : '#a855f7'} />
+      {/* ======================================================== */}
+      {/* VUE DONA : HEADER STRICTEMENT FIXE & CHAT FLUIDE        */}
+      {/* ======================================================== */}
+      {currentCategory === 'dona' ? (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: donaViewportHeight ? `${donaViewportHeight}px` : '100dvh',
+            maxHeight: donaViewportHeight ? `${donaViewportHeight}px` : '100dvh',
+            width: '100%',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 60,
+            overscrollBehavior: 'none',
+          }}
+          className="bg-[#020202]"
+        >
+          {/* HEADER UNIQUE DONA - FIXE EN HAUT, NE BOUGE JAMAIS LORSQUE LE CLAVIER SORT */}
+          <header className="safe-top-header shrink-0 h-14 md:h-16 w-full bg-[#060608]/95 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-3.5 sm:px-6 md:px-10 z-50 shadow-md">
+            <div className="flex items-center space-x-3 md:space-x-8">
+              <div 
+                className="flex items-center cursor-pointer outline-none group transition-transform active:scale-95 select-none" 
+                onClick={() => {
+                  setCurrentCategory('home');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                title={lang === 'fr' ? 'Retourner à l’accueil' : 'Return to Home'}
+              >
+                <div className="md:hidden flex items-center justify-center p-1">
+                  <LevelMovieLogo className="w-7 h-7 transition-transform group-hover:scale-110" color="#a855f7" />
+                </div>
+                <h1 className="hidden md:flex text-xl md:text-2xl font-black tracking-widest leading-none drop-shadow-lg items-center">
+                  <span className="text-white">Level</span><span className="text-[#a855f7]">Movie</span>
+                </h1>
+              </div>
+
+              <nav className="hidden lg:flex space-x-6 text-[12px] font-bold uppercase tracking-widest text-white/60">
+                <button onClick={() => setCurrentCategory('home')} className="transition-colors hover:text-white outline-none cursor-pointer">{t.home}</button>
+                <button 
+                  onClick={() => setCurrentCategory('dona')} 
+                  className="flex items-center gap-1.5 transition-all outline-none cursor-pointer group text-[#c084fc] font-black"
+                  title="Dona"
+                >
+                  <Bot className="w-4 h-4 text-[#c084fc]" />
+                  <span className="font-bold tracking-wide">Dona</span>
+                </button>
+                <button onClick={() => setCurrentCategory('movie')} className="transition-colors hover:text-white outline-none cursor-pointer">{t.movies}</button>
+                <button onClick={() => setCurrentCategory('party')} className="flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>{t.partyTab || 'Salons'}</span>
+                </button>
+                <button onClick={() => setCurrentCategory('trailers')} className="transition-colors hover:text-white outline-none cursor-pointer">{t.trailers || 'Bandes-Annonces'}</button>
+                <button onClick={() => setCurrentCategory('anime')} className="flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer">
+                  <LevelMovieLogo className="w-3.5 h-3.5" color="#ef4444" />
+                  <span>Anime</span>
+                </button>
+                <button onClick={() => setCurrentCategory('watchlist')} className="transition-colors hover:text-white outline-none cursor-pointer">{t.myList}</button>
+              </nav>
             </div>
 
-            {/* PC ONLY: Stylized text (No icon) */}
-            <h1 className="hidden md:flex text-xl md:text-2xl font-black tracking-widest leading-none drop-shadow-lg items-center">
-              <span className="text-white">Level</span><span className="text-[#a855f7]">Movie</span>
-            </h1>
-          </div>
+            {/* BOUTONS ACTIONS DONA (UNIFIÉ : MOBILE & PC) */}
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
+              {/* 1. Montre / Horloge (Historique) */}
+              <button
+                type="button"
+                onClick={() => setDonaHistoryTrigger(prev => prev + 1)}
+                className="text-white/75 hover:text-[#c084fc] active:text-[#c084fc] transition-colors p-1.5 outline-none cursor-pointer active:scale-95"
+                title={lang === 'fr' ? 'Historique des discussions' : 'Chat History'}
+              >
+                <Clock className="w-5 h-5 text-[#c084fc]" />
+              </button>
 
-          <nav className="hidden lg:flex space-x-6 text-[12px] font-bold uppercase tracking-widest text-white/60">
-            <button onClick={() => setCurrentCategory('home')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'home' ? 'text-[#a855f7]' : ''}`}>{t.home}</button>
-            <button 
-              onClick={() => setCurrentCategory('dona')} 
-              className={`flex items-center gap-1.5 transition-all outline-none cursor-pointer group ${currentCategory === 'dona' ? 'text-[#c084fc] font-black' : 'text-white/60 hover:text-white'}`}
-              title="Dona"
-            >
-              <Bot className="w-4 h-4 group-hover:scale-110 transition-transform text-[#c084fc]" />
-              <span className="font-bold tracking-wide">Dona</span>
-            </button>
-            <button onClick={() => setCurrentCategory('movie')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'movie' ? 'text-[#a855f7]' : ''}`}>{t.movies}</button>
-            <button onClick={() => setCurrentCategory('party')} className={`flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'party' ? 'text-[#a855f7] font-bold' : ''}`}>
-              <Users className="w-3.5 h-3.5" />
-              <span>{t.partyTab || 'Salons'}</span>
-            </button>
-            <button onClick={() => setCurrentCategory('trailers')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'trailers' ? 'text-[#a855f7]' : ''}`}>{t.trailers || 'Bandes-Annonces'}</button>
-            <button onClick={() => setCurrentCategory('anime')} className={`flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'anime' ? 'text-red-500 font-bold' : ''}`}>
-              <LevelMovieLogo className="w-3.5 h-3.5" color="#ef4444" />
-              <span>Anime</span>
-            </button>
-            <button onClick={() => setCurrentCategory('watchlist')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'watchlist' ? 'text-[#a855f7]' : ''}`}>{t.myList}</button>
-          </nav>
-        </div>
+              {/* 2. Ardoise et Bic / New Chat */}
+              <button
+                type="button"
+                onClick={() => setDonaNewChatTrigger(prev => prev + 1)}
+                className="text-white/75 hover:text-white active:text-[#c084fc] transition-colors p-1.5 outline-none cursor-pointer active:scale-95"
+                title={lang === 'fr' ? 'Nouvelle discussion' : 'New Chat'}
+              >
+                <SquarePen className="w-5 h-5 text-white/80 hover:text-white" />
+              </button>
 
-        <div className="flex items-center space-x-3 md:space-x-4">
-          {currentCategory === 'dona' ? (
-            <>
-              {/* BOUTONS DONA MOBILE (SANS BULLE / SANS CONTOUR BUBBLE) */}
-              <div className="flex items-center gap-4 sm:gap-5 md:hidden">
-                {/* 1. Montre / Horloge (Historique) */}
-                <button
-                  type="button"
-                  onClick={() => setDonaHistoryTrigger(prev => prev + 1)}
-                  className="text-white/75 hover:text-[#c084fc] active:text-[#c084fc] transition-colors p-1 outline-none cursor-pointer active:scale-95"
-                  title={lang === 'fr' ? 'Historique des discussions' : 'Chat History'}
-                >
-                  <Clock className="w-5 h-5 text-[#c084fc]" />
-                </button>
-
-                {/* 2. Ardoise et Bic / New Chat (Style ChatGPT) */}
-                <button
-                  type="button"
-                  onClick={() => setDonaNewChatTrigger(prev => prev + 1)}
-                  className="text-white/75 hover:text-white active:text-[#c084fc] transition-colors p-1 outline-none cursor-pointer active:scale-95"
-                  title={lang === 'fr' ? 'Nouvelle discussion' : 'New Chat'}
-                >
-                  <SquarePen className="w-5 h-5 text-white/80 hover:text-white" />
-                </button>
-
-                {/* 3. Bouton X Croix (Sortir sans bulle) */}
-                <button
-                  type="button"
-                  onClick={() => setCurrentCategory('home')}
-                  className="text-white/60 hover:text-white active:text-rose-400 transition-colors p-1 outline-none cursor-pointer active:scale-95"
-                  title={lang === 'fr' ? 'Fermer Dona' : 'Close Dona'}
-                >
-                  <X className="w-5 h-5 text-white/70 hover:text-white" />
+              {/* 3. Recherche (PC) */}
+              <div className="hidden md:block">
+                <button onClick={() => setShowSearchModal(true)} className="group flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 py-1.5 rounded-full outline-none transition-all shadow-inner cursor-pointer">
+                  <SearchIcon className="w-3.5 h-3.5 shrink-0 text-[#a855f7]" />
+                  <span className="text-white/50">{t.searchPlaceholder}</span>
                 </button>
               </div>
 
-              {/* Boutons Search & Profil visibles sur tablette / PC */}
-              <div className="hidden md:flex items-center space-x-3 md:space-x-4">
-                <button onClick={() => setShowSearchModal(true)} className="group flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 md:px-4 py-2 rounded-full outline-none w-10 md:w-72 justify-center md:justify-start transition-all shadow-inner cursor-pointer">
-                  <SearchIcon className="w-4 h-4 shrink-0 text-[#a855f7]" />
-                  <span className="hidden md:inline truncate text-white/50">{t.searchPlaceholder}</span>
-                </button>
-
+              {/* 4. Profil (PC) */}
+              <div className="hidden md:block">
                 <div 
-                  className="flex items-center gap-2.5 p-1.5 pr-3 md:pr-4 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-md outline-none active:scale-95" 
+                  className="flex items-center gap-2 p-1 pr-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-pointer shadow-md outline-none active:scale-95" 
                   onClick={() => {
                     if (user) {
                       setShowSidebar(true);
@@ -1418,21 +1469,118 @@ export default function App() {
                     {user ? (
                       <LevelAvatar avatar={userPhoto} name={defaultUserName} size="sm" />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-[#151520] flex items-center justify-center border border-[#a855f7]/40 shadow-inner">
-                        <UserIcon className="w-4 h-4 text-[#a855f7]" />
+                      <div className="w-7 h-7 rounded-full bg-[#151520] flex items-center justify-center border border-[#a855f7]/40 shadow-inner">
+                        <UserIcon className="w-3.5 h-3.5 text-[#a855f7]" />
                       </div>
                     )}
                   </div>
-                  <div className="hidden md:block min-w-0">
-                    <p className="text-[12px] font-bold uppercase truncate tracking-wide text-white/90">
-                      {user ? defaultUserName : (lang === 'fr' ? 'Connexion' : 'Log In')}
-                    </p>
-                  </div>
                 </div>
               </div>
-            </>
-          ) : (
-            <>
+
+              {/* 5. Bouton X Croix (Sortir de Dona) */}
+              <button
+                type="button"
+                onClick={() => setCurrentCategory('home')}
+                className="text-white/60 hover:text-white active:text-rose-400 transition-colors p-1.5 outline-none cursor-pointer active:scale-95"
+                title={lang === 'fr' ? 'Fermer Dona' : 'Close Dona'}
+              >
+                <X className="w-5 h-5 text-white/70 hover:text-white" />
+              </button>
+            </div>
+          </header>
+
+          {/* CONTENU CENTRAL DU CHAT QUI DÉFILE SOUS LE HEADER FIXE */}
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative">
+            <DonaModal
+              isOpen={true}
+              onClose={() => setCurrentCategory('home')}
+              onSelectMovie={(movie, mode = 'info') => openModal(movie, mode)}
+              onCreateParty={(movie) => triggerCreateParty(movie)}
+              onNavigateCategory={(cat) => setCurrentCategory(cat)}
+              onOpenSearch={(q) => {
+                if (q) setSearchQuery(q);
+                setShowSearchModal(true);
+              }}
+              onOpenSettings={() => setShowSettings(true)}
+              onOpenSupport={() => setShowSupport(true)}
+              lang={lang}
+              historyTrigger={donaHistoryTrigger}
+              newChatTrigger={donaNewChatTrigger}
+            />
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* HEADER PRINCIPAL STANDARD */}
+          <header className={`safe-top-header fixed top-0 w-full z-50 transition-all duration-500 ease-in-out flex items-center justify-between px-4 md:px-10 pb-3 md:pb-4 ${isScrolled ? 'bg-black/80 backdrop-blur-2xl border-b border-white/5 shadow-xl' : 'bg-gradient-to-b from-[#060608] via-[#060608]/90 to-transparent'}`}>
+            <div className="flex items-center space-x-3 md:space-x-8">
+              <div 
+                className="flex items-center cursor-pointer outline-none group transition-transform active:scale-95 select-none" 
+                onClick={() => {
+                  if (currentCategory === 'anime') {
+                    setAnimeSubTab('home');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    showToast(lang === 'fr' ? 'Actualisation du catalogue LevelAnime...' : 'Refreshing LevelAnime catalog...', 'info');
+                  } else {
+                    setCurrentCategory('home');
+                    setPageSeed((prev) => prev + 1);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    showToast(lang === 'fr' ? 'Nouveautés & actualisation du catalogue...' : 'Discovering new releases & refreshing catalog...', 'info');
+                  }
+                }}
+                title={currentCategory === 'anime' ? (lang === 'fr' ? 'Actualiser le catalogue LevelAnime' : 'Refresh LevelAnime catalog') : (lang === 'fr' ? 'Actualiser le catalogue LevelMovie' : 'Refresh LevelMovie catalog')}
+              >
+                {/* Mobile ONLY: Logo Icon (No text) */}
+                <div className="md:hidden flex items-center justify-center p-1">
+                  <LevelMovieLogo className="w-7 h-7 transition-transform group-hover:scale-110" color={currentCategory === 'anime' ? '#ef4444' : '#a855f7'} />
+                </div>
+
+                {/* PC ONLY: Stylized text (No icon) */}
+                <h1 className="hidden md:flex text-xl md:text-2xl font-black tracking-widest leading-none drop-shadow-lg items-center">
+                  <span className="text-white">Level</span><span className="text-[#a855f7]">Movie</span>
+                </h1>
+              </div>
+
+              <nav className="hidden lg:flex space-x-6 text-[12px] font-bold uppercase tracking-widest text-white/60">
+                <button onClick={() => setCurrentCategory('home')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'home' ? 'text-[#a855f7]' : ''}`}>{t.home}</button>
+                <button 
+                  onClick={() => setCurrentCategory('dona')} 
+                  className={`flex items-center gap-1.5 transition-all outline-none cursor-pointer group ${currentCategory === 'dona' ? 'text-[#c084fc] font-black' : 'text-white/60 hover:text-white'}`}
+                  title="Dona"
+                >
+                  <Bot className="w-4 h-4 group-hover:scale-110 transition-transform text-[#c084fc]" />
+                  <span className="font-bold tracking-wide">Dona</span>
+                </button>
+                <button onClick={() => setCurrentCategory('movie')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'movie' ? 'text-[#a855f7]' : ''}`}>{t.movies}</button>
+                <button onClick={() => setCurrentCategory('party')} className={`flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'party' ? 'text-[#a855f7] font-bold' : ''}`}>
+                  <Users className="w-3.5 h-3.5" />
+                  <span>{t.partyTab || 'Salons'}</span>
+                </button>
+                <button onClick={() => setCurrentCategory('trailers')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'trailers' ? 'text-[#a855f7]' : ''}`}>{t.trailers || 'Bandes-Annonces'}</button>
+                <button onClick={() => setCurrentCategory('anime')} className={`flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'anime' ? 'text-red-500 font-bold' : ''}`}>
+                  <LevelMovieLogo className="w-3.5 h-3.5" color="#ef4444" />
+                  <span>Anime</span>
+                </button>
+                <button onClick={() => setCurrentCategory('watchlist')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'watchlist' ? 'text-[#a855f7]' : ''}`}>{t.myList}</button>
+              </nav>
+            </div>
+
+            <div className="flex items-center space-x-3 md:space-x-4">
+              {/* Indicateur visuel subtil Hors-Ligne dans le Header */}
+              {isNetworkOffline && (
+                <button
+                  type="button"
+                  onClick={() => setOpenOfflineDetailTrigger(prev => prev + 1)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-amber-500/15 border border-amber-500/35 hover:bg-amber-500/25 hover:border-amber-400 text-amber-300 text-[10px] sm:text-xs font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] animate-pulse active:scale-95 cursor-pointer shrink-0"
+                  title={lang === 'fr' ? 'Mode hors-ligne actif (cliquez pour afficher les options)' : 'Offline mode active (click for options)'}
+                >
+                  <WifiOff className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="font-bold uppercase tracking-wider hidden sm:inline">
+                    {lang === 'fr' ? 'Hors-ligne' : 'Offline'}
+                  </span>
+                </button>
+              )}
+
               <button onClick={() => setShowSearchModal(true)} className="group flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 md:px-4 py-2 rounded-full outline-none w-10 md:w-72 justify-center md:justify-start transition-all shadow-inner cursor-pointer">
                 <SearchIcon className="w-4 h-4 shrink-0 text-[#a855f7]" />
                 <span className="hidden md:inline truncate text-white/50">{t.searchPlaceholder}</span>
@@ -1465,72 +1613,39 @@ export default function App() {
                   </p>
                 </div>
               </div>
-            </>
-          )}
-        </div>
-      </header>
-
-      {/* NAVBAR MOBILE (Masquée sur Dona pour laisser la place complète au chat) */}
-      {currentCategory !== 'dona' && (
-        <nav className="safe-bottom-nav lg:hidden fixed bottom-0 w-full z-50 bg-[#060608]/95 backdrop-blur-xl border-t border-white/5 flex justify-around items-center pt-3 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
-          <button onClick={() => setCurrentCategory('home')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'home' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-            <Home className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.home}</span>
-          </button>
-          <button 
-            onClick={() => setCurrentCategory('dona')} 
-            className={`flex flex-col items-center justify-center gap-1 transition-all outline-none cursor-pointer active:scale-95 group ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/70 hover:text-white'}`}
-            title="Dona"
-          >
-            <div className="relative flex items-center justify-center w-6 h-6">
-              <Bot className="w-5 h-5 relative z-10 transition-transform group-hover:scale-110 text-[#c084fc]" />
             </div>
-            <span className={`text-[9px] font-black uppercase tracking-wider ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/60'}`}>Dona</span>
-          </button>
-          <button onClick={() => setCurrentCategory('party')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'party' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-            <Users className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.partyTab || 'Salons'}</span>
-          </button>
-          <button onClick={() => { setCurrentCategory('anime'); setAnimeSubTab('home'); }} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'anime' && !showSidebar ? 'text-red-500' : 'text-white/50 hover:text-white'}`}>
-            <LevelMovieLogo className="w-5 h-5" color="#ef4444" /> <span className="text-[9px] font-bold uppercase tracking-widest">Anime</span>
-          </button>
-          <button onClick={() => setShowSidebar(true)} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-            <Menu className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.menu || 'Menu'}</span>
-          </button>
-        </nav>
+          </header>
+
+          {/* NAVBAR MOBILE */}
+          <nav className="safe-bottom-nav lg:hidden fixed bottom-0 w-full z-50 bg-[#060608]/95 backdrop-blur-xl border-t border-white/5 flex justify-around items-center pt-3 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+            <button onClick={() => setCurrentCategory('home')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'home' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
+              <Home className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.home}</span>
+            </button>
+            <button 
+              onClick={() => setCurrentCategory('dona')} 
+              className={`flex flex-col items-center justify-center gap-1 transition-all outline-none cursor-pointer active:scale-95 group ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/70 hover:text-white'}`}
+              title="Dona"
+            >
+              <div className="relative flex items-center justify-center w-6 h-6">
+                <Bot className="w-5 h-5 relative z-10 transition-transform group-hover:scale-110 text-[#c084fc]" />
+              </div>
+              <span className={`text-[9px] font-black uppercase tracking-wider ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/60'}`}>Dona</span>
+            </button>
+            <button onClick={() => setCurrentCategory('party')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'party' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
+              <Users className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.partyTab || 'Salons'}</span>
+            </button>
+            <button onClick={() => { setCurrentCategory('anime'); setAnimeSubTab('home'); }} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'anime' && !showSidebar ? 'text-red-500' : 'text-white/50 hover:text-white'}`}>
+              <LevelMovieLogo className="w-5 h-5" color="#ef4444" /> <span className="text-[9px] font-bold uppercase tracking-widest">Anime</span>
+            </button>
+            <button onClick={() => setShowSidebar(true)} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
+              <Menu className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.menu || 'Menu'}</span>
+            </button>
+          </nav>
+        </>
       )}
 
       {/* CONTENU PRINCIPAL */}
-      {currentCategory === 'dona' ? (
-        <div 
-          style={{
-            height: donaViewportHeight 
-              ? `${donaViewportHeight - (typeof window !== 'undefined' && window.innerWidth >= 768 ? 64 : 56)}px` 
-              : 'calc(100dvh - 3.5rem)',
-            maxHeight: donaViewportHeight 
-              ? `${donaViewportHeight - (typeof window !== 'undefined' && window.innerWidth >= 768 ? 64 : 56)}px` 
-              : 'calc(100dvh - 3.5rem)',
-          }}
-          className="fixed inset-x-0 top-14 md:top-16 z-30 flex flex-col bg-[#020202] animate-in fade-in duration-200 overflow-hidden"
-        >
-          <div className="w-full h-full flex flex-col flex-1 overflow-hidden">
-            <DonaModal
-              isOpen={true}
-              onClose={() => setCurrentCategory('home')}
-              onSelectMovie={(movie, mode = 'info') => openModal(movie, mode)}
-              onCreateParty={(movie) => triggerCreateParty(movie)}
-              onNavigateCategory={(cat) => setCurrentCategory(cat)}
-              onOpenSearch={(q) => {
-                if (q) setSearchQuery(q);
-                setShowSearchModal(true);
-              }}
-              onOpenSettings={() => setShowSettings(true)}
-              onOpenSupport={() => setShowSupport(true)}
-              lang={lang}
-              historyTrigger={donaHistoryTrigger}
-              newChatTrigger={donaNewChatTrigger}
-            />
-          </div>
-        </div>
-      ) : currentCategory === 'party' ? (
+      {currentCategory === 'dona' ? null : currentCategory === 'party' ? (
         <div className="pt-24 px-4 md:px-14 pb-24 min-h-screen relative z-30 w-full max-w-[2000px] mx-auto space-y-8 animate-in fade-in duration-300">
           {/* Executive Watch Party Cinema Lounge Header */}
           <div className="relative w-full rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-[#140b24] via-[#0d0d18] to-[#090912] border border-[#a855f7]/25 shadow-[0_15px_40px_rgba(0,0,0,0.7)] overflow-hidden">
@@ -1792,6 +1907,7 @@ export default function App() {
         user={user}
         onRequireAuth={() => setShowLoginModal(true)}
         showToast={showToast}
+        onStartParty={triggerCreateParty}
       />
 
       {/* MODAL AIDE & SUPPORT */}
@@ -2018,10 +2134,45 @@ export default function App() {
             <h3 className="text-xl font-black text-white mb-2 uppercase tracking-widest">{t.logoutBtn}</h3>
             <p className="text-white/60 text-xs mb-6">{t.logoutConfirm}</p>
             <div className="flex gap-3">
-              <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white/70 rounded-xl text-[10px] font-bold uppercase cursor-pointer">{t.cancel}</button>
-              <button onClick={handleLogout} className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-bold uppercase cursor-pointer">{t.confirm}</button>
+              <button
+                disabled={isLoggingOut}
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 py-3 bg-white/5 hover:bg-white/10 disabled:opacity-50 text-white/70 rounded-xl text-[10px] font-bold uppercase cursor-pointer"
+              >
+                {t.cancel}
+              </button>
+              <button
+                disabled={isLoggingOut}
+                onClick={handleLogout}
+                className="flex-1 py-3 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl text-[10px] font-bold uppercase cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>{lang === 'fr' ? 'Déconnexion...' : 'Logging out...'}</span>
+                  </>
+                ) : (
+                  t.confirm
+                )}
+              </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* OVERLAY DE CHARGEMENT DE DÉCONNEXION */}
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[999999] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-in fade-in duration-300 pointer-events-auto select-none">
+          <div className="relative flex items-center justify-center mb-6">
+            <div className="w-20 h-20 rounded-full border-4 border-red-500/20 border-t-red-500 animate-spin" />
+            <LogOut className="w-8 h-8 text-red-500 absolute animate-pulse" />
+          </div>
+          <h3 className="text-lg md:text-xl font-black text-white uppercase tracking-widest mb-1.5 text-center">
+            {lang === 'fr' ? 'Déconnexion en cours...' : 'Logging out...'}
+          </h3>
+          <p className="text-xs text-white/50 font-medium text-center">
+            {lang === 'fr' ? 'Fermeture sécurisée de votre session' : 'Securing and closing your session'}
+          </p>
         </div>
       )}
 
@@ -2207,6 +2358,8 @@ export default function App() {
         onOpenWatchlist={() => setCurrentCategory('watchlist')}
         onOpenHistory={() => setCurrentCategory('history')}
         showToast={showToast}
+        onStatusChange={setIsNetworkOffline}
+        openDetailTrigger={openOfflineDetailTrigger}
       />
     </div>
   );

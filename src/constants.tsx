@@ -447,352 +447,286 @@ export interface AvatarPreset {
 }
 
 export const DEFAULT_AVATARS: AvatarPreset[] = [
-  // --- 3D HOMMES (DIVERSITÉ ET STYLES CINÉMA) ---
   {
-    id: 'avatar-3d-01',
-    name: 'Alexandre',
-    category: '3D Homme',
-    gradient: 'from-[#6366f1] via-[#4f46e5] to-[#1e1b4b]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Alexandre&backgroundColor=6366f1,4f46e5'
+    "id": "avatar-3d-01",
+    "name": "Lucas",
+    "category": "3D Homme",
+    "gradient": "from-[#6366f1] via-[#4f46e5] to-[#1e1b4b]",
+    "image": "/avatars/memo_1.png"
   },
   {
-    id: 'avatar-3d-02',
-    name: 'Malik',
-    category: '3D Homme',
-    gradient: 'from-[#059669] via-[#047857] to-[#064e3b]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Malik&backgroundColor=059669,047857'
+    "id": "avatar-3d-02",
+    "name": "Malik",
+    "category": "3D Homme",
+    "gradient": "from-[#059669] via-[#047857] to-[#064e3b]",
+    "image": "/avatars/memo_2.png"
   },
   {
-    id: 'avatar-3d-03',
-    name: 'Tariq',
-    category: '3D Homme',
-    gradient: 'from-[#0284c7] via-[#0369a1] to-[#1e3a8a]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Tariq&backgroundColor=0284c7,0369a1'
+    "id": "avatar-3d-03",
+    "name": "Tariq",
+    "category": "3D Homme",
+    "gradient": "from-[#0284c7] via-[#0369a1] to-[#1e3a8a]",
+    "image": "/avatars/memo_3.png"
   },
   {
-    id: 'avatar-3d-04',
-    name: 'Kenji',
-    category: '3D Homme',
-    gradient: 'from-[#dc2626] via-[#b91c1c] to-[#7f1d1d]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Kenji&backgroundColor=dc2626,991b1b'
+    "id": "avatar-3d-04",
+    "name": "Kenji",
+    "category": "3D Homme",
+    "gradient": "from-[#dc2626] via-[#b91c1c] to-[#7f1d1d]",
+    "image": "/avatars/memo_4.png"
   },
   {
-    id: 'avatar-3d-05',
-    name: 'Jordan',
-    category: '3D Homme',
-    gradient: 'from-[#d97706] via-[#b45309] to-[#78350f]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Jordan&backgroundColor=d97706,b45309'
+    "id": "avatar-3d-05",
+    "name": "Jordan",
+    "category": "3D Homme",
+    "gradient": "from-[#d97706] via-[#b45309] to-[#78350f]",
+    "image": "/avatars/memo_5.png"
   },
   {
-    id: 'avatar-3d-06',
-    name: 'Liam',
-    category: '3D Homme',
-    gradient: 'from-[#7c3aed] via-[#6d28d9] to-[#3b0764]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Liam&backgroundColor=7c3aed,6d28d9'
+    "id": "avatar-3d-06",
+    "name": "Alexandre",
+    "category": "3D Homme",
+    "gradient": "from-[#7c3aed] via-[#6d28d9] to-[#3b0764]",
+    "image": "/avatars/memo_6.png"
   },
   {
-    id: 'avatar-3d-07',
-    name: 'Carlos',
-    category: '3D Homme',
-    gradient: 'from-[#ea580c] via-[#c2410c] to-[#7c2d12]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Carlos&backgroundColor=ea580c,c2410c'
+    "id": "avatar-3d-07",
+    "name": "Carlos",
+    "category": "3D Homme",
+    "gradient": "from-[#ea580c] via-[#c2410c] to-[#7c2d12]",
+    "image": "/avatars/memo_7.png"
   },
   {
-    id: 'avatar-3d-08',
-    name: 'Jin',
-    category: '3D Homme',
-    gradient: 'from-[#0891b2] via-[#0e7490] to-[#164e63]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Jin&backgroundColor=0891b2,0e7490'
+    "id": "avatar-3d-08",
+    "name": "Jin",
+    "category": "3D Homme",
+    "gradient": "from-[#0891b2] via-[#0e7490] to-[#164e63]",
+    "image": "/avatars/memo_8.png"
   },
   {
-    id: 'avatar-3d-09',
-    name: 'Samuel',
-    category: '3D Homme',
-    gradient: 'from-[#4f46e5] via-[#4338ca] to-[#1e1b4b]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Samuel&backgroundColor=4f46e5,4338ca'
-  },
-
-  // --- 3D FEMMES (DIVERSITÉ ET ÉLÉGANCE) ---
-  {
-    id: 'avatar-3d-10',
-    name: 'Sophia',
-    category: '3D Femme',
-    gradient: 'from-[#ec4899] via-[#db2777] to-[#831843]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Sophia&backgroundColor=ec4899,db2777'
+    "id": "avatar-3d-09",
+    "name": "Samuel",
+    "category": "3D Homme",
+    "gradient": "from-[#4f46e5] via-[#4338ca] to-[#1e1b4b]",
+    "image": "/avatars/memo_9.png"
   },
   {
-    id: 'avatar-3d-11',
-    name: 'Aaliyah',
-    category: '3D Femme',
-    gradient: 'from-[#f59e0b] via-[#d97706] to-[#78350f]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Aaliyah&backgroundColor=f59e0b,d97706'
+    "id": "avatar-3d-10",
+    "name": "Enzo",
+    "category": "3D Homme",
+    "gradient": "from-[#0d9488] via-[#0f766e] to-[#134e4a]",
+    "image": "/avatars/memo_10.png"
   },
   {
-    id: 'avatar-3d-12',
-    name: 'Maya',
-    category: '3D Femme',
-    gradient: 'from-[#8b5cf6] via-[#7c3aed] to-[#4c1d95]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Maya&backgroundColor=8b5cf6,7c3aed'
+    "id": "avatar-3d-11",
+    "name": "Maxime",
+    "category": "3D Homme",
+    "gradient": "from-[#3b82f6] via-[#1d4ed8] to-[#172554]",
+    "image": "/avatars/memo_11.png"
   },
   {
-    id: 'avatar-3d-13',
-    name: 'Yuna',
-    category: '3D Femme',
-    gradient: 'from-[#06b6d4] via-[#0891b2] to-[#164e63]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Yuna&backgroundColor=06b6d4,0891b2'
+    "id": "avatar-3d-12",
+    "name": "Noah",
+    "category": "3D Homme",
+    "gradient": "from-[#8b5cf6] via-[#6d28d9] to-[#2e1065]",
+    "image": "/avatars/memo_12.png"
   },
   {
-    id: 'avatar-3d-14',
-    name: 'Chloe',
-    category: '3D Femme',
-    gradient: 'from-[#10b981] via-[#059669] to-[#064e3b]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Chloe&backgroundColor=10b981,059669'
+    "id": "avatar-3d-13",
+    "name": "Diego",
+    "category": "3D Homme",
+    "gradient": "from-[#10b981] via-[#059669] to-[#064e3b]",
+    "image": "/avatars/memo_13.png"
   },
   {
-    id: 'avatar-3d-15',
-    name: 'Isabella',
-    category: '3D Femme',
-    gradient: 'from-[#f43f5e] via-[#e11d48] to-[#881337]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Isabella&backgroundColor=f43f5e,e11d48'
+    "id": "avatar-3d-14",
+    "name": "Ethan",
+    "category": "3D Homme",
+    "gradient": "from-[#f59e0b] via-[#d97706] to-[#78350f]",
+    "image": "/avatars/memo_14.png"
   },
   {
-    id: 'avatar-3d-16',
-    name: 'Layla',
-    category: '3D Femme',
-    gradient: 'from-[#3b82f6] via-[#2563eb] to-[#1e3a8a]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Layla&backgroundColor=3b82f6,2563eb'
+    "id": "avatar-3d-15",
+    "name": "Mohamed",
+    "category": "3D Homme",
+    "gradient": "from-[#2563eb] via-[#1d4ed8] to-[#0f172a]",
+    "image": "/avatars/memo_15.png"
   },
   {
-    id: 'avatar-3d-17',
-    name: 'Zoe',
-    category: '3D Femme',
-    gradient: 'from-[#a855f7] via-[#9333ea] to-[#581c87]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Zoe&backgroundColor=a855f7,9333ea'
+    "id": "avatar-3d-16",
+    "name": "Sophia",
+    "category": "3D Femme",
+    "gradient": "from-[#ec4899] via-[#db2777] to-[#831843]",
+    "image": "/avatars/memo_16.png"
   },
   {
-    id: 'avatar-3d-18',
-    name: 'Amira',
-    category: '3D Femme',
-    gradient: 'from-[#fb923c] via-[#ea580c] to-[#7c2d12]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Amira&backgroundColor=fb923c,ea580c'
-  },
-
-  // --- 3D CINÉMA & HÉROS ---
-  {
-    id: 'avatar-3d-19',
-    name: 'Neo',
-    category: '3D Cinéma',
-    gradient: 'from-[#10b981] via-[#047857] to-[#022c22]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Neo&backgroundColor=10b981,047857'
+    "id": "avatar-3d-17",
+    "name": "Amira",
+    "category": "3D Femme",
+    "gradient": "from-[#fb923c] via-[#ea580c] to-[#7c2d12]",
+    "image": "/avatars/memo_17.png"
   },
   {
-    id: 'avatar-3d-20',
-    name: 'Trinity',
-    category: '3D Cinéma',
-    gradient: 'from-[#065f46] via-[#047857] to-[#0f172a]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Trinity&backgroundColor=065f46,047857'
+    "id": "avatar-3d-18",
+    "name": "Elena",
+    "category": "3D Femme",
+    "gradient": "from-[#f59e0b] via-[#d97706] to-[#78350f]",
+    "image": "/avatars/memo_18.png"
   },
   {
-    id: 'avatar-3d-21',
-    name: 'Morfeus',
-    category: '3D Cinéma',
-    gradient: 'from-[#475569] via-[#334155] to-[#0f172a]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Morfeus&backgroundColor=475569,334155'
+    "id": "avatar-3d-19",
+    "name": "Maya",
+    "category": "3D Femme",
+    "gradient": "from-[#8b5cf6] via-[#7c3aed] to-[#4c1d95]",
+    "image": "/avatars/memo_19.png"
   },
   {
-    id: 'avatar-3d-22',
-    name: 'Valkyrie',
-    category: '3D Cinéma',
-    gradient: 'from-[#f43f5e] via-[#be123c] to-[#4c0519]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Valkyrie&backgroundColor=f43f5e,be123c'
+    "id": "avatar-3d-20",
+    "name": "Aiko",
+    "category": "3D Femme",
+    "gradient": "from-[#06b6d4] via-[#0891b2] to-[#164e63]",
+    "image": "/avatars/memo_20.png"
   },
   {
-    id: 'avatar-3d-23',
-    name: 'Cyber Samurai',
-    category: '3D Cinéma',
-    gradient: 'from-[#ef4444] via-[#b91c1c] to-[#450a0a]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CyberSamurai&backgroundColor=ef4444,b91c1c'
+    "id": "avatar-3d-21",
+    "name": "Chloe",
+    "category": "3D Femme",
+    "gradient": "from-[#10b981] via-[#059669] to-[#064e3b]",
+    "image": "/avatars/memo_21.png"
   },
   {
-    id: 'avatar-3d-24',
-    name: 'Shadow Hunter',
-    category: '3D Cinéma',
-    gradient: 'from-[#1e293b] via-[#0f172a] to-[#020617]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=ShadowHunter&backgroundColor=1e293b,0f172a'
-  },
-
-  // --- 3D VIP & EXECUTIVE ---
-  {
-    id: 'avatar-3d-25',
-    name: 'Golden Crown',
-    category: '3D VIP',
-    gradient: 'from-[#fbbf24] via-[#f59e0b] to-[#78350f]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=GoldenCrown&backgroundColor=fbbf24,f59e0b'
+    "id": "avatar-3d-22",
+    "name": "Camille",
+    "category": "3D Femme",
+    "gradient": "from-[#f43f5e] via-[#e11d48] to-[#881337]",
+    "image": "/avatars/memo_22.png"
   },
   {
-    id: 'avatar-3d-26',
-    name: 'Diamond Star',
-    category: '3D VIP',
-    gradient: 'from-[#38bdf8] via-[#0284c7] to-[#0c4a6e]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=DiamondStar&backgroundColor=38bdf8,0284c7'
+    "id": "avatar-3d-23",
+    "name": "Inès",
+    "category": "3D Femme",
+    "gradient": "from-[#3b82f6] via-[#2563eb] to-[#1e3a8a]",
+    "image": "/avatars/memo_23.png"
   },
   {
-    id: 'avatar-3d-27',
-    name: 'Royal Purple',
-    category: '3D VIP',
-    gradient: 'from-[#c084fc] via-[#9333ea] to-[#3b0764]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=RoyalPurple&backgroundColor=c084fc,9333ea'
+    "id": "avatar-3d-24",
+    "name": "Zara",
+    "category": "3D Femme",
+    "gradient": "from-[#a855f7] via-[#9333ea] to-[#581c87]",
+    "image": "/avatars/memo_24.png"
   },
   {
-    id: 'avatar-3d-28',
-    name: 'Emerald Lord',
-    category: '3D VIP',
-    gradient: 'from-[#34d399] via-[#059669] to-[#064e3b]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=EmeraldLord&backgroundColor=34d399,059669'
+    "id": "avatar-3d-25",
+    "name": "Léa",
+    "category": "3D Femme",
+    "gradient": "from-[#c084fc] via-[#a855f7] to-[#6b21a8]",
+    "image": "/avatars/memo_25.png"
   },
   {
-    id: 'avatar-3d-29',
-    name: 'Ruby Knight',
-    category: '3D VIP',
-    gradient: 'from-[#fb7185] via-[#e11d48] to-[#4c0519]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=RubyKnight&backgroundColor=fb7185,e11d48'
+    "id": "avatar-3d-26",
+    "name": "Astrid",
+    "category": "3D Femme",
+    "gradient": "from-[#d946ef] via-[#c026d3] to-[#701a75]",
+    "image": "/avatars/memo_26.png"
   },
   {
-    id: 'avatar-3d-30',
-    name: 'Midnight Boss',
-    category: '3D VIP',
-    gradient: 'from-[#64748b] via-[#334155] to-[#020617]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=MidnightBoss&backgroundColor=64748b,334155'
-  },
-
-  // --- 3D FUTURISTE & CYBER ---
-  {
-    id: 'avatar-3d-31',
-    name: 'Neon Horizon',
-    category: '3D Futuriste',
-    gradient: 'from-[#06b6d4] via-[#3b82f6] to-[#6d28d9]',
-    image: 'https://api.dicebear.com/7.x/bottts/svg?seed=NeonHorizon&backgroundColor=06b6d4,3b82f6'
+    "id": "avatar-3d-27",
+    "name": "Sora",
+    "category": "3D Femme",
+    "gradient": "from-[#14b8a6] via-[#0d9488] to-[#115e59]",
+    "image": "/avatars/memo_27.png"
   },
   {
-    id: 'avatar-3d-32',
-    name: 'Cyber Punk',
-    category: '3D Futuriste',
-    gradient: 'from-[#ec4899] via-[#8b5cf6] to-[#1e1b4b]',
-    image: 'https://api.dicebear.com/7.x/bottts/svg?seed=CyberPunk&backgroundColor=ec4899,8b5cf6'
+    "id": "avatar-3d-28",
+    "name": "Sophie",
+    "category": "3D Femme",
+    "gradient": "from-[#f97316] via-[#ea580c] to-[#9d174d]",
+    "image": "/avatars/memo_28.png"
   },
   {
-    id: 'avatar-3d-33',
-    name: 'Nova AI',
-    category: '3D Futuriste',
-    gradient: 'from-[#10b981] via-[#06b6d4] to-[#1e3a8a]',
-    image: 'https://api.dicebear.com/7.x/bottts/svg?seed=NovaAI&backgroundColor=10b981,06b6d4'
+    "id": "avatar-3d-29",
+    "name": "Yasmine",
+    "category": "3D Femme",
+    "gradient": "from-[#0ea5e9] via-[#0284c7] to-[#0369a1]",
+    "image": "/avatars/memo_29.png"
   },
   {
-    id: 'avatar-3d-34',
-    name: 'Quantum Pilot',
-    category: '3D Futuriste',
-    gradient: 'from-[#f59e0b] via-[#ef4444] to-[#7f1d1d]',
-    image: 'https://api.dicebear.com/7.x/bottts/svg?seed=QuantumPilot&backgroundColor=f59e0b,ef4444'
+    "id": "avatar-3d-30",
+    "name": "Olivia",
+    "category": "3D Femme",
+    "gradient": "from-[#ec4899] via-[#be123c] to-[#4c0519]",
+    "image": "/avatars/memo_30.png"
   },
   {
-    id: 'avatar-3d-35',
-    name: 'Vortex Rider',
-    category: '3D Futuriste',
-    gradient: 'from-[#a855f7] via-[#ec4899] to-[#4c0519]',
-    image: 'https://api.dicebear.com/7.x/bottts/svg?seed=VortexRider&backgroundColor=a855f7,ec4899'
+    "id": "avatar-3d-31",
+    "name": "Neo",
+    "category": "3D Cinéma",
+    "gradient": "from-[#1e293b] via-[#0f172a] to-[#020617]",
+    "image": "/avatars/memo_31.png"
   },
   {
-    id: 'avatar-3d-36',
-    name: 'Aether Guardian',
-    category: '3D Futuriste',
-    gradient: 'from-[#38bdf8] via-[#818cf8] to-[#312e81]',
-    image: 'https://api.dicebear.com/7.x/bottts/svg?seed=AetherGuardian&backgroundColor=38bdf8,818cf8'
-  },
-
-  // --- LEGACY AVATARS (RÉTROCOMPATIBILITÉ GARANTIE) ---
-  {
-    id: 'avatar-angel',
-    name: 'Angel',
-    category: '3D Homme',
-    gradient: 'from-[#0284c7] to-[#1e3a8a]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Angel&backgroundColor=0284c7,1e3a8a'
+    "id": "avatar-3d-32",
+    "name": "Titan",
+    "category": "3D Cinéma",
+    "gradient": "from-[#dc2626] via-[#b91c1c] to-[#450a0a]",
+    "image": "/avatars/memo_32.png"
   },
   {
-    id: 'avatar-marco',
-    name: 'Marco',
-    category: '3D Homme',
-    gradient: 'from-[#059669] to-[#064e3b]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Marco&backgroundColor=059669,064e3b'
+    "id": "avatar-3d-33",
+    "name": "Ronin",
+    "category": "3D Cinéma",
+    "gradient": "from-[#059669] via-[#047857] to-[#022c22]",
+    "image": "/avatars/memo_33.png"
   },
   {
-    id: 'avatar-cherubin',
-    name: 'Chérubin',
-    category: '3D Homme',
-    gradient: 'from-[#d97706] to-[#78350f]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Cherubin&backgroundColor=d97706,78350f'
+    "id": "avatar-3d-34",
+    "name": "Phoenix",
+    "category": "3D Cinéma",
+    "gradient": "from-[#f97316] via-[#ea580c] to-[#7c2d12]",
+    "image": "/avatars/memo_34.png"
   },
   {
-    id: 'avatar-sun',
-    name: 'Sun',
-    category: '3D Homme',
-    gradient: 'from-[#0ea5e9] to-[#0369a1]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sun&backgroundColor=0ea5e9,0369a1'
+    "id": "avatar-3d-35",
+    "name": "Specter",
+    "category": "3D Cinéma",
+    "gradient": "from-[#475569] via-[#334155] to-[#0f172a]",
+    "image": "/avatars/memo_35.png"
   },
   {
-    id: 'avatar-illane',
-    name: 'Illane',
-    category: '3D Femme',
-    gradient: 'from-[#ec4899] to-[#881337]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Illane&backgroundColor=ec4899,881337'
+    "id": "avatar-3d-36",
+    "name": "Cyber Alpha",
+    "category": "3D Futuriste",
+    "gradient": "from-[#06b6d4] via-[#3b82f6] to-[#6d28d9]",
+    "image": "/avatars/3d_1.png"
   },
   {
-    id: 'avatar-lea',
-    name: 'Léa',
-    category: '3D Femme',
-    gradient: 'from-[#8b5cf6] to-[#4c1d95]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Lea&backgroundColor=8b5cf6,4c1d95'
+    "id": "avatar-3d-37",
+    "name": "Neon Nexus",
+    "category": "3D Futuriste",
+    "gradient": "from-[#38bdf8] via-[#818cf8] to-[#312e81]",
+    "image": "/avatars/3d_2.png"
   },
   {
-    id: 'avatar-lex',
-    name: 'Lex',
-    category: '3D Homme',
-    gradient: 'from-[#9333ea] to-[#3b0764]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Lex&backgroundColor=9333ea,3b0764'
+    "id": "avatar-3d-38",
+    "name": "Astro 3D",
+    "category": "3D Futuriste",
+    "gradient": "from-[#ec4899] via-[#8b5cf6] to-[#1e1b4b]",
+    "image": "/avatars/3d_3.png"
   },
   {
-    id: 'avatar-aben',
-    name: 'Aben',
-    category: '3D Homme',
-    gradient: 'from-[#dc2626] to-[#7f1d1d]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Aben&backgroundColor=dc2626,7f1d1d'
+    "id": "avatar-3d-39",
+    "name": "Quantum VR",
+    "category": "3D Futuriste",
+    "gradient": "from-[#10b981] via-[#06b6d4] to-[#1e3a8a]",
+    "image": "/avatars/3d_4.png"
   },
   {
-    id: 'avatar-mohamed',
-    name: 'Mohamed',
-    category: '3D Homme',
-    gradient: 'from-[#2563eb] to-[#1e293b]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Mohamed&backgroundColor=2563eb,1e293b'
-  },
-  {
-    id: 'avatar-christ',
-    name: 'Christ',
-    category: '3D Homme',
-    gradient: 'from-[#4f46e5] to-[#1e1b4b]',
-    image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Christ&backgroundColor=4f46e5,1e1b4b'
-  },
-  {
-    id: 'avatar-sophie',
-    name: 'Sophie',
-    category: '3D Femme',
-    gradient: 'from-[#f97316] to-[#9d174d]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Sophie&backgroundColor=f97316,9d174d'
-  },
-  {
-    id: 'avatar-alexa',
-    name: 'Alexa',
-    category: '3D Femme',
-    gradient: 'from-[#06b6d4] to-[#0f766e]',
-    image: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexa&backgroundColor=06b6d4,0f766e'
+    "id": "avatar-3d-40",
+    "name": "Mecha VIP",
+    "category": "3D Futuriste",
+    "gradient": "from-[#a855f7] via-[#ec4899] to-[#4c0519]",
+    "image": "/avatars/3d_5.png"
   }
 ];
+
 

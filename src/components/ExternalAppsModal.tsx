@@ -33,6 +33,7 @@ interface ExternalAppsModalProps {
   user?: any;
   onRequireAuth?: () => void;
   showToast?: (msg: string, type?: string) => void;
+  onStartParty?: (movie: any) => void;
 }
 
 export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
@@ -41,7 +42,8 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
   lang,
   user,
   onRequireAuth,
-  showToast
+  showToast,
+  onStartParty
 }) => {
   const isFr = lang === 'fr';
 
@@ -271,7 +273,17 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
       {/* ========================================================================= */}
       {currentAppId === 'level-anime' && (
         <div key={`app-anime-${refreshKey}`} className="flex-1 w-full h-full overflow-hidden">
-          <LevelAnimeApp lang={lang} user={user} showToast={showToast} />
+          <LevelAnimeApp
+            lang={lang}
+            user={user}
+            showToast={showToast}
+            onStartParty={(movie) => {
+              onClose();
+              if (onStartParty) {
+                onStartParty(movie);
+              }
+            }}
+          />
         </div>
       )}
 

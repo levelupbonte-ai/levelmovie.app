@@ -1,4 +1,5 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
+import fs from 'fs';
 import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -886,6 +887,117 @@ app.get('/api/geo-check', async (req, res) => {
   } catch (err) {
     res.json({ allowed: false, isSanDiego: false });
   }
+});
+
+// =========================================================================
+// USER PROFILES & AVATARS PERSISTENT DATABASE ENGINE
+// Stores user profiles (uid, name, handle, photo/avatar, email, updatedAt)
+// in data/users.json on the server disk for permanent synchronization
+// =========================================================================
+const USERS_DB_FILE = path.join(process.cwd(), 'data', 'users.json');
+
+interface StoredUserProfile {
+  uid: string;
+  name: string;
+  handle?: string;
+  photo?: string;
+  email?: string;
+  isVip?: boolean;
+  updatedAt: number;
+}
+
+const userProfiles = new Map<string, StoredUserProfile>();
+
+try {
+  if (fs.existsSync(USERS_DB_FILE)) {
+    const raw = fs.readFileSync(USERS_DB_FILE, 'utf-8');
+    const parsed: Record<string, StoredUserProfile> = JSON.parse(raw);
+    Object.entries(parsed).forEach(([uid, profile]) => {
+      userProfiles.set(uid, profile);
+    });
+    console.log(`[UserDatabase] Loaded ${userProfiles.size} persistent user profiles from disk.`);
+  }
+} catch (e) {
+  console.warn('[UserDatabase] Error reading users.json:', e);
+}
+
+let saveUsersTimeout: NodeJS.Timeout | null = null;
+function persistUserProfiles(): void {
+  if (saveUsersTimeout) clearTimeout(saveUsersTimeout);
+  saveUsersTimeout = setTimeout(() => {
+    try {
+      const dataDir = path.dirname(USERS_DB_FILE);
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      const obj: Record<string, StoredUserProfile> = {};
+      userProfiles.forEach((val, key) => {
+        obj[key] = val;
+      });
+      fs.writeFileSync(USERS_DB_FILE, JSON.stringify(obj, null, 2), 'utf-8');
+    } catch (e) {
+      console.warn('[UserDatabase] Error saving users.json:', e);
+    }
+  }, 500);
+}
+
+// Save or Update User Profile in Database
+app.post('/api/user/profile', (req: Request, res: Response) => {
+  const { uid, name, handle, photo, email, isVip } = req.body || {};
+  if (!uid) {
+    return res.status(400).json({ success: false, error: 'User UID is required' });
+  }
+
+  const existing = userProfiles.get(uid) || { uid, name: name || 'Cinéphile', updatedAt: Date.now() };
+  const updated: StoredUserProfile = {
+    uid,
+    name: name !== undefined && name.trim() ? name.trim() : existing.name,
+    handle: handle !== undefined ? handle.trim().replace(/^@+/, '') : existing.handle,
+    photo: photo !== undefined ? photo : existing.photo,
+    email: email !== undefined ? email.trim() : existing.email,
+    isVip: isVip !== undefined ? isVip : existing.isVip,
+    updatedAt: Date.now()
+  };
+
+  userProfiles.set(uid, updated);
+  persistUserProfiles();
+
+  return res.json({ success: true, profile: updated });
+});
+
+// Get User Profile by UID
+app.get('/api/user/profile', (req: Request, res: Response) => {
+  const uid = (req.query.uid as string || '').trim();
+  if (!uid) {
+    return res.status(400).json({ success: false, error: 'UID query parameter required' });
+  }
+
+  const profile = userProfiles.get(uid);
+  if (!profile) {
+    return res.status(404).json({ success: false, error: 'Profile not found' });
+  }
+
+  return res.json({ success: true, profile });
+});
+
+// Search User Profiles (for Watch Party friend invite & search)
+app.get('/api/users/search', (req: Request, res: Response) => {
+  const query = (req.query.q as string || '').trim().toLowerCase();
+  if (!query) {
+    return res.json({ success: true, users: [] });
+  }
+
+  const results: StoredUserProfile[] = [];
+  userProfiles.forEach((profile) => {
+    const matchName = profile.name && profile.name.toLowerCase().includes(query);
+    const matchHandle = profile.handle && profile.handle.toLowerCase().includes(query);
+    const matchEmail = profile.email && profile.email.toLowerCase().includes(query);
+    if (matchName || matchHandle || matchEmail) {
+      results.push(profile);
+    }
+  });
+
+  return res.json({ success: true, users: results.slice(0, 25) });
 });
 
 // Server Ads & Issue Reporting Endpoint

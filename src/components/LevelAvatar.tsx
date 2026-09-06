@@ -41,7 +41,7 @@ export const LevelAvatar: React.FC<LevelAvatarProps> = ({
 
   // Check if avatar matches a preset
   const preset = DEFAULT_AVATARS.find(p => p.id === avatar || p.image === avatar);
-  const isDirectImageUrl = avatar && (avatar.startsWith('data:') || avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('blob:'));
+  const isDirectImageUrl = avatar && (avatar.startsWith('/') || avatar.startsWith('./') || avatar.startsWith('data:') || avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('blob:'));
   const effectiveImageUrl = isDirectImageUrl ? avatar : preset?.image;
   const isPresetId = avatar && (preset !== undefined || avatar.startsWith('avatar-'));
   const resolvedAvatarId = preset ? preset.id : (avatar && avatar.startsWith('avatar-') ? avatar : 'avatar-3d-01');

@@ -100,9 +100,23 @@ export const DonaModal: React.FC<DonaModalProps> = ({
     };
   }, [isOpen]);
 
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const plusMenuRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior
+      });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom('smooth');
+  }, [messages, isTyping]);
 
   // Close plus menu when clicking outside
   useEffect(() => {
@@ -595,55 +609,6 @@ export const DonaModal: React.FC<DonaModalProps> = ({
 
   return (
     <div className="w-full h-full flex-1 flex flex-col bg-[#020202] text-white overflow-hidden shadow-2xl relative">
-      
-      {/* ======================================================== */}
-      {/* BARRE D'ACTIONS DESKTOP SEULEMENT (MASQUÉE SUR MOBILE) */}
-      {/* ======================================================== */}
-      <div className="hidden md:flex h-12 px-6 lg:px-10 bg-[#07070d]/95 border-b border-white/5 items-center justify-between shrink-0 z-30 backdrop-blur-md">
-        
-        {/* Titre avec Bot */}
-        <div className="flex items-center gap-2">
-          <Bot className="w-5 h-5 text-[#c084fc]" />
-          <span className="text-[13px] font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#e9d5ff] via-[#c084fc] to-[#a855f7]">
-            Dona AI
-          </span>
-        </div>
-
-        {/* Boutons d'actions : Horloge (Historique) & Nouveau (+) */}
-        <div className="flex items-center gap-2">
-          {/* BOUTON 1 : Historique (Horloge) */}
-          <button
-            type="button"
-            onClick={() => setShowHistory(!showHistory)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer border ${
-              showHistory 
-                ? 'bg-[#a855f7] text-white border-[#c084fc] shadow-[0_0_12px_rgba(168,85,247,0.5)]' 
-                : 'bg-white/5 text-white/80 hover:text-white hover:bg-white/10 border-white/10'
-            }`}
-            title={isFr ? 'Historique des conversations' : 'Chat History'}
-          >
-            <Clock className="w-3.5 h-3.5 text-[#c084fc]" />
-            <span>{isFr ? 'Historique' : 'History'}</span>
-            {savedConversations.length > 0 && (
-              <span className="text-[9px] px-1.5 bg-[#a855f7]/40 rounded font-mono font-bold text-white">
-                {savedConversations.length}
-              </span>
-            )}
-          </button>
-
-          {/* BOUTON 2 : Nouvelle conversation (+) */}
-          <button
-            type="button"
-            onClick={handleNewConversation}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/5 hover:bg-[#a855f7]/20 text-white/90 hover:text-white border border-white/10 hover:border-[#a855f7]/60 rounded-xl text-[11px] font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
-            title={isFr ? 'Nouvelle discussion' : 'New conversation'}
-          >
-            <Plus className="w-3.5 h-3.5 text-[#a855f7]" />
-            <span>{isFr ? 'Nouveau' : 'New'}</span>
-          </button>
-        </div>
-      </div>
-
       {/* ======================================================== */}
       {/* CORPS PRINCIPAL : ZONE DE DISCUSSION FLUIDE & FIXE */}
       {/* ======================================================== */}
@@ -741,7 +706,10 @@ export const DonaModal: React.FC<DonaModalProps> = ({
         <main className="flex-1 flex flex-col h-full bg-[#020202] relative overflow-hidden min-h-0">
           
           {/* Flux de messages ou Ecran d'accueil initial */}
-          <div className="flex-1 overflow-y-auto px-4 md:px-8 lg:px-12 py-6 space-y-6 custom-scrollbar overscroll-contain min-h-0">
+          <div 
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto px-4 md:px-8 lg:px-12 py-6 space-y-6 custom-scrollbar overscroll-contain min-h-0"
+          >
             
             {/* SI AUCUN MESSAGE : ÉCRAN D'ACCUEIL ÉPURÉ SANS ÉTOILE */}
             {messages.length === 0 ? (
@@ -975,11 +943,9 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                   value={inputVal}
                   onChange={(e) => setInputVal(e.target.value)}
                   onFocus={() => {
-                    window.scrollTo(0, 0);
                     setTimeout(() => {
-                      window.scrollTo(0, 0);
-                      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-                    }, 60);
+                      scrollToBottom('smooth');
+                    }, 80);
                   }}
                   placeholder={
                     isFr 
