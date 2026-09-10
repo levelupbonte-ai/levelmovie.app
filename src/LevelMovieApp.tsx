@@ -1364,12 +1364,12 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
         <div 
           style={{
             position: 'fixed',
-            top: onBackToEcosystem ? '45px' : 0,
+            top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            height: donaViewportHeight ? `${donaViewportHeight}px` : (onBackToEcosystem ? 'calc(100dvh - 45px)' : '100dvh'),
-            maxHeight: donaViewportHeight ? `${donaViewportHeight}px` : (onBackToEcosystem ? 'calc(100dvh - 45px)' : '100dvh'),
+            height: donaViewportHeight ? `${donaViewportHeight}px` : '100dvh',
+            maxHeight: donaViewportHeight ? `${donaViewportHeight}px` : '100dvh',
             width: '100%',
             overflow: 'hidden',
             display: 'flex',
@@ -1512,7 +1512,7 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
       ) : (
         <>
           {/* HEADER PRINCIPAL STANDARD */}
-          <header className={`safe-top-header fixed ${onBackToEcosystem ? 'top-[45px]' : 'top-0'} w-full z-50 transition-all duration-500 ease-in-out flex items-center justify-between px-4 md:px-10 pb-3 md:pb-4 ${isScrolled ? 'bg-black/80 backdrop-blur-2xl border-b border-white/5 shadow-xl' : 'bg-gradient-to-b from-[#060608] via-[#060608]/90 to-transparent'}`}>
+          <header className={`safe-top-header fixed top-0 w-full z-50 transition-all duration-500 ease-in-out flex items-center justify-between px-4 md:px-10 pb-3 md:pb-4 ${isScrolled ? 'bg-black/80 backdrop-blur-2xl border-b border-white/5 shadow-xl' : 'bg-gradient-to-b from-[#060608] via-[#060608]/90 to-transparent'}`}>
             <div className="flex items-center space-x-3 md:space-x-8">
               <div 
                 className="flex items-center cursor-pointer outline-none group transition-transform active:scale-95 select-none" 
@@ -1540,18 +1540,6 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
                   <span className="text-white">Level</span><span className="text-[#a855f7]">Movie</span>
                 </h1>
               </div>
-
-              {onBackToEcosystem && (
-                <button
-                  type="button"
-                  onClick={onBackToEcosystem}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#7c3aed]/20 hover:bg-[#7c3aed]/40 border border-[#7c3aed]/50 text-purple-200 hover:text-white text-[11px] font-semibold transition-all active:scale-95 cursor-pointer shrink-0"
-                  title="Back to LevelUp Ecosystem homepage"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Ecosystem</span>
-                </button>
-              )}
 
               <nav className="hidden lg:flex space-x-6 text-[12px] font-bold uppercase tracking-widest text-white/60">
                 <button onClick={() => setCurrentCategory('home')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'home' ? 'text-[#a855f7]' : ''}`}>{t.home}</button>

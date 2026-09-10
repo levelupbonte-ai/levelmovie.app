@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Code, Cpu, Sparkles, Check, Star, ArrowRight, Headphones,
   Sun, Tv, ShieldCheck, CheckCircle2, Mail, Menu, X,
-  Music, CloudSun, Film, PlayCircle, ArrowLeft, Send, ExternalLink,
-  FileText, Layers, Compass, DollarSign, ChevronRight, Sparkle, Tag, FileCheck, ArrowUpRight
+  Music, CloudSun, Film, PlayCircle, Play, Send, ExternalLink,
+  FileText, Layers, ChevronRight
 } from 'lucide-react';
 import LevelMovieApp from './LevelMovieApp';
 import { LevelMusicApp } from './components/apps/LevelMusicApp';
 import { LevelDayApp } from './components/apps/LevelDayApp';
+import { LevelMovieLogo } from './constants';
 
 type AppRoute = 'ecosystem' | 'movie' | 'music' | 'weather';
 
@@ -64,7 +65,7 @@ export default function App() {
     setContactModalOpen(true);
   };
 
-  // Synchronize browser history and page titles for true URL routing in the same tab
+  // Synchronize browser history and page titles for instant true URL routing in the same tab
   const navigateTo = (route: AppRoute) => {
     const targetPath = ROUTE_PATHS[route];
     if (window.location.pathname !== targetPath) {
@@ -79,12 +80,10 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const route = getRouteFromPath(window.location.pathname);
-      setCurrentAppView(route);
-      document.title = ROUTE_TITLES[route];
+      navigateTo(route);
     };
 
     window.addEventListener('popstate', handlePopState);
-    // Ensure correct initial title
     document.title = ROUTE_TITLES[currentAppView];
 
     return () => window.removeEventListener('popstate', handlePopState);
@@ -141,173 +140,32 @@ export default function App() {
     }, 2200);
   };
 
-  // =========================================================================
-  // SEPARATE DEDICATED APP VIEW: LEVELMOVIE (/levelmovie)
-  // =========================================================================
-  if (currentAppView === 'movie') {
-    return (
-      <div className="relative w-full min-h-screen levelmovie-app bg-[#060608]">
-        {/* Top Ecosystem Navigation Bar */}
-        <nav className="sticky top-0 z-[9999] h-[45px] bg-[#0c0c14]/95 backdrop-blur-md border-b border-[#7c3aed]/30 px-3 sm:px-6 flex items-center justify-between text-xs text-white shadow-xl">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              onClick={() => navigateTo('ecosystem')}
-              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-semibold transition-all shadow-md active:scale-95 cursor-pointer"
-              title="Return to LevelUp Ecosystem homepage"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">← Back to Ecosystem</span>
-            </button>
-            
-            <div className="hidden sm:flex items-center gap-2 text-white/50 border-l border-white/10 pl-3">
-              <span className="font-semibold text-white/80">LevelUp Ecosystem</span>
-              <span>/</span>
-              <span className="text-[#a855f7] font-bold">LevelMovie</span>
-            </div>
-          </div>
+  return (
+    <>
+      {/* SEPARATE DEDICATED APP VIEW: LEVELMOVIE (/levelmovie) */}
+      {currentAppView === 'movie' && (
+        <div className="relative w-full min-h-screen levelmovie-app bg-[#060608]">
+          <LevelMovieApp onBackToEcosystem={() => navigateTo('ecosystem')} />
+        </div>
+      )}
 
-          {/* Quick Ecosystem Switcher */}
-          <div className="flex items-center gap-2 sm:gap-3 text-white/70">
-            <button
-              onClick={() => navigateTo('music')}
-              className="px-2 sm:px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-white/80 transition-colors hidden xs:flex items-center gap-1.5 cursor-pointer"
-            >
-              <Music className="w-3.5 h-3.5 text-purple-400" />
-              <span className="hidden md:inline">LevelMusic</span>
-            </button>
-
-            <button
-              onClick={() => navigateTo('weather')}
-              className="px-2 sm:px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-white/80 transition-colors hidden xs:flex items-center gap-1.5 cursor-pointer"
-            >
-              <CloudSun className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="hidden md:inline">LevelDay</span>
-            </button>
-
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="font-medium text-[11px]">LevelMovie Active</span>
-            </div>
-          </div>
-        </nav>
-
-        {/* Dedicated Full LevelMovie Application */}
-        <LevelMovieApp onBackToEcosystem={() => navigateTo('ecosystem')} />
-      </div>
-    );
-  }
-
-  // =========================================================================
-  // SEPARATE DEDICATED APP VIEW: LEVELMUSIC (/music)
-  // =========================================================================
-  if (currentAppView === 'music') {
-    return (
-      <div className="relative w-full min-h-screen bg-[#07080f] text-white">
-        {/* Top Ecosystem Navigation Bar */}
-        <nav className="sticky top-0 z-[9999] h-[45px] bg-[#0c0c14]/95 backdrop-blur-md border-b border-[#7c3aed]/30 px-3 sm:px-6 flex items-center justify-between text-xs text-white shadow-xl">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              onClick={() => navigateTo('ecosystem')}
-              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-semibold transition-all shadow-md active:scale-95 cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">← Back to Ecosystem</span>
-            </button>
-            <div className="hidden sm:flex items-center gap-2 text-white/50 border-l border-white/10 pl-3">
-              <span className="font-semibold text-white/80">LevelUp Ecosystem</span>
-              <span>/</span>
-              <span className="text-purple-400 font-bold">LevelMusic</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-3 text-white/70">
-            <button
-              onClick={() => navigateTo('movie')}
-              className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Film className="w-3.5 h-3.5 text-[#a855f7]" />
-              <span className="hidden md:inline">LevelMovie</span>
-            </button>
-            <button
-              onClick={() => navigateTo('weather')}
-              className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <CloudSun className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="hidden md:inline">LevelDay</span>
-            </button>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400">
-              <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
-              <span className="font-medium text-[11px]">LevelMusic Active</span>
-            </div>
-          </div>
-        </nav>
-
-        {/* Dedicated Full LevelMusic Application */}
-        <div className="h-[calc(100vh-45px)]">
+      {/* SEPARATE DEDICATED APP VIEW: LEVELMUSIC (/music) */}
+      {currentAppView === 'music' && (
+        <div className="relative w-full h-screen bg-[#07080f] text-white overflow-hidden">
           <LevelMusicApp lang="en" onClose={() => navigateTo('ecosystem')} />
         </div>
-      </div>
-    );
-  }
+      )}
 
-  // =========================================================================
-  // SEPARATE DEDICATED APP VIEW: LEVELDAY WEATHER (/weather)
-  // =========================================================================
-  if (currentAppView === 'weather') {
-    return (
-      <div className="relative w-full min-h-screen bg-[#02050e] text-white">
-        {/* Top Ecosystem Navigation Bar */}
-        <nav className="sticky top-0 z-[9999] h-[45px] bg-[#0c0c14]/95 backdrop-blur-md border-b border-cyan-500/30 px-3 sm:px-6 flex items-center justify-between text-xs text-white shadow-xl">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              onClick={() => navigateTo('ecosystem')}
-              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold transition-all shadow-md active:scale-95 cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">← Back to Ecosystem</span>
-            </button>
-            <div className="hidden sm:flex items-center gap-2 text-white/50 border-l border-white/10 pl-3">
-              <span className="font-semibold text-white/80">LevelUp Ecosystem</span>
-              <span>/</span>
-              <span className="text-cyan-400 font-bold">LevelDay Weather</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-3 text-white/70">
-            <button
-              onClick={() => navigateTo('movie')}
-              className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Film className="w-3.5 h-3.5 text-[#a855f7]" />
-              <span className="hidden md:inline">LevelMovie</span>
-            </button>
-            <button
-              onClick={() => navigateTo('music')}
-              className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Music className="w-3.5 h-3.5 text-purple-400" />
-              <span className="hidden md:inline">LevelMusic</span>
-            </button>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-              <span className="font-medium text-[11px]">LevelDay Active</span>
-            </div>
-          </div>
-        </nav>
-
-        {/* Dedicated Full LevelDay Weather Application */}
-        <div className="h-[calc(100vh-45px)]">
+      {/* SEPARATE DEDICATED APP VIEW: LEVELDAY WEATHER (/weather) */}
+      {currentAppView === 'weather' && (
+        <div className="relative w-full h-screen bg-[#02050e] text-white overflow-hidden">
           <LevelDayApp lang="en" onClose={() => navigateTo('ecosystem')} />
         </div>
-      </div>
-    );
-  }
+      )}
 
-  // =========================================================================
-  // MAIN HOMEPAGE VIEW: LEVELUP ECOSYSTEM (100% ENGLISH)
-  // =========================================================================
-  return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans antialiased selection:bg-[#7c3aed] selection:text-white">
+      {/* MAIN HOMEPAGE VIEW: LEVELUP ECOSYSTEM (100% ENGLISH) */}
+      {currentAppView === 'ecosystem' && (
+        <div className="min-h-screen bg-gray-50 text-gray-900 font-sans antialiased selection:bg-[#7c3aed] selection:text-white">
       
       {/* Navbar (Sticky, Frosted Glass effect) */}
       <header
@@ -335,25 +193,15 @@ export default function App() {
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex space-x-6 lg:space-x-8">
               <a href="#services" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Services</a>
-              <a href="#pricing" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Pricing</a>
-              <a href="#process" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Process</a>
               <a href="#ecosystem" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Apps</a>
-              <a href="#sitelinks" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Sub-Links</a>
               <a href="#security" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Security</a>
             </nav>
 
             {/* CTA Button */}
-            <div className="hidden md:flex items-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => openInquiryWithPackage()}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-              >
-                Request Form
-              </button>
+            <div className="hidden md:flex items-center">
               <a
                 href="#contact"
-                className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-all shadow-sm hover:shadow-md cursor-pointer"
+                className="bg-gray-900 hover:bg-[#7c3aed] text-white px-5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider transition-all shadow-sm hover:shadow-md cursor-pointer"
               >
                 Join Ecosystem
               </a>
@@ -364,7 +212,7 @@ export default function App() {
               <button
                 id="mobile-menu-btn"
                 onClick={() => setMobileMenuOpen(prev => !prev)}
-                className="text-gray-600 hover:text-gray-900 focus:outline-none p-2 cursor-pointer"
+                className="text-gray-600 hover:text-gray-900 focus:outline-none p-2 rounded-none cursor-pointer"
                 aria-label="Toggle navigation menu"
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -380,58 +228,30 @@ export default function App() {
               <a
                 href="#services"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
+                className="block px-3 py-3 rounded-none text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
               >
                 Services
               </a>
               <a
-                href="#pricing"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
-              >
-                Pricing & Packages
-              </a>
-              <a
-                href="#process"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
-              >
-                Process
-              </a>
-              <a
                 href="#ecosystem"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
+                className="block px-3 py-3 rounded-none text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
               >
-                Ecosystem Apps
-              </a>
-              <a
-                href="#sitelinks"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
-              >
-                Sub-Links Directory
+                Apps
               </a>
               <a
                 href="#security"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
+                className="block px-3 py-3 rounded-none text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
               >
                 Security
               </a>
-              <button
-                type="button"
-                onClick={() => { setMobileMenuOpen(false); openInquiryWithPackage(); }}
-                className="w-full mt-2 text-center px-3 py-3 rounded-md text-base font-medium bg-[#f5f3ff] text-[#7c3aed] border border-[#ede9fe] cursor-pointer"
-              >
-                Project Request Form
-              </button>
               <a
                 href="#contact"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block mt-4 text-center px-3 py-3 rounded-md text-base font-medium bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                className="block mt-4 text-center px-3 py-3 rounded-none text-base font-medium bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
               >
-                Join the Ecosystem
+                Join Ecosystem
               </a>
             </div>
           </div>
@@ -453,14 +273,14 @@ export default function App() {
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <a
                 href="#services"
-                className="bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-8 py-4 rounded-xl font-medium text-lg transition-all shadow-lg shadow-[#7c3aed]/30 flex items-center justify-center gap-2"
+                className="bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-8 py-4 rounded-none font-medium text-lg transition-all shadow-lg shadow-[#7c3aed]/30 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Discover Our Solutions</span>
                 <ArrowRight className="w-5 h-5" />
               </a>
               <a
                 href="#pricing"
-                className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 px-8 py-4 rounded-xl font-medium text-lg transition-all flex items-center justify-center gap-2 shadow-sm"
+                className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 px-8 py-4 rounded-none font-medium text-lg transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
               >
                 <span>View Plans & Pricing</span>
               </a>
@@ -497,27 +317,27 @@ export default function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
-            <div className="bg-gray-50 rounded-xl p-8 border border-gray-200 hover:border-[#c4b5fd] hover:shadow-card transition-all duration-300 fade-up">
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm text-[#7c3aed] mb-6 border border-gray-200">
+            <div className="bg-gray-50 rounded-none p-8 border border-gray-200 hover:border-[#c4b5fd] hover:shadow-card transition-all duration-300 fade-up">
+              <div className="w-12 h-12 bg-white rounded-none flex items-center justify-center shadow-sm text-[#7c3aed] mb-6 border border-gray-200">
                 <Code className="w-6 h-6" />
               </div>
               <h4 className="text-xl font-bold text-gray-900 mb-3">Bespoke Websites</h4>
               <p className="text-gray-600 leading-relaxed">From showcase landing pages to complex e-commerce platforms, we engineer every project for peak performance, lightning speed, and optimal UX.</p>
             </div>
 
-            {/* Feature 2 */}
-            <div className="bg-gray-50 rounded-xl p-8 border border-gray-200 hover:border-[#c4b5fd] hover:shadow-card transition-all duration-300 fade-up" style={{ transitionDelay: '100ms' }}>
-              <div className="w-12 h-12 bg-[#7c3aed] rounded-lg flex items-center justify-center shadow-sm text-white mb-6">
+            {/* Feature 2: AI-Powered Architecture without bubble */}
+            <div className="bg-gray-50 rounded-none p-8 border border-gray-200 hover:border-[#c4b5fd] hover:shadow-card transition-all duration-300 fade-up" style={{ transitionDelay: '100ms' }}>
+              <div className="w-12 h-12 bg-white rounded-none flex items-center justify-center shadow-sm text-[#7c3aed] mb-6 border border-gray-200">
                 <Cpu className="w-6 h-6" />
               </div>
               <h4 className="text-xl font-bold text-gray-900 mb-3">AI-Powered Architecture</h4>
               <p className="text-gray-600 leading-relaxed">Our AI-assisted workflows ensure superior professional quality, strict coding standards, and a design aesthetic rivaling top global tech platforms.</p>
             </div>
 
-            {/* Feature 3 */}
-            <div className="bg-gray-50 rounded-xl p-8 border border-gray-200 hover:border-[#c4b5fd] hover:shadow-card transition-all duration-300 fade-up" style={{ transitionDelay: '200ms' }}>
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm text-[#7c3aed] mb-6 border border-gray-200">
-                <Sparkles className="w-6 h-6" />
+            {/* Feature 3: Web Apps & Virtual Events with Pro Layers Icon */}
+            <div className="bg-gray-50 rounded-none p-8 border border-gray-200 hover:border-[#c4b5fd] hover:shadow-card transition-all duration-300 fade-up" style={{ transitionDelay: '200ms' }}>
+              <div className="w-12 h-12 bg-white rounded-none flex items-center justify-center shadow-sm text-[#7c3aed] mb-6 border border-gray-200">
+                <Layers className="w-6 h-6" />
               </div>
               <h4 className="text-xl font-bold text-gray-900 mb-3">Web Apps & Virtual Events</h4>
               <p className="text-gray-600 leading-relaxed">Dynamic full-stack web applications and interactive virtual invitations tailored for high-profile events and modern digital experiences.</p>
@@ -536,17 +356,17 @@ export default function App() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm relative fade-up">
+            <div className="bg-white p-8 rounded-none border border-gray-200 shadow-sm relative fade-up">
               <div className="text-[#7c3aed] font-bold text-4xl mb-4">01</div>
               <h4 className="text-xl font-bold text-gray-900 mb-2">Initial Build</h4>
               <p className="text-gray-600">We construct your entire website or web application according to your precise requirements with zero upfront cost.</p>
             </div>
-            <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm relative fade-up" style={{ transitionDelay: '100ms' }}>
+            <div className="bg-white p-8 rounded-none border border-gray-200 shadow-sm relative fade-up" style={{ transitionDelay: '100ms' }}>
               <div className="text-[#7c3aed] font-bold text-4xl mb-4">02</div>
               <h4 className="text-xl font-bold text-gray-900 mb-2">Demo & Validation</h4>
               <p className="text-gray-600">We showcase an interactive live demonstration of your completed project. You experience and test the real working product.</p>
             </div>
-            <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm relative fade-up" style={{ transitionDelay: '200ms' }}>
+            <div className="bg-white p-8 rounded-none border border-gray-200 shadow-sm relative fade-up" style={{ transitionDelay: '200ms' }}>
               <div className="text-[#7c3aed] font-bold text-4xl mb-4">03</div>
               <h4 className="text-xl font-bold text-gray-900 mb-2">Payment & Launch</h4>
               <p className="text-gray-600">Only once you are 100% satisfied with the outcome do you complete payment, and we deploy your platform live worldwide.</p>
@@ -595,7 +415,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => openInquiryWithPackage('Virtual Invitation & Event ($120)', 'Hello, I would like to order or discuss a Virtual Invitation & Event website.')}
-                className="block w-full py-2.5 px-4 bg-white text-gray-900 font-medium text-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-sm shadow-sm cursor-pointer"
+                className="block w-full py-2.5 px-4 bg-white text-gray-900 font-medium text-center rounded-none border border-gray-300 hover:bg-gray-100 transition-colors text-sm shadow-sm cursor-pointer"
               >
                 Order Now ($120)
               </button>
@@ -630,7 +450,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => openInquiryWithPackage('Starter Website ($350)', 'Hello, I would like to start a Starter Website project with the zero-risk build-first workflow.')}
-                className="block w-full py-2.5 px-4 bg-white text-gray-900 font-medium text-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-sm shadow-sm cursor-pointer"
+                className="block w-full py-2.5 px-4 bg-white text-gray-900 font-medium text-center rounded-none border border-gray-300 hover:bg-gray-100 transition-colors text-sm shadow-sm cursor-pointer"
               >
                 Get Started ($350)
               </button>
@@ -639,7 +459,7 @@ export default function App() {
             {/* Pro Plan (Featured) */}
             <div id="pricing-pro" className="bg-gray-900 rounded-xl p-6 border border-gray-800 flex flex-col relative shadow-xl fade-up z-10" style={{ transitionDelay: '200ms' }}>
               <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-3">
-                <span className="bg-[#8b5cf6] text-white text-[10px] font-bold px-2.5 py-1 uppercase tracking-wide rounded-full shadow-md">Popular</span>
+                <span className="bg-[#8b5cf6] text-white text-[10px] font-bold px-2.5 py-1 uppercase tracking-wide rounded-none shadow-md">Popular</span>
               </div>
               <h4 className="text-lg font-bold text-white mb-1">Business Pro</h4>
               <p className="text-gray-400 text-xs mb-6 h-10">Scale your customer acquisition and cement your brand authority.</p>
@@ -668,7 +488,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => openInquiryWithPackage('Business Pro ($800)', 'Hello, I am interested in the Business Pro package for our company website.')}
-                className="block w-full py-2.5 px-4 bg-[#7c3aed] text-white font-medium text-center rounded-lg hover:bg-[#8b5cf6] transition-colors text-sm shadow-md cursor-pointer"
+                className="block w-full py-2.5 px-4 bg-[#7c3aed] text-white font-medium text-center rounded-none hover:bg-[#8b5cf6] transition-colors text-sm shadow-md cursor-pointer"
               >
                 Choose Pro ($800)
               </button>
@@ -691,7 +511,7 @@ export default function App() {
                   <Check className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
                   <span className="text-gray-600">Encrypted database & cloud setup</span>
                 </li>
-                <li className="flex items-start gap-2.5 bg-[#f5f3ff] p-2 rounded border border-[#ede9fe]">
+                <li className="flex items-start gap-2.5 bg-[#f5f3ff] p-2 rounded-none border border-[#ede9fe]">
                   <Star className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5 fill-[#7c3aed]" />
                   <span className="text-[#4c1d95] font-semibold text-xs leading-tight">Guaranteed 3-year maintenance & support</span>
                 </li>
@@ -699,7 +519,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => openInquiryWithPackage('Ecosystem Premium (Custom Quote)', 'Hello, I would like to request a consultation and quote for a custom full-stack web application.')}
-                className="block w-full py-2.5 px-4 bg-gray-50 text-gray-900 font-medium text-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-sm cursor-pointer"
+                className="block w-full py-2.5 px-4 bg-gray-50 text-gray-900 font-medium text-center rounded-none border border-gray-300 hover:bg-gray-100 transition-colors text-sm cursor-pointer"
               >
                 Request Custom Quote
               </button>
@@ -730,17 +550,17 @@ export default function App() {
                 {/* Music preview */}
                 <li
                   onClick={() => navigateTo('music')}
-                  className="flex items-start gap-4 p-3 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer group"
+                  className="flex items-start gap-4 p-3 rounded-none hover:bg-white/5 transition-colors cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0 text-[#a78bfa] mt-1 group-hover:bg-[#7c3aed] group-hover:text-white transition-colors">
+                  <div className="w-10 h-10 rounded-none bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0 text-[#a78bfa] mt-1 group-hover:bg-[#7c3aed] group-hover:text-white transition-colors">
                     <Music className="w-5 h-5" />
                   </div>
                   <div>
                     <h4 className="text-xl font-semibold mb-1 group-hover:text-[#a78bfa] transition-colors flex items-center gap-2">
-                      <span>Music Previews (30s)</span>
-                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-900/60 text-purple-300 border border-purple-500/30 flex items-center gap-1">
-                        <span>Launch App</span>
-                        <ExternalLink className="w-2.5 h-2.5" />
+                      <span>LevelMusic</span>
+                      <span className="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-none bg-purple-900/60 text-purple-300 border border-purple-500/30 flex items-center gap-1.5">
+                        <Play className="w-2.5 h-2.5 fill-current" />
+                        <span>Écouter</span>
                       </span>
                     </h4>
                     <p className="text-gray-400 text-sm">Listen to instant previews of the hottest trending tracks directly in our integrated player.</p>
@@ -750,40 +570,39 @@ export default function App() {
                 {/* Weather */}
                 <li
                   onClick={() => navigateTo('weather')}
-                  className="flex items-start gap-4 p-3 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer group"
+                  className="flex items-start gap-4 p-3 rounded-none hover:bg-white/5 transition-colors cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0 text-[#a78bfa] mt-1 group-hover:bg-cyan-600 group-hover:text-white transition-colors">
+                  <div className="w-10 h-10 rounded-none bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0 text-[#a78bfa] mt-1 group-hover:bg-cyan-600 group-hover:text-white transition-colors">
                     <CloudSun className="w-5 h-5" />
                   </div>
                   <div>
                     <h4 className="text-xl font-semibold mb-1 group-hover:text-cyan-400 transition-colors flex items-center gap-2">
-                      <span>Live Weather (LevelDay)</span>
-                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-cyan-900/60 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
-                        <span>Launch App</span>
-                        <ExternalLink className="w-2.5 h-2.5" />
+                      <span>LevelDay</span>
+                      <span className="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-none bg-cyan-900/60 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5">
+                        <span>Consulter</span>
                       </span>
                     </h4>
                     <p className="text-gray-400 text-sm">Check real-time weather conditions, forecasts, and atmospheric metrics for your favorite cities worldwide.</p>
                   </div>
                 </li>
                 
-                {/* Movies & Series (LevelMovie) */}
+                {/* Movies & Series */}
                 <li
                   onClick={() => navigateTo('movie')}
-                  className="flex items-start gap-4 p-3 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer group"
+                  className="flex items-start gap-4 p-3 rounded-none hover:bg-white/5 transition-colors cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0 text-[#a78bfa] mt-1 group-hover:bg-[#7c3aed] group-hover:text-white transition-colors">
+                  <div className="w-10 h-10 rounded-none bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0 text-[#a78bfa] mt-1 group-hover:bg-[#7c3aed] group-hover:text-white transition-colors">
                     <Film className="w-5 h-5" />
                   </div>
                   <div>
                     <h4 className="text-xl font-semibold mb-1 group-hover:text-[#a78bfa] transition-colors flex items-center gap-2">
-                      <span>Movies & Anime Hub (LevelMovie)</span>
-                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-red-900/60 text-red-300 border border-red-500/30 flex items-center gap-1">
-                        <span>Launch LevelMovie</span>
-                        <ExternalLink className="w-2.5 h-2.5" />
+                      <span>LevelMovie</span>
+                      <span className="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-none bg-[#7c3aed]/40 text-purple-200 border border-[#a78bfa]/40 flex items-center gap-1.5">
+                        <Play className="w-2.5 h-2.5 fill-current text-[#a78bfa]" />
+                        <span>Jouer</span>
                       </span>
                     </h4>
-                    <p className="text-gray-400 text-sm">LevelMovie: Discover trending releases, summaries, trailers, and stream movies, series, and anime in HD.</p>
+                    <p className="text-gray-400 text-sm">Discover trending releases, summaries, trailers, and stream movies, series, and anime in HD.</p>
                   </div>
                 </li>
               </ul>
@@ -796,60 +615,218 @@ export default function App() {
                 {/* Music Bento Box */}
                 <div
                   onClick={() => navigateTo('music')}
-                  className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-purple-500 transition-all flex flex-col justify-between cursor-pointer group"
+                  className="bg-gray-800 rounded-none p-5 sm:p-6 border border-gray-700 hover:border-purple-500 transition-all flex flex-col justify-between cursor-pointer group select-none relative overflow-hidden"
                   title="Open LevelMusic Player"
                 >
-                  <div>
-                    <Headphones className="w-8 h-8 text-[#a78bfa] mb-4 group-hover:scale-110 transition-transform" />
-                    <div className="h-2 w-1/2 bg-gray-700 rounded mb-2"></div>
-                    <div className="h-2 w-3/4 bg-gray-700 rounded"></div>
+                  {/* Header with discreet pro button */}
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <Headphones className="w-6 h-6 text-[#a78bfa] group-hover:scale-110 transition-transform" />
+                      <div>
+                        <div className="text-sm font-bold text-white tracking-wide leading-tight">LevelMusic</div>
+                        <div className="text-[10px] font-mono text-purple-300">Lossless 320kbps</div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-semibold bg-white/10 hover:bg-[#7c3aed] text-white px-3 py-1.5 rounded-none border border-white/15 transition-colors flex items-center gap-1.5">
+                      <Play className="w-3 h-3 fill-current text-[#a78bfa] group-hover:text-white" />
+                      <span>Écouter</span>
+                    </span>
                   </div>
-                  <div className="mt-6 flex items-center justify-between">
-                    <span className="text-xs text-purple-300 font-medium">LevelMusic Audio</span>
-                    <PlayCircle className="w-7 h-7 text-white group-hover:text-[#a78bfa] transition-colors" />
+
+                  {/* Pro Music Cards */}
+                  <div className="space-y-2.5 my-2">
+                    {/* Track 1 */}
+                    <div className="flex items-center gap-3 p-2 bg-black/40 border border-white/10 hover:border-purple-500/50 transition-all group/track">
+                      <div className="relative w-11 h-11 bg-purple-950 shrink-0 overflow-hidden">
+                        <img
+                          src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=200&auto=format&fit=crop&q=80"
+                          alt="Midnight Horizon"
+                          className="w-full h-full object-cover group-hover/track:scale-110 transition-transform duration-300"
+                          referrerPolicy="no-referrer"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <Play className="w-3.5 h-3.5 text-white fill-current opacity-90 group-hover/track:scale-110 transition-transform" />
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-semibold text-white truncate">Midnight Horizon</div>
+                        <div className="text-[10px] text-gray-400 truncate">Synthwave • Neon Echoes</div>
+                      </div>
+                      {/* Mini animated equalizer */}
+                      <div className="flex items-end gap-0.5 h-3.5 shrink-0 px-1">
+                        <span className="w-1 bg-[#a78bfa] h-2.5 animate-pulse"></span>
+                        <span className="w-1 bg-purple-400 h-3.5 animate-ping"></span>
+                        <span className="w-1 bg-pink-400 h-2 animate-pulse"></span>
+                      </div>
+                    </div>
+
+                    {/* Track 2 */}
+                    <div className="flex items-center gap-3 p-2 bg-black/40 border border-white/10 hover:border-purple-500/50 transition-all group/track">
+                      <div className="relative w-11 h-11 bg-indigo-950 shrink-0 overflow-hidden">
+                        <img
+                          src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&auto=format&fit=crop&q=80"
+                          alt="Amapiano Sunset"
+                          className="w-full h-full object-cover group-hover/track:scale-110 transition-transform duration-300"
+                          referrerPolicy="no-referrer"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <Play className="w-3.5 h-3.5 text-white fill-current opacity-90 group-hover/track:scale-110 transition-transform" />
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-semibold text-white truncate">Golden Hour Groove</div>
+                        <div className="text-[10px] text-gray-400 truncate">Amapiano & Afrobeat</div>
+                      </div>
+                      <span className="text-[10px] text-purple-300 font-mono shrink-0">3:24</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-400">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-none animate-pulse"></span>
+                      Hits 2025
+                    </span>
+                    <span className="text-purple-300 font-medium">Lecteur HD</span>
                   </div>
                 </div>
 
                 {/* Weather Bento Box */}
                 <div
                   onClick={() => navigateTo('weather')}
-                  className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-yellow-500 transition-all flex flex-col justify-between cursor-pointer group"
+                  className="bg-gray-800 rounded-none p-5 sm:p-6 border border-gray-700 hover:border-yellow-500 transition-all flex flex-col justify-between cursor-pointer group select-none"
                   title="Open LevelDay Weather"
                 >
-                  <div>
-                    <Sun className="w-8 h-8 text-yellow-400 mb-4 group-hover:rotate-45 transition-transform" />
-                    <div className="text-2xl font-bold text-white mb-1">24°C</div>
-                    <div className="text-gray-400 text-sm">Real-time Weather</div>
+                  <div className="flex justify-between items-center mb-2">
+                    <Sun className="w-8 h-8 text-yellow-400 group-hover:rotate-45 transition-transform" />
+                    <span className="text-xs font-semibold bg-white/10 hover:bg-yellow-600/30 text-white px-2.5 py-1 rounded-none border border-white/15 transition-colors">
+                      Consulter
+                    </span>
                   </div>
-                  <div className="mt-4 h-1 w-full bg-gray-700 rounded overflow-hidden">
+                  <div>
+                    <div className="text-2xl font-bold text-white mb-0.5">24°C</div>
+                    <div className="text-gray-300 text-xs font-medium">Paris • Ensoleillé</div>
+                    <div className="text-gray-400 text-[11px] mt-1">Humidité 48% • Vent 14 km/h</div>
+                  </div>
+                  <div className="mt-4 h-1.5 w-full bg-gray-700 rounded-none overflow-hidden">
                     <div className="h-full bg-yellow-400 w-2/3"></div>
                   </div>
                 </div>
 
-                {/* Movie Hub Bento Box */}
+                {/* Movie Hub Bento Box with Real Cinema Cards */}
                 <div
                   onClick={() => navigateTo('movie')}
-                  className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-[#7c3aed] transition-all sm:col-span-2 cursor-pointer group"
+                  className="bg-gray-800 rounded-none p-5 sm:p-6 border border-gray-700 hover:border-[#7c3aed] transition-all sm:col-span-2 cursor-pointer group select-none"
                   title="Open LevelMovie HD Streaming Platform"
                 >
+                  {/* Header with discreet pro button (NO up arrow!) */}
                   <div className="flex justify-between items-center mb-4">
-                    <Tv className="w-8 h-8 text-[#a78bfa] group-hover:scale-110 transition-transform" />
-                    <span className="text-xs font-semibold bg-gray-700 group-hover:bg-[#7c3aed] group-hover:text-white text-gray-300 px-2 py-1 rounded transition-colors flex items-center gap-1">
-                      <span>Launch LevelMovie</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </span>
-                  </div>
-                  <div className="flex gap-4 items-center">
-                    <div className="h-24 w-16 bg-gray-700 rounded-md shrink-0 overflow-hidden relative group-hover:shadow-lg transition-all">
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-center p-1">
-                        <span className="text-[8px] font-bold text-purple-300 uppercase">HD</span>
+                    <div className="flex items-center gap-2.5">
+                      <Tv className="w-7 h-7 text-[#a78bfa] group-hover:scale-110 transition-transform" />
+                      <div>
+                        <div className="text-base font-bold text-white tracking-wide leading-tight">LevelMovie Cinema</div>
+                        <div className="text-[11px] text-gray-400 font-mono">12 000+ Films, Séries & Animes HD</div>
                       </div>
                     </div>
-                    <div className="space-y-3 flex-1 pt-1">
-                      <div className="h-2.5 w-full bg-gray-600 rounded"></div>
-                      <div className="h-2 w-5/6 bg-gray-700 rounded"></div>
-                      <div className="h-2 w-4/6 bg-gray-700 rounded"></div>
+                    {/* Discrete professional button: Jouer / Visiter (No arrow!) */}
+                    <span className="text-xs font-semibold bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-3.5 py-1.5 rounded-none border border-purple-400/40 shadow-sm transition-all flex items-center gap-1.5 tracking-wider uppercase">
+                      <Play className="w-3.5 h-3.5 fill-current text-white" />
+                      <span>Jouer</span>
+                    </span>
+                  </div>
+
+                  {/* Real Cinema Cards Grid (3 pro cinema cards) */}
+                  <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
+                    {/* Cinema Card 1: Dune 2 */}
+                    <div className="group relative aspect-[2/3] bg-black/50 overflow-hidden border border-white/10 hover:border-[#a855f7] hover:scale-[1.03] hover:shadow-[0_0_28px_rgba(168,85,247,0.4)] transition-all duration-500 ease-out hover:z-10">
+                      <img
+                        src="https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg"
+                        alt="Dune: Part Two"
+                        className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
+                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                      />
+                      {/* Top badges */}
+                      <div className="absolute top-1.5 left-1.5 right-1.5 flex items-center justify-between pointer-events-none">
+                        <span className="px-1.5 py-0.5 bg-black/85 text-[9px] font-bold text-amber-300 border border-amber-400/30">4K UHD</span>
+                        <span className="px-1.5 py-0.5 bg-purple-950/90 text-[9px] font-bold text-white border border-purple-400/30">★ 8.6</span>
+                      </div>
+                      {/* Hover play overlay */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-none bg-[#7c3aed] flex items-center justify-center text-white shadow-[0_0_16px_rgba(124,58,237,0.6)] transform scale-90 group-hover:scale-100 transition-transform duration-300 ease-out">
+                          <Play className="w-4 h-4 fill-current ml-0.5" />
+                        </div>
+                      </div>
+                      {/* Bottom movie info */}
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2 pt-4">
+                        <div className="text-xs font-bold text-white truncate leading-tight">Dune 2</div>
+                        <div className="text-[10px] text-gray-400 truncate">Sci-Fi • 2024</div>
+                      </div>
                     </div>
+
+                    {/* Cinema Card 2: Oppenheimer */}
+                    <div className="group relative aspect-[2/3] bg-black/50 overflow-hidden border border-white/10 hover:border-[#a855f7] hover:scale-[1.03] hover:shadow-[0_0_28px_rgba(168,85,247,0.4)] transition-all duration-500 ease-out hover:z-10">
+                      <img
+                        src="https://image.tmdb.org/t/p/w500/ptpr0kGAckfQkJeJIt8st5dglvd.jpg"
+                        alt="Oppenheimer"
+                        className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
+                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                      />
+                      {/* Top badges */}
+                      <div className="absolute top-1.5 left-1.5 right-1.5 flex items-center justify-between pointer-events-none">
+                        <span className="px-1.5 py-0.5 bg-black/85 text-[9px] font-bold text-sky-300 border border-sky-400/30">IMAX</span>
+                        <span className="px-1.5 py-0.5 bg-purple-950/90 text-[9px] font-bold text-white border border-purple-400/30">★ 8.9</span>
+                      </div>
+                      {/* Hover play overlay */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-none bg-[#7c3aed] flex items-center justify-center text-white shadow-[0_0_16px_rgba(124,58,237,0.6)] transform scale-90 group-hover:scale-100 transition-transform duration-300 ease-out">
+                          <Play className="w-4 h-4 fill-current ml-0.5" />
+                        </div>
+                      </div>
+                      {/* Bottom movie info */}
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2 pt-4">
+                        <div className="text-xs font-bold text-white truncate leading-tight">Oppenheimer</div>
+                        <div className="text-[10px] text-gray-400 truncate">Drame • 2023</div>
+                      </div>
+                    </div>
+
+                    {/* Cinema Card 3: Interstellar */}
+                    <div className="group relative aspect-[2/3] bg-black/50 overflow-hidden border border-white/10 hover:border-[#a855f7] hover:scale-[1.03] hover:shadow-[0_0_28px_rgba(168,85,247,0.4)] transition-all duration-500 ease-out hover:z-10">
+                      <img
+                        src="https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg"
+                        alt="Interstellar"
+                        className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
+                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                      />
+                      {/* Top badges */}
+                      <div className="absolute top-1.5 left-1.5 right-1.5 flex items-center justify-between pointer-events-none">
+                        <span className="px-1.5 py-0.5 bg-black/85 text-[9px] font-bold text-emerald-300 border border-emerald-400/30">HDR10</span>
+                        <span className="px-1.5 py-0.5 bg-purple-950/90 text-[9px] font-bold text-white border border-purple-400/30">★ 8.7</span>
+                      </div>
+                      {/* Hover play overlay */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-none bg-[#7c3aed] flex items-center justify-center text-white shadow-[0_0_16px_rgba(124,58,237,0.6)] transform scale-90 group-hover:scale-100 transition-transform duration-300 ease-out">
+                          <Play className="w-4 h-4 fill-current ml-0.5" />
+                        </div>
+                      </div>
+                      {/* Bottom movie info */}
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2 pt-4">
+                        <div className="text-xs font-bold text-white truncate leading-tight">Interstellar</div>
+                        <div className="text-[10px] text-gray-400 truncate">Espace • Culte</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer status line */}
+                  <div className="mt-3.5 pt-2.5 border-t border-white/10 flex items-center justify-between text-xs text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-emerald-400 rounded-none"></span>
+                      <span className="text-white/80 font-medium text-[11px] sm:text-xs">Lecteur streaming intégré sans coupure</span>
+                    </div>
+                    <span className="text-[#a78bfa] font-mono text-[11px] hidden sm:inline">VF & VOSTFR</span>
                   </div>
                 </div>
 
@@ -911,14 +888,14 @@ export default function App() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href="mailto:contact@levelupecosystem.com"
-              className="inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-xl font-medium text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-none font-medium text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer"
             >
               <span>Start a Project</span>
               <Mail className="w-5 h-5" />
             </a>
             <button
               onClick={() => setContactModalOpen(true)}
-              className="inline-flex items-center justify-center gap-2 bg-[#f5f3ff] hover:bg-[#ede9fe] text-[#6d28d9] border border-[#ddd6fe] px-8 py-4 rounded-xl font-medium text-lg transition-all shadow-sm hover:shadow-md cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 bg-[#f5f3ff] hover:bg-[#ede9fe] text-[#6d28d9] border border-[#ddd6fe] px-8 py-4 rounded-none font-medium text-lg transition-all shadow-sm hover:shadow-md cursor-pointer"
             >
               <span>Instant Project Form</span>
               <Send className="w-5 h-5" />
@@ -927,407 +904,10 @@ export default function App() {
         </div>
       </section>
 
-      {/* Ecosystem Sub-Links & Directory (Sous-liens & Navigation Rapide) */}
-      <section id="sitelinks" className="py-20 bg-gray-50 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ede9fe] text-[#6d28d9] text-xs font-semibold uppercase tracking-wider mb-3">
-                <Compass className="w-3.5 h-3.5" />
-                <span>Ecosystem Directory & Sub-Links</span>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-                Explore LevelUp Sub-Links & Applications
-              </h2>
-              <p className="text-gray-600 text-base mt-2 max-w-2xl">
-                Quick direct access to our streaming cinema platform, client inquiry and quote forms, transparent website pricing, and cloud applications.
-              </p>
-            </div>
-
-            {/* Direct Quick Launch Pills */}
-            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-              <a
-                href="/levelmovie"
-                onClick={(e) => { e.preventDefault(); navigateTo('movie'); }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-sm font-semibold shadow-sm transition-all hover:scale-105"
-              >
-                <Film className="w-4 h-4" />
-                <span>Launch LevelMovie</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </a>
-              <button
-                type="button"
-                onClick={() => openInquiryWithPackage()}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 text-sm font-medium shadow-sm transition-all cursor-pointer"
-              >
-                <FileText className="w-4 h-4 text-[#7c3aed]" />
-                <span>Project Request Form</span>
-              </button>
-              <a
-                href="#pricing"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 text-sm font-medium shadow-sm transition-all"
-              >
-                <Tag className="w-4 h-4 text-[#7c3aed]" />
-                <span>Website Pricing</span>
-              </a>
-            </div>
-          </div>
-
-          {/* 4 Categorized Sub-Link Columns */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            
-            {/* 1. LevelMovie Hub */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200/90 shadow-sm flex flex-col justify-between hover:border-[#c4b5fd] transition-all">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center font-bold">
-                    <Film className="w-5 h-5" />
-                  </div>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Live App</span>
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">LevelMovie Cinema Hub</h3>
-                <p className="text-xs text-gray-500 mb-4">
-                  Stream thousands of blockbuster movies, series, and anime in HD with zero intrusive ads.
-                </p>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>
-                    <a
-                      href="/levelmovie"
-                      onClick={(e) => { e.preventDefault(); navigateTo('movie'); }}
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span className="font-medium text-gray-800 group-hover:text-[#7c3aed]">Launch LevelMovie Platform</span>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/levelmovie"
-                      onClick={(e) => { e.preventDefault(); navigateTo('movie'); }}
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>HD Movies & Trending Blockbusters</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/levelmovie"
-                      onClick={(e) => { e.preventDefault(); navigateTo('movie'); }}
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Popular TV Series & Seasons</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/levelmovie"
-                      onClick={(e) => { e.preventDefault(); navigateTo('movie'); }}
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Anime & Manga Collection</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/levelmovie"
-                      onClick={(e) => { e.preventDefault(); navigateTo('movie'); }}
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Synchronized Watch Parties</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/levelmovie"
-                      onClick={(e) => { e.preventDefault(); navigateTo('movie'); }}
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Dona AI Film Assistant</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                </ul>
-              </div>
-              <div className="pt-4 mt-4 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={() => navigateTo('movie')}
-                  className="w-full py-2 px-3 rounded-lg bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <span>Open LevelMovie</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* 2. Project Requests & Forms */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200/90 shadow-sm flex flex-col justify-between hover:border-[#c4b5fd] transition-all">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center font-bold">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">Request Forms</span>
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">Project Inquiries & Requests</h3>
-                <p className="text-xs text-gray-500 mb-4">
-                  Submit your custom specification or request a free consultation under our zero-risk model.
-                </p>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => openInquiryWithPackage()}
-                      className="w-full text-left group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors cursor-pointer"
-                    >
-                      <span className="font-medium text-gray-800 group-hover:text-[#7c3aed]">Instant Project Inquiry Form</span>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => openInquiryWithPackage('Ecosystem Premium (Custom Quote)', 'I would like a custom quote for our upcoming project.')}
-                      className="w-full text-left group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors cursor-pointer"
-                    >
-                      <span>Custom Quote Request Form</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => openInquiryWithPackage('Starter Website ($350)', 'I would like to order the $350 Starter Website.')}
-                      className="w-full text-left group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors cursor-pointer"
-                    >
-                      <span>Order Starter Website ($350)</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => openInquiryWithPackage('Business Pro ($800)', 'I would like to request the $800 Business Pro package.')}
-                      className="w-full text-left group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors cursor-pointer"
-                    >
-                      <span>Order Business Pro ($800)</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => openInquiryWithPackage('Virtual Invitation & Event ($120)', 'I would like to order a Virtual Invitation ($120).')}
-                      className="w-full text-left group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors cursor-pointer"
-                    >
-                      <span>Order Virtual Invitation ($120)</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </button>
-                  </li>
-                  <li>
-                    <a
-                      href="mailto:contact@levelupecosystem.com"
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Direct Email: contact@levelupecosystem.com</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                </ul>
-              </div>
-              <div className="pt-4 mt-4 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={() => openInquiryWithPackage()}
-                  className="w-full py-2 px-3 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Open Request Form</span>
-                </button>
-              </div>
-            </div>
-
-            {/* 3. Website & App Pricing */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200/90 shadow-sm flex flex-col justify-between hover:border-[#c4b5fd] transition-all">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center font-bold">
-                    <Tag className="w-5 h-5" />
-                  </div>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Pricing</span>
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">Website Pricing & Packages</h3>
-                <p className="text-xs text-gray-500 mb-4">
-                  Transparent, fixed pricing. We build your product first; you inspect and pay only after approval.
-                </p>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>
-                    <a
-                      href="#pricing"
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span className="font-medium text-gray-800 group-hover:text-[#7c3aed]">All Pricing Plans Overview</span>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#pricing-event"
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Virtual Invitations & Events — $120</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#pricing-starter"
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Starter Showcase Website — $350</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#pricing-pro"
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Business Pro Platform — $800</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#pricing-custom"
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Ecosystem Custom App — Tailored</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#process"
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>3-Step Payment Guarantee Policy</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                </ul>
-              </div>
-              <div className="pt-4 mt-4 border-t border-gray-100">
-                <a
-                  href="#pricing"
-                  className="w-full py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <span>Compare All Plans</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </a>
-              </div>
-            </div>
-
-            {/* 4. Ecosystem Apps & Security */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200/90 shadow-sm flex flex-col justify-between hover:border-[#c4b5fd] transition-all">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center font-bold">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Free Utilities</span>
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">Ecosystem Apps & Trust</h3>
-                <p className="text-xs text-gray-500 mb-4">
-                  Free web utilities, cutting-edge artificial intelligence, and rigorous digital security protocols.
-                </p>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>
-                    <a
-                      href="/music"
-                      onClick={(e) => { e.preventDefault(); navigateTo('music'); }}
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span className="font-medium text-gray-800 group-hover:text-[#7c3aed]">LevelMusic — Web Audio Player</span>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/weather"
-                      onClick={(e) => { e.preventDefault(); navigateTo('weather'); }}
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span className="font-medium text-gray-800 group-hover:text-[#7c3aed]">LevelDay — Live Weather Radar</span>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#security"
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Anti-Phishing & Data Defense Center</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#process"
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Zero-Risk 3-Step Methodology</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/terms"
-                      onClick={(e) => { e.preventDefault(); alert("LevelUp Ecosystem Terms of Service: All web engineering deliverables are backed by a 100% satisfaction approval guarantee prior to final payment."); }}
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Terms of Service & Guarantees</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/privacy"
-                      onClick={(e) => { e.preventDefault(); alert("LevelUp Ecosystem Privacy Policy: Client data, credentials, and project intellectual property remain strictly confidential and encrypted."); }}
-                      className="group flex items-center justify-between py-1 hover:text-[#7c3aed] transition-colors"
-                    >
-                      <span>Privacy Policy & Client Data</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#7c3aed]" />
-                    </a>
-                  </li>
-                </ul>
-              </div>
-              <div className="pt-4 mt-4 border-t border-gray-100">
-                <a
-                  href="#services"
-                  className="w-full py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <span>Explore Engineering Services</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </a>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 border-t border-gray-800 pt-16 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
             
             {/* Column 1: Brand & Mission */}
             <div className="lg:col-span-2">
@@ -1337,28 +917,12 @@ export default function App() {
                 </svg>
                 <span className="font-bold text-xl text-white tracking-tight">LevelUp Ecosystem</span>
               </div>
-              <p className="text-gray-400 text-sm mb-6 max-w-sm leading-relaxed">
+              <p className="text-gray-400 text-sm max-w-sm leading-relaxed">
                 Next-generation web development and AI ecosystem. We build your high-converting websites, applications, and cloud tools under a zero-risk, approval-first delivery model.
               </p>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800/80 border border-gray-700 text-xs text-gray-300">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>All Ecosystem Services Operational</span>
-              </div>
-            </div>
-            
-            {/* Column 2: Website Solutions & Pricing */}
-            <div>
-              <h4 className="font-semibold text-white text-sm uppercase tracking-wider mb-4">Website Pricing</h4>
-              <ul className="space-y-2.5 text-sm">
-                <li><a href="#pricing-event" className="hover:text-white transition-colors">Virtual Invitations ($120)</a></li>
-                <li><a href="#pricing-starter" className="hover:text-white transition-colors">Starter Website ($350)</a></li>
-                <li><a href="#pricing-pro" className="hover:text-white transition-colors">Business Pro ($800)</a></li>
-                <li><a href="#pricing-custom" className="hover:text-white transition-colors">Custom Enterprise SaaS</a></li>
-                <li><a href="#pricing" className="text-[#a78bfa] hover:underline transition-colors flex items-center gap-1 font-medium"><span>Compare All Plans</span> →</a></li>
-              </ul>
             </div>
 
-            {/* Column 3: Request Forms */}
+            {/* Column 2: Request Forms */}
             <div>
               <h4 className="font-semibold text-white text-sm uppercase tracking-wider mb-4">Request Forms</h4>
               <ul className="space-y-2.5 text-sm">
@@ -1397,7 +961,7 @@ export default function App() {
               </ul>
             </div>
 
-            {/* Column 4: Ecosystem Apps */}
+            {/* Column 3: Ecosystem Apps */}
             <div>
               <h4 className="font-semibold text-white text-sm uppercase tracking-wider mb-4">Ecosystem Apps</h4>
               <ul className="space-y-2.5 text-sm">
@@ -1407,7 +971,7 @@ export default function App() {
                     className="hover:text-white transition-colors text-left cursor-pointer flex items-center gap-1.5 font-medium text-gray-200"
                   >
                     <span className="text-[#a855f7]">★</span>
-                    <span>LevelMovie (Cinema HD)</span>
+                    <span>LevelMovie</span>
                   </button>
                 </li>
                 <li>
@@ -1415,7 +979,7 @@ export default function App() {
                     onClick={() => navigateTo('music')}
                     className="hover:text-white transition-colors text-left cursor-pointer flex items-center gap-1.5"
                   >
-                    <span>LevelMusic (Audio Player)</span>
+                    <span>LevelMusic</span>
                   </button>
                 </li>
                 <li>
@@ -1423,7 +987,7 @@ export default function App() {
                     onClick={() => navigateTo('weather')}
                     className="hover:text-white transition-colors text-left cursor-pointer flex items-center gap-1.5"
                   >
-                    <span>LevelDay (Live Weather)</span>
+                    <span>LevelDay</span>
                   </button>
                 </li>
                 <li><a href="#security" className="hover:text-white transition-colors">Cybersecurity Center</a></li>
@@ -1453,16 +1017,16 @@ export default function App() {
       {/* Instant Contact Form Modal */}
       {contactModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-gray-100 relative animate-in fade-in zoom-in-95">
+          <div className="bg-white rounded-none max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-gray-200 relative animate-in fade-in zoom-in-95">
             <button
               onClick={() => setContactModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-none hover:bg-gray-100 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-none bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center font-bold border border-[#ede9fe]">
                 <Mail className="w-5 h-5" />
               </div>
               <div>
@@ -1473,7 +1037,7 @@ export default function App() {
 
             {contactSent ? (
               <div className="py-8 text-center space-y-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                <div className="w-12 h-12 rounded-none bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
                   <Check className="w-6 h-6" />
                 </div>
                 <h4 className="text-lg font-bold text-gray-900">Inquiry Sent Successfully!</h4>
@@ -1489,7 +1053,7 @@ export default function App() {
                     value={contactForm.name}
                     onChange={e => setContactForm(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="e.g. John Doe"
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-none text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all"
                   />
                 </div>
 
@@ -1501,7 +1065,7 @@ export default function App() {
                     value={contactForm.email}
                     onChange={e => setContactForm(prev => ({ ...prev, email: e.target.value }))}
                     placeholder="john.doe@example.com"
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-none text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all"
                   />
                 </div>
 
@@ -1510,7 +1074,7 @@ export default function App() {
                   <select
                     value={contactForm.projectType}
                     onChange={e => setContactForm(prev => ({ ...prev, projectType: e.target.value }))}
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-none text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all"
                   >
                     <option value="Virtual Invitation & Event ($120)">Virtual Invitation & Event ($120)</option>
                     <option value="Starter Website ($350)">Starter Website ($350)</option>
@@ -1528,14 +1092,14 @@ export default function App() {
                     value={contactForm.message}
                     onChange={e => setContactForm(prev => ({ ...prev, message: e.target.value }))}
                     placeholder="Describe your goals, requirements, timeline, or specific features..."
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all resize-none"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-none text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all resize-none"
                   ></textarea>
                 </div>
 
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-3 px-4 bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-medium rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3 px-4 bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-medium rounded-none transition-all shadow-md active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>Submit Inquiry</span>
                     <ArrowRight className="w-4 h-4" />
@@ -1548,6 +1112,8 @@ export default function App() {
         </div>
       )}
 
-    </div>
+        </div>
+      )}
+    </>
   );
 }

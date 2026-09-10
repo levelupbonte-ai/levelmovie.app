@@ -34,12 +34,33 @@ export const DonaStar = ({ className = "w-6 h-6" }: { className?: string }) => {
   );
 };
 
-export const LevelMovieLogo = ({ className = "w-6 h-6", color = "currentColor" }: { className?: string; color?: string }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M5 4V17C5 19.2091 6.79086 21 9 21H20" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M10 8.35824C10 7.42436 11.0185 6.8488 11.8153 7.33235L17.5855 10.8242C18.3571 11.2915 18.3571 12.4137 17.5855 12.881L11.8153 16.3728C11.0185 16.8564 10 16.2808 10 15.347V8.35824Z" fill={color}/>
-  </svg>
-);
+export const LevelMovieLogo = ({ 
+  className = "w-6 h-6", 
+  color,
+  useGradient = false 
+}: { 
+  className?: string; 
+  color?: string;
+  useGradient?: boolean;
+}) => {
+  const gradId = "lvl_movie_logo_grad";
+  const strokeColor = useGradient ? `url(#${gradId})` : (color || "currentColor");
+  const fillColor = useGradient ? `url(#${gradId})` : (color || "currentColor");
+
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#d8b4fe" />
+          <stop offset="50%" stopColor="#a855f7" />
+          <stop offset="100%" stopColor="#6366f1" />
+        </linearGradient>
+      </defs>
+      <path d="M5 4V17C5 19.2091 6.79086 21 9 21H20" stroke={strokeColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M10 8.35824C10 7.42436 11.0185 6.8488 11.8153 7.33235L17.5855 10.8242C18.3571 11.2915 18.3571 12.4137 17.5855 12.881L11.8153 16.3728C11.0185 16.8564 10 16.2808 10 15.347V8.35824Z" fill={fillColor}/>
+    </svg>
+  );
+};
 
 export const TikTokHomeIcon = ({ className = "w-5 h-5", fill = "currentColor" }: { className?: string; fill?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="currentColor" xmlns="http://www.w3.org/2000/svg">

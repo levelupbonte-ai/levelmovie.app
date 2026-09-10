@@ -186,6 +186,17 @@ export const LevelDayApp: React.FC<LevelDayAppProps> = ({ onClose, lang = 'fr', 
               <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-cyan-400' : ''}`} />
               <span className="hidden sm:inline">Actualiser</span>
             </button>
+
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white border border-white/10 transition-colors cursor-pointer shrink-0"
+                title="Fermer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
