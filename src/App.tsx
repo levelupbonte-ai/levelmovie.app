@@ -1,2366 +1,872 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Play, Info, Search as SearchIcon, X, ChevronLeft, ChevronRight,
-  Star, User as UserIcon, LogOut, Film, Globe, Shield, HardDrive, Filter,
-  Home, Tv, Clapperboard, History, AlertOctagon, Bookmark,
-  ArrowDown, ArrowUp, Plus, Users, Mail, AlertTriangle, CheckCircle, XCircle,
-  Building, Lock, Menu, Sparkles, Compass, ShieldCheck, Zap,
-  Clock, SquarePen, Calendar, Bot, WifiOff, Loader2
+  Code, Cpu, Sparkles, Check, Star, ArrowRight, Headphones,
+  Sun, Tv, ShieldCheck, CheckCircle2, Mail, Menu, X,
+  Music, CloudSun, Film, PlayCircle, ArrowLeft, Send
 } from 'lucide-react';
-import {
-  doc, setDoc, getDoc, deleteDoc, collection, addDoc, onSnapshot, query, orderBy, limit, getDocs, arrayUnion,
-  onAuthStateChanged, signInAnonymously, signInWithPopup, signInWithRedirect, signOut,
-  app, auth, db, googleProvider, facebookProvider, VAPID_KEY, NOTIF_PATH, FCM_TOKEN_PATH,
-  getMessaging, getToken, onMessage, isSupported as isMessagingSupported
-} from './lib/firebase-stub';
-import {
-  API_KEY, BASE_URL, IMAGE_BASE_URL, LevelMovieLogo, DonaStar, WatchPartySVG,
-  censorText, filterMatureContent, getDailySeed, getWeekSeed, getHoursUntilMidnight, APP_ID,
-  isLowDataMode, setLowDataModeState, getWeeklyVipStatus
-} from './constants';
-import { i18n, globalStyles } from './i18n';
-import { Banner } from './components/Banner';
-import { Row } from './components/Row';
-import { AlgoRow, TrailerRow } from './components/AlgoRow';
-import { MovieModal } from './components/MovieModal';
-import { SettingsModal } from './components/SettingsModal';
-import { AppSidebar } from './components/AppSidebar';
-import { ExternalAppsModal } from './components/ExternalAppsModal';
-import { SupportModal } from './components/SupportModal';
-import { SearchModal } from './components/SearchModal';
-import { AuthModal, AuthView } from './components/AuthModal';
-import { MandatoryProfileCompletionModal } from './components/MandatoryProfileCompletionModal';
-import { LevelAvatar } from './components/LevelAvatar';
-import { DonaModal } from './components/DonaModal';
-import { CinematicPosterWall } from './components/CinematicPosterWall';
-import { AvatarPickerModal } from './components/AvatarPickerModal';
-import { MaintenanceScreen } from './components/MaintenanceScreen';
-import { FooterDisclaimer } from './components/FooterDisclaimer';
-import { LegalModal, LegalDocType } from './components/LegalModal';
-import { NetworkOfflineManager } from './components/NetworkOfflineManager';
-import { LevelAnimeApp } from './components/apps/LevelAnimeApp';
-import { supabase, isSupabaseConfigured } from './lib/supabase';
-import { partySyncService } from './lib/partySyncService';
-
-// Regional Automatic Language Detection:
-// Africa (100% French) + Francophone Europe (French), Anglophone & Rest of World (English)
-const detectUserRegionLang = (): string => {
-  const explicitSaved = localStorage.getItem('levelmovie_lang_explicit');
-  const saved = localStorage.getItem('levelmovie_lang');
-  if (explicitSaved === 'true' && saved && (saved === 'fr' || saved === 'en')) {
-    return saved;
-  }
-
-  try {
-    const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || '').toLowerCase();
-    const navLang = (navigator.language || (navigator as any).userLanguage || '').toLowerCase();
-    const allLangs = (navigator.languages || []).map((l: string) => l.toLowerCase());
-
-    // 1. All African regions/timezones -> French
-    if (tz.startsWith('africa/')) {
-      return 'fr';
-    }
-
-    // 2. Francophone European regions / cities
-    const francophoneTz = ['paris', 'brussels', 'geneva', 'monaco', 'luxembourg', 'zurich'];
-    if (francophoneTz.some(city => tz.includes(city))) {
-      return 'fr';
-    }
-
-    // 3. Francophone browser language
-    if (navLang.startsWith('fr') || allLangs.some((l: string) => l.startsWith('fr'))) {
-      return 'fr';
-    }
-
-    // 4. Default for anglophone countries and all other regions -> English
-    return 'en';
-  } catch (e) {
-    return 'en';
-  }
-};
+import LevelMovieApp from './LevelMovieApp';
+import { LevelMusicApp } from './components/apps/LevelMusicApp';
+import { LevelDayApp } from './components/apps/LevelDayApp';
 
 export default function App() {
-  const [lang, setLang] = useState(detectUserRegionLang);
-  const [contentLang, setContentLang] = useState(localStorage.getItem('levelmovie_content_lang') || 'all');
-  const [isMaintenance, setIsMaintenance] = useState(false);
-
-  const [fbUser, setFbUser] = useState<any>(null);
-  const [user, setUser] = useState<any>(() => {
-    const savedUid = localStorage.getItem('levelmovie_user_uid');
-    const savedEmail = localStorage.getItem('levelmovie_user_email');
-    return savedUid ? { uid: savedUid, email: savedEmail || '' } : null;
-  });
-  const [userPhoto, setUserPhoto] = useState<string | null>(() => {
-    return localStorage.getItem('levelmovie_custom_avatar') || localStorage.getItem('levelmovie_user_photo') || localStorage.getItem('lm_photo') || null;
-  });
-  const [userName, setUserName] = useState<string>(() => {
-    return localStorage.getItem('levelmovie_username') || localStorage.getItem('levelmovie_user_name') || '';
-  });
-  const [userEmail, setUserEmail] = useState<string>(() => {
-    return localStorage.getItem('levelmovie_user_email') || '';
-  });
-  const [userHandle, setUserHandle] = useState<string>(() => localStorage.getItem('levelmovie_user_handle') || '');
-  const [showMandatoryOnboarding, setShowMandatoryOnboarding] = useState(false);
-  const [onboardingOAuthUser, setOnboardingOAuthUser] = useState<any>(null);
-  const [authError, setAuthError] = useState('');
-  const [isLoadingAuth, setIsLoadingAuth] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [toasts, setToasts] = useState<any[]>([]);
+  
+  // App views: 'ecosystem' (default home) or integrated apps ('movie', 'music', 'weather')
+  const [currentAppView, setCurrentAppView] = useState<'ecosystem' | 'movie' | 'music' | 'weather'>('ecosystem');
+  
+  // Contact modal state
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: '', email: '', projectType: 'Site Basique (350$)', message: '' });
+  const [contactSent, setContactSent] = useState(false);
 
-  const [currentCategory, setCurrentCategory] = useState('home');
-  const [isNetworkOffline, setIsNetworkOffline] = useState<boolean>(() => {
-    return typeof navigator !== 'undefined' ? !navigator.onLine : false;
-  });
-  const [openOfflineDetailTrigger, setOpenOfflineDetailTrigger] = useState<number>(0);
-  const [donaViewportHeight, setDonaViewportHeight] = useState<number | null>(null);
-
-  // Lock document scroll and adapt height to visualViewport when on Dona so top header never moves on mobile keyboard
+  // Scroll effect for navbar
   useEffect(() => {
-    if (currentCategory === 'dona') {
-      const prevOverflow = document.body.style.overflow;
-      const prevPosition = document.body.style.position;
-      const prevWidth = document.body.style.width;
-      const prevHeight = document.body.style.height;
-      const prevTop = document.body.style.top;
-
-      const scrollY = window.scrollY;
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.height = '100%';
-      document.body.style.top = `-${scrollY}px`;
-
-      const updateVp = () => {
-        if (window.visualViewport) {
-          setDonaViewportHeight(window.visualViewport.height);
-        }
-      };
-      updateVp();
-
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', updateVp);
-        window.visualViewport.addEventListener('scroll', updateVp);
-      }
-
-      return () => {
-        document.body.style.overflow = prevOverflow;
-        document.body.style.position = prevPosition;
-        document.body.style.width = prevWidth;
-        document.body.style.height = prevHeight;
-        document.body.style.top = prevTop;
-        window.scrollTo(0, scrollY);
-        if (window.visualViewport) {
-          window.visualViewport.removeEventListener('resize', updateVp);
-          window.visualViewport.removeEventListener('scroll', updateVp);
-        }
-      };
-    } else {
-      setDonaViewportHeight(null);
-    }
-  }, [currentCategory]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-
-  const [recentSearches, setRecentSearches] = useState<string[]>(JSON.parse(localStorage.getItem('lm_recent_searches') || '[]'));
-  const [showSearchModal, setShowSearchModal] = useState(false);
-
-  const [partySearchQuery, setPartySearchQuery] = useState('');
-  const [partySearchResults, setPartySearchResults] = useState<any[]>([]);
-
-  const [heroMovie, setHeroMovie] = useState<any>(null);
-  const [pageSeed, setPageSeed] = useState(1);
-
-  const [selectedMovie, setSelectedMovie] = useState<any>(null);
-  const [modalMode, setModalMode] = useState('info');
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showExternalApps, setShowExternalApps] = useState(false);
-  const [showSupport, setShowSupport] = useState(false);
-  const [settingsTab, setSettingsTab] = useState('account');
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const [watchlist, setWatchlist] = useState<number[]>([]);
-  const [watchlistData, setWatchlistData] = useState<any[]>([]);
-  const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
-
-  const [parentalFilter, setParentalFilter] = useState(false);
-  const [parentalPin, setParentalPin] = useState<string | null>(null);
-  const [pinModal, setPinModal] = useState({ show: false, mode: 'create', tempPin: '', error: '' });
-
-  const [isNearBottom, setIsNearBottom] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [authModalInitialView, setAuthModalInitialView] = useState<AuthView>('view-main');
-  const [showLegalModal, setShowLegalModal] = useState(false);
-  const [legalDocType, setLegalDocType] = useState<LegalDocType>('terms');
-  const [showDona, setShowDona] = useState(false);
-  const [donaHistoryTrigger, setDonaHistoryTrigger] = useState(0);
-  const [donaNewChatTrigger, setDonaNewChatTrigger] = useState(0);
-  const [animeSubTab, setAnimeSubTab] = useState<'home' | 'explore' | 'releases'>('home');
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const [loginBackdrops, setLoginBackdrops] = useState<string[]>([]);
-
-  const [partyId, setPartyId] = useState<string | null>(null);
-  const [partyData, setPartyData] = useState<any>(null);
-  const [activePartyCode, setActivePartyCode] = useState<string | null>(null);
-  const [lowDataMode, setLowDataMode] = useState<boolean>(() => isLowDataMode());
-
-  useEffect(() => {
-    if (lowDataMode) {
-      document.documentElement.classList.add('low-data-mode');
-    } else {
-      document.documentElement.classList.remove('low-data-mode');
-    }
-  }, [lowDataMode]);
-
-  useEffect(() => {
-    const handleLowDataChange = (e: any) => {
-      if (typeof e?.detail?.enabled === 'boolean') {
-        setLowDataMode(e.detail.enabled);
-      }
-    };
-    window.addEventListener('levelmovie_low_data_change', handleLowDataChange);
-    return () => {
-      window.removeEventListener('levelmovie_low_data_change', handleLowDataChange);
-    };
-  }, []);
-
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [showNotifPanel, setShowNotifPanel] = useState(false);
-  const [lastSeenNotifTs, setLastSeenNotifTs] = useState(parseInt(localStorage.getItem('lm_last_seen_notif') || '0', 10));
-  const [pushPermission, setPushPermission] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'default');
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [reportText, setReportText] = useState('');
-  const [reviewText, setReviewText] = useState('');
-  const [reviewStars, setReviewStars] = useState(5);
-  const [supportSubmitting, setSupportSubmitting] = useState(false);
-  const [roomEndedInfo, setRoomEndedInfo] = useState<any>(null);
-  const [bannedInfo, setBannedInfo] = useState<any>(null);
-
-  const [showPartyTutorial, setShowPartyTutorial] = useState(false);
-  const [pendingPartyAction, setPendingPartyAction] = useState<any>(null);
-
-  const [showCreatePartyPrompt, setShowCreatePartyPrompt] = useState(false);
-  const [isPartyMinimized, setIsPartyMinimized] = useState(false);
-  const [createPartyMovie, setCreatePartyMovie] = useState<any>(null);
-  const [customRoomName, setCustomRoomName] = useState("");
-  const [showAvatarPickerModal, setShowAvatarPickerModal] = useState(false);
-  const [geoInfo, setGeoInfo] = useState<{
-    city?: string | null;
-    region?: string | null;
-    country?: string | null;
-    isSanDiego?: boolean;
-    checked?: boolean;
-  }>({ checked: false });
-
-  const checkRegionAccess = useCallback(async () => {
-    // 1. Dérogation URL / Admin / Testeur (ex: ?bypass=sandiego, ?access=sandiego, ?city=sandiego)
-    const urlParams = new URLSearchParams(window.location.search);
-    const bypassParam = urlParams.get('bypass') || urlParams.get('access') || urlParams.get('city') || urlParams.get('region');
-    if (bypassParam && bypassParam.toLowerCase().includes('sandiego')) {
-      localStorage.setItem('lm_sandiego_access', 'true');
-      setIsMaintenance(false);
-      setGeoInfo({ city: 'San Diego', region: 'California', country: 'US', isSanDiego: true, checked: true });
-      return;
-    }
-
-    // 2. Accès débloqué ou mémorisé dans le navigateur
-    if (localStorage.getItem('lm_sandiego_access') === 'true') {
-      setIsMaintenance(false);
-      setGeoInfo({ city: 'San Diego', region: 'California', country: 'US', isSanDiego: true, checked: true });
-      return;
-    }
-
-    // 3. Détection par géolocalisation IP & fuseau horaire
-    try {
-      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-      let data: any = null;
-      try {
-        const res = await fetch('https://ipwho.is/', { signal: controller.signal });
-        if (res.ok) {
-          data = await res.json();
-        }
-      } catch (e) {
-        // Fallback endpoint serveur
-        try {
-          const fallbackRes = await fetch(`/api/geo-check?tz=${encodeURIComponent(userTz)}`);
-          if (fallbackRes.ok) {
-            data = await fallbackRes.json();
-          }
-        } catch (e2) {}
-      } finally {
-        clearTimeout(timeoutId);
-      }
-
-      if (data) {
-        const city = String(data.city || '').toLowerCase();
-        const postal = String(data.postal || '');
-        const region = String(data.region || '').toLowerCase();
-        const lat = typeof data.latitude === 'number' ? data.latitude : null;
-        const lon = typeof data.longitude === 'number' ? data.longitude : null;
-
-        // Villes du comté de San Diego
-        const sdCities = [
-          'san diego', 'la jolla', 'chula vista', 'oceanside', 'escondido', 
-          'carlsbad', 'el cajon', 'vista', 'san marcos', 'encinitas', 
-          'national city', 'la mesa', 'santee', 'poway', 'imperial beach', 
-          'lemon grove', 'coronado', 'solana beach', 'del mar', 'spring valley'
-        ];
-
-        const isCityMatch = sdCities.some(sdc => city.includes(sdc));
-        const isZipMatch = postal.startsWith('919') || postal.startsWith('920') || postal.startsWith('921');
-        const isGeoMatch = lat !== null && lon !== null &&
-          lat >= 32.40 && lat <= 33.55 &&
-          lon >= -117.65 && lon <= -116.30;
-
-        // Prise en compte du routage mobile cellulaire : de nombreux utilisateurs à San Diego
-        // ont leur trafic cellulaire (T-Mobile / Verizon / AT&T) géo-localisé par les bases IP à Phoenix (AZ)
-        // tout en ayant leur fuseau horaire réglé sur Pacific Time (America/Los_Angeles).
-        const isMobileGatewayPhoenix = (city.includes('phoenix') || region.includes('arizona')) &&
-          userTz === 'America/Los_Angeles';
-
-        const isSanDiego = isCityMatch || isZipMatch || isGeoMatch || isMobileGatewayPhoenix || data.isSanDiego === true;
-
-        setGeoInfo({
-          city: isSanDiego && isMobileGatewayPhoenix ? 'San Diego (Cellular Relay)' : (data.city || null),
-          region: data.region || null,
-          country: data.country || data.country_code || null,
-          isSanDiego,
-          checked: true,
-        });
-
-        // Accessible à San Diego
-        if (isSanDiego) {
-          localStorage.setItem('lm_sandiego_access', 'true');
-          setIsMaintenance(false);
-        } else {
-          setIsMaintenance(true);
-        }
-        return;
-      }
-    } catch (err) {
-      console.warn('[Region Check] Failed:', err);
-    }
-
-    // Par défaut : maintenance activée
-    setIsMaintenance(true);
-    setGeoInfo(prev => ({ ...prev, checked: true }));
-  }, []);
-
-  const handleGpsDetect = (coords: { latitude: number; longitude: number }) => {
-    const inSd = coords.latitude >= 32.40 && coords.latitude <= 33.55 &&
-                 coords.longitude >= -117.65 && coords.longitude <= -116.30;
-    if (inSd || coords.latitude > 0) {
-      localStorage.setItem('lm_sandiego_access', 'true');
-      setGeoInfo({ city: 'San Diego (GPS)', region: 'California', country: 'US', isSanDiego: true, checked: true });
-      setIsMaintenance(false);
-    }
-  };
-
-  useEffect(() => {
-    checkRegionAccess();
-  }, [checkRegionAccess]);
-
-  useEffect(() => {
-    const handleAvatarChange = (e: any) => {
-      if (e?.detail?.avatar) {
-        setUserPhoto(e.detail.avatar);
-      }
-    };
-    const handleProfileChange = (e: any) => {
-      if (e?.detail) {
-        if (e.detail.name) setUserName(e.detail.name);
-        if (e.detail.photo) setUserPhoto(e.detail.photo);
-        if (e.detail.handle) setUserHandle(e.detail.handle);
-        if (e.detail.email) setUserEmail(e.detail.email);
-        if (e.detail.uid && !user) {
-          setUser({ uid: e.detail.uid, email: e.detail.email || '' });
-        }
-      }
-    };
-    window.addEventListener('levelmovie_avatar_change', handleAvatarChange);
-    window.addEventListener('levelmovie_profile_change', handleProfileChange);
-    return () => {
-      window.removeEventListener('levelmovie_avatar_change', handleAvatarChange);
-      window.removeEventListener('levelmovie_profile_change', handleProfileChange);
-    };
-  }, [user]);
-
-  const [showSplash, setShowSplash] = useState(true);
-  const [splashStep, setSplashStep] = useState(0);
-  const [browserCheck, setBrowserCheck] = useState<{ status: 'idle' | 'checking' | 'done'; isOpera: boolean; text: string }>({
-    status: 'checking',
-    isOpera: false,
-    text: 'Analyse du navigateur...'
-  });
-  const [serverCheck, setServerCheck] = useState<{ status: 'idle' | 'checking' | 'done'; ok: boolean; latency: number; text: string }>({
-    status: 'idle',
-    ok: false,
-    latency: 0,
-    text: 'En attente...'
-  });
-  const [catalogCheck, setCatalogCheck] = useState<{ status: 'idle' | 'checking' | 'done'; ok: boolean; text: string }>({
-    status: 'idle',
-    ok: false,
-    text: 'En attente...'
-  });
-
-  const t = i18n[lang] || i18n['fr'];
-  const defaultUserName = userName || t.defaultUser;
-
-  const guestUid = useMemo(() => {
-    let gid = localStorage.getItem('lm_guest_party_uid');
-    if (!gid) {
-      gid = 'guest_' + Math.random().toString(36).substring(2, 9);
-      localStorage.setItem('lm_guest_party_uid', gid);
-    }
-    return gid;
-  }, []);
-
-  const effectiveUid = user?.uid || fbUser?.uid || guestUid;
-  const effectiveUserName = userName || (user ? defaultUserName : (localStorage.getItem('lm_guest_party_name') || (lang === 'fr' ? 'Invité ' + effectiveUid.slice(-4) : 'Guest ' + effectiveUid.slice(-4))));
-  const effectiveUserPhoto = userPhoto || null;
-  const effectiveUser = useMemo(() => {
-    if (user) return { ...user, uid: user.uid || effectiveUid };
-    return {
-      uid: effectiveUid,
-      displayName: effectiveUserName,
-      email: userEmail || '',
-      photoURL: effectiveUserPhoto,
-      isGuest: true
-    };
-  }, [user, effectiveUid, effectiveUserName, userEmail, effectiveUserPhoto]);
-
-  useEffect(() => {
-    partySyncService.setMember({
-      uid: effectiveUid,
-      name: effectiveUserName,
-      photo: effectiveUserPhoto || ''
-    });
-  }, [effectiveUid, effectiveUserName, effectiveUserPhoto]);
-
-  const showToast = useCallback((msg: string, type = 'info') => {
-    if (type === 'info') return;
-    const id = Date.now() + Math.random();
-    setToasts(prev => [...prev, { id, msg, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(toastItem => toastItem.id !== id));
-    }, 3000);
-  }, []);
-
-  const syncPreferencesToDb = useCallback(async (newPrefs: any) => {
-    if (!user || !fbUser) return;
-    try {
-      await setDoc(doc(db, "artifacts", APP_ID, "users", user.uid, "preferences", "settings"), newPrefs, { merge: true });
-    } catch (e) {}
-  }, [user, fbUser]);
-
-  const joinPartyByCode = useCallback(async (codeStr: string) => {
-    if (!codeStr) return;
-    const cleanCode = codeStr.trim().toUpperCase();
-    const inputEl = document.getElementById('partyCodeInput') as HTMLInputElement | null;
-    if (inputEl) { inputEl.value = ''; inputEl.blur(); }
-    localStorage.removeItem('pending_party_join');
-
-    try {
-      const memberObj = { uid: effectiveUid, name: effectiveUserName, photo: effectiveUserPhoto || "" };
-      const partyData = await partySyncService.joinParty(cleanCode, memberObj);
-
-      if (!partyData || partyData.status === 'ended') {
-        showToast(t.eventEnded || (lang === 'fr' ? 'Salon introuvable ou terminé' : 'Room not found or ended'), 'error');
-        return;
-      }
-
-      if (partyData.banned && partyData.banned.includes(effectiveUid)) {
-        showToast(lang === 'fr' ? 'Vous êtes banni de ce salon' : 'You are banned from this room', 'error');
-        return;
-      }
-
-      const res = await fetch(`${BASE_URL}/${partyData.mediaType || 'movie'}/${partyData.movieId}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
-      const movieData = await res.json();
-      if (partyData.mediaType === 'tv') {
-        movieData.resumeSeason = partyData.season || 1;
-        movieData.resumeEpisode = partyData.episode || 1;
-      }
-
-      setPartyData(partyData);
-      setSelectedMovie(movieData);
-      setPartyId(cleanCode);
-      setModalMode('play');
-      setIsPartyMinimized(false);
-      localStorage.setItem('active_party_id', cleanCode);
-      window.history.pushState({}, '', `?party=${cleanCode}`);
-      showToast(lang === 'fr' ? `Salon rejoint : ${partyData.roomName || partyData.title}` : `Joined room: ${partyData.roomName || partyData.title}`, 'success');
-    } catch (e) {
-      showToast(t.invalidPartyCode || (lang === 'fr' ? 'Code invalide ou erreur réseau' : 'Invalid code'), 'error');
-    }
-  }, [effectiveUid, effectiveUserName, effectiveUserPhoto, lang, t, showToast]);
-
-  const triggerJoinParty = useCallback((code: string) => {
-    const seen = localStorage.getItem('lm_party_tutorial_seen');
-    if (!seen) {
-      setPendingPartyAction({ type: 'join', code });
-      setShowPartyTutorial(true);
-    } else {
-      joinPartyByCode(code);
-    }
-  }, [joinPartyByCode]);
-
-  useEffect(() => {
-    // Si la fenêtre courante est un popup d'authentification OAuth ouvert par l'application
-    if (window.opener && window.opener !== window) {
-      setTimeout(() => {
-        try {
-          window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
-          window.close();
-        } catch (e) {
-          // ignore
-        }
-      }, 600);
-    }
-
-    // Check URL hash & search params for OAuth error or success returns
-    const hashStr = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
-    const hashParams = new URLSearchParams(hashStr);
-    const searchParams = new URLSearchParams(window.location.search);
-
-    // Deep-linking / SEO Search Query Handling (?search=Naruto or ?q=One+Piece)
-    const initialSearch = searchParams.get('search') || searchParams.get('q');
-    if (initialSearch) {
-      setSearchQuery(initialSearch);
-      setShowSearchModal(true);
-    }
-
-    // Deep-linking Category Handling (?category=anime / movies / series / dona)
-    const initialCategory = searchParams.get('category');
-    if (initialCategory) {
-      setCurrentCategory(initialCategory);
-    }
-
-    // Deep-linking Auth Handling (?auth=login / ?auth=signup / ?auth=key)
-    const initialAuth = searchParams.get('auth');
-    if (initialAuth === 'login') {
-      setAuthModalInitialView('view-login');
-      setShowLoginModal(true);
-    } else if (initialAuth === 'signup') {
-      setAuthModalInitialView('view-signup');
-      setShowLoginModal(true);
-    } else if (initialAuth === 'key') {
-      setAuthModalInitialView('view-key');
-      setShowLoginModal(true);
-    }
-
-    const oauthError = hashParams.get('error') || searchParams.get('error');
-    const oauthErrorDesc = hashParams.get('error_description') || searchParams.get('error_description');
-    const oauthErrorCode = hashParams.get('error_code') || searchParams.get('error_code');
-
-    if (oauthError || oauthErrorCode) {
-      console.group('⚠️ [LEVELMOVIE AUTH] Erreur retour OAuth détectée dans l’URL');
-      console.error('Code d’erreur :', oauthErrorCode || oauthError);
-      console.error('Description :', oauthErrorDesc || 'Non spécifiée');
-      console.log('Paramètres bruts Hash :', hashStr);
-      console.log('Paramètres bruts Search :', window.location.search);
-      
-      if (oauthErrorCode === '403' || oauthError === 'access_denied' || (oauthErrorDesc && oauthErrorDesc.includes('403'))) {
-        console.warn('💡 ================== DIAGNOSTIC COMPLET ERREUR 403 GOOGLE ==================');
-        console.warn('1. STATUT GOOGLE CLOUD : Votre application Google Cloud est probablement en mode "En cours de test" (Testing).');
-        console.warn('   -> Rendez-vous sur : https://console.cloud.google.com/apis/credentials/consent');
-        console.warn('   -> Cliquez sur le bouton "PUBLIER L’APPLICATION" pour autoriser tout le monde sans blocage 403.');
-        console.warn('   -> Ou ajoutez votre email sous la section "Utilisateurs test".');
-        console.warn('2. URIs DE REDIRECTION DANS GOOGLE CLOUD :');
-        console.warn('   -> URI de redirection autorisée : https://epprgkolsywdfouffpmj.supabase.co/auth/v1/callback');
-        console.warn('3. TYPE D’UTILISATEUR GOOGLE : Assurez-vous que le type d’utilisateur est "Externe" (External).');
-        console.warn('=============================================================================');
-      }
-      console.groupEnd();
-    }
-
-    if (isSupabaseConfigured && supabase) {
-      const evaluateUserSession = (sessionUser: any) => {
-        if (!sessionUser) return;
-        const uid = sessionUser.id || sessionUser.uid;
-        const userMeta = sessionUser.user_metadata || {};
-        const isCompleted = userMeta.profile_completed === true || 
-          localStorage.getItem(`lm_profile_completed_${uid}`) === 'true';
-
-        if (!isCompleted) {
-          console.log('⚡ [Mandatory Onboarding] Première connexion OAuth détectée sans profil complété:', sessionUser.email);
-          setOnboardingOAuthUser(sessionUser);
-          setShowMandatoryOnboarding(true);
-          setShowLoginModal(false);
-        } else {
-          setUser({ uid, email: sessionUser.email });
-          const name = userMeta.full_name || userMeta.first_name || sessionUser.email?.split('@')[0] || t.defaultUser;
-          setUserName(name);
-          if (sessionUser.email) setUserEmail(sessionUser.email);
-          const photo = userMeta.avatar_url || localStorage.getItem('levelmovie_user_photo') || null;
-          if (photo) setUserPhoto(photo);
-          const handle = userMeta.username || localStorage.getItem('levelmovie_user_handle') || '';
-          if (handle) setUserHandle(handle);
-          setShowLoginModal(false);
-          setShowMandatoryOnboarding(false);
-        }
-
-        // Clean up URL hash from OAuth redirect
-        try {
-          if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
-            setTimeout(() => {
-              window.history.replaceState({}, document.title, window.location.pathname);
-            }, 800);
-          }
-        } catch (_) {}
-      };
-
-      supabase.auth.getSession().then(({ data: { session }, error }) => {
-        if (error) {
-          console.error('❌ [Supabase Auth] Erreur lors de la récupération de session :', error);
-        } else if (session?.user) {
-          console.log('✅ [Supabase Auth] Utilisateur connecté :', session.user.email, session.user.id);
-          evaluateUserSession(session.user);
-        } else {
-          console.log('ℹ️ [Supabase Auth] Prêt (Aucune session active enregistrée).');
-        }
-      });
-
-      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-        console.log('🔄 [Supabase Auth Event] :', event, session?.user?.email || '(aucun)');
-        if (session?.user) {
-          evaluateUserSession(session.user);
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setUserName('');
-          setUserEmail('');
-          setUserPhoto(null);
-          setUserHandle('');
-          setShowMandatoryOnboarding(false);
-          setOnboardingOAuthUser(null);
-        }
-      });
-
-      const handleWindowMessage = (e: MessageEvent) => {
-        if (e.data?.type === 'OAUTH_AUTH_SUCCESS') {
-          supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session?.user) {
-              evaluateUserSession(session.user);
-            }
-          });
-        }
-      };
-      window.addEventListener('message', handleWindowMessage);
-
-      return () => {
-        authListener.subscription.unsubscribe();
-        window.removeEventListener('message', handleWindowMessage);
-      };
-    }
-  }, [t.defaultUser]);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUserResult) => {
-      setFbUser(fbUserResult);
-      if (fbUserResult) {
-        if (!fbUserResult.isAnonymous) {
-          const uid = fbUserResult.uid;
-          const name = fbUserResult.displayName || (fbUserResult.email ? fbUserResult.email.split('@')[0] : t.defaultUser);
-          const email = fbUserResult.email || '';
-          const photo = fbUserResult.photoURL || null;
-          setUser({ uid });
-          setUserName(name);
-          setUserEmail(email);
-          if (photo) setUserPhoto(photo);
-          localStorage.setItem('levelmovie_user_uid', uid);
-          localStorage.setItem('levelmovie_user_name', name);
-          localStorage.setItem('levelmovie_user_email', email);
-          if (photo) localStorage.setItem('lm_photo', photo);
-        } else {
-          // Restore existing saved session if available so anonymous Firebase doesn't wipe the logged-in user
-          const savedUid = localStorage.getItem('levelmovie_user_uid');
-          const savedName = localStorage.getItem('levelmovie_user_name');
-          const savedEmail = localStorage.getItem('levelmovie_user_email');
-          const savedPhoto = localStorage.getItem('lm_photo');
-          if (savedUid) {
-            setUser({ uid: savedUid });
-            if (savedName) setUserName(savedName);
-            if (savedEmail) setUserEmail(savedEmail);
-            if (savedPhoto) setUserPhoto(savedPhoto);
-          } else {
-            setUser(null);
-          }
-        }
-        setIsLoadingAuth(false);
-        const pendingParty = localStorage.getItem('pending_party_join');
-        if (pendingParty) { triggerJoinParty(pendingParty); }
-      } else {
-        try {
-          await signInAnonymously(auth);
-        } catch (e) {}
-      }
-    });
-    return () => unsubscribe();
-  }, [t.defaultUser, triggerJoinParty]);
-
-  useEffect(() => {
-    if (!fbUser) return;
-    const unsubMaintenance = onSnapshot(doc(db, "artifacts", APP_ID, "public", "data", "system", "config"), (docSnap) => {
-      if (docSnap.exists() && docSnap.data().levelmovie_maintenance === true) {
-        setIsMaintenance(true);
-      } else {
-        setIsMaintenance(false);
-      }
-    });
-    return () => unsubMaintenance();
-  }, [fbUser]);
-
-  useEffect(() => {
-    if (!fbUser) return;
-    try {
-      const q = query(collection(db, ...NOTIF_PATH), orderBy('createdAt', 'desc'), limit(30));
-      const unsub = onSnapshot(q, (snap) => {
-        const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        setNotifications(items);
-      }, () => {});
-      return () => unsub();
-    } catch (e) {}
-  }, [fbUser]);
-
-  useEffect(() => {
-    const savedName = localStorage.getItem('levelmovie_user_name');
-    const savedUid = localStorage.getItem('levelmovie_user_uid');
-    const savedEmail = localStorage.getItem('levelmovie_user_email');
-    const savedPhoto = localStorage.getItem('lm_photo');
-
-    // Multi-stage real verification pipeline during splash (Snappy ~2.6s)
-    const t1 = setTimeout(() => setSplashStep(1), 100);
-
-    const isFr = lang === 'fr';
-
-    // STEP 1: Browser Analysis (0ms -> 700ms)
-    const tBrowser = setTimeout(() => {
-      const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-      const isOpera = /OPR\/|Opera|Opera GX/i.test(ua);
-      setBrowserCheck({
-        status: 'done',
-        isOpera,
-        text: isOpera
-          ? (isFr ? 'Opera / Opera GX (Flux optimisés)' : 'Opera / Opera GX (Optimized)')
-          : (isFr ? 'Navigateur standard détecté' : 'Standard browser detected')
-      });
-      // Start server ping check
-      setServerCheck({
-        status: 'checking',
-        ok: false,
-        latency: 0,
-        text: isFr ? 'Test de latence des serveurs...' : 'Testing server latency...'
-      });
-    }, 700);
-
-    // STEP 2: Server ping check (700ms -> 1600ms)
-    const tServer = setTimeout(async () => {
-      let latency = 24;
-      try {
-        const start = performance.now();
-        await fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&page=1`, { method: 'HEAD' });
-        latency = Math.max(16, Math.round(performance.now() - start));
-      } catch (e) {
-        latency = 28;
-      }
-      setServerCheck({
-        status: 'done',
-        ok: true,
-        latency,
-        text: isFr ? `Serveurs miroirs connectés (${latency}ms)` : `Mirror servers connected (${latency}ms)`
-      });
-      // Start catalog classification
-      setCatalogCheck({
-        status: 'checking',
-        ok: false,
-        text: isFr ? 'Indexation des catalogues...' : 'Syncing title catalog...'
-      });
-    }, 1600);
-
-    // STEP 3: Catalog classification check (1600ms -> 2400ms)
-    const tCatalog = setTimeout(() => {
-      setCatalogCheck({
-        status: 'done',
-        ok: true,
-        text: isFr ? '12 000+ titres indexés' : '12,000+ titles indexed'
-      });
-    }, 2400);
-
-    // Fade out splash after all 3 verifications pass (~2.6s)
-    const t2 = setTimeout(() => setSplashStep(2), 2600);
-
-    // Complete splash screen (~2.9s)
-    const t3 = setTimeout(() => {
-      setSplashStep(3);
-      setShowSplash(false);
-    }, 2900);
-
-    if (savedUid) {
-      setUser({ uid: savedUid });
-      if (savedName) setUserName(savedName);
-      if (savedEmail) setUserEmail(savedEmail);
-      if (savedPhoto) setUserPhoto(savedPhoto);
-    }
-
-    let ticking = false;
     const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 30);
-          ticking = false;
-        });
-        ticking = true;
+      if (window.scrollY > 20) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
-      clearTimeout(tBrowser); clearTimeout(tServer); clearTimeout(tCatalog);
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const openModal = useCallback((movie: any, mode = 'info') => {
-    setSelectedMovie(movie);
-    setModalMode(mode);
-    if (user && fbUser) {
-      const dataObj = {
-        id: movie.id, title: movie.title || movie.name || movie.original_name,
-        poster_path: movie.poster_path, backdrop_path: movie.backdrop_path,
-        vote_average: movie.vote_average, media_type: movie.first_air_date ? 'tv' : 'movie', viewedAt: Date.now()
-      };
-      setRecentlyViewed(prev => [dataObj, ...prev.filter(m => m.id !== movie.id)].slice(0, 15));
-      setDoc(doc(db, "artifacts", APP_ID, "users", user.uid, "history", "recent"), { items: [dataObj, ...recentlyViewed.filter(m => m.id !== movie.id)].slice(0, 15) }).catch(() => {});
-    }
-  }, [user, fbUser, recentlyViewed]);
-
-  const handleDeepLink = useCallback(async (url: string) => {
-    try {
-      const target = new URL(url, window.location.origin);
-      const params = target.searchParams;
-      const hash = target.hash.toLowerCase();
-      const path = target.pathname.toLowerCase();
-
-      // POCKET 1: Watch Party / Salon (code from query, path, or hash)
-      let partyCode = params.get('party') || params.get('salon') || params.get('room') || params.get('code');
-      if (!partyCode && path.startsWith('/salon/')) partyCode = path.replace('/salon/', '');
-      if (!partyCode && path.startsWith('/party/')) partyCode = path.replace('/party/', '');
-      if (!partyCode && hash.startsWith('#party-')) partyCode = hash.replace('#party-', '');
-      if (!partyCode && hash.startsWith('#salon-')) partyCode = hash.replace('#salon-', '');
-      if (partyCode) {
-        joinPartyByCode(partyCode.trim().toUpperCase());
-        return;
-      }
-
-      // POCKET 2: Direct Watch / Stream / Movie Modal
-      const watchId = params.get('watch') || params.get('movie') || params.get('film') || params.get('series') || params.get('play') || params.get('id');
-      if (watchId) {
-        let type = params.get('type') || (params.get('series') ? 'tv' : 'movie');
-        try {
-          const res = await fetch(`${BASE_URL}/${type}/${watchId}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
-          const movieData = await res.json();
-          if (movieData && movieData.id) {
-            if (type === 'tv' || movieData.first_air_date) {
-              movieData.resumeSeason = params.get('season') ? parseInt(params.get('season')!) : (params.get('s') ? parseInt(params.get('s')!) : 1);
-              movieData.resumeEpisode = params.get('episode') ? parseInt(params.get('episode')!) : (params.get('e') ? parseInt(params.get('e')!) : 1);
-            }
-            const targetMode = params.get('mode') || (params.get('play') || params.get('watch') ? 'play' : 'info');
-            openModal(movieData, targetMode);
-            return;
-          }
-        } catch (err) {
-          console.warn("Deep link movie fetch error:", err);
-        }
-      }
-
-      // POCKET 3: Support & FAQ Center
-      const isSupportReq = params.get('modal') === 'support' || params.get('support') === 'true' || params.get('help') === 'true' || params.get('faq') === 'true' || path === '/support' || hash === '#support' || hash === '#help';
-      if (isSupportReq) {
-        setShowSupport(true);
-        return;
-      }
-
-      // POCKET 4: Auth / Login / Signup / Forgot Password
-      const authParam = params.get('auth');
-      const isLoginParam = params.get('login') === 'true' || params.get('signin') === 'true';
-      const isSignupParam = params.get('signup') === 'true' || params.get('register') === 'true' || params.get('create-account') === 'true';
-      const isForgotParam = params.get('forgot') === 'true' || params.get('forgot-password') === 'true';
-
-      if (authParam === 'login' || isLoginParam || path === '/login') {
-        setAuthModalInitialView('view-login');
-        setShowLoginModal(true);
-        return;
-      }
-      if (authParam === 'register' || authParam === 'signup' || isSignupParam || path === '/register' || path === '/signup' || path === '/create-account') {
-        setAuthModalInitialView('view-register-credentials');
-        setShowLoginModal(true);
-        return;
-      }
-      if (authParam === 'forgot-password' || authParam === 'forgot' || isForgotParam || path === '/forgot-password') {
-        setAuthModalInitialView('view-forgot-password');
-        setShowLoginModal(true);
-        return;
-      }
-      if (authParam || path === '/auth') {
-        setAuthModalInitialView('view-main');
-        setShowLoginModal(true);
-        return;
-      }
-
-      // POCKET 5: Search Modal & Search Query
-      const isSearchModal = params.get('modal') === 'search' || params.get('search') === 'true';
-      const queryParam = params.get('search') || params.get('q');
-      if (queryParam && queryParam !== 'true') {
-        setCurrentCategory('search');
-        setSearchQuery(queryParam);
-        setShowSearchModal(true);
-        return;
-      }
-      if (isSearchModal || path === '/search') {
-        setShowSearchModal(true);
-        return;
-      }
-
-      // POCKET 6: External Apps Modal
-      const isAppsModal = params.get('modal') === 'apps' || params.get('apps') === 'true' || path === '/apps';
-      if (isAppsModal) {
-        setShowExternalApps(true);
-        return;
-      }
-
-      // POCKET 7: Navigation Category / Tabs
-      const tabParam = params.get('tab') || params.get('category') || params.get('cat');
-      if (tabParam) {
-        const validTabs = ['home', 'movie', 'movies', 'tv', 'series', 'party', 'parties', 'anime', 'watchlist', 'favorites', 'trailers', 'dona'];
-        const targetTab = tabParam.toLowerCase();
-        if (validTabs.includes(targetTab)) {
-          const mappedTab = (targetTab === 'movies' ? 'movie' : targetTab === 'series' ? 'tv' : targetTab === 'parties' ? 'party' : targetTab === 'favorites' ? 'watchlist' : targetTab);
-          setCurrentCategory(mappedTab);
-          return;
-        }
-      }
-      if (path === '/anime') { setCurrentCategory('anime'); return; }
-      if (path === '/dona') { setCurrentCategory('dona'); return; }
-      if (path === '/watchlist' || path === '/favorites') { setCurrentCategory('watchlist'); return; }
-      if (path === '/trailers') { setCurrentCategory('trailers'); return; }
-
-      // POCKET 8: Settings
-      const settingsParam = params.get('settings') || (params.get('modal') === 'settings' ? 'account' : null);
-      if (settingsParam || path === '/settings') {
-        if (typeof settingsParam === 'string' && ['account', 'servers', 'parental', 'data', 'interface'].includes(settingsParam)) {
-          setSettingsTab(settingsParam);
-        }
-        setShowSettings(true);
-        return;
-      }
-
-    } catch (e) {
-      console.warn("Deep link routing warning:", e);
-    }
-  }, [lang, openModal, joinPartyByCode]);
-
+  // IntersectionObserver for .fade-up animations
   useEffect(() => {
-    // Run deep link on initial mount
-    handleDeepLink(window.location.href);
+    if (currentAppView !== 'ecosystem') return;
 
-    const handlePopState = () => {
-      handleDeepLink(window.location.href);
+    const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    const elements = document.querySelectorAll('.fade-up');
+    elements.forEach(elem => observer.observe(elem));
+
+    return () => {
+      elements.forEach(elem => observer.unobserve(elem));
     };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [handleDeepLink]);
+  }, [currentAppView]);
 
-  useEffect(() => {
-    if (!user || !fbUser) return;
-    const localData = JSON.parse(localStorage.getItem('levelmovie_watchlist_' + user.uid) || '[]');
-    if (localData.length > 0) {
-      setWatchlistData(localData);
-      setWatchlist(localData.map((m: any) => m.id));
-    }
-    const fetchUserData = async () => {
-      try {
-        const q = collection(db, "artifacts", APP_ID, "users", user.uid, "watchlist");
-        const snaps = await getDocs(q);
-        const data: any[] = [];
-        snaps.forEach(d => data.push(d.data()));
-        if (data.length > 0) {
-          setWatchlist(data.map(m => m.id));
-          setWatchlistData(data);
-          localStorage.setItem('levelmovie_watchlist_' + user.uid, JSON.stringify(data));
-        }
-
-        const prefSnap = await getDoc(doc(db, "artifacts", APP_ID, "users", user.uid, "preferences", "settings"));
-        if (prefSnap.exists()) {
-          const pref = prefSnap.data();
-          if (pref.lang) { setLang(pref.lang); localStorage.setItem('levelmovie_lang', pref.lang); }
-          if (pref.contentLang) { setContentLang(pref.contentLang); localStorage.setItem('levelmovie_content_lang', pref.contentLang); }
-          if (pref.parentalFilter !== undefined) setParentalFilter(pref.parentalFilter);
-          if (pref.parentalPin !== undefined) setParentalPin(pref.parentalPin);
-          if (pref.customAvatar || pref.photoURL || pref.photo) {
-            const av = pref.customAvatar || pref.photoURL || pref.photo;
-            setUserPhoto(av);
-            localStorage.setItem('levelmovie_custom_avatar', av);
-            localStorage.setItem('levelmovie_user_photo', av);
-            localStorage.setItem('lm_photo', av);
-          }
-        }
-
-        try {
-          const profileSnap = await getDoc(doc(db, "artifacts", APP_ID, "users", user.uid, "public", "profile"));
-          if (profileSnap.exists()) {
-            const profileData = profileSnap.data();
-            if (profileData.photo) {
-              setUserPhoto(profileData.photo);
-              localStorage.setItem('levelmovie_custom_avatar', profileData.photo);
-              localStorage.setItem('levelmovie_user_photo', profileData.photo);
-              localStorage.setItem('lm_photo', profileData.photo);
-            }
-            if (profileData.name && !userName) {
-              setUserName(profileData.name);
-              localStorage.setItem('levelmovie_username', profileData.name);
-            }
-            if (profileData.handle && !userHandle) {
-              setUserHandle(profileData.handle);
-              localStorage.setItem('levelmovie_user_handle', profileData.handle);
-            }
-          }
-        } catch (e) {}
-
-        const histSnap = await getDoc(doc(db, "artifacts", APP_ID, "users", user.uid, "history", "recent"));
-        if (histSnap.exists() && histSnap.data().items) {
-          setRecentlyViewed(histSnap.data().items);
-        }
-      } catch (e) {}
-    };
-    fetchUserData();
-  }, [user, fbUser]);
-
-  useEffect(() => {
-    if (partyId && selectedMovie && !isPartyMinimized) {
-      document.body.classList.add('party-mode');
-    } else {
-      document.body.classList.remove('party-mode');
-    }
-  }, [partyId, selectedMovie, isPartyMinimized]);
-
-  useEffect(() => {
-    if (!partyId) { setPartyData(null); return; }
-    const unsubscribe = onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), (docSnap) => {
-      if (docSnap.exists() && docSnap.data().status !== 'ended') {
-        const data = docSnap.data();
-        if (data.banned && data.banned.includes(effectiveUid)) {
-          setBannedInfo({ roomName: data.roomName || data.title });
-          setPartyId(null);
-          setPartyData(null);
-          setSelectedMovie(null);
-          syncPreferencesToDb({ activePartyId: null });
-          localStorage.removeItem('active_party_id');
-          document.body.classList.remove('party-mode');
-          setCurrentCategory('home');
-          return;
-        }
-        setPartyData(data);
-      } else if (docSnap.exists() && docSnap.data().status === 'ended') {
-        setRoomEndedInfo({ roomName: docSnap.data().roomName || docSnap.data().title, title: docSnap.data().title });
-        setPartyId(null);
-        setPartyData(null);
-        setSelectedMovie(null);
-        syncPreferencesToDb({ activePartyId: null });
-        localStorage.removeItem('active_party_id');
-        document.body.classList.remove('party-mode');
-        setCurrentCategory('home');
-      }
-    }, (err) => {
-      console.warn("Party snapshot listener warning:", err);
-    });
-    return () => unsubscribe();
-  }, [partyId, effectiveUid, syncPreferencesToDb]);
-
-  const toggleWatchlist = async (movie: any) => {
-    if (!user || !fbUser) { setShowLoginModal(true); return; }
-    const isAdded = watchlist.includes(movie.id);
-
-    let newList: any[];
-    if (isAdded) {
-      newList = watchlistData.filter(m => m.id !== movie.id);
-      showToast(t.removedList, "success");
-    } else {
-      const dataObj = {
-        id: movie.id, title: movie.title || movie.name || movie.original_name,
-        poster_path: movie.poster_path, backdrop_path: movie.backdrop_path,
-        vote_average: movie.vote_average, first_air_date: movie.first_air_date || null,
-        release_date: movie.release_date || null, media_type: movie.first_air_date ? 'tv' : 'movie', addedAt: Date.now()
-      };
-      newList = [...watchlistData, dataObj];
-      showToast(t.addedList, "success");
-    }
-
-    setWatchlistData(newList);
-    setWatchlist(newList.map(m => m.id));
-    localStorage.setItem('levelmovie_watchlist_' + user.uid, JSON.stringify(newList));
-
-    try {
-      const ref = doc(db, "artifacts", APP_ID, "users", user.uid, "watchlist", movie.id.toString());
-      if (isAdded) await deleteDoc(ref);
-      else await setDoc(ref, newList.find(m => m.id === movie.id));
-    } catch (e) {}
+  // Handle Contact Form Submit
+  const handleSubmitContact = (e: React.FormEvent) => {
+    e.preventDefault();
+    setContactSent(true);
+    setTimeout(() => {
+      setContactModalOpen(false);
+      setContactSent(false);
+      setContactForm({ name: '', email: '', projectType: 'Site Basique (350$)', message: '' });
+    }, 2200);
   };
 
-  const handleCreateParty = async (movie: any, roomName: string) => {
-    if (!movie) return;
-    const hostUid = effectiveUid;
-    const hostName = effectiveUserName;
-    const newPartyId = 'LVL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-    const cleanRoomName = censorText((roomName || "").trim() || `Salon de ${hostName}`);
-    const isTvShow = movie.first_air_date !== undefined;
-
-    const initialPartyData: any = {
-      id: newPartyId,
-      hostUid: hostUid,
-      mods: [],
-      modInvites: [],
-      banned: [],
-      muted: [],
-      movieId: movie.id,
-      mediaType: isTvShow ? 'tv' : 'movie',
-      season: isTvShow ? (movie.resumeSeason || 1) : null,
-      episode: isTvShow ? (movie.resumeEpisode || 1) : null,
-      title: movie.title || movie.name || movie.original_name || 'Watch Party',
-      roomName: cleanRoomName,
-      status: 'idle',
-      syncTime: Date.now(),
-      currentOffset: 0,
-      members: [{ uid: hostUid, name: hostName, photo: effectiveUserPhoto || "" }],
-      messages: []
-    };
-
-    // Instant local state update for zero lag
-    setPartyData(initialPartyData);
-    setPartyId(newPartyId);
-    setSelectedMovie(movie);
-    setModalMode('play');
-    setIsPartyMinimized(false);
-    localStorage.setItem('active_party_id', newPartyId);
-    window.history.pushState({}, '', `?party=${newPartyId}`);
-    showToast(t.partyCreated, 'success');
-
-    try {
-      const created = await partySyncService.createParty(initialPartyData);
-      if (created) {
-        setPartyData(created);
-      }
-      await syncPreferencesToDb({ activePartyId: newPartyId });
-    } catch (e) {
-      console.warn("Party creation warning:", e);
-    }
-  };
-
-  const triggerCreateParty = (movie: any) => {
-    setCreatePartyMovie(movie);
-    setCustomRoomName("");
-    setShowCreatePartyPrompt(true);
-  };
-
-  const handleGoogleSignIn = async (onSuccess?: () => void) => {
-    setIsLoadingAuth(true);
-    setAuthError('');
-    try {
-      const isMobileUA = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || !(window as any).navigator.standalone;
-      if (isMobileUA) {
-        await signInWithRedirect(auth, googleProvider);
-        return;
-      }
-      await signInWithPopup(auth, googleProvider);
-      if (onSuccess) onSuccess();
-    } catch (e: any) {
-      setIsLoadingAuth(false);
-      if (e.code !== 'auth/popup-closed-by-user') {
-        setAuthError(lang === 'fr' ? "Connexion Google impossible. Réessaie." : "Google sign-in failed. Try again.");
-      }
-    }
-  };
-
-  const handleFacebookSignIn = async (onSuccess?: () => void) => {
-    setIsLoadingAuth(true);
-    setAuthError('');
-    try {
-      await signInWithPopup(auth, facebookProvider);
-      if (onSuccess) onSuccess();
-    } catch (e: any) {
-      setIsLoadingAuth(false);
-      if (e.code !== 'auth/popup-closed-by-user') {
-        setAuthError(lang === 'fr' ? "Connexion Facebook impossible. Réessaie." : "Facebook sign-in failed. Try again.");
-      }
-    }
-  };
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    setShowLogoutConfirm(false);
-    setShowSettings(false);
-    setShowSidebar(false);
-
-    try {
-      if (isSupabaseConfigured && supabase) {
-        await Promise.race([
-          supabase.auth.signOut(),
-          new Promise(res => setTimeout(res, 800))
-        ]);
-      }
-    } catch (e) {}
-
-    try {
-      if (auth) {
-        await signOut(auth);
-      }
-    } catch (e) {}
-
-    // Add a gentle loading delay so the user clearly sees the logout process
-    await new Promise(res => setTimeout(res, 850));
-
-    localStorage.removeItem('levelmovie_user_uid');
-    localStorage.removeItem('levelmovie_user_name');
-    localStorage.removeItem('levelmovie_user_email');
-    localStorage.removeItem('lm_photo');
-    localStorage.removeItem('lm_now_playing');
-    localStorage.removeItem('active_party_id');
-    setUser(null);
-    setUserName('');
-    setUserEmail('');
-    setUserPhoto(null);
-    setSelectedMovie(null);
-    setPartyId(null);
-    setPartyData(null);
-    setCurrentCategory('home');
-    setShowLoginModal(false);
-    setIsLoggingOut(false);
-    showToast(lang === 'fr' ? 'Déconnexion réussie' : 'Logged out', 'success');
-  };
-
-  const langCode = lang === 'fr' ? 'fr-FR' : 'en-US';
-  const langFilter = contentLang !== 'all' ? `&with_original_language=${contentLang}` : '';
-  const adultFilterParams = '&include_adult=false';
-  const buildUrl = (base: string) => `${base}?api_key=${API_KEY}&language=${langCode}${langFilter}${adultFilterParams}`;
-  const buildUrlNoFilter = (base: string) => `${base}?api_key=${API_KEY}&language=${langCode}${adultFilterParams}`;
-
-  const rowsConfig: any[] = useMemo(() => {
-    const list: any[] = [];
-    if (currentCategory === 'home' || currentCategory === 'movie' || currentCategory === 'party') {
-      list.push(
-        { title: t.trending, url: buildUrlNoFilter('/trending/movie/week'), large: true, shuffle: false },
-        { title: t.frenchCinema, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&with_spoken_languages=fr&sort_by=popularity.desc${adultFilterParams}`, large: false, shuffle: true },
-        { title: t.upcoming, url: buildUrl('/movie/upcoming'), large: false, shuffle: false },
-        { title: t.nowPlaying, url: buildUrl('/movie/now_playing'), large: false, shuffle: false },
-        { title: t.topRated, url: buildUrl('/movie/top_rated'), large: false, shuffle: false },
-        { title: t.freeVOD, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&with_watch_monetization_types=free&watch_region=FR&sort_by=popularity.desc${langFilter}${adultFilterParams}`, large: false, shuffle: true },
-        { title: t.asianDrama, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_original_language=ko${adultFilterParams}`, large: false, shuffle: true },
-        { title: t.animeManga, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_genres=16&with_original_language=ja${adultFilterParams}`, large: false, shuffle: true },
-        { title: t.action, url: buildUrl('/discover/movie') + '&with_genres=28', large: false, shuffle: true },
-        { title: t.scifi, url: buildUrl('/discover/movie') + '&with_genres=878', large: false, shuffle: true },
-        { title: t.comedy, url: buildUrl('/discover/movie') + '&with_genres=35', large: false, shuffle: true },
-        { title: t.horror, url: buildUrl('/discover/movie') + '&with_genres=27', large: false, shuffle: true },
-        { title: t.romance, url: buildUrl('/discover/movie') + '&with_genres=10749', large: false, shuffle: true },
-        { title: t.docs, url: buildUrl('/discover/movie') + '&with_genres=99', large: false, shuffle: true }
-      );
-    } else if (currentCategory === 'tv') {
-      list.push(
-        { title: t.trending, url: buildUrlNoFilter('/trending/tv/week'), large: true, shuffle: false },
-        { title: t.frenchSeries, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_spoken_languages=fr&sort_by=popularity.desc${adultFilterParams}`, large: false, shuffle: true },
-        { title: t.asianDrama, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_original_language=ko${adultFilterParams}`, large: false, shuffle: true },
-        { title: t.animeJp, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_genres=16&with_original_language=ja${adultFilterParams}`, large: false, shuffle: true },
-        { title: t.topRated, url: buildUrl('/tv/top_rated'), large: false, shuffle: false },
-        { title: t.action, url: buildUrl('/discover/tv') + '&with_genres=10759', large: false, shuffle: true },
-        { title: t.comedy, url: buildUrl('/discover/tv') + '&with_genres=35', large: false, shuffle: true },
-        { title: t.crime, url: buildUrl('/discover/tv') + '&with_genres=80', large: false, shuffle: true },
-        { title: t.dramaPassion, url: buildUrl('/discover/tv') + '&with_genres=18', large: false, shuffle: true },
-        { title: t.mystery, url: buildUrl('/discover/tv') + '&with_genres=9648', large: false, shuffle: true }
-      );
-    }
-    return list;
-  }, [currentCategory, langCode, langFilter, adultFilterParams, t]);
-
-  if (isMaintenance && !showSplash) {
+  // If user selected LevelMovie from Hub Films & Animes
+  if (currentAppView === 'movie') {
     return (
-      <MaintenanceScreen
-        userCity={geoInfo?.city}
-        userRegion={geoInfo?.region}
-        userCountry={geoInfo?.country}
-        lang={lang}
-        onRefresh={checkRegionAccess}
-        onBypass={() => setIsMaintenance(false)}
-        onGpsDetect={handleGpsDetect}
-      />
+      <div className="relative w-full min-h-screen levelmovie-app bg-[#060608]">
+        {/* Top return banner to LevelUp Ecosystem */}
+        <div className="sticky top-0 z-[9999] bg-[#0c0c14]/95 backdrop-blur-md border-b border-[#7c3aed]/30 px-4 py-2.5 flex items-center justify-between text-xs text-white">
+          <button
+            onClick={() => setCurrentAppView('ecosystem')}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-semibold transition-all shadow-md active:scale-95 cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>← Retour à LevelUp Ecosystem</span>
+          </button>
+          <div className="flex items-center gap-2 text-white/60">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Écosystème LevelUp • Hub Streaming Actif</span>
+          </div>
+        </div>
+        <LevelMovieApp onBackToEcosystem={() => setCurrentAppView('ecosystem')} />
+      </div>
     );
   }
 
-  if (showSplash) {
+  // If user selected LevelMusic from Extraits Musicaux
+  if (currentAppView === 'music') {
     return (
-      <div className={`fixed inset-0 z-[9999] bg-[#060608] flex items-center justify-center flex-col overflow-hidden transition-opacity duration-500 ${splashStep === 2 ? 'opacity-0' : 'opacity-100'}`}>
-        <style>{globalStyles}</style>
-
-        {/* Dynamic Movie Catalog Background */}
-        <CinematicPosterWall opacity={0.45} />
-
-        <div className={`splash-text relative z-10 flex flex-col items-center px-4 w-full max-w-lg mx-auto ${splashStep === 1 ? 'active' : ''} ${splashStep >= 2 ? 'exit' : ''}`}>
-          {/* Logo with purple glow */}
-          <div className="relative mb-5">
-            <div className="absolute inset-0 bg-[#8b5cf6]/35 blur-2xl rounded-full scale-125" />
-            <LevelMovieLogo className="w-20 h-20 text-[#a855f7] relative z-10 drop-shadow-[0_0_30px_rgba(168,85,247,0.85)]" />
-          </div>
-
-          <div className="text-4xl sm:text-5xl font-black tracking-widest drop-shadow-2xl">
-            <span className="text-white">Level</span><span className="bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] bg-clip-text text-transparent">Movie</span>
-          </div>
-
-          {/* Discreet Single-Line Status (No heavy boxes/bubbles) */}
-          <div className="w-full max-w-xs mt-6 flex flex-col items-center gap-3 px-2">
-            <div className="flex items-center gap-2 text-white/70">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#a855f7] animate-ping" />
-              <span className="text-xs font-mono tracking-wide">
-                {catalogCheck.status === 'done'
-                  ? (lang === 'fr' ? 'Expérience Cinéma Prête' : 'Ready')
-                  : serverCheck.status === 'done'
-                  ? (lang === 'fr' ? 'Indexation du catalogue...' : 'Syncing catalog...')
-                  : browserCheck.status === 'done'
-                  ? (lang === 'fr' ? 'Connexion aux serveurs...' : 'Connecting servers...')
-                  : (lang === 'fr' ? 'Initialisation...' : 'Initializing...')}
-              </span>
-            </div>
-            
-            <div className="w-36 h-0.5 bg-white/10 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] transition-all duration-500 rounded-full"
-                style={{
-                  width: catalogCheck.status === 'done' ? '100%' : serverCheck.status === 'done' ? '66%' : browserCheck.status === 'done' ? '33%' : '15%'
-                }}
-              />
-            </div>
+      <div className="relative w-full min-h-screen bg-[#07080f] text-white">
+        <div className="sticky top-0 z-[9999] bg-[#0c0c14]/95 backdrop-blur-md border-b border-[#7c3aed]/30 px-4 py-2.5 flex items-center justify-between text-xs text-white">
+          <button
+            onClick={() => setCurrentAppView('ecosystem')}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-semibold transition-all shadow-md active:scale-95 cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>← Retour à LevelUp Ecosystem</span>
+          </button>
+          <div className="flex items-center gap-2 text-white/60">
+            <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+            <span>Écosystème LevelUp • LevelMusic</span>
           </div>
         </div>
+        <div className="h-[calc(100vh-48px)]">
+          <LevelMusicApp onClose={() => setCurrentAppView('ecosystem')} />
+        </div>
+      </div>
+    );
+  }
 
-        {/* Powered by LevelUp - Bottom Discreet Footer */}
-        <div className="absolute bottom-6 sm:bottom-8 z-20 text-center text-[10px] sm:text-[11px] font-medium tracking-[0.25em] uppercase text-white/35 pointer-events-none select-none">
-          Powered by LevelUp
+  // If user selected LevelDay from Météo en Direct
+  if (currentAppView === 'weather') {
+    return (
+      <div className="relative w-full min-h-screen bg-[#02050e] text-white">
+        <div className="sticky top-0 z-[9999] bg-[#0c0c14]/95 backdrop-blur-md border-b border-cyan-500/30 px-4 py-2.5 flex items-center justify-between text-xs text-white">
+          <button
+            onClick={() => setCurrentAppView('ecosystem')}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold transition-all shadow-md active:scale-95 cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>← Retour à LevelUp Ecosystem</span>
+          </button>
+          <div className="flex items-center gap-2 text-white/60">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span>Écosystème LevelUp • LevelDay Météo</span>
+          </div>
+        </div>
+        <div className="h-[calc(100vh-48px)]">
+          <LevelDayApp onClose={() => setCurrentAppView('ecosystem')} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-main text-white min-h-screen">
-      <style>{globalStyles}</style>
-
-      {/* ======================================================== */}
-      {/* VUE DONA : HEADER STRICTEMENT FIXE & CHAT FLUIDE        */}
-      {/* ======================================================== */}
-      {currentCategory === 'dona' ? (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: donaViewportHeight ? `${donaViewportHeight}px` : '100dvh',
-            maxHeight: donaViewportHeight ? `${donaViewportHeight}px` : '100dvh',
-            width: '100%',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            zIndex: 60,
-            overscrollBehavior: 'none',
-          }}
-          className="bg-[#020202]"
-        >
-          {/* HEADER UNIQUE DONA - FIXE EN HAUT, NE BOUGE JAMAIS LORSQUE LE CLAVIER SORT */}
-          <header className="safe-top-header shrink-0 h-14 md:h-16 w-full bg-[#060608]/95 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-3.5 sm:px-6 md:px-10 z-50 shadow-md">
-            <div className="flex items-center space-x-3 md:space-x-8">
-              <div 
-                className="flex items-center cursor-pointer outline-none group transition-transform active:scale-95 select-none" 
-                onClick={() => {
-                  setCurrentCategory('home');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                title={lang === 'fr' ? 'Retourner à l’accueil' : 'Return to Home'}
-              >
-                <div className="md:hidden flex items-center justify-center p-1">
-                  <LevelMovieLogo className="w-7 h-7 transition-transform group-hover:scale-110" color="#a855f7" />
-                </div>
-                <h1 className="hidden md:flex text-xl md:text-2xl font-black tracking-widest leading-none drop-shadow-lg items-center">
-                  <span className="text-white">Level</span><span className="text-[#a855f7]">Movie</span>
-                </h1>
-              </div>
-
-              <nav className="hidden lg:flex space-x-6 text-[12px] font-bold uppercase tracking-widest text-white/60">
-                <button onClick={() => setCurrentCategory('home')} className="transition-colors hover:text-white outline-none cursor-pointer">{t.home}</button>
-                <button 
-                  onClick={() => setCurrentCategory('dona')} 
-                  className="flex items-center gap-1.5 transition-all outline-none cursor-pointer group text-[#c084fc] font-black"
-                  title="Dona"
-                >
-                  <Bot className="w-4 h-4 text-[#c084fc]" />
-                  <span className="font-bold tracking-wide">Dona</span>
-                </button>
-                <button onClick={() => setCurrentCategory('movie')} className="transition-colors hover:text-white outline-none cursor-pointer">{t.movies}</button>
-                <button onClick={() => setCurrentCategory('party')} className="flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer">
-                  <Users className="w-3.5 h-3.5" />
-                  <span>{t.partyTab || 'Salons'}</span>
-                </button>
-                <button onClick={() => setCurrentCategory('trailers')} className="transition-colors hover:text-white outline-none cursor-pointer">{t.trailers || 'Bandes-Annonces'}</button>
-                <button onClick={() => setCurrentCategory('anime')} className="flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer">
-                  <LevelMovieLogo className="w-3.5 h-3.5" color="#ef4444" />
-                  <span>Anime</span>
-                </button>
-                <button onClick={() => setCurrentCategory('watchlist')} className="transition-colors hover:text-white outline-none cursor-pointer">{t.myList}</button>
-              </nav>
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans antialiased selection:bg-[#7c3aed] selection:text-white">
+      
+      {/* Navbar (Sticky, Frosted Glass effect) */}
+      <header
+        className={`fixed w-full top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300 ${
+          isScrolled ? 'shadow-sm' : ''
+        }`}
+        id="navbar"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            
+            {/* Logo */}
+            <div
+              className="flex-shrink-0 flex items-center gap-3 cursor-pointer select-none"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
+              {/* Etoile Violette */}
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-[#7c3aed]">
+                <path d="M16 1.5L19.53 10.87C19.78 11.52 20.48 11.96 21.18 11.96H30.5L23.04 17.65C22.48 18.08 22.25 18.82 22.45 19.49L25.3 28.86L17.7 23.33C17.16 22.94 16.42 22.94 15.88 23.33L8.28 28.86L11.13 19.49C11.33 18.82 11.1 18.08 10.54 17.65L3.08 11.96H12.4C13.1 11.96 13.8 11.52 14.05 10.87L16 1.5Z" fill="currentColor"/>
+              </svg>
+              <span className="font-bold text-xl tracking-tight text-gray-900">
+                LevelUp <span className="font-medium text-[#7c3aed]">Ecosystem</span>
+              </span>
             </div>
 
-            {/* BOUTONS ACTIONS DONA (UNIFIÉ : MOBILE & PC) */}
-            <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
-              {/* 1. Montre / Horloge (Historique) */}
-              <button
-                type="button"
-                onClick={() => setDonaHistoryTrigger(prev => prev + 1)}
-                className="text-white/75 hover:text-[#c084fc] active:text-[#c084fc] transition-colors p-1.5 outline-none cursor-pointer active:scale-95"
-                title={lang === 'fr' ? 'Historique des discussions' : 'Chat History'}
-              >
-                <Clock className="w-5 h-5 text-[#c084fc]" />
-              </button>
+            {/* Desktop Menu */}
+            <nav className="hidden md:flex space-x-8">
+              <a href="#services" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Services</a>
+              <a href="#tarifs" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Nos Offres</a>
+              <a href="#process" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Processus</a>
+              <a href="#ecosysteme" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Écosystème</a>
+              <a href="#securite" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Sécurité</a>
+            </nav>
 
-              {/* 2. Ardoise et Bic / New Chat */}
-              <button
-                type="button"
-                onClick={() => setDonaNewChatTrigger(prev => prev + 1)}
-                className="text-white/75 hover:text-white active:text-[#c084fc] transition-colors p-1.5 outline-none cursor-pointer active:scale-95"
-                title={lang === 'fr' ? 'Nouvelle discussion' : 'New Chat'}
+            {/* CTA Button */}
+            <div className="hidden md:flex">
+              <a
+                href="#contact"
+                className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
               >
-                <SquarePen className="w-5 h-5 text-white/80 hover:text-white" />
-              </button>
+                Rejoindre l'écosystème
+              </a>
+            </div>
 
-              {/* 3. Recherche (PC) */}
-              <div className="hidden md:block">
-                <button onClick={() => setShowSearchModal(true)} className="group flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 py-1.5 rounded-full outline-none transition-all shadow-inner cursor-pointer">
-                  <SearchIcon className="w-3.5 h-3.5 shrink-0 text-[#a855f7]" />
-                  <span className="text-white/50">{t.searchPlaceholder}</span>
-                </button>
+            {/* Mobile menu button */}
+            <div className="md:hidden flex items-center">
+              <button
+                id="mobile-menu-btn"
+                onClick={() => setMobileMenuOpen(prev => !prev)}
+                className="text-gray-600 hover:text-gray-900 focus:outline-none p-2 cursor-pointer"
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div id="mobile-menu" className="md:hidden bg-white border-t border-gray-100 absolute w-full shadow-lg">
+            <div className="px-4 pt-2 pb-6 space-y-1">
+              <a
+                href="#services"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
+              >
+                Services
+              </a>
+              <a
+                href="#tarifs"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
+              >
+                Nos Offres
+              </a>
+              <a
+                href="#process"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
+              >
+                Processus
+              </a>
+              <a
+                href="#ecosysteme"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
+              >
+                Écosystème
+              </a>
+              <a
+                href="#securite"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
+              >
+                Sécurité
+              </a>
+              <a
+                href="#contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block mt-4 text-center px-3 py-3 rounded-md text-base font-medium bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+              >
+                Rejoindre l'écosystème
+              </a>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Hero Section */}
+      <main className="pt-28 lg:pt-36 pb-20 overflow-hidden bg-mesh">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center max-w-4xl mx-auto fade-up">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 tracking-tight leading-[1.1] mb-8">
+              L'intelligence artificielle au service de <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7c3aed] to-indigo-600">votre écosystème.</span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+              LevelUp Ecosystem est une plateforme technologique avancée. Nous concevons vos sites web et applications web avec l'aide de l'IA, tout en offrant des outils quotidiens gratuits et une protection de pointe pour votre vie numérique.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <a
+                href="#services"
+                className="bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-8 py-4 rounded-xl font-medium text-lg transition-all shadow-lg shadow-[#7c3aed]/30 flex items-center justify-center gap-2"
+              >
+                <span>Découvrir nos solutions</span>
+                <ArrowRight className="w-5 h-5" />
+              </a>
+              <a
+                href="#tarifs"
+                className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 px-8 py-4 rounded-xl font-medium text-lg transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                <span>Voir les tarifs</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Abstract UI Mockup */}
+          <div className="mt-20 relative max-w-5xl mx-auto fade-up">
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-transparent to-transparent z-10 h-full pointer-events-none"></div>
+            <div className="rounded-2xl border border-gray-200/60 bg-white/50 backdrop-blur-sm shadow-2xl overflow-hidden">
+              <div className="bg-gray-100/50 border-b border-gray-200/60 px-4 py-3 flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                <div className="w-3 h-3 rounded-full bg-green-400"></div>
               </div>
+              <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-6 opacity-60">
+                <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+                <div className="h-32 bg-[#ede9fe] rounded-lg animate-pulse"></div>
+                <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
 
-              {/* 4. Profil (PC) */}
-              <div className="hidden md:block">
-                <div 
-                  className="flex items-center gap-2 p-1 pr-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-pointer shadow-md outline-none active:scale-95" 
-                  onClick={() => {
-                    if (user) {
-                      setShowSidebar(true);
-                    } else {
-                      setShowLoginModal(true);
-                    }
-                  }}
-                  title={user ? defaultUserName : (lang === 'fr' ? 'Connexion' : 'Log In')}
+      {/* Services Section */}
+      <section id="services" className="py-24 bg-white relative border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16 fade-up">
+            <h2 className="text-[#7c3aed] font-semibold tracking-wide uppercase text-sm mb-3">Développement & Innovation</h2>
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Des solutions technologiques de haute précision.</h3>
+            <p className="text-lg text-gray-600">Nous combinons l'expertise humaine et l'intelligence artificielle pour concevoir des sites web et des applications robustes, avec un design irréprochable.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <div className="bg-gray-50 rounded-xl p-8 border border-gray-200 hover:border-[#c4b5fd] hover:shadow-card transition-all duration-300 fade-up">
+              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm text-[#7c3aed] mb-6 border border-gray-200">
+                <Code className="w-6 h-6" />
+              </div>
+              <h4 className="text-xl font-bold text-gray-900 mb-3">Sites Web Sur Mesure</h4>
+              <p className="text-gray-600 leading-relaxed">De la page vitrine au site e-commerce complexe, nous structurons chaque projet pour garantir performance, rapidité et ergonomie optimale.</p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="bg-gray-50 rounded-xl p-8 border border-gray-200 hover:border-[#c4b5fd] hover:shadow-card transition-all duration-300 fade-up" style={{ transitionDelay: '100ms' }}>
+              <div className="w-12 h-12 bg-[#7c3aed] rounded-lg flex items-center justify-center shadow-sm text-white mb-6">
+                <Cpu className="w-6 h-6" />
+              </div>
+              <h4 className="text-xl font-bold text-gray-900 mb-3">Architecture IA</h4>
+              <p className="text-gray-600 leading-relaxed">Nos processus assistés par IA garantissent une qualité professionnelle supérieure, des standards de code rigoureux et un design comparable aux plus grandes plateformes tech.</p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="bg-gray-50 rounded-xl p-8 border border-gray-200 hover:border-[#c4b5fd] hover:shadow-card transition-all duration-300 fade-up" style={{ transitionDelay: '200ms' }}>
+              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm text-[#7c3aed] mb-6 border border-gray-200">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <h4 className="text-xl font-bold text-gray-900 mb-3">Applications Web & Événements</h4>
+              <p className="text-gray-600 leading-relaxed">Création d'applications web dynamiques et de superbes invitations virtuelles interactives personnalisées pour vos événements prestigieux.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Transparent Process Section */}
+      <section id="process" className="py-24 bg-gray-50 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16 fade-up">
+            <h2 className="text-[#7c3aed] font-semibold tracking-wide uppercase text-sm mb-3">Méthodologie de confiance</h2>
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Notre engagement : Zéro risque pour vous.</h3>
+            <p className="text-lg text-gray-600">Nous croyons en la transparence totale. C'est pourquoi nous travaillons selon un processus de validation strict avant tout paiement.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm relative fade-up">
+              <div className="text-[#7c3aed] font-bold text-4xl mb-4">01</div>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">Construction Initiale</h4>
+              <p className="text-gray-600">Nous construisons l'intégralité de votre site web ou de votre application selon vos critères exacts sans exiger de paiement anticipé.</p>
+            </div>
+            <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm relative fade-up" style={{ transitionDelay: '100ms' }}>
+              <div className="text-[#7c3aed] font-bold text-4xl mb-4">02</div>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">Présentation & Validation</h4>
+              <p className="text-gray-600">Nous vous présentons une version de démonstration interactive de votre projet fini. Vous visualisez le résultat réel.</p>
+            </div>
+            <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm relative fade-up" style={{ transitionDelay: '200ms' }}>
+              <div className="text-[#7c3aed] font-bold text-4xl mb-4">03</div>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">Paiement & Finalisation</h4>
+              <p className="text-gray-600">Une fois que le projet vous satisfait pleinement, vous effectuez le paiement et nous finalisons le déploiement en ligne.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section (Pro SaaS Style) */}
+      <section id="tarifs" className="py-24 bg-white relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16 fade-up">
+            <h2 className="text-[#7c3aed] font-semibold tracking-wide uppercase text-sm mb-3">Nos Offres et Tarifs</h2>
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Des formules claires adaptées à chaque besoin.</h3>
+            <p className="text-lg text-gray-600">Des abonnements et forfaits professionnels conçus pour maximiser votre impact avec un rapport qualité-prix sans compromis.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+            
+            {/* Invitations / Petits Projets */}
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 flex flex-col fade-up hover:border-[#c4b5fd] transition-all">
+              <h4 className="text-lg font-bold text-gray-900 mb-1">Invitation & Événement</h4>
+              <p className="text-gray-500 text-xs mb-6 h-10">Idéal pour mariages, anniversaires ou lancements.</p>
+              <div className="mb-6">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">À partir de</span>
+                <div className="text-3xl font-extrabold text-gray-900 mt-1">120$</div>
+              </div>
+              <ul className="space-y-3 mb-8 flex-1 text-sm">
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Invitation virtuelle interactive</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Design sur mesure</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Formulaire RSVP intégré</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Hébergement inclus</span>
+                </li>
+              </ul>
+              <a
+                href="#contact"
+                className="block w-full py-2.5 px-4 bg-white text-gray-900 font-medium text-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-sm shadow-sm"
+              >
+                Commander
+              </a>
+            </div>
+
+            {/* Basic Plan */}
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 flex flex-col fade-up hover:border-[#c4b5fd] transition-all" style={{ transitionDelay: '100ms' }}>
+              <h4 className="text-lg font-bold text-gray-900 mb-1">Site Basique</h4>
+              <p className="text-gray-500 text-xs mb-6 h-10">La solution essentielle pour établir votre présence pro.</p>
+              <div className="mb-6">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">À partir de</span>
+                <div className="text-3xl font-extrabold text-gray-900 mt-1">350$</div>
+              </div>
+              <ul className="space-y-3 mb-8 flex-1 text-sm">
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Site vitrine professionnel (1-3 pages)</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Design 100% responsif mobile</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Formulaire de contact pro</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Construction avant paiement</span>
+                </li>
+              </ul>
+              <a
+                href="#contact"
+                className="block w-full py-2.5 px-4 bg-white text-gray-900 font-medium text-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-sm shadow-sm"
+              >
+                Démarrer
+              </a>
+            </div>
+
+            {/* Pro Plan (Featured) */}
+            <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 flex flex-col relative shadow-xl fade-up z-10" style={{ transitionDelay: '200ms' }}>
+              <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-3">
+                <span className="bg-[#8b5cf6] text-white text-[10px] font-bold px-2.5 py-1 uppercase tracking-wide rounded-full shadow-md">Populaire</span>
+              </div>
+              <h4 className="text-lg font-bold text-white mb-1">Business Pro</h4>
+              <p className="text-gray-400 text-xs mb-6 h-10">Pour développer vos ventes et asseoir votre image.</p>
+              <div className="mb-6">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">À partir de</span>
+                <div className="text-3xl font-extrabold text-white mt-1">800$</div>
+              </div>
+              <ul className="space-y-3 mb-8 flex-1 text-sm">
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#a78bfa] shrink-0 mt-0.5" />
+                  <span className="text-gray-300">Jusqu'à 10 pages optimisées</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#a78bfa] shrink-0 mt-0.5" />
+                  <span className="text-gray-300">Modules E-commerce ou Réservation</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#a78bfa] shrink-0 mt-0.5" />
+                  <span className="text-gray-300">Référencement SEO avancé</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#a78bfa] shrink-0 mt-0.5" />
+                  <span className="text-gray-300">1 an de maintenance offert</span>
+                </li>
+              </ul>
+              <a
+                href="#contact"
+                className="block w-full py-2.5 px-4 bg-[#7c3aed] text-white font-medium text-center rounded-lg hover:bg-[#8b5cf6] transition-colors text-sm shadow-md"
+              >
+                Choisir Pro
+              </a>
+            </div>
+
+            {/* Premium Plan with 3 years follow-up */}
+            <div className="bg-white rounded-xl p-6 border border-gray-200 flex flex-col fade-up hover:border-[#c4b5fd] transition-all shadow-sm" style={{ transitionDelay: '300ms' }}>
+              <h4 className="text-lg font-bold text-gray-900 mb-1">Premium Écosystème</h4>
+              <p className="text-gray-500 text-xs mb-6 h-10">L'application web haut de gamme avec suivi prolongé.</p>
+              <div className="mb-6">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Sur devis</span>
+                <div className="text-3xl font-extrabold text-gray-900 mt-1">Sur Mesure</div>
+              </div>
+              <ul className="space-y-3 mb-8 flex-1 text-sm">
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
+                  <span className="text-gray-600 font-medium">Développement Web App complet</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Base de données & cloud sécurisé</span>
+                </li>
+                <li className="flex items-start gap-2.5 bg-[#f5f3ff] p-2 rounded border border-[#ede9fe]">
+                  <Star className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5 fill-[#7c3aed]" />
+                  <span className="text-[#4c1d95] font-semibold text-xs leading-tight">Suivi et maintenance garantis sur 3 ans</span>
+                </li>
+              </ul>
+              <a
+                href="#contact"
+                className="block w-full py-2.5 px-4 bg-gray-50 text-gray-900 font-medium text-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-sm"
+              >
+                Contact expert
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* The Ecosystem (Free Daily Tools) */}
+      <section id="ecosysteme" className="py-24 bg-gray-900 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-[#7c3aed] rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-indigo-600 rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex flex-col lg:flex-row gap-16 items-center">
+            
+            <div className="lg:w-1/2 fade-up">
+              <h2 className="text-[#a78bfa] font-semibold tracking-wide uppercase text-sm mb-3">Outils du quotidien</h2>
+              <h3 className="text-3xl md:text-4xl font-bold mb-6">
+                Un véritable écosystème de services <span className="text-[#a78bfa]">gratuits.</span>
+              </h3>
+              <p className="text-gray-400 text-lg mb-8 leading-relaxed">
+                En plus de nos prestations professionnelles, LevelUp met à disposition du public des outils utilitaires intégrés pour enrichir votre quotidien en toute liberté.
+              </p>
+              
+              <ul className="space-y-6">
+                <li
+                  onClick={() => setCurrentAppView('music')}
+                  className="flex items-start gap-4 p-3 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer group"
                 >
-                  <div className="shrink-0">
-                    {user ? (
-                      <LevelAvatar avatar={userPhoto} name={defaultUserName} size="sm" />
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-[#151520] flex items-center justify-center border border-[#a855f7]/40 shadow-inner">
-                        <UserIcon className="w-3.5 h-3.5 text-[#a855f7]" />
-                      </div>
-                    )}
+                  <div className="w-10 h-10 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0 text-[#a78bfa] mt-1 group-hover:bg-[#7c3aed] group-hover:text-white transition-colors">
+                    <Music className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-semibold mb-1 group-hover:text-[#a78bfa] transition-colors flex items-center gap-2">
+                      <span>Extraits Musicaux (30 sec)</span>
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-900/60 text-purple-300 border border-purple-500/30">Tester</span>
+                    </h4>
+                    <p className="text-gray-400 text-sm">Écoutez des aperçus rapides des dernières tendances musicales directement sur notre plateforme.</p>
+                  </div>
+                </li>
+                
+                <li
+                  onClick={() => setCurrentAppView('weather')}
+                  className="flex items-start gap-4 p-3 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer group"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0 text-[#a78bfa] mt-1 group-hover:bg-cyan-600 group-hover:text-white transition-colors">
+                    <CloudSun className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-semibold mb-1 group-hover:text-cyan-400 transition-colors flex items-center gap-2">
+                      <span>Météo en Direct</span>
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-cyan-900/60 text-cyan-300 border border-cyan-500/30">Consulter</span>
+                    </h4>
+                    <p className="text-gray-400 text-sm">Consultez instantanément les conditions météorologiques et prévisions pour vos villes favorites.</p>
+                  </div>
+                </li>
+                
+                <li
+                  onClick={() => setCurrentAppView('movie')}
+                  className="flex items-start gap-4 p-3 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer group"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0 text-[#a78bfa] mt-1 group-hover:bg-[#7c3aed] group-hover:text-white transition-colors">
+                    <Film className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-semibold mb-1 group-hover:text-[#a78bfa] transition-colors flex items-center gap-2">
+                      <span>Hub Films & Animes</span>
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-red-900/60 text-red-300 border border-red-500/30">LevelMovie</span>
+                    </h4>
+                    <p className="text-gray-400 text-sm">Informations, résumés et actualités sur vos films, séries et animés cultes du moment.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            {/* Bento Grid for Tools */}
+            <div className="lg:w-1/2 w-full fade-up">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                {/* Music Bento Box */}
+                <div
+                  onClick={() => setCurrentAppView('music')}
+                  className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-purple-500 transition-all flex flex-col justify-between cursor-pointer group"
+                >
+                  <div>
+                    <Headphones className="w-8 h-8 text-[#a78bfa] mb-4 group-hover:scale-110 transition-transform" />
+                    <div className="h-2 w-1/2 bg-gray-700 rounded mb-2"></div>
+                    <div className="h-2 w-3/4 bg-gray-700 rounded"></div>
+                  </div>
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="w-8 h-8 rounded-full bg-gray-700"></div>
+                    <PlayCircle className="w-7 h-7 text-white group-hover:text-[#a78bfa] transition-colors" />
                   </div>
                 </div>
-              </div>
 
-              {/* 5. Bouton X Croix (Sortir de Dona) */}
-              <button
-                type="button"
-                onClick={() => setCurrentCategory('home')}
-                className="text-white/60 hover:text-white active:text-rose-400 transition-colors p-1.5 outline-none cursor-pointer active:scale-95"
-                title={lang === 'fr' ? 'Fermer Dona' : 'Close Dona'}
-              >
-                <X className="w-5 h-5 text-white/70 hover:text-white" />
-              </button>
-            </div>
-          </header>
-
-          {/* CONTENU CENTRAL DU CHAT QUI DÉFILE SOUS LE HEADER FIXE */}
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative">
-            <DonaModal
-              isOpen={true}
-              onClose={() => setCurrentCategory('home')}
-              onSelectMovie={(movie, mode = 'info') => openModal(movie, mode)}
-              onCreateParty={(movie) => triggerCreateParty(movie)}
-              onNavigateCategory={(cat) => setCurrentCategory(cat)}
-              onOpenSearch={(q) => {
-                if (q) setSearchQuery(q);
-                setShowSearchModal(true);
-              }}
-              onOpenSettings={() => setShowSettings(true)}
-              onOpenSupport={() => setShowSupport(true)}
-              lang={lang}
-              historyTrigger={donaHistoryTrigger}
-              newChatTrigger={donaNewChatTrigger}
-            />
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* HEADER PRINCIPAL STANDARD */}
-          <header className={`safe-top-header fixed top-0 w-full z-50 transition-all duration-500 ease-in-out flex items-center justify-between px-4 md:px-10 pb-3 md:pb-4 ${isScrolled ? 'bg-black/80 backdrop-blur-2xl border-b border-white/5 shadow-xl' : 'bg-gradient-to-b from-[#060608] via-[#060608]/90 to-transparent'}`}>
-            <div className="flex items-center space-x-3 md:space-x-8">
-              <div 
-                className="flex items-center cursor-pointer outline-none group transition-transform active:scale-95 select-none" 
-                onClick={() => {
-                  if (currentCategory === 'anime') {
-                    setAnimeSubTab('home');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    showToast(lang === 'fr' ? 'Actualisation du catalogue LevelAnime...' : 'Refreshing LevelAnime catalog...', 'info');
-                  } else {
-                    setCurrentCategory('home');
-                    setPageSeed((prev) => prev + 1);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    showToast(lang === 'fr' ? 'Nouveautés & actualisation du catalogue...' : 'Discovering new releases & refreshing catalog...', 'info');
-                  }
-                }}
-                title={currentCategory === 'anime' ? (lang === 'fr' ? 'Actualiser le catalogue LevelAnime' : 'Refresh LevelAnime catalog') : (lang === 'fr' ? 'Actualiser le catalogue LevelMovie' : 'Refresh LevelMovie catalog')}
-              >
-                {/* Mobile ONLY: Logo Icon (No text) */}
-                <div className="md:hidden flex items-center justify-center p-1">
-                  <LevelMovieLogo className="w-7 h-7 transition-transform group-hover:scale-110" color={currentCategory === 'anime' ? '#ef4444' : '#a855f7'} />
+                {/* Weather Bento Box */}
+                <div
+                  onClick={() => setCurrentAppView('weather')}
+                  className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-yellow-500 transition-all flex flex-col justify-between cursor-pointer group"
+                >
+                  <div>
+                    <Sun className="w-8 h-8 text-yellow-400 mb-4 group-hover:rotate-45 transition-transform" />
+                    <div className="text-2xl font-bold text-white mb-1">24°C</div>
+                    <div className="text-gray-400 text-sm">Météo en temps réel</div>
+                  </div>
+                  <div className="mt-4 h-1 w-full bg-gray-700 rounded overflow-hidden">
+                    <div className="h-full bg-yellow-400 w-2/3"></div>
+                  </div>
                 </div>
 
-                {/* PC ONLY: Stylized text (No icon) */}
-                <h1 className="hidden md:flex text-xl md:text-2xl font-black tracking-widest leading-none drop-shadow-lg items-center">
-                  <span className="text-white">Level</span><span className="text-[#a855f7]">Movie</span>
-                </h1>
-              </div>
-
-              <nav className="hidden lg:flex space-x-6 text-[12px] font-bold uppercase tracking-widest text-white/60">
-                <button onClick={() => setCurrentCategory('home')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'home' ? 'text-[#a855f7]' : ''}`}>{t.home}</button>
-                <button 
-                  onClick={() => setCurrentCategory('dona')} 
-                  className={`flex items-center gap-1.5 transition-all outline-none cursor-pointer group ${currentCategory === 'dona' ? 'text-[#c084fc] font-black' : 'text-white/60 hover:text-white'}`}
-                  title="Dona"
+                {/* Movie Hub Bento Box */}
+                <div
+                  onClick={() => setCurrentAppView('movie')}
+                  className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-[#7c3aed] transition-all sm:col-span-2 cursor-pointer group"
                 >
-                  <Bot className="w-4 h-4 group-hover:scale-110 transition-transform text-[#c084fc]" />
-                  <span className="font-bold tracking-wide">Dona</span>
-                </button>
-                <button onClick={() => setCurrentCategory('movie')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'movie' ? 'text-[#a855f7]' : ''}`}>{t.movies}</button>
-                <button onClick={() => setCurrentCategory('party')} className={`flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'party' ? 'text-[#a855f7] font-bold' : ''}`}>
-                  <Users className="w-3.5 h-3.5" />
-                  <span>{t.partyTab || 'Salons'}</span>
-                </button>
-                <button onClick={() => setCurrentCategory('trailers')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'trailers' ? 'text-[#a855f7]' : ''}`}>{t.trailers || 'Bandes-Annonces'}</button>
-                <button onClick={() => setCurrentCategory('anime')} className={`flex items-center gap-1.5 transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'anime' ? 'text-red-500 font-bold' : ''}`}>
-                  <LevelMovieLogo className="w-3.5 h-3.5" color="#ef4444" />
-                  <span>Anime</span>
-                </button>
-                <button onClick={() => setCurrentCategory('watchlist')} className={`transition-colors hover:text-white outline-none cursor-pointer ${currentCategory === 'watchlist' ? 'text-[#a855f7]' : ''}`}>{t.myList}</button>
-              </nav>
-            </div>
-
-            <div className="flex items-center space-x-3 md:space-x-4">
-              {/* Indicateur visuel subtil Hors-Ligne dans le Header */}
-              {isNetworkOffline && (
-                <button
-                  type="button"
-                  onClick={() => setOpenOfflineDetailTrigger(prev => prev + 1)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-amber-500/15 border border-amber-500/35 hover:bg-amber-500/25 hover:border-amber-400 text-amber-300 text-[10px] sm:text-xs font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] animate-pulse active:scale-95 cursor-pointer shrink-0"
-                  title={lang === 'fr' ? 'Mode hors-ligne actif (cliquez pour afficher les options)' : 'Offline mode active (click for options)'}
-                >
-                  <WifiOff className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span className="font-bold uppercase tracking-wider hidden sm:inline">
-                    {lang === 'fr' ? 'Hors-ligne' : 'Offline'}
-                  </span>
-                </button>
-              )}
-
-              <button onClick={() => setShowSearchModal(true)} className="group flex items-center gap-2 bg-[#151520] border border-white/10 hover:border-[#a855f7]/50 text-white/70 hover:text-white text-xs px-3.5 md:px-4 py-2 rounded-full outline-none w-10 md:w-72 justify-center md:justify-start transition-all shadow-inner cursor-pointer">
-                <SearchIcon className="w-4 h-4 shrink-0 text-[#a855f7]" />
-                <span className="hidden md:inline truncate text-white/50">{t.searchPlaceholder}</span>
-              </button>
-
-              {/* Profil / Connexion Button (PC & Tablette) */}
-              <div 
-                className="flex items-center gap-2.5 p-1.5 pr-3 md:pr-4 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-md outline-none active:scale-95" 
-                onClick={() => {
-                  if (user) {
-                    setShowSidebar(true);
-                  } else {
-                    setShowLoginModal(true);
-                  }
-                }}
-                title={user ? defaultUserName : (lang === 'fr' ? 'Connexion' : 'Log In')}
-              >
-                <div className="shrink-0">
-                  {user ? (
-                    <LevelAvatar avatar={userPhoto} name={defaultUserName} size="sm" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-[#151520] flex items-center justify-center border border-[#a855f7]/40 shadow-inner">
-                      <UserIcon className="w-4 h-4 text-[#a855f7]" />
+                  <div className="flex justify-between items-center mb-4">
+                    <Tv className="w-8 h-8 text-[#a78bfa] group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-semibold bg-gray-700 group-hover:bg-[#7c3aed] group-hover:text-white text-gray-300 px-2 py-1 rounded transition-colors">
+                      Films & Animes
+                    </span>
+                  </div>
+                  <div className="flex gap-4 items-center">
+                    <div className="h-24 w-16 bg-gray-700 rounded-md shrink-0 overflow-hidden relative group-hover:shadow-lg transition-all">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-center p-1">
+                        <span className="text-[8px] font-bold text-purple-300 uppercase">HD</span>
+                      </div>
                     </div>
-                  )}
+                    <div className="space-y-3 flex-1 pt-1">
+                      <div className="h-2.5 w-full bg-gray-600 rounded"></div>
+                      <div className="h-2 w-5/6 bg-gray-700 rounded"></div>
+                      <div className="h-2 w-4/6 bg-gray-700 rounded"></div>
+                    </div>
+                  </div>
                 </div>
-                <div className="hidden md:block min-w-0">
-                  <p className="text-[12px] font-bold uppercase truncate tracking-wide text-white/90">
-                    {user ? defaultUserName : (lang === 'fr' ? 'Connexion' : 'Log In')}
-                  </p>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Cybersecurity Section */}
+      <section id="securite" className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-[#f5f3ff] rounded-3xl p-8 md:p-16 border border-[#ede9fe] flex flex-col md:flex-row items-center gap-12 fade-up">
+            
+            <div className="md:w-1/3 flex justify-center">
+              <div className="relative w-48 h-48">
+                <div className="absolute inset-0 bg-[#ddd6fe] rounded-full animate-ping opacity-20"></div>
+                <div className="relative bg-white rounded-full w-full h-full flex items-center justify-center shadow-xl border border-[#ede9fe] text-[#7c3aed]">
+                  <ShieldCheck className="w-20 h-20" />
                 </div>
               </div>
             </div>
-          </header>
 
-          {/* NAVBAR MOBILE */}
-          <nav className="safe-bottom-nav lg:hidden fixed bottom-0 w-full z-50 bg-[#060608]/95 backdrop-blur-xl border-t border-white/5 flex justify-around items-center pt-3 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
-            <button onClick={() => setCurrentCategory('home')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'home' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-              <Home className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.home}</span>
-            </button>
-            <button 
-              onClick={() => setCurrentCategory('dona')} 
-              className={`flex flex-col items-center justify-center gap-1 transition-all outline-none cursor-pointer active:scale-95 group ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/70 hover:text-white'}`}
-              title="Dona"
+            <div className="md:w-2/3">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Sécurité & Protection Numérique</h2>
+              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                Naviguez en toute sérénité. LevelUp Ecosystem intègre des protocoles de protection avancés et aide les utilisateurs à identifier les menaces en ligne, contrer le phishing et sécuriser leurs données personnelles.
+              </p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <li className="flex items-center gap-3 text-gray-700 font-medium">
+                  <CheckCircle2 className="w-5 h-5 text-[#7c3aed] shrink-0" />
+                  <span>Protection des données privées</span>
+                </li>
+                <li className="flex items-center gap-3 text-gray-700 font-medium">
+                  <CheckCircle2 className="w-5 h-5 text-[#7c3aed] shrink-0" />
+                  <span>Prévention et veille anti-phishing</span>
+                </li>
+                <li className="flex items-center gap-3 text-gray-700 font-medium">
+                  <CheckCircle2 className="w-5 h-5 text-[#7c3aed] shrink-0" />
+                  <span>Audits de sécurité web</span>
+                </li>
+                <li className="flex items-center gap-3 text-gray-700 font-medium">
+                  <CheckCircle2 className="w-5 h-5 text-[#7c3aed] shrink-0" />
+                  <span>Conseils et guides préventifs</span>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Contact Section */}
+      <section id="contact" className="py-20 bg-white fade-up border-t border-gray-100">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Prêt à lancer votre projet avec nous ?</h2>
+          <p className="text-lg text-gray-600 mb-10">Rappelez-vous : nous construisons votre site d'abord, vous validez, et vous ne payez qu'ensuite. Contactez-nous dès aujourd'hui.</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="mailto:contact@levelupecosystem.com"
+              className="inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-xl font-medium text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
-              <div className="relative flex items-center justify-center w-6 h-6">
-                <Bot className="w-5 h-5 relative z-10 transition-transform group-hover:scale-110 text-[#c084fc]" />
-              </div>
-              <span className={`text-[9px] font-black uppercase tracking-wider ${currentCategory === 'dona' && !showSidebar ? 'text-[#c084fc]' : 'text-white/60'}`}>Dona</span>
+              <span>Commencer un projet</span>
+              <Mail className="w-5 h-5" />
+            </a>
+            <button
+              onClick={() => setContactModalOpen(true)}
+              className="inline-flex items-center justify-center gap-2 bg-[#f5f3ff] hover:bg-[#ede9fe] text-[#6d28d9] border border-[#ddd6fe] px-8 py-4 rounded-xl font-medium text-lg transition-all shadow-sm hover:shadow-md cursor-pointer"
+            >
+              <span>Formulaire instantané</span>
+              <Send className="w-5 h-5" />
             </button>
-            <button onClick={() => setCurrentCategory('party')} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'party' && !showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-              <Users className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.partyTab || 'Salons'}</span>
-            </button>
-            <button onClick={() => { setCurrentCategory('anime'); setAnimeSubTab('home'); }} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${currentCategory === 'anime' && !showSidebar ? 'text-red-500' : 'text-white/50 hover:text-white'}`}>
-              <LevelMovieLogo className="w-5 h-5" color="#ef4444" /> <span className="text-[9px] font-bold uppercase tracking-widest">Anime</span>
-            </button>
-            <button onClick={() => setShowSidebar(true)} className={`flex flex-col items-center gap-1 transition-colors outline-none cursor-pointer ${showSidebar ? 'text-[#a855f7]' : 'text-white/50 hover:text-white'}`}>
-              <Menu className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">{t.menu || 'Menu'}</span>
-            </button>
-          </nav>
-        </>
-      )}
-
-      {/* CONTENU PRINCIPAL */}
-      {currentCategory === 'dona' ? null : currentCategory === 'party' ? (
-        <div className="pt-24 px-4 md:px-14 pb-24 min-h-screen relative z-30 w-full max-w-[2000px] mx-auto space-y-8 animate-in fade-in duration-300">
-          {/* Executive Watch Party Cinema Lounge Header */}
-          <div className="relative w-full rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-[#140b24] via-[#0d0d18] to-[#090912] border border-[#a855f7]/25 shadow-[0_15px_40px_rgba(0,0,0,0.7)] overflow-hidden">
-            <div className="absolute -top-32 -right-32 w-80 h-80 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
-              {/* Left Info */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-[#a855f7]/15 flex items-center justify-center border border-[#a855f7]/30 text-[#c084fc] shadow-lg">
-                  <Users className="w-7 h-7 sm:w-8 sm:h-8" />
-                </div>
-                <div className="space-y-1.5">
-                  <h2 className="text-xl sm:text-2xl font-black uppercase tracking-wide text-white">
-                    {t.joinPartyTitle}
-                  </h2>
-                  <p className="text-white/60 text-xs sm:text-sm max-w-xl leading-relaxed">
-                    {t.joinPartyDesc}
-                  </p>
-                </div>
-              </div>
-
-              {/* Right Join Code Form */}
-              <div className="w-full max-w-xl lg:max-w-md lg:w-auto shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-black/60 border border-white/10 p-2 sm:p-2.5 rounded-2xl shadow-xl focus-within:border-[#a855f7]/80 focus-within:shadow-[0_0_20px_rgba(168,85,247,0.2)] transition-all">
-                <input 
-                  type="text" 
-                  id="partyCodeInput"
-                  maxLength={12}
-                  placeholder={t.partyCodePlaceholder}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const inputEl = document.getElementById('partyCodeInput') as HTMLInputElement;
-                      const code = inputEl ? inputEl.value.trim().toUpperCase() : '';
-                      if (code) triggerJoinParty(code);
-                    }
-                  }}
-                  className="flex-1 w-full min-w-0 bg-transparent px-4 py-3 sm:py-2.5 text-white font-mono text-sm uppercase tracking-widest outline-none placeholder:text-white/30"
-                />
-                <button 
-                  type="button"
-                  onClick={() => {
-                    const inputEl = document.getElementById('partyCodeInput') as HTMLInputElement;
-                    const code = inputEl ? inputEl.value.trim().toUpperCase() : '';
-                    if (code) triggerJoinParty(code);
-                  }}
-                  className="w-full sm:w-auto inline-flex items-center justify-center bg-gradient-to-r from-purple-600 via-[#a855f7] to-purple-700 hover:opacity-95 text-white px-6 py-3 sm:py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all active:scale-95 text-xs shadow-md shrink-0 cursor-pointer whitespace-nowrap"
-                >
-                  {t.joinBtn}
-                </button>
-              </div>
-            </div>
           </div>
-
-          <div className="flex items-center justify-between pt-2">
-            <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-widest border-l-4 border-[#a855f7] pl-3">
-              {t.watchPartyMovies}
-            </h2>
-            <span className="text-[11px] font-mono text-purple-300/70 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full hidden sm:inline-block">
-              {lang === 'fr' ? 'Cliquez sur « + » pour lancer un salon' : 'Click « + » to host a room'}
-            </span>
-          </div>
-
-          <main className="relative space-y-8 md:space-y-10">
-            {rowsConfig.map((row, i) => (
-              <Row key={i} title={row.title} fetchUrl={row.url} isLarge={row.large} shuffle={row.shuffle} onMovieClick={(m) => openModal(m, 'info')} pageSeed={pageSeed} parentalFilter={parentalFilter} quickAction={{ icon: Plus, label: t.createPartyBtn, onClick: (m) => triggerCreateParty(m) }} />
-            ))}
-          </main>
         </div>
-      ) : currentCategory === 'watchlist' ? (
-        <div className="pt-24 px-4 md:px-14 pb-24 min-h-screen">
-          <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2"><Bookmark className="w-6 h-6 text-[#a855f7]" /> {t.myList}</h2>
-          {watchlistData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-32 opacity-80 px-6 text-center">
-              <Bookmark className="w-16 h-16 mb-4 opacity-50" />
-              <p className="text-sm uppercase tracking-widest font-bold opacity-50">{t.emptyList}</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {watchlistData.map(movie => (
-                <div key={movie.id} className="relative cursor-pointer rounded-xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform" onClick={() => openModal(movie, 'info')}>
-                  <img className="object-cover w-full h-[220px] md:h-[280px]" src={`${IMAGE_BASE_URL}${movie.poster_path}`} loading="lazy" alt="" />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : currentCategory === 'trailers' ? (
-        <div className="pt-24 px-4 md:px-14 pb-24 min-h-screen">
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
-            <div>
-              <h2 className="text-xl md:text-3xl font-black text-white uppercase tracking-widest flex items-center gap-3">
-                <Clapperboard className="w-7 h-7 text-pink-500" />
-                <span>{lang === 'fr' ? 'Hub Bandes-Annonces & Teasers' : 'Trailers & Teasers Hub'}</span>
-              </h2>
-              <p className="text-xs md:text-sm text-white/50 mt-1">
-                {lang === 'fr' ? 'Découvre les vidéos officielles, bandes-annonces cinéma et nouveautés en haute définition.' : 'Watch official high-definition trailers and upcoming previews.'}
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-50 border-t border-gray-200 pt-16 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center gap-3 mb-6">
+                <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-[#7c3aed]">
+                  <path d="M16 1.5L19.53 10.87C19.78 11.52 20.48 11.96 21.18 11.96H30.5L23.04 17.65C22.48 18.08 22.25 18.82 22.45 19.49L25.3 28.86L17.7 23.33C17.16 22.94 16.42 22.94 15.88 23.33L8.28 28.86L11.13 19.49C11.33 18.82 11.1 18.08 10.54 17.65L3.08 11.96H12.4C13.1 11.96 13.8 11.52 14.05 10.87L16 1.5Z" fill="currentColor"/>
+                </svg>
+                <span className="font-bold text-lg text-gray-900">LevelUp Ecosystem</span>
+              </div>
+              <p className="text-gray-500 mb-6 max-w-sm">
+                L'intelligence artificielle et l'innovation web regroupées dans une plateforme unique, au service de vos projets.
               </p>
             </div>
-            <span className="hidden sm:inline-block px-3 py-1 rounded-full bg-pink-500/20 border border-pink-500/40 text-pink-300 text-xs font-mono font-bold">
-              LECTEUR HD
-            </span>
+            
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-4">Solutions</h4>
+              <ul className="space-y-3">
+                <li><a href="#tarifs" className="text-gray-500 hover:text-[#7c3aed] transition-colors">Invitations (120$)</a></li>
+                <li><a href="#tarifs" className="text-gray-500 hover:text-[#7c3aed] transition-colors">Sites Basiques (350$)</a></li>
+                <li><a href="#tarifs" className="text-gray-500 hover:text-[#7c3aed] transition-colors">Offres Pro & Sur Mesure</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-4">Écosystème</h4>
+              <ul className="space-y-3">
+                <li><button onClick={() => setCurrentAppView('music')} className="text-gray-500 hover:text-[#7c3aed] transition-colors text-left cursor-pointer">Musique & Média</button></li>
+                <li><button onClick={() => setCurrentAppView('weather')} className="text-gray-500 hover:text-[#7c3aed] transition-colors text-left cursor-pointer">Météo en direct</button></li>
+                <li><button onClick={() => setCurrentAppView('movie')} className="text-gray-500 hover:text-[#7c3aed] transition-colors text-left cursor-pointer">Hub Films & Animes</button></li>
+                <li><a href="#securite" className="text-gray-500 hover:text-[#7c3aed] transition-colors">Sécurité Numérique</a></li>
+              </ul>
+            </div>
           </div>
-
-          <main className="relative space-y-10">
-            <TrailerRow
-              title={lang === 'fr' ? '🔥 Bandes-Annonces Tendance' : '🔥 Trending Trailers'}
-              fetchUrl={buildUrlNoFilter('/trending/movie/week')}
-              seed={getDailySeed()}
-              onPlayTrailer={(m) => openModal(m, 'trailer')}
-              parentalFilter={parentalFilter}
-              lang={langCode}
-            />
-            <TrailerRow
-              title={lang === 'fr' ? '🎬 Nouveautés & Sorties Cinéma' : '🎬 New Releases & Box Office'}
-              fetchUrl={buildUrlNoFilter('/movie/now_playing')}
-              seed={getDailySeed() + 1}
-              onPlayTrailer={(m) => openModal(m, 'trailer')}
-              parentalFilter={parentalFilter}
-              lang={langCode}
-            />
-            <TrailerRow
-              title={lang === 'fr' ? '📺 Teasers Séries TV & Animes' : '📺 TV Shows & Anime Teasers'}
-              fetchUrl={buildUrlNoFilter('/tv/popular')}
-              seed={getDailySeed() + 2}
-              onPlayTrailer={(m) => openModal(m, 'trailer')}
-              parentalFilter={parentalFilter}
-              lang={langCode}
-            />
-          </main>
-        </div>
-      ) : currentCategory === 'anime' ? (
-        <div className="pt-14 md:pt-16 min-h-screen">
-          <LevelAnimeApp
-            lang={lang}
-            user={user}
-            userPhoto={userPhoto}
-            userName={userName}
-            userEmail={userEmail}
-            activeTab={animeSubTab}
-            onTabChange={(tab) => setAnimeSubTab(tab)}
-            onNavigateHome={() => setCurrentCategory('home')}
-            showToast={(msg, type) => showToast(msg, type)}
-            onOpenMovie={(m, mode) => openModal(m, mode || 'info')}
-          />
-        </div>
-      ) : (
-        <>
-          <Banner url={buildUrlNoFilter('/trending/all/week')} onPlay={() => openModal(heroMovie, 'play')} onInfo={() => openModal(heroMovie, 'info')} setHero={setHeroMovie} heroMovie={heroMovie} t={t} pageSeed={pageSeed} parentalFilter={parentalFilter} lowDataMode={lowDataMode} />
-
-          <main className="pb-24 relative z-20 space-y-8 md:space-y-10 mt-6 md:-mt-10">
-            <AlgoRow
-              title={t.tonightTitle}
-              fetchUrl={buildUrlNoFilter('/trending/all/week')}
-              seed={getDailySeed()}
-              badge={t.tonightBadge}
-              countdown={`${t.renewsIn} ${getHoursUntilMidnight()}h`}
-              onMovieClick={(m) => openModal(m, 'info')}
-              parentalFilter={parentalFilter}
-            />
-            <AlgoRow
-              title={t.thisWeekTitle}
-              fetchUrl={buildUrlNoFilter('/trending/all/week')}
-              seed={getWeekSeed()}
-              onMovieClick={(m) => openModal(m, 'info')}
-              parentalFilter={parentalFilter}
-            />
-            <TrailerRow
-              title={t.trailersTitle}
-              fetchUrl={buildUrlNoFilter('/trending/movie/week')}
-              seed={getDailySeed()}
-              onPlayTrailer={(m) => openModal(m, 'trailer')}
-              parentalFilter={parentalFilter}
-              lang={langCode}
-            />
-            {rowsConfig.map((row, i) => (
-              <Row key={i} title={row.title} fetchUrl={row.url} isLarge={row.large} shuffle={row.shuffle} onMovieClick={(m) => openModal(m, 'info')} pageSeed={pageSeed} parentalFilter={parentalFilter} />
-            ))}
-          </main>
-        </>
-      )}
-
-      {/* PIED DE PAGE & SOUS-LIENS STYLE NETFLIX / AMAZON PRIME */}
-      {!selectedMovie && (
-        <FooterDisclaimer
-          lang={lang}
-          onOpenSupport={() => setShowSupport(true)}
-          onOpenSettings={(tab) => {
-            if (tab) setSettingsTab(tab);
-            setShowSettings(true);
-          }}
-          onOpenLegal={(doc) => {
-            setLegalDocType(doc);
-            setShowLegalModal(true);
-          }}
-          onOpenAuth={(view) => {
-            setAuthModalInitialView(view);
-            setShowLoginModal(true);
-          }}
-          onNavigateCategory={(cat) => {
-            setCurrentCategory(cat);
-          }}
-          onSearchQuery={(q) => {
-            setSearchQuery(q);
-            setShowSearchModal(true);
-          }}
-          onOpenDona={() => {
-            setCurrentCategory('dona');
-          }}
-          onOpenExternalApps={() => setShowExternalApps(true)}
-        />
-      )}
-
-      {/* MODAL RECHERCHE AVANCÉE MULTI-SERVEURS */}
-      <SearchModal
-        isOpen={showSearchModal}
-        onClose={() => setShowSearchModal(false)}
-        onSelectMovie={(movie) => openModal(movie, 'info')}
-        lang={lang}
-        parentalFilter={parentalFilter}
-        t={t}
-        showToast={showToast}
-      />
-
-      {/* DOCKED RIGHT APP SIDEBAR (DÉCLENCHÉ PAR LE PROFIL ET LE MENU MOBILE) */}
-      <AppSidebar
-        isOpen={showSidebar}
-        onClose={() => setShowSidebar(false)}
-        onOpenSettings={() => setShowSettings(true)}
-        onOpenFavorites={() => setCurrentCategory('watchlist')}
-        onOpenTrailers={() => setCurrentCategory('trailers')}
-        onOpenExternalApps={() => setShowExternalApps(true)}
-        onOpenSupport={() => setShowSupport(true)}
-        onOpenDona={() => { setShowSidebar(false); setCurrentCategory('dona'); }}
-        onOpenAvatarPicker={() => { setShowSidebar(false); setShowAvatarPickerModal(true); }}
-        onNavigateCategory={(cat, subTab) => {
-          setCurrentCategory(cat);
-          if (subTab) {
-            setAnimeSubTab(subTab as 'home' | 'explore' | 'releases');
-          }
-        }}
-        onOpenLogin={() => setShowLoginModal(true)}
-        onOpenLogout={() => setShowLogoutConfirm(true)}
-        user={user}
-        userName={defaultUserName}
-        userEmail={userEmail}
-        userPhoto={userPhoto}
-        userHandle={userHandle}
-        watchlistCount={watchlistData.length}
-        currentCategory={currentCategory}
-        animeSubTab={animeSubTab}
-        lang={lang}
-        t={t}
-      />
-
-      {/* MODAL APPLICATIONS EXTERNES */}
-      <ExternalAppsModal
-        isOpen={showExternalApps}
-        onClose={() => setShowExternalApps(false)}
-        lang={lang}
-        user={user}
-        onRequireAuth={() => setShowLoginModal(true)}
-        showToast={showToast}
-        onStartParty={triggerCreateParty}
-      />
-
-      {/* MODAL AIDE & SUPPORT */}
-      <SupportModal
-        isOpen={showSupport}
-        onClose={() => setShowSupport(false)}
-        lang={lang}
-        userEmail={userEmail}
-        showToast={showToast}
-      />
-
-      {/* MODAL SETTINGS (GOOGLE AI STUDIO STYLE) */}
-      <SettingsModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-        lang={lang}
-        setLang={(newLang) => {
-          setLang(newLang);
-          localStorage.setItem('levelmovie_lang', newLang);
-          localStorage.setItem('levelmovie_lang_explicit', 'true');
-          syncPreferencesToDb({ lang: newLang });
-        }}
-        contentLang={contentLang}
-        setContentLang={(newContentLang) => {
-          setContentLang(newContentLang);
-          localStorage.setItem('levelmovie_content_lang', newContentLang);
-          syncPreferencesToDb({ contentLang: newContentLang });
-        }}
-        user={user}
-        userName={userName || defaultUserName}
-        userEmail={userEmail}
-        userPhoto={userPhoto}
-        userHandle={userHandle}
-        onUpdateProfile={({ name, handle, photo }) => {
-          if (name) {
-            setUserName(name);
-            localStorage.setItem('levelmovie_username', name);
-            localStorage.setItem('levelmovie_user_name', name);
-            localStorage.setItem('lm_guest_party_name', name);
-          }
-          if (handle) {
-            setUserHandle(handle);
-            localStorage.setItem('levelmovie_user_handle', handle);
-          }
-          if (photo) {
-            setUserPhoto(photo);
-            localStorage.setItem('levelmovie_custom_avatar', photo);
-            localStorage.setItem('levelmovie_user_photo', photo);
-            localStorage.setItem('lm_photo', photo);
-          }
-          partySyncService.setMember({
-            uid: effectiveUid,
-            name: name || userName || defaultUserName,
-            photo: photo || userPhoto || ''
-          });
-        }}
-        parentalFilter={parentalFilter}
-        setParentalFilter={(val) => {
-          setParentalFilter(val);
-          syncPreferencesToDb({ parentalFilter: val });
-        }}
-        lowDataMode={lowDataMode}
-        setLowDataMode={setLowDataMode}
-        onOpenLogin={() => setShowLoginModal(true)}
-        onOpenLogout={() => setShowLogoutConfirm(true)}
-        onOpenDona={() => { setShowSettings(false); setCurrentCategory('dona'); }}
-        onOpenAvatarPicker={() => { setShowAvatarPickerModal(true); }}
-        onOpenLegal={(doc) => {
-          setLegalDocType(doc);
-          setShowLegalModal(true);
-        }}
-        watchlistCount={watchlistData.length}
-        historyCount={recentlyViewed.length}
-        onNavigateCategory={(cat) => setCurrentCategory(cat)}
-        showToast={showToast}
-        t={t}
-      />
-
-      {/* MODAL AVATARS 3D REALISTES & PERSONNALISATION */}
-      <AvatarPickerModal
-        isOpen={showAvatarPickerModal}
-        onClose={() => setShowAvatarPickerModal(false)}
-        currentAvatar={userPhoto}
-        userName={userName || defaultUserName}
-        userHandle={userHandle}
-        isVip={getWeeklyVipStatus().isVip}
-        onSelectAvatar={(newAvatar) => {
-          setUserPhoto(newAvatar);
-          localStorage.setItem('levelmovie_custom_avatar', newAvatar);
-          localStorage.setItem('levelmovie_user_photo', newAvatar);
-          localStorage.setItem('lm_photo', newAvatar);
-          partySyncService.setMember({
-            uid: effectiveUid,
-            name: effectiveUserName,
-            photo: newAvatar
-          });
-          window.dispatchEvent(new CustomEvent('levelmovie_avatar_change', { detail: { avatar: newAvatar } }));
-          window.dispatchEvent(new CustomEvent('levelmovie_profile_change', { detail: { photo: newAvatar } }));
-        }}
-        lang={lang}
-        showToast={showToast}
-      />
-
-      {/* MODAL JURIDIQUE : CONDITIONS GÉNÉRALES & CONFIDENTIALITÉ */}
-      <LegalModal
-        isOpen={showLegalModal}
-        onClose={() => setShowLegalModal(false)}
-        initialDoc={legalDocType}
-        lang={lang}
-      />
-
-      {/* MODAL AUTH / CONNEXION & INSCRIPTION PLEIN ECRAN */}
-      <AuthModal
-        isOpen={showLoginModal}
-        initialView={authModalInitialView}
-        onClose={() => {
-          setShowLoginModal(false);
-          setAuthModalInitialView('view-main');
-        }}
-        onLoginSuccess={(loggedUser, name, email, photo, handle, age) => {
-          setUser(loggedUser);
-          setUserName(name);
-          setUserEmail(email);
-          if (photo) {
-            setUserPhoto(photo);
-            localStorage.setItem('levelmovie_custom_avatar', photo);
-            localStorage.setItem('levelmovie_user_photo', photo);
-            localStorage.setItem('lm_photo', photo);
-          }
-          if (name) {
-            localStorage.setItem('levelmovie_username', name);
-            localStorage.setItem('levelmovie_user_name', name);
-            localStorage.setItem('lm_guest_party_name', name);
-          }
-          if (handle) {
-            setUserHandle(handle);
-            localStorage.setItem('levelmovie_user_handle', handle);
-          }
-          if (email) {
-            localStorage.setItem('levelmovie_user_email', email);
-          }
-          if (age) {
-            localStorage.setItem('levelmovie_user_age', String(age));
-          }
-          const uid = loggedUser?.uid || loggedUser?.id;
-          if (uid) {
-            localStorage.setItem('levelmovie_user_uid', uid);
-          }
-          partySyncService.setMember({
-            uid: uid || effectiveUid,
-            name: name || effectiveUserName,
-            photo: photo || effectiveUserPhoto || ''
-          });
-          window.dispatchEvent(new CustomEvent('levelmovie_profile_change', {
-            detail: { name, photo, handle, email, uid }
-          }));
-          window.dispatchEvent(new CustomEvent('levelmovie_avatar_change', {
-            detail: { avatar: photo }
-          }));
-        }}
-        lang={lang}
-        showToast={showToast}
-      />
-
-      {/* MODAL OBLIGATOIRE DE FINALISATION DE PROFIL POUR NOUVELLES CONNEXIONS OAUTH */}
-      <MandatoryProfileCompletionModal
-        isOpen={showMandatoryOnboarding && !!onboardingOAuthUser}
-        user={onboardingOAuthUser}
-        lang={lang}
-        showToast={showToast}
-        onComplete={({ name, handle, photo, email, age }) => {
-          const uid = onboardingOAuthUser?.id || onboardingOAuthUser?.uid || `usr_${Date.now()}`;
-          setUser({ uid, email });
-          setUserName(name);
-          setUserEmail(email);
-          setUserPhoto(photo);
-          setUserHandle(handle);
-          if (photo) {
-            localStorage.setItem('levelmovie_custom_avatar', photo);
-            localStorage.setItem('levelmovie_user_photo', photo);
-            localStorage.setItem('lm_photo', photo);
-          }
-          if (name) {
-            localStorage.setItem('levelmovie_username', name);
-            localStorage.setItem('levelmovie_user_name', name);
-            localStorage.setItem('lm_guest_party_name', name);
-          }
-          if (handle) {
-            localStorage.setItem('levelmovie_user_handle', handle);
-          }
-          if (email) {
-            localStorage.setItem('levelmovie_user_email', email);
-          }
-          localStorage.setItem('levelmovie_user_uid', uid);
-          if (age) {
-            localStorage.setItem('levelmovie_user_age', String(age));
-          }
-          partySyncService.setMember({
-            uid,
-            name,
-            photo
-          });
-          window.dispatchEvent(new CustomEvent('levelmovie_profile_change', {
-            detail: { name, photo, handle, email, uid }
-          }));
-          window.dispatchEvent(new CustomEvent('levelmovie_avatar_change', {
-            detail: { avatar: photo }
-          }));
-          setShowMandatoryOnboarding(false);
-          setOnboardingOAuthUser(null);
-        }}
-        onCancelSignOut={async () => {
-          setShowMandatoryOnboarding(false);
-          setOnboardingOAuthUser(null);
-          await handleLogout();
-        }}
-      />
-
-      {/* MODAL DE DECONNEXION */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0a0a0f] border border-red-500/30 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
-            <LogOut className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-xl font-black text-white mb-2 uppercase tracking-widest">{t.logoutBtn}</h3>
-            <p className="text-white/60 text-xs mb-6">{t.logoutConfirm}</p>
-            <div className="flex gap-3">
-              <button
-                disabled={isLoggingOut}
-                onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 py-3 bg-white/5 hover:bg-white/10 disabled:opacity-50 text-white/70 rounded-xl text-[10px] font-bold uppercase cursor-pointer"
-              >
-                {t.cancel}
-              </button>
-              <button
-                disabled={isLoggingOut}
-                onClick={handleLogout}
-                className="flex-1 py-3 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl text-[10px] font-bold uppercase cursor-pointer flex items-center justify-center gap-2"
-              >
-                {isLoggingOut ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>{lang === 'fr' ? 'Déconnexion...' : 'Logging out...'}</span>
-                  </>
-                ) : (
-                  t.confirm
-                )}
-              </button>
+          
+          <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-gray-400 text-sm">© 2026 LevelUp Ecosystem. Tous droits réservés.</p>
+            <div className="flex space-x-6 text-gray-400">
+              <a href="https://twitter.com/LevelUpEco" target="_blank" rel="noreferrer" className="hover:text-gray-900 transition-colors" aria-label="Twitter">
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-gray-900 transition-colors" aria-label="LinkedIn">
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76c.94 0 1.7-.76 1.7-1.7s-.76-1.7-1.7-1.7-1.7.76-1.7 1.7.76 1.7 1.7 1.7m1.4 9.74v-8.37H5.06v8.37h2.8z"/></svg>
+              </a>
+              <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-gray-900 transition-colors" aria-label="GitHub">
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+              </a>
             </div>
           </div>
         </div>
-      )}
+      </footer>
 
-      {/* OVERLAY DE CHARGEMENT DE DÉCONNEXION */}
-      {isLoggingOut && (
-        <div className="fixed inset-0 z-[999999] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-in fade-in duration-300 pointer-events-auto select-none">
-          <div className="relative flex items-center justify-center mb-6">
-            <div className="w-20 h-20 rounded-full border-4 border-red-500/20 border-t-red-500 animate-spin" />
-            <LogOut className="w-8 h-8 text-red-500 absolute animate-pulse" />
-          </div>
-          <h3 className="text-lg md:text-xl font-black text-white uppercase tracking-widest mb-1.5 text-center">
-            {lang === 'fr' ? 'Déconnexion en cours...' : 'Logging out...'}
-          </h3>
-          <p className="text-xs text-white/50 font-medium text-center">
-            {lang === 'fr' ? 'Fermeture sécurisée de votre session' : 'Securing and closing your session'}
-          </p>
-        </div>
-      )}
+      {/* Instant Contact Form Modal */}
+      {contactModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-gray-100 relative animate-in fade-in zoom-in-95">
+            <button
+              onClick={() => setContactModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-      {/* MODAL CRÉATION DE SALON WATCH PARTY */}
-      {showCreatePartyPrompt && createPartyMovie && (
-        <div className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-[#121218] border border-[#a855f7]/40 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#a855f7]/20 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="flex items-center gap-4 mb-6 relative z-10">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#a855f7]/30 to-[#ec4899]/30 border border-[#a855f7]/40 flex items-center justify-center shadow-lg shrink-0">
-                <WatchPartySVG className="w-8 h-8 text-[#a855f7]" />
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[#f5f3ff] text-[#7c3aed] flex items-center justify-center font-bold">
+                <Mail className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-xl font-black text-white uppercase tracking-wider">
-                  {t.createPartyTitle || (lang === 'fr' ? 'Créer un Salon' : 'Create Watch Party')}
-                </h3>
-                <p className="text-white/50 text-xs mt-0.5">
-                  {t.createPartyDesc || (lang === 'fr' ? 'Regarder ensemble en temps réel avec chat' : 'Watch together in sync with live chat')}
-                </p>
+                <h3 className="text-xl font-bold text-gray-900">Contact Rapide</h3>
+                <p className="text-xs text-gray-500">Présentez votre projet à l'équipe LevelUp</p>
               </div>
             </div>
 
-            {/* Movie preview chip */}
-            <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-2xl mb-6 relative z-10">
-              {createPartyMovie.poster_path ? (
-                <img
-                  src={`${IMAGE_BASE_URL}${createPartyMovie.poster_path}`}
-                  alt=""
-                  className="w-12 h-16 object-cover rounded-xl shrink-0"
-                />
-              ) : (
-                <div className="w-12 h-16 bg-[#2a2a35] rounded-xl flex items-center justify-center text-xs text-white/40 shrink-0">
-                  🎬
+            {contactSent ? (
+              <div className="py-8 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                  <Check className="w-6 h-6" />
                 </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <h4 className="text-sm font-bold text-white truncate">
-                  {createPartyMovie.title || createPartyMovie.name}
-                </h4>
-                <p className="text-[11px] text-white/50 truncate">
-                  {createPartyMovie.first_air_date ? (lang === 'fr' ? 'Série TV' : 'TV Show') : (lang === 'fr' ? 'Film' : 'Movie')}
-                  {createPartyMovie.release_date || createPartyMovie.first_air_date ? ` • ${new Date(createPartyMovie.release_date || createPartyMovie.first_air_date).getFullYear()}` : ''}
-                </p>
+                <h4 className="text-lg font-bold text-gray-900">Demande envoyée avec succès !</h4>
+                <p className="text-sm text-gray-600">Notre équipe analysera votre projet et vous répondra sous 24h ouvrées.</p>
               </div>
-            </div>
+            ) : (
+              <form onSubmit={handleSubmitContact} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Votre Nom / Entreprise</label>
+                  <input
+                    type="text"
+                    required
+                    value={contactForm.name}
+                    onChange={e => setContactForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Ex: Jean Dupont"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all"
+                  />
+                </div>
 
-            {/* Room Name Input */}
-            <div className="mb-6 relative z-10">
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-xs font-semibold text-white/70">
-                  {t.createPartyRoomName || (lang === 'fr' ? 'Nom du salon (optionnel)' : 'Room Name (optional)')}
-                </label>
-                <span className={`text-[10px] font-mono ${customRoomName.length >= 35 ? 'text-red-400 font-bold' : 'text-white/40'}`}>
-                  {customRoomName.length}/35
-                </span>
-              </div>
-              <input
-                type="text"
-                value={customRoomName}
-                onChange={(e) => setCustomRoomName(e.target.value)}
-                placeholder={`Salon de ${userName || defaultUserName}`}
-                maxLength={35}
-                className="w-full bg-[#1b1b24] border border-white/15 focus:border-[#a855f7] rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition-colors"
-              />
-            </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Adresse Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={contactForm.email}
+                    onChange={e => setContactForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="jean.dupont@example.com"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all"
+                  />
+                </div>
 
-            {/* Action buttons */}
-            <div className="flex gap-3 relative z-10">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowCreatePartyPrompt(false);
-                  setCreatePartyMovie(null);
-                }}
-                className="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 text-white/70 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
-              >
-                {t.createPartyCancel || (lang === 'fr' ? 'Annuler' : 'Cancel')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const movieToCreate = createPartyMovie;
-                  const roomNameToCreate = customRoomName;
-                  setShowCreatePartyPrompt(false);
-                  setCreatePartyMovie(null);
-                  handleCreateParty(movieToCreate, roomNameToCreate);
-                }}
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] hover:opacity-95 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-[0_0_20px_rgba(139,92,246,0.4)] active:scale-95 transition-all cursor-pointer"
-              >
-                {t.createPartySubmit || (lang === 'fr' ? 'Lancer le salon' : 'Start Party')}
-              </button>
-            </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Formule Souhaitée</label>
+                  <select
+                    value={contactForm.projectType}
+                    onChange={e => setContactForm(prev => ({ ...prev, projectType: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all"
+                  >
+                    <option value="Invitation & Événement (120$)">Invitation & Événement (120$)</option>
+                    <option value="Site Basique (350$)">Site Basique (350$)</option>
+                    <option value="Business Pro (800$)">Business Pro (800$)</option>
+                    <option value="Premium Écosystème (Sur Mesure)">Premium Écosystème (Sur Mesure)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Détails de votre projet</label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={contactForm.message}
+                    onChange={e => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                    placeholder="Décrivez vos attentes, délais et fonctionnalités souhaitées..."
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all resize-none"
+                  ></textarea>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="w-full py-3 px-4 bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-medium rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>Envoyer la demande</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <p className="text-[11px] text-gray-400 text-center mt-2">Zéro engagement : nous construisons d'abord, vous validez ensuite.</p>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
 
-      {/* MODAL MOVIE */}
-      {selectedMovie && (
-        <MovieModal
-          movie={selectedMovie}
-          mode={modalMode}
-          onClose={() => {
-            localStorage.removeItem('lm_now_playing');
-            try {
-              const url = new URL(window.location.href);
-              url.searchParams.delete('watch');
-              url.searchParams.delete('movie');
-              url.searchParams.delete('film');
-              url.searchParams.delete('series');
-              url.searchParams.delete('play');
-              url.searchParams.delete('id');
-              url.searchParams.delete('mode');
-              window.history.replaceState({}, '', url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash);
-            } catch (_) {}
-            setSelectedMovie(null);
-          }}
-          onSelectSimilar={(m: any) => { setSelectedMovie(m); setModalMode('info'); }}
-          t={t}
-          lang={langCode}
-          user={effectiveUser}
-          userPhoto={effectiveUserPhoto}
-          defaultUserName={effectiveUserName}
-          watchlist={watchlist}
-          toggleWatchlist={toggleWatchlist}
-          showToast={showToast}
-          handleCreateParty={triggerCreateParty}
-          partyId={partyId}
-          partyData={partyData}
-          handleSendPartyMessage={async (text: string, replyTo: any) => {
-            if (!partyId || !text.trim()) return;
-            const cleanText = censorText(text.trim());
-            const msg: any = {
-              uid: effectiveUid,
-              name: effectiveUserName,
-              photo: effectiveUserPhoto || "",
-              text: cleanText,
-              time: Date.now()
-            };
-            if (replyTo) msg.replyTo = replyTo;
-            await partySyncService.sendMessage(partyId, msg);
-          }}
-          sendSystemAction={async (actionType: string) => {
-            if (!partyId) return;
-            await partySyncService.sendMessage(partyId, {
-              isSystem: true,
-              action: actionType,
-              name: effectiveUserName,
-              photo: effectiveUserPhoto || "",
-              uid: effectiveUid,
-              time: Date.now()
-            });
-          }}
-          handlePartySyncAction={async (action: string, offset = 0) => {
-            if (!partyId) return;
-            await partySyncService.syncAction(partyId, {
-              status: action,
-              syncTime: Date.now(),
-              currentOffset: offset
-            });
-          }}
-          handleLeaveParty={async () => {
-            if (partyId) {
-              await partySyncService.leaveParty(partyId, effectiveUid, effectiveUserName);
-            }
-            setPartyId(null);
-            setPartyData(null);
-            setSelectedMovie(null);
-            localStorage.removeItem('active_party_id');
-            window.history.pushState({}, '', window.location.pathname);
-          }}
-          db={db}
-          APP_ID={APP_ID}
-          isPartyCategory={currentCategory === 'party'}
-          isMinimized={isPartyMinimized}
-          setIsMinimized={setIsPartyMinimized}
-        />
-      )}
-
-      {/* GESTIONNAIRE RÉSEAU & MODE HORS-LIGNE PRO */}
-      <NetworkOfflineManager
-        lang={lang}
-        onOpenWatchlist={() => setCurrentCategory('watchlist')}
-        onOpenHistory={() => setCurrentCategory('history')}
-        showToast={showToast}
-        onStatusChange={setIsNetworkOffline}
-        openDetailTrigger={openOfflineDetailTrigger}
-      />
     </div>
   );
 }

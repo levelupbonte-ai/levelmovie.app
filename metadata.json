@@ -1,6 +1,6 @@
 {
   "name": "LevelMovie",
-  "description": "LevelMovie — Streaming Films & Séries HD Gratuit | LevelUp Ecosystem",
+  "description": "LevelUp Ecosystem : Plateforme technologique propulsée par l'IA. Création de sites, d'applications, services gratuits au quotidien et solutions de cybersécurité.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

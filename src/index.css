@@ -1,6 +1,39 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+@theme {
+  --font-sans: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+  --shadow-subtle: 0 4px 40px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+
+.fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.bg-mesh {
+  background-color: #ffffff;
+  background-image: radial-gradient(at 40% 20%, hsla(260,100%,94%,1) 0px, transparent 50%),
+  radial-gradient(at 80% 0%, hsla(220,100%,95%,1) 0px, transparent 50%),
+  radial-gradient(at 0% 50%, hsla(260,100%,98%,1) 0px, transparent 50%);
+}
 
 * {
   user-select: none;
@@ -55,13 +88,18 @@ body.party-mode {
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  background-color: #060608;
-  color: white;
+  font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+  background-color: #f9fafb;
+  color: #111827;
   -webkit-tap-highlight-color: transparent;
   padding-bottom: env(safe-area-inset-bottom);
   padding-top: env(safe-area-inset-top);
   overflow-x: hidden;
+}
+
+.levelmovie-app {
+  background-color: #060608;
+  color: white;
 }
 
 ::-webkit-scrollbar {
