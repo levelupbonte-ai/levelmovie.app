@@ -1,6 +1,6 @@
 {
-  "name": "LevelMovie",
-  "description": "LevelUp Ecosystem : Plateforme technologique propulsée par l'IA. Création de sites, d'applications, services gratuits au quotidien et solutions de cybersécurité.",
+  "name": "LevelUp Ecosystem",
+  "description": "LevelUp Ecosystem: Next-generation AI-powered technology platform. Custom website engineering, full-stack web applications, zero-risk development, free daily cloud utilities (LevelMovie, LevelMusic, LevelDay), and digital cybersecurity.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
