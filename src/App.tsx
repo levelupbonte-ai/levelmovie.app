@@ -3,33 +3,39 @@ import {
   Code, Cpu, Sparkles, Check, Star, ArrowRight, Headphones,
   Sun, Tv, ShieldCheck, CheckCircle2, Mail, Menu, X,
   Music, CloudSun, Film, PlayCircle, Play, Send, ExternalLink,
-  FileText, Layers, ChevronRight
+  FileText, Layers, ChevronRight, Lock, Shield
 } from 'lucide-react';
 import LevelMovieApp from './LevelMovieApp';
 import { LevelMusicApp } from './components/apps/LevelMusicApp';
 import { LevelDayApp } from './components/apps/LevelDayApp';
+import { ProjectStudioApp } from './components/apps/ProjectStudioApp';
+import { StudioPreparationScreen } from './components/apps/StudioPreparationScreen';
+import { BuildFirstFaq } from './components/BuildFirstFaq';
 import { LevelMovieLogo } from './constants';
 
-type AppRoute = 'ecosystem' | 'movie' | 'music' | 'weather';
+type AppRoute = 'ecosystem' | 'movie' | 'music' | 'weather' | 'studio';
 
 const ROUTE_PATHS: Record<AppRoute, string> = {
   ecosystem: '/',
   movie: '/levelmovie',
   music: '/music',
-  weather: '/weather'
+  weather: '/weather',
+  studio: '/studio'
 };
 
 const ROUTE_TITLES: Record<AppRoute, string> = {
   ecosystem: 'LevelUp Ecosystem | Next-Gen AI Web Development & Digital Platform',
   movie: 'LevelMovie — Stream Movies & Series HD | LevelUp Ecosystem',
   music: 'LevelMusic — Trending Audio & Previews | LevelUp Ecosystem',
-  weather: 'LevelDay — Live Weather & Atmospheric Data | LevelUp Ecosystem'
+  weather: 'LevelDay — Live Weather & Atmospheric Data | LevelUp Ecosystem',
+  studio: 'LevelUp Project Studio — Espace Pro & Cahier des Charges Étape par Étape'
 };
 
 function getRouteFromPath(path: string): AppRoute {
   if (path.startsWith('/levelmovie') || path.startsWith('/movie')) return 'movie';
   if (path.startsWith('/music') || path.startsWith('/levelmusic')) return 'music';
   if (path.startsWith('/weather') || path.startsWith('/levelday')) return 'weather';
+  if (path.startsWith('/studio') || path.startsWith('/project')) return 'studio';
   return 'ecosystem';
 }
 
@@ -45,8 +51,12 @@ export default function App() {
     return 'ecosystem';
   });
   
-  // Contact modal state
+  // Contact modal and Studio states
   const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
+  const [isPreparingStudio, setIsPreparingStudio] = useState(false);
+  const [studioInitialPackage, setStudioInitialPackage] = useState('Starter Website ($350)');
+  const [studioInitialMessage, setStudioInitialMessage] = useState('');
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',
@@ -55,7 +65,23 @@ export default function App() {
   });
   const [contactSent, setContactSent] = useState(false);
 
-  // Helper to open inquiry form with pre-selected package or initial message
+  // Helper to open the full-page Project Studio with a 4-second preparation animation in superposition over the site
+  const openStudio = (pkg?: string, msg?: string) => {
+    if (pkg) setStudioInitialPackage(pkg);
+    if (msg !== undefined) setStudioInitialMessage(msg);
+    setIsPreparingStudio(true);
+  };
+
+  const handlePreparationComplete = () => {
+    setIsPreparingStudio(false);
+    navigateTo('studio');
+  };
+
+  const handlePreparationCancel = () => {
+    setIsPreparingStudio(false);
+  };
+
+  // Helper to open quick inquiry modal form with pre-selected package or initial message
   const openInquiryWithPackage = (projectType?: string, initialMessage?: string) => {
     setContactForm(prev => ({
       ...prev,
@@ -142,6 +168,15 @@ export default function App() {
 
   return (
     <>
+      {/* Superposition Loading Screen over the site */}
+      {isPreparingStudio && (
+        <StudioPreparationScreen
+          onComplete={handlePreparationComplete}
+          onCancel={handlePreparationCancel}
+          lang="fr"
+        />
+      )}
+
       {/* SEPARATE DEDICATED APP VIEW: LEVELMOVIE (/levelmovie) */}
       {currentAppView === 'movie' && (
         <div className="relative w-full min-h-screen levelmovie-app bg-[#060608]">
@@ -160,6 +195,18 @@ export default function App() {
       {currentAppView === 'weather' && (
         <div className="relative w-full h-screen bg-[#02050e] text-white overflow-hidden">
           <LevelDayApp lang="en" onClose={() => navigateTo('ecosystem')} />
+        </div>
+      )}
+
+      {/* SEPARATE DEDICATED APP VIEW: PROJECT STUDIO (/studio) */}
+      {currentAppView === 'studio' && (
+        <div className="relative w-full min-h-screen bg-[#07080f] text-white">
+          <ProjectStudioApp
+            initialPackage={studioInitialPackage}
+            initialMessage={studioInitialMessage}
+            onClose={() => navigateTo('ecosystem')}
+            lang="fr"
+          />
         </div>
       )}
 
@@ -195,16 +242,19 @@ export default function App() {
               <a href="#services" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Services</a>
               <a href="#ecosystem" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Apps</a>
               <a href="#security" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Security</a>
+              <a href="#faq" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">FAQ</a>
             </nav>
 
             {/* CTA Button */}
             <div className="hidden md:flex items-center">
-              <a
-                href="#contact"
-                className="bg-gray-900 hover:bg-[#7c3aed] text-white px-5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider transition-all shadow-sm hover:shadow-md cursor-pointer"
+              <button
+                type="button"
+                id="navbar-join-ecosystem-btn"
+                onClick={() => openStudio()}
+                className="bg-gray-900 hover:bg-[#7c3aed] text-white px-5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider transition-all shadow-sm hover:shadow-md cursor-pointer flex items-center justify-center"
               >
-                Join Ecosystem
-              </a>
+                <span>Join Ecosystem</span>
+              </button>
             </div>
 
             {/* Mobile Menu Toggle Button */}
@@ -247,12 +297,22 @@ export default function App() {
                 Security
               </a>
               <a
-                href="#contact"
+                href="#faq"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block mt-4 text-center px-3 py-3 rounded-none text-base font-medium bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+                className="block px-3 py-3 rounded-none text-base font-medium text-gray-700 hover:text-[#7c3aed] hover:bg-gray-50"
+              >
+                FAQ
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  openStudio();
+                }}
+                className="w-full block mt-4 text-center px-3 py-3 rounded-none text-base font-medium bg-[#7c3aed] text-white hover:bg-[#6d28d9] cursor-pointer"
               >
                 Join Ecosystem
-              </a>
+              </button>
             </div>
           </div>
         )}
@@ -509,7 +569,7 @@ export default function App() {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
-                  <span className="text-gray-600">Encrypted database & cloud setup</span>
+                  <span className="text-gray-600">Encrypted high-security cloud setup</span>
                 </li>
                 <li className="flex items-start gap-2.5 bg-[#f5f3ff] p-2 rounded-none border border-[#ede9fe]">
                   <Star className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5 fill-[#7c3aed]" />
@@ -874,33 +934,47 @@ export default function App() {
                   <span>Cyber hygiene & best practices</span>
                 </li>
               </ul>
+
+              {/* Security Action Buttons */}
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <button
+                  type="button"
+                  id="security-learn-btn"
+                  onClick={() => setSecurityModalOpen(true)}
+                  className="inline-flex items-center gap-2 bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-6 py-3 font-semibold text-sm transition-all shadow-md hover:shadow-lg active:scale-98 cursor-pointer rounded-none"
+                >
+                  <span>Learn More</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  id="security-audit-btn"
+                  onClick={() => openInquiryWithPackage('Web Security Audit', 'Hello, I would like to request an assessment or audit for our website security.')}
+                  className="inline-flex items-center gap-2 bg-white hover:bg-gray-100 text-gray-800 border border-gray-300 px-6 py-3 font-medium text-sm transition-all shadow-sm cursor-pointer rounded-none"
+                >
+                  <span>Request Security Audit</span>
+                </button>
+              </div>
             </div>
 
           </div>
         </div>
       </section>
 
+      {/* Build-First Zero-Risk Process FAQ Section */}
+      <BuildFirstFaq
+        onOpenStudio={() => openStudio()}
+        onOpenContact={() => openInquiryWithPackage('General Inquiry', 'Hello, I have a question about the build-first zero-risk process.')}
+      />
+
       {/* CTA Contact Section */}
       <section id="contact" className="py-20 bg-white fade-up border-t border-gray-100">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Ready to launch your project with us?</h2>
-          <p className="text-lg text-gray-600 mb-10">Remember: we build your product first, you inspect and validate, and you only pay after complete approval. Get in touch with our team today.</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="mailto:contact@levelupecosystem.com"
-              className="inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-none font-medium text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer"
-            >
-              <span>Start a Project</span>
-              <Mail className="w-5 h-5" />
-            </a>
-            <button
-              onClick={() => setContactModalOpen(true)}
-              className="inline-flex items-center justify-center gap-2 bg-[#f5f3ff] hover:bg-[#ede9fe] text-[#6d28d9] border border-[#ddd6fe] px-8 py-4 rounded-none font-medium text-lg transition-all shadow-sm hover:shadow-md cursor-pointer"
-            >
-              <span>Instant Project Form</span>
-              <Send className="w-5 h-5" />
-            </button>
-          </div>
+          <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">Remember: we build your product first, you inspect and validate, and you only pay after complete approval. Get in touch with our team today.</p>
+          <p className="text-sm text-gray-500">
+            Direct communications & inquiries: <a href="mailto:contact@levelupecosystem.com" className="text-[#7c3aed] font-semibold hover:underline">contact@levelupecosystem.com</a>
+          </p>
         </div>
       </section>
 
@@ -924,15 +998,24 @@ export default function App() {
 
             {/* Column 2: Request Forms */}
             <div>
-              <h4 className="font-semibold text-white text-sm uppercase tracking-wider mb-4">Request Forms</h4>
+              <h4 className="font-semibold text-white text-sm uppercase tracking-wider mb-4">Request & Studio</h4>
               <ul className="space-y-2.5 text-sm">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => openStudio()}
+                    className="hover:text-[#c4b5fd] text-[#a78bfa] font-medium transition-colors text-left cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>Start a Project (Studio)</span>
+                  </button>
+                </li>
                 <li>
                   <button
                     type="button"
                     onClick={() => openInquiryWithPackage()}
                     className="hover:text-white transition-colors text-left cursor-pointer"
                   >
-                    Instant Project Form
+                    Instant Project Form (Faire une demande)
                   </button>
                 </li>
                 <li>
@@ -992,6 +1075,7 @@ export default function App() {
                 </li>
                 <li><a href="#security" className="hover:text-white transition-colors">Cybersecurity Center</a></li>
                 <li><a href="#process" className="hover:text-white transition-colors">Zero-Risk Guarantee</a></li>
+                <li><a href="#faq" className="hover:text-white transition-colors">Zero-Risk FAQ</a></li>
               </ul>
             </div>
 
@@ -1108,6 +1192,115 @@ export default function App() {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Security Details Modal (Opened via Learn More in Security section) */}
+      {securityModalOpen && (
+        <div
+          id="security-modal"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => setSecurityModalOpen(false)}
+        >
+          <div
+            className="bg-white max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-gray-200 relative animate-in fade-in zoom-in-95 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSecurityModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-none hover:bg-gray-100 transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Modal Header */}
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-12 h-12 bg-[#f5f3ff] text-[#7c3aed] border border-[#ede9fe] flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-7 h-7" />
+              </div>
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-purple-100 text-[#7c3aed] text-xs font-bold uppercase tracking-wider mb-1">
+                  <Lock className="w-3 h-3" />
+                  <span>Security & Digital Protection Standards</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+                  How LevelUp Protects Your Digital Presence
+                </h3>
+              </div>
+            </div>
+
+            {/* Security Pillars Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              
+              {/* Pillar 1 */}
+              <div className="p-4 bg-gray-50 border border-gray-200">
+                <div className="flex items-center gap-2 mb-2 text-[#7c3aed] font-bold text-sm">
+                  <Shield className="w-4 h-4" />
+                  <h4>Data Defense & Encryption</h4>
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  End-to-end TLS 1.3 in-transit encryption and AES-256 data storage standards ensure all user transactions and communications remain completely confidential.
+                </p>
+              </div>
+
+              {/* Pillar 2 */}
+              <div className="p-4 bg-gray-50 border border-gray-200">
+                <div className="flex items-center gap-2 mb-2 text-[#7c3aed] font-bold text-sm">
+                  <ShieldCheck className="w-4 h-4" />
+                  <h4>Anti-Phishing & Threat Alerts</h4>
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Active monitoring against lookalike domains, credential harvesting, spoofing, and rogue redirection ensures your visitors reach your authentic platforms.
+                </p>
+              </div>
+
+              {/* Pillar 3 */}
+              <div className="p-4 bg-gray-50 border border-gray-200">
+                <div className="flex items-center gap-2 mb-2 text-[#7c3aed] font-bold text-sm">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <h4>Zero-Trust Code Audits</h4>
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Strict OWASP Top 10 mitigation routines, automated dependency CVE scanning, and secure headers (CSP, CORS, HSTS) are baked into every build.
+                </p>
+              </div>
+
+              {/* Pillar 4 */}
+              <div className="p-4 bg-gray-50 border border-gray-200">
+                <div className="flex items-center gap-2 mb-2 text-[#7c3aed] font-bold text-sm">
+                  <Lock className="w-4 h-4" />
+                  <h4>Privacy-First Architecture</h4>
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Zero sale of customer data, zero invasive third-party tracking scripts, and strict compliance with global privacy standards (GDPR-ready).
+                </p>
+              </div>
+
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => setSecurityModalOpen(false)}
+                className="w-full sm:w-auto px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSecurityModalOpen(false);
+                  openInquiryWithPackage('Web Security Audit', 'Hello, I would like to schedule a security consultation and audit for our website or application.');
+                }}
+                className="w-full sm:w-auto px-6 py-2.5 bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-sm font-semibold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Request Security Audit</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}
