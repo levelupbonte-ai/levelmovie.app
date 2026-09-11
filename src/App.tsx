@@ -3,12 +3,15 @@ import {
   Code, Cpu, Sparkles, Check, Star, ArrowRight, Headphones,
   Sun, Tv, ShieldCheck, CheckCircle2, Mail, Menu, X,
   Music, CloudSun, Film, PlayCircle, Play, Send, ExternalLink,
-  FileText, Layers, ChevronRight
+  FileText, Layers, ChevronRight, User as UserIcon, LogOut
 } from 'lucide-react';
 import LevelMovieApp from './LevelMovieApp';
 import { LevelMusicApp } from './components/apps/LevelMusicApp';
 import { LevelDayApp } from './components/apps/LevelDayApp';
-import { LevelMovieLogo } from './constants';
+import { AuthModal } from './components/AuthModal';
+import { VitrineSitesModal } from './components/VitrineSitesModal';
+import { LevelAvatar } from './components/LevelAvatar';
+import { LevelMovieLogo, LevelUpEcosystemStar } from './constants';
 
 type AppRoute = 'ecosystem' | 'movie' | 'music' | 'weather';
 
@@ -45,6 +48,47 @@ export default function App() {
     return 'ecosystem';
   });
   
+  // Ecosystem Member Auth & Showcase Modals
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [vitrineModalOpen, setVitrineModalOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState<{ text: string; type: string } | null>(null);
+
+  // Ecosystem Member Session
+  const [currentUser, setCurrentUser] = useState<{
+    name: string;
+    email: string;
+    photo?: string | null;
+    uid?: string;
+  } | null>(() => {
+    if (typeof window !== 'undefined') {
+      const email = localStorage.getItem('levelmovie_user_email');
+      const name = localStorage.getItem('levelmovie_user_name') || localStorage.getItem('levelmovie_username');
+      const photo = localStorage.getItem('levelmovie_user_photo') || localStorage.getItem('lm_photo');
+      const uid = localStorage.getItem('levelmovie_user_uid');
+      if (email && name) {
+        return { email, name, photo, uid: uid || 'usr_saved' };
+      }
+    }
+    return null;
+  });
+
+  const showToast = (text: string, type: string = 'info') => {
+    setToastMsg({ text, type });
+    setTimeout(() => setToastMsg(null), 4000);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('levelmovie_user_email');
+    localStorage.removeItem('levelmovie_user_name');
+    localStorage.removeItem('levelmovie_username');
+    localStorage.removeItem('levelmovie_user_photo');
+    localStorage.removeItem('lm_photo');
+    localStorage.removeItem('levelmovie_user_uid');
+    localStorage.removeItem('levelmovie_user_handle');
+    setCurrentUser(null);
+    showToast('Vous avez été déconnecté avec succès.', 'info');
+  };
+
   // Contact modal state
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [contactForm, setContactForm] = useState({
@@ -191,20 +235,52 @@ export default function App() {
             </div>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden md:flex space-x-6 lg:space-x-8">
+            <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
               <a href="#services" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Services</a>
               <a href="#ecosystem" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Apps</a>
+              <button
+                type="button"
+                onClick={() => setVitrineModalOpen(true)}
+                className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors cursor-pointer"
+              >
+                <span>Vitrine Sites</span>
+              </button>
               <a href="#security" className="text-gray-600 hover:text-[#7c3aed] font-medium transition-colors">Security</a>
             </nav>
 
-            {/* CTA Button */}
+            {/* CTA Button / Member Profile */}
             <div className="hidden md:flex items-center">
-              <a
-                href="#contact"
-                className="bg-gray-900 hover:bg-[#7c3aed] text-white px-5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider transition-all shadow-sm hover:shadow-md cursor-pointer"
-              >
-                Join Ecosystem
-              </a>
+              {currentUser ? (
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setAuthModalOpen(true)}
+                    className="flex items-center gap-2 py-1 px-2.5 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-none text-xs font-bold text-purple-900 transition-colors cursor-pointer"
+                    title="Mon compte membre LevelUp"
+                  >
+                    <LevelAvatar avatar={currentUser.photo || ''} name={currentUser.name} size="sm" />
+                    <span className="max-w-[120px] truncate">{currentUser.name}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="text-xs text-gray-500 hover:text-red-600 font-medium px-1.5 py-1 transition-colors cursor-pointer flex items-center gap-1"
+                    title="Se déconnecter"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Quitter</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setAuthModalOpen(true)}
+                  className="bg-gray-900 hover:bg-[#7c3aed] text-white px-5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider transition-all shadow-sm hover:shadow-md cursor-pointer flex items-center gap-2 group"
+                >
+                  <LevelUpEcosystemStar className="w-4 h-4 text-[#a78bfa] group-hover:text-white transition-colors" color="currentColor" />
+                  <span>Join Ecosystem</span>
+                </button>
+              )}
             </div>
 
             {/* Mobile Menu Toggle Button */}
@@ -239,6 +315,16 @@ export default function App() {
               >
                 Apps
               </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setVitrineModalOpen(true);
+                }}
+                className="block w-full text-left px-3 py-3 rounded-none text-base font-medium text-[#7c3aed] hover:bg-purple-50 cursor-pointer"
+              >
+                <span>Vitrine de Sites Web</span>
+              </button>
               <a
                 href="#security"
                 onClick={() => setMobileMenuOpen(false)}
@@ -246,13 +332,40 @@ export default function App() {
               >
                 Security
               </a>
-              <a
-                href="#contact"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block mt-4 text-center px-3 py-3 rounded-none text-base font-medium bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
-              >
-                Join Ecosystem
-              </a>
+              
+              {currentUser ? (
+                <div className="mt-4 pt-3 border-t border-gray-100 space-y-2">
+                  <div className="flex items-center gap-2.5 px-3 py-2 bg-purple-50">
+                    <LevelAvatar avatar={currentUser.photo || ''} name={currentUser.name} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-gray-900 truncate">{currentUser.name}</p>
+                      <p className="text-[11px] text-gray-500 truncate">{currentUser.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="block w-full text-center px-3 py-2.5 rounded-none text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 cursor-pointer"
+                  >
+                    Se déconnecter
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setAuthModalOpen(true);
+                  }}
+                  className="flex items-center justify-center gap-2 w-full mt-4 text-center px-3 py-3 rounded-none text-base font-medium bg-[#7c3aed] text-white hover:bg-[#6d28d9] cursor-pointer"
+                >
+                  <LevelUpEcosystemStar className="w-5 h-5 text-white" color="currentColor" />
+                  <span>Join Ecosystem</span>
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -894,11 +1007,10 @@ export default function App() {
               <Mail className="w-5 h-5" />
             </a>
             <button
-              onClick={() => setContactModalOpen(true)}
-              className="inline-flex items-center justify-center gap-2 bg-[#f5f3ff] hover:bg-[#ede9fe] text-[#6d28d9] border border-[#ddd6fe] px-8 py-4 rounded-none font-medium text-lg transition-all shadow-sm hover:shadow-md cursor-pointer"
+              onClick={() => setVitrineModalOpen(true)}
+              className="inline-flex items-center justify-center bg-[#f5f3ff] hover:bg-[#ede9fe] text-[#6d28d9] border border-[#ddd6fe] px-8 py-4 rounded-none font-semibold text-lg transition-all shadow-sm hover:shadow-md cursor-pointer"
             >
-              <span>Instant Project Form</span>
-              <Send className="w-5 h-5" />
+              <span>Vitrine de Sites & Designs</span>
             </button>
           </div>
         </div>
@@ -922,10 +1034,19 @@ export default function App() {
               </p>
             </div>
 
-            {/* Column 2: Request Forms */}
+            {/* Column 2: Request Forms & Vitrine */}
             <div>
-              <h4 className="font-semibold text-white text-sm uppercase tracking-wider mb-4">Request Forms</h4>
+              <h4 className="font-semibold text-white text-sm uppercase tracking-wider mb-4">Vitrine & Commandes</h4>
               <ul className="space-y-2.5 text-sm">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setVitrineModalOpen(true)}
+                    className="hover:text-white transition-colors text-left cursor-pointer text-purple-300 font-medium"
+                  >
+                    <span>Vitrine de Sites & Designs</span>
+                  </button>
+                </li>
                 <li>
                   <button
                     type="button"
@@ -1109,6 +1230,60 @@ export default function App() {
               </form>
             )}
           </div>
+        </div>
+      )}
+
+      {/* LevelUp Ecosystem Authentication Modal (No Username Requirement) */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        hideUsername={true}
+        appName="LevelUp Ecosystem"
+        subtitle="Accédez à votre espace membre, projets et services exclusifs."
+        lang="fr"
+        showToast={showToast}
+        onLoginSuccess={(loggedUser, name, email, photo) => {
+          const uid = loggedUser?.uid || loggedUser?.id || `usr_${Date.now()}`;
+          const userObj = { name, email, photo, uid };
+          setCurrentUser(userObj);
+          if (email) localStorage.setItem('levelmovie_user_email', email);
+          if (name) localStorage.setItem('levelmovie_user_name', name);
+          if (photo) localStorage.setItem('levelmovie_user_photo', photo);
+          localStorage.setItem('levelmovie_user_uid', uid);
+          setAuthModalOpen(false);
+          showToast(`Bienvenue sur LevelUp Ecosystem, ${name} !`, 'success');
+        }}
+      />
+
+      {/* Vitrine de Sites & Designs Showcase Modal */}
+      <VitrineSitesModal
+        isOpen={vitrineModalOpen}
+        onClose={() => setVitrineModalOpen(false)}
+        onLaunchApp={(targetRoute) => {
+          setVitrineModalOpen(false);
+          navigateTo(targetRoute);
+        }}
+        onSelectDesignForProject={(design) => {
+          setVitrineModalOpen(false);
+          openInquiryWithPackage(
+            `Starter Website ($350) - Design: ${design.title}`,
+            `Bonjour l'équipe LevelUp,\n\nJe souhaite lancer mon projet basé sur le design "${design.title}" (${design.category}). Pouvez-vous préparer un premier prototype sans frais ?`
+          );
+        }}
+        onRequestCustomProject={() => {
+          setVitrineModalOpen(false);
+          openInquiryWithPackage(
+            'Ecosystem Premium (Custom Quote)',
+            `Bonjour l'équipe LevelUp,\n\nJ'ai parcouru la vitrine de sites et je souhaite concevoir un projet web sur-mesure pour mon activité.`
+          );
+        }}
+      />
+
+      {/* Floating System Toast Notification */}
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 z-[999999] bg-gray-900 text-white px-5 py-3 shadow-2xl border border-purple-500/40 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4">
+          <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+          <span className="text-xs font-medium">{toastMsg.text}</span>
         </div>
       )}
 

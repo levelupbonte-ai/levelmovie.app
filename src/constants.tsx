@@ -1,5 +1,26 @@
 import React from 'react';
 
+export const LevelUpEcosystemStar = ({ 
+  className = "w-5 h-5", 
+  color = "currentColor" 
+}: { 
+  className?: string; 
+  color?: string; 
+}) => (
+  <svg 
+    viewBox="0 0 32 32" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg" 
+    className={className}
+    style={{ display: 'inline-block', verticalAlign: 'middle' }}
+  >
+    <path 
+      d="M16 1.5L19.53 10.87C19.78 11.52 20.48 11.96 21.18 11.96H30.5L23.04 17.65C22.48 18.08 22.25 18.82 22.45 19.49L25.3 28.86L17.7 23.33C17.16 22.94 16.42 22.94 15.88 23.33L8.28 28.86L11.13 19.49C11.33 18.82 11.1 18.08 10.54 17.65L3.08 11.96H12.4C13.1 11.96 13.8 11.52 14.05 10.87L16 1.5Z" 
+      fill={color}
+    />
+  </svg>
+);
+
 export const DonaStar = ({ className = "w-6 h-6" }: { className?: string }) => {
   const gradientId = React.useId ? React.useId().replace(/:/g, "_") : "dona_star_grad";
   return (
@@ -58,6 +79,63 @@ export const LevelMovieLogo = ({
       </defs>
       <path d="M5 4V17C5 19.2091 6.79086 21 9 21H20" stroke={strokeColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
       <path d="M10 8.35824C10 7.42436 11.0185 6.8488 11.8153 7.33235L17.5855 10.8242C18.3571 11.2915 18.3571 12.4137 17.5855 12.881L11.8153 16.3728C11.0185 16.8564 10 16.2808 10 15.347V8.35824Z" fill={fillColor}/>
+    </svg>
+  );
+};
+
+export const LevelMusicLogo = ({ 
+  className = "w-6 h-6", 
+  color,
+  useGradient = true
+}: { 
+  className?: string; 
+  color?: string;
+  useGradient?: boolean;
+}) => {
+  const gradId = "lvl_music_logo_grad";
+  const strokeColor = useGradient ? `url(#${gradId})` : (color || "currentColor");
+  const fillColor = useGradient ? `url(#${gradId})` : (color || "currentColor");
+
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#c084fc" />
+          <stop offset="50%" stopColor="#818cf8" />
+          <stop offset="100%" stopColor="#ec4899" />
+        </linearGradient>
+      </defs>
+      <path d="M9 17V8.5L16 6.8V14.5" stroke={strokeColor} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="7" cy="17" r="2.5" fill={fillColor}/>
+      <circle cx="14" cy="14.5" r="2.5" fill={fillColor}/>
+    </svg>
+  );
+};
+
+export const LevelDayLogo = ({ 
+  className = "w-6 h-6", 
+  color,
+  useGradient = true
+}: { 
+  className?: string; 
+  color?: string;
+  useGradient?: boolean;
+}) => {
+  const gradId = "lvl_day_logo_grad";
+  const strokeColor = useGradient ? `url(#${gradId})` : (color || "currentColor");
+  const fillColor = useGradient ? `url(#${gradId})` : (color || "currentColor");
+
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fde047" />
+          <stop offset="50%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#f97316" />
+        </linearGradient>
+      </defs>
+      <circle cx="12" cy="12" r="4.5" fill={fillColor}/>
+      <path d="M12 2.5V5M12 19V21.5M2.5 12H5M19 12H21.5M5.28 5.28L7.05 7.05M16.95 16.95L18.72 18.72M5.28 18.72L7.05 16.95M16.95 7.05L18.72 5.28" stroke={strokeColor} strokeWidth="2" strokeLinecap="round"/>
     </svg>
   );
 };

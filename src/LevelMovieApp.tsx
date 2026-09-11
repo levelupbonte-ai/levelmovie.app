@@ -391,8 +391,8 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
     };
   }, [user]);
 
-  const [showSplash, setShowSplash] = useState(true);
-  const [splashStep, setSplashStep] = useState(0);
+  const [showSplash, setShowSplash] = useState(false);
+  const [splashStep, setSplashStep] = useState(3);
   const [browserCheck, setBrowserCheck] = useState<{ status: 'idle' | 'checking' | 'done'; isOpera: boolean; text: string }>({
     status: 'checking',
     isOpera: false,
@@ -1285,73 +1285,6 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
     }
     return list;
   }, [currentCategory, langCode, langFilter, adultFilterParams, t]);
-
-  if (isMaintenance && !showSplash) {
-    return (
-      <MaintenanceScreen
-        userCity={geoInfo?.city}
-        userRegion={geoInfo?.region}
-        userCountry={geoInfo?.country}
-        lang={lang}
-        onRefresh={checkRegionAccess}
-        onBypass={() => setIsMaintenance(false)}
-        onGpsDetect={handleGpsDetect}
-      />
-    );
-  }
-
-  if (showSplash) {
-    return (
-      <div className={`fixed inset-0 z-[9999] bg-[#060608] flex items-center justify-center flex-col overflow-hidden transition-opacity duration-500 ${splashStep === 2 ? 'opacity-0' : 'opacity-100'}`}>
-        <style>{globalStyles}</style>
-
-        {/* Dynamic Movie Catalog Background */}
-        <CinematicPosterWall opacity={0.45} />
-
-        <div className={`splash-text relative z-10 flex flex-col items-center px-4 w-full max-w-lg mx-auto ${splashStep === 1 ? 'active' : ''} ${splashStep >= 2 ? 'exit' : ''}`}>
-          {/* Logo with purple glow */}
-          <div className="relative mb-5">
-            <div className="absolute inset-0 bg-[#8b5cf6]/35 blur-2xl rounded-full scale-125" />
-            <LevelMovieLogo className="w-20 h-20 text-[#a855f7] relative z-10 drop-shadow-[0_0_30px_rgba(168,85,247,0.85)]" />
-          </div>
-
-          <div className="text-4xl sm:text-5xl font-black tracking-widest drop-shadow-2xl">
-            <span className="text-white">Level</span><span className="bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] bg-clip-text text-transparent">Movie</span>
-          </div>
-
-          {/* Discreet Single-Line Status (No heavy boxes/bubbles) */}
-          <div className="w-full max-w-xs mt-6 flex flex-col items-center gap-3 px-2">
-            <div className="flex items-center gap-2 text-white/70">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#a855f7] animate-ping" />
-              <span className="text-xs font-mono tracking-wide">
-                {catalogCheck.status === 'done'
-                  ? (lang === 'fr' ? 'Expérience Cinéma Prête' : 'Ready')
-                  : serverCheck.status === 'done'
-                  ? (lang === 'fr' ? 'Indexation du catalogue...' : 'Syncing catalog...')
-                  : browserCheck.status === 'done'
-                  ? (lang === 'fr' ? 'Connexion aux serveurs...' : 'Connecting servers...')
-                  : (lang === 'fr' ? 'Initialisation...' : 'Initializing...')}
-              </span>
-            </div>
-            
-            <div className="w-36 h-0.5 bg-white/10 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] transition-all duration-500 rounded-full"
-                style={{
-                  width: catalogCheck.status === 'done' ? '100%' : serverCheck.status === 'done' ? '66%' : browserCheck.status === 'done' ? '33%' : '15%'
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Powered by LevelUp - Bottom Discreet Footer */}
-        <div className="absolute bottom-6 sm:bottom-8 z-20 text-center text-[10px] sm:text-[11px] font-medium tracking-[0.25em] uppercase text-white/35 pointer-events-none select-none">
-          Powered by LevelUp
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-main text-white min-h-screen">

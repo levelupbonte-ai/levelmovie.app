@@ -4,7 +4,7 @@ import {
   User, UserPlus, LogOut, LogIn, ArrowRight, Star, Camera,
   Upload, CheckCircle2, Calendar, RefreshCw, BadgeCheck, ShieldAlert, Crown
 } from 'lucide-react';
-import { LevelMovieLogo, DEFAULT_AVATARS, AvatarPreset, recordWeeklyLogin } from '../constants';
+import { LevelMovieLogo, LevelMusicLogo, LevelDayLogo, DEFAULT_AVATARS, AvatarPreset, recordWeeklyLogin, LevelUpEcosystemStar } from '../constants';
 import { LevelAvatar } from './LevelAvatar';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -25,6 +25,9 @@ interface AuthModalProps {
   showToast: (msg: string, type?: string) => void;
   initialView?: AuthView;
   onboardingUser?: any;
+  hideUsername?: boolean;
+  appName?: string;
+  subtitle?: string;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -34,7 +37,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   lang,
   showToast,
   initialView = 'view-main',
-  onboardingUser = null
+  onboardingUser = null,
+  hideUsername = false,
+  appName = 'LevelMovie',
+  subtitle
 }) => {
   const [currentView, setCurrentView] = useState<AuthView>(initialView);
 
@@ -42,8 +48,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setCurrentView(initialView);
+      if (hideUsername) {
+        setRegStep(3);
+        setOnboardStep(3);
+      }
     }
-  }, [isOpen, initialView]);
+  }, [isOpen, initialView, hideUsername]);
 
   // Form states - Login
   const [loginEmail, setLoginEmail] = useState('');
@@ -51,7 +61,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   // Form states - Step-by-Step Registration (1: @ID, 2: Âge, 3: Email/Mdp, 4: Profil/Avatar, 5: Validation & Save)
-  const [regStep, setRegStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [regStep, setRegStep] = useState<1 | 2 | 3 | 4 | 5>(hideUsername ? 3 : 1);
   const [regUsername, setRegUsername] = useState('');
   const [regAge, setRegAge] = useState<string>('18');
   const [regEmail, setRegEmail] = useState('');
@@ -137,7 +147,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   ];
 
-  const showcasePosters = dynamicPosters.length > 0 ? dynamicPosters : defaultShowcasePosters;
+  const ecosystemShowcasePosters = [
+    {
+      title: isFr ? 'Sites Web Haute Conversion & Sur-Mesure' : 'High-Converting Bespoke Websites',
+      bg: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1280&q=80',
+      rating: 'PageSpeed 99+',
+      overview: isFr ? 'Architecture moderne, vitesse instantanée et intégration Stripe & IA fluide.' : 'Cutting-edge architecture, instant loading and seamless Stripe & AI integrations.'
+    },
+    {
+      title: isFr ? 'Construit d\'abord, payez après validation' : 'Build First, Pay After Approval',
+      bg: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1280&q=80',
+      rating: isFr ? 'Garantie Totale' : 'Satisfaction Guaranteed',
+      overview: isFr ? 'Zéro acompte initial. Nous réalisons votre produit, vous inspectez chaque détail avant le paiement.' : 'Zero upfront deposit. We build your product, you inspect every detail before payment.'
+    },
+    {
+      title: isFr ? 'Applications Web & Solutions Cloud' : 'Web Applications & Cloud Solutions',
+      bg: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1280&q=80',
+      rating: 'Full-Stack Cloud',
+      overview: isFr ? 'Portails SaaS, APIs temps réel et intégrations intelligentes taillées pour votre croissance.' : 'SaaS portals, real-time APIs, and smart integrations tailored for scale.'
+    }
+  ];
+
+  const showcasePosters = (appName === 'LevelUp Ecosystem')
+    ? ecosystemShowcasePosters
+    : (dynamicPosters.length > 0 ? dynamicPosters : defaultShowcasePosters);
 
   // Auto carousel cycling
   useEffect(() => {
@@ -491,8 +524,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setLoading(true);
     setErrorMsg('');
 
-    const fullName = regFullName.trim() || regUsername.trim() || 'Cinéphile';
-    const cleanHandle = formatUsernameInput(regUsername);
+    const autoHandle = regEmail.trim().split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') || 'membre';
+    const cleanHandle = formatUsernameInput(hideUsername ? autoHandle : (regUsername || autoHandle));
+    const fullName = regFullName.trim() || cleanHandle || 'Membre';
     const ageNum = parseInt(regAge, 10) || 18;
 
     try {
@@ -538,7 +572,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           cleanHandle,
           ageNum
         );
-        showToast(isFr ? `Bienvenue sur LevelMovie, @${cleanHandle} !` : `Welcome to LevelMovie, @${cleanHandle}!`, 'success');
+        showToast(
+          isFr 
+            ? (appName ? `Bienvenue sur ${appName}, ${fullName} !` : `Bienvenue sur LevelMovie, @${cleanHandle} !`) 
+            : (appName ? `Welcome to ${appName}, ${fullName}!` : `Welcome to LevelMovie, @${cleanHandle}!`), 
+          'success'
+        );
         handleClose();
       } else {
         setTimeout(() => {
@@ -565,7 +604,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             cleanHandle,
             ageNum
           );
-          showToast(isFr ? `Bienvenue sur LevelMovie, @${cleanHandle} !` : `Welcome to LevelMovie, @${cleanHandle}!`, 'success');
+          showToast(
+            isFr 
+              ? (appName ? `Bienvenue sur ${appName}, ${fullName} !` : `Bienvenue sur LevelMovie, @${cleanHandle} !`) 
+              : (appName ? `Welcome to ${appName}, ${fullName}!` : `Welcome to LevelMovie, @${cleanHandle}!`), 
+            'success'
+          );
           handleClose();
         }, 400);
       }
@@ -628,8 +672,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleOnboardingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    const cleanHandle = formatUsernameInput(onboardUsername);
-    const cleanName = onboardFullName.trim() || 'Cinéphile';
+    const autoHandle = (onboardFullName.trim() || 'user').toLowerCase().replace(/[^a-z0-9_]/g, '') || 'membre';
+    const cleanHandle = formatUsernameInput(hideUsername ? autoHandle : (onboardUsername || autoHandle));
+    const cleanName = onboardFullName.trim() || (hideUsername ? 'Membre' : 'Cinéphile');
     const ageNum = parseInt(onboardAge, 10) || 18;
 
     setLoading(true);
@@ -672,7 +717,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         cleanHandle,
         ageNum
       );
-      showToast(isFr ? `Bienvenue, @${cleanHandle} !` : `Welcome, @${cleanHandle}!`, 'success');
+      showToast(
+        isFr 
+          ? (appName ? `Bienvenue sur ${appName}, ${cleanName} !` : `Bienvenue, @${cleanHandle} !`) 
+          : (appName ? `Welcome to ${appName}, ${cleanName}!` : `Welcome, @${cleanHandle}!`), 
+        'success'
+      );
       handleClose();
     } catch (err: any) {
       setLoading(false);
@@ -692,13 +742,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     } else if (currentView === 'view-forgot-password' || currentView === 'view-forgot-password-sent') {
       navigateToView('view-login');
     } else if (currentView === 'view-register-credentials') {
-      if (regStep > 1) {
-        setRegStep((prev) => (prev - 1) as any);
+      if (hideUsername) {
+        if (regStep === 5) {
+          setRegStep(4);
+        } else if (regStep === 4) {
+          setRegStep(3);
+        } else {
+          navigateToView('view-register-choice');
+        }
       } else {
-        navigateToView('view-register-choice');
+        if (regStep > 1) {
+          setRegStep((prev) => (prev - 1) as any);
+        } else {
+          navigateToView('view-register-choice');
+        }
       }
     } else if (currentView === 'view-onboarding') {
-      if (onboardStep > 1) {
+      if (hideUsername) {
+        if (isSupabaseConfigured() && supabase) {
+          supabase.auth.signOut().catch(() => {});
+        }
+        handleClose();
+      } else if (onboardStep > 1) {
         setOnboardStep((prev) => (prev - 1) as any);
       } else {
         if (isSupabaseConfigured() && supabase) {
@@ -715,16 +780,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const isAgeRefused = parseInt(regAge, 10) < 16;
   const isOnboardAgeRefused = parseInt(onboardAge, 10) < 16;
+  const isEcosystem = appName === 'LevelUp Ecosystem';
 
   return (
-    <div className="fixed inset-0 z-[9600] w-full h-full bg-[#060609] text-[#e2e2e8] flex flex-col md:flex-row overflow-hidden animate-in fade-in duration-200 font-sans overscroll-contain">
+    <div className="fixed inset-0 z-[9600] w-full h-full flex flex-col md:flex-row overflow-hidden animate-in fade-in duration-200 font-sans overscroll-contain bg-[#0a0b12] text-[#e2e2e8]">
       
       {/* ======================================================== */}
       {/* GAUCHE: FORMULAIRE PRO & ÉPURÉ SANS POLLUTION VISUELLE   */}
       {/* ======================================================== */}
       <div 
         ref={scrollContainerRef} 
-        className="w-full md:w-1/2 h-full flex flex-col justify-between items-center p-6 sm:p-8 lg:p-10 overflow-y-auto overscroll-contain touch-pan-y bg-[#0c0c12] border-r border-[#1a1a26] relative z-20 custom-scrollbar"
+        className="w-full md:w-1/2 h-full flex flex-col justify-between items-center p-6 sm:p-8 lg:p-10 overflow-y-auto overscroll-contain touch-pan-y relative z-20 custom-scrollbar bg-[#0f1019] border-r border-[#1c1d2e] text-[#e2e2e8]"
       >
         
         {/* Conteneur Centré */}
@@ -739,15 +805,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 {/* Logo & Titre */}
                 <div className="text-center mb-8">
                   <div className="mx-auto mb-3.5 flex items-center justify-center">
-                    <LevelMovieLogo className="w-12 h-12 text-[#a855f7] drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
+                    {appName === 'LevelUp Ecosystem' ? (
+                      <LevelUpEcosystemStar className="w-12 h-12 text-[#a855f7]" color="currentColor" />
+                    ) : (
+                      <LevelMovieLogo className="w-12 h-12 text-[#a855f7] drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
+                    )}
                   </div>
-                  <h1 className="text-2xl sm:text-3xl font-black mb-2 text-white tracking-tight">
-                    Level<span className="text-[#a855f7]">Movie</span>
+                  <h1 className="text-2xl sm:text-3xl font-black mb-2 tracking-tight text-white">
+                    {appName === 'LevelUp Ecosystem' ? (
+                      <>LevelUp <span className="text-[#a855f7]">Ecosystem</span></>
+                    ) : (
+                      <>Level<span className="text-[#a855f7]">Movie</span></>
+                    )}
                   </h1>
                   <p className="text-white/60 text-xs sm:text-sm px-2 leading-relaxed">
-                    {isFr 
-                      ? 'Accédez à votre espace cinéma, salons Watch Party et favoris.' 
-                       : 'Access cinema streaming, synchronized rooms, and watchlists.'}
+                    {subtitle || (isFr 
+                      ? (appName === 'LevelUp Ecosystem' ? 'Accédez à votre espace, vos projets et l’ensemble des services LevelUp.' : 'Accédez à votre espace cinéma, salons Watch Party et favoris.') 
+                      : (appName === 'LevelUp Ecosystem' ? 'Access your unified account, projects and LevelUp services.' : 'Access cinema streaming, synchronized rooms, and watchlists.'))}
                   </p>
                 </div>
 
@@ -765,7 +839,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button
                     type="button"
                     onClick={() => navigateToView('view-register-choice')}
-                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#9333ea] hover:bg-[#7e22ce] text-white rounded-xl font-bold transition-all shadow-md active:scale-[0.99] cursor-pointer text-sm"
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-xl font-bold transition-all shadow-md active:scale-[0.99] cursor-pointer text-sm"
                   >
                     <UserPlus className="w-4 h-4 shrink-0" />
                     <span>{isFr ? 'Créer un compte' : 'Create an account'}</span>
@@ -775,9 +849,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button
                     type="button"
                     onClick={() => navigateToView('view-login')}
-                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#14141e] hover:bg-[#1a1a28] text-white rounded-xl font-bold transition-all border border-[#2a2a3c] hover:border-[#a855f7]/50 active:scale-[0.99] cursor-pointer text-sm"
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl font-bold transition-all active:scale-[0.99] cursor-pointer text-sm bg-[#161726] hover:bg-[#1f2034] text-white border border-[#2b2d42] hover:border-[#a855f7]/50"
                   >
-                    <LogIn className="w-4 h-4 text-[#c084fc] shrink-0" />
+                    {appName === 'LevelUp Ecosystem' ? (
+                      <LevelUpEcosystemStar className="w-4 h-4 text-[#a855f7] shrink-0" color="currentColor" />
+                    ) : (
+                      <LogIn className="w-4 h-4 text-[#c084fc] shrink-0" />
+                    )}
                     <span>{isFr ? 'Se connecter' : 'Sign in'}</span>
                   </button>
 
@@ -785,7 +863,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-transparent hover:bg-white/5 text-white/50 hover:text-white rounded-xl font-medium transition-all text-xs cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium transition-all text-xs cursor-pointer bg-transparent hover:bg-white/5 text-white/50 hover:text-white"
                   >
                     <LogOut className="w-3.5 h-3.5 text-white/40" />
                     <span>{isFr ? 'Sortir' : 'Exit'}</span>
@@ -802,10 +880,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 
                 {/* En-tête */}
                 <div className="text-center mb-6">
-                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
                     {isFr ? 'Créer un compte' : 'Create Account'}
                   </h2>
-                  <p className="text-xs text-white/60 mt-1 max-w-xs mx-auto">
+                  <p className="text-xs mt-1 max-w-xs mx-auto text-white/60">
                     {isFr 
                       ? 'Choisissez votre méthode d’inscription :' 
                       : 'Choose your preferred signup method:'}
@@ -821,12 +899,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                 <div className="space-y-3">
                   
-                  {/* OPTION 1 : GOOGLE (PRO, SANS BULLE) */}
+                  {/* OPTION 1 : GOOGLE */}
                   <button
                     type="button"
                     onClick={handleGoogleAuth}
                     disabled={loading}
-                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-white hover:bg-neutral-100 text-neutral-900 rounded-xl font-bold transition-all border border-white shadow-sm active:scale-[0.99] cursor-pointer text-xs sm:text-sm"
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl font-bold transition-all shadow-sm active:scale-[0.99] cursor-pointer text-xs sm:text-sm bg-white hover:bg-neutral-100 text-neutral-900 border border-white"
                   >
                     <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -841,12 +919,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      setRegStep(1);
+                      setRegStep(hideUsername ? 3 : 1);
                       navigateToView('view-register-credentials');
                     }}
-                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#14141e] hover:bg-[#1a1a28] text-white rounded-xl font-bold transition-all border border-[#2a2a3c] hover:border-[#a855f7]/60 active:scale-[0.99] cursor-pointer text-xs sm:text-sm"
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl font-bold transition-all active:scale-[0.99] cursor-pointer text-xs sm:text-sm bg-[#161726] hover:bg-[#1f2034] text-white border border-[#2b2d42] hover:border-[#a855f7]/60"
                   >
-                    <Mail className="w-4 h-4 text-[#c084fc] shrink-0" />
+                    <Mail className="w-4 h-4 shrink-0 text-[#c084fc]" />
                     <span>{isFr ? 'S’inscrire avec une adresse e-mail' : 'Sign up with email'}</span>
                   </button>
 
@@ -857,7 +935,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button
                     type="button"
                     onClick={() => navigateToView('view-login')}
-                    className="text-xs text-white/60 hover:text-white transition-colors cursor-pointer"
+                    className="text-xs transition-colors cursor-pointer text-white/60 hover:text-white"
                   >
                     {isFr ? (
                       <>Vous avez déjà un compte ? <span className="text-[#c084fc] font-bold">Se connecter</span></>
@@ -874,10 +952,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             {currentView === 'view-login' && (
               <div className="animate-in fade-in duration-150">
                 <div className="text-center mb-6">
-                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
                     {isFr ? 'Connexion' : 'Sign In'}
                   </h2>
-                  <p className="text-xs text-white/50 mt-1">
+                  <p className="text-xs mt-1 text-white/50">
                     {isFr ? 'Identifiez-vous pour accéder à vos contenus :' : 'Sign in to access your contents:'}
                   </p>
                 </div>
@@ -889,13 +967,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </div>
                 )}
 
-                {/* SYSTÈME 1 : GOOGLE PRO SANS BULLE */}
+                {/* SYSTÈME 1 : GOOGLE */}
                 <div className="mb-4">
                   <button
                     type="button"
                     onClick={handleGoogleAuth}
                     disabled={loading}
-                    className="w-full flex items-center justify-center px-4 py-3 bg-white hover:bg-neutral-100 text-neutral-900 rounded-xl font-bold transition-all border border-white shadow-sm cursor-pointer active:scale-[0.99] text-xs sm:text-sm"
+                    className="w-full flex items-center justify-center px-4 py-3 rounded-xl font-bold transition-all shadow-sm cursor-pointer active:scale-[0.99] text-xs sm:text-sm bg-white hover:bg-neutral-100 text-neutral-900 border border-white"
                   >
                     <svg className="h-4 w-4 mr-2.5 shrink-0" viewBox="0 0 24 24">
                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -910,7 +988,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 {/* SÉPARATEUR */}
                 <div className="relative my-4 flex items-center justify-center">
                   <div className="w-full border-t border-white/10" />
-                  <span className="absolute px-3 bg-[#0c0c12] text-[10px] font-bold uppercase tracking-wider text-white/40">
+                  <span className="absolute px-3 bg-[#0f1019] text-white/40 text-[10px] font-bold uppercase tracking-wider">
                     {isFr ? 'ou avec identifiants e-mail' : 'or with email credentials'}
                   </span>
                 </div>
@@ -918,14 +996,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 {/* SYSTÈME 2 : FORMULAIRE E-MAIL */}
                 <form onSubmit={handleLoginSubmit} className="space-y-3.5">
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-white/70 mb-1">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider mb-1 text-white/70">
                       {isFr ? 'E-mail' : 'Email'}
                     </label>
                     <input
                       type="email"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] outline-none shadow-inner"
+                      className="w-full px-4 py-3 rounded-xl text-xs sm:text-sm outline-none transition-all bg-[#161726] border border-[#2b2d42] text-white placeholder-white/30 focus:border-[#a855f7] shadow-inner"
                       placeholder="nom@exemple.com"
                       autoFocus
                       required
@@ -940,7 +1018,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       <button
                         type="button"
                         onClick={() => navigateToView('view-forgot-password')}
-                        className="text-xs text-[#c084fc] hover:text-white transition-colors cursor-pointer font-medium"
+                        className="text-xs font-medium cursor-pointer transition-colors text-[#c084fc] hover:text-white"
                       >
                         {isFr ? 'Oublié ?' : 'Forgot?'}
                       </button>
@@ -950,14 +1028,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         type={showLoginPassword ? 'text' : 'password'}
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] outline-none pr-10 shadow-inner"
+                        className="w-full px-4 py-3 rounded-xl text-xs sm:text-sm outline-none pr-10 transition-all bg-[#161726] border border-[#2b2d42] text-white placeholder-white/30 focus:border-[#a855f7] shadow-inner"
                         placeholder="••••••••"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowLoginPassword(!showLoginPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white cursor-pointer"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer text-white/40 hover:text-white"
                       >
                         {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -967,26 +1045,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3.5 mt-2 bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-md"
+                    className="w-full py-3.5 mt-2 bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-md"
                   >
                     {loading ? (
                       <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
                     ) : (
-                      <span>{isFr ? 'Se connecter' : 'Sign In'}</span>
+                      <>
+                        {appName === 'LevelUp Ecosystem' && (
+                          <LevelUpEcosystemStar className="w-4 h-4 text-white shrink-0" color="currentColor" />
+                        )}
+                        <span>{isFr ? 'Se connecter' : 'Sign In'}</span>
+                      </>
                     )}
                   </button>
                 </form>
 
+                {/* Lien Créer un compte */}
                 <div className="mt-5 text-center">
                   <button
                     type="button"
                     onClick={() => navigateToView('view-register-choice')}
-                    className="text-xs text-white/60 hover:text-white transition-colors cursor-pointer"
+                    className="text-xs transition-colors cursor-pointer text-white/60 hover:text-white"
                   >
                     {isFr ? (
-                      <>Nouveau sur LevelMovie ? <span className="text-[#c084fc] font-bold">Créer un compte</span></>
+                      <>{appName === 'LevelUp Ecosystem' ? 'Nouveau sur l’Ecosystem ?' : 'Nouveau sur LevelMovie ?'} <span className="text-[#c084fc] font-bold">Créer un compte</span></>
                     ) : (
-                      <>New to LevelMovie? <span className="text-[#c084fc] font-bold">Create account</span></>
+                      <>{appName === 'LevelUp Ecosystem' ? 'New to Ecosystem?' : 'New to LevelMovie?' } <span className="text-[#c084fc] font-bold">Create account</span></>
                     )}
                   </button>
                 </div>
@@ -1017,14 +1101,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                 <form onSubmit={handleForgotSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-white/70 mb-1.5">
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-white/70">
                       {isFr ? 'E-mail' : 'Email'}
                     </label>
                     <input
                       type="email"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl text-xs sm:text-sm bg-[#14141e] border border-[#2a2a3c] text-white placeholder-white/30 focus:border-[#a855f7] outline-none shadow-inner"
+                      className="w-full px-4 py-3 rounded-xl text-xs sm:text-sm outline-none transition-all bg-[#161726] border border-[#2b2d42] text-white placeholder-white/30 focus:border-[#a855f7] shadow-inner"
                       placeholder="nom@exemple.com"
                       autoFocus
                       required
@@ -1034,7 +1118,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3.5 bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-md"
+                    className="w-full py-3.5 bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-md"
                   >
                     {loading ? (
                       <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -1049,7 +1133,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             {/* VUE 4 : MOT DE PASSE OUBLIÉ - ENVOYÉ */}
             {currentView === 'view-forgot-password-sent' && (
               <div className="text-center py-4 animate-in fade-in duration-150">
-                <div className="w-12 h-12 rounded-2xl bg-[#1c122c] border border-[#a855f7]/60 flex items-center justify-center mx-auto mb-4 text-[#c084fc] shadow-md">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md bg-[#1c122c] border border-[#a855f7]/60 text-[#c084fc]">
                   <Key className="w-6 h-6" />
                 </div>
                 <h2 className="text-2xl font-black mb-2 text-white">
@@ -1064,7 +1148,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="button"
                   onClick={() => navigateToView('view-login')}
-                  className="w-full py-3.5 bg-white text-gray-900 rounded-xl text-xs font-black uppercase tracking-wider hover:bg-gray-100 transition-colors cursor-pointer active:scale-95 shadow-md"
+                  className="w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition-colors cursor-pointer active:scale-95 shadow-md bg-[#7c3aed] hover:bg-[#6d28d9] text-white"
                 >
                   {isFr ? 'Retour à la connexion' : 'Back to Sign In'}
                 </button>
@@ -1079,7 +1163,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div className="mb-5">
                   <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-white/50 mb-2">
                     <span className="text-[#c084fc] font-mono">
-                      {isFr ? `Étape ${regStep} / 5` : `Step ${regStep} / 5`}
+                      {hideUsername 
+                        ? (isFr ? `Étape ${regStep === 3 ? 1 : regStep === 4 ? 2 : 3} / 3` : `Step ${regStep === 3 ? 1 : regStep === 4 ? 2 : 3} / 3`)
+                        : (isFr ? `Étape ${regStep} / 5` : `Step ${regStep} / 5`)}
                     </span>
                     <span className="text-white/80 font-medium">
                       {regStep === 1 && (isFr ? 'Identifiant' : 'Username')}
@@ -1093,7 +1179,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
                     <div 
                       className="h-full bg-gradient-to-r from-[#a855f7] to-[#ec4899] transition-all duration-300 rounded-full"
-                      style={{ width: `${(regStep / 5) * 100}%` }}
+                      style={{ 
+                        width: hideUsername
+                          ? `${((regStep === 3 ? 1 : regStep === 4 ? 2 : 3) / 3) * 100}%`
+                          : `${(regStep / 5) * 100}%` 
+                      }}
                     />
                   </div>
                 </div>
@@ -1111,7 +1201,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     {regStep === 1 && (isFr ? 'Définissez votre pseudonyme public.' : 'Set your unique @handle.')}
                     {regStep === 2 && (isFr ? '16 ans minimum requis pour accéder à la plateforme.' : '16+ minimum age required.')}
                     {regStep === 3 && (isFr ? 'Renseignez votre e-mail et un mot de passe.' : 'Enter your email and password.')}
-                    {regStep === 4 && (isFr ? 'Sélectionnez un avatar cinéma et votre nom.' : 'Choose your avatar and display name.')}
+                    {regStep === 4 && (isFr ? 'Sélectionnez un avatar et votre nom d’affichage.' : 'Choose your avatar and display name.')}
                     {regStep === 5 && (isFr ? `Saisissez le code transmis à ${regEmail}.` : `Enter the code sent to ${regEmail}.`)}
                   </p>
                 </div>
@@ -1691,11 +1781,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         />
                         <div className="min-w-0 flex-1">
                           <span className="text-sm font-black text-white block truncate">
-                            {onboardFullName || onboardUsername || 'Cinéphile'}
+                            {onboardFullName || (hideUsername ? 'Membre' : (onboardUsername || 'Cinéphile'))}
                           </span>
-                          <span className="text-xs text-[#d8b4fe] font-mono">
-                            @{onboardUsername || 'cinephile'}
-                          </span>
+                          {!hideUsername && (
+                            <span className="text-xs text-[#d8b4fe] font-mono">
+                              @{onboardUsername || 'cinephile'}
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -1755,11 +1847,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* BOUTON RETOUR INTELLIGENT UNIQUE EN BAS                   */}
           {/* ======================================================== */}
           {currentView !== 'view-main' && (
-            <div className="w-full flex flex-col gap-2 mt-6 pt-4 border-t border-[#1e1e2e]">
+            <div className="w-full flex flex-col gap-2 mt-6 pt-4 border-t border-[#1e2030]">
               <button
                 type="button"
                 onClick={handleSmartBack}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#14141e] hover:bg-[#1c1c28] text-white/80 hover:text-white border border-[#28283a] transition-all text-xs font-bold cursor-pointer active:scale-95 shadow-sm"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all text-xs font-bold cursor-pointer active:scale-95 shadow-sm bg-[#161726] hover:bg-[#1f2034] text-white/80 hover:text-white border border-[#28293d]"
               >
                 <ArrowLeft className="w-3.5 h-3.5 text-[#c084fc]" />
                 <span>{isFr ? 'Retour' : 'Back'}</span>
@@ -1772,52 +1864,111 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       </div>
 
       {/* ======================================================== */}
-      {/* DROITE: VITRINE CINÉMA DYNAMIQUE                           */}
+      {/* DROITE: VITRINE CINÉMA OU ECOSYSTEM                      */}
       {/* ======================================================== */}
-      <div className="hidden md:flex md:w-1/2 h-full relative bg-gradient-to-br from-[#120a22] to-[#080911] overflow-hidden flex-col justify-between p-10 lg:p-14">
-        
-        {/* Animated Background poster */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-35 transition-all duration-1000 scale-105"
-          style={{ backgroundImage: `url(${showcasePosters[posterIndex].bg})` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#060609] via-[#060609]/70 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0c0c12] via-transparent to-[#060609]/40" />
-
-        {/* Top badge */}
-        <div className="relative z-10 flex items-center justify-end">
-          <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-amber-400 text-xs font-black">
-            <Star className="w-4 h-4 fill-amber-400" />
-            <span>{showcasePosters[posterIndex].rating}</span>
+      {isEcosystem ? (
+        <div className="hidden md:flex md:w-1/2 h-full relative bg-gradient-to-br from-[#151426] via-[#0f101a] to-[#080910] border-l border-[#1c1d2e] overflow-hidden flex-col justify-between p-8 lg:p-12 text-white">
+          
+          {/* Top branding */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <LevelUpEcosystemStar className="w-5 h-5 text-[#a855f7]" color="currentColor" />
+              <span className="text-sm font-black tracking-tight text-white">LevelUp <span className="text-[#a855f7]">Ecosystem</span></span>
+            </div>
           </div>
-        </div>
 
-        {/* Center Poster Title */}
-        <div className="relative z-10 space-y-3">
-          <h3 className="text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight drop-shadow-md">
-            {showcasePosters[posterIndex].title}
-          </h3>
-          <p className="text-xs sm:text-sm text-white/70 leading-relaxed max-w-md">
-            {showcasePosters[posterIndex].overview || (isFr 
-              ? 'Accédez à des milliers de films et séries, organisez vos Watch Parties en direct.' 
-              : 'Stream thousands of movies and host synchronized Watch Parties.')}
-          </p>
-        </div>
+          {/* Center Showcase */}
+          <div className="space-y-4 my-auto py-6">
+            <div>
+              <h3 className="text-2xl lg:text-3xl font-black text-white tracking-tight leading-tight">
+                Un compte unique pour l’ensemble de vos applications.
+              </h3>
+              <p className="text-xs sm:text-sm text-white/60 mt-2 leading-relaxed">
+                Connectez-vous en continu à vos services streaming, salons synchronisés, audio et assistant climatique quotidien.
+              </p>
+            </div>
 
-        {/* Bottom indicators */}
-        <div className="relative z-10 flex items-center gap-2 pt-4">
-          {showcasePosters.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setPosterIndex(i)}
-              className={`h-2 rounded-full transition-all cursor-pointer ${
-                posterIndex === i ? 'w-10 bg-[#a855f7]' : 'w-2 bg-white/20 hover:bg-white/40'
-              }`}
-            />
-          ))}
-        </div>
+            {/* Apps preview cards with REAL logos (sans bulles) */}
+            <div className="grid grid-cols-1 gap-2.5 pt-2">
+              <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#a855f7]/50 transition-colors flex items-center gap-3.5 shadow-sm">
+                <LevelMovieLogo className="w-8 h-8 shrink-0 text-[#c084fc]" useGradient={true} />
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white">LevelMovie</div>
+                  <div className="text-[11px] text-white/50 truncate">Cinéma Ultra-HD 4K & Salons synchronisés</div>
+                </div>
+              </div>
 
-      </div>
+              <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-indigo-500/50 transition-colors flex items-center gap-3.5 shadow-sm">
+                <LevelMusicLogo className="w-8 h-8 shrink-0" useGradient={true} />
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white">LevelMusic</div>
+                  <div className="text-[11px] text-white/50 truncate">Audio haute fidélité & Salons d’écoute partagés</div>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-amber-500/50 transition-colors flex items-center gap-3.5 shadow-sm">
+                <LevelDayLogo className="w-8 h-8 shrink-0" useGradient={true} />
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white">LevelDay</div>
+                  <div className="text-[11px] text-white/50 truncate">Météo en direct & assistant climatique quotidien</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom info */}
+          <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs text-white/40 font-medium">
+            <span>LevelUp Ecosystem</span>
+            <span>Suite Applicative Intégrée</span>
+          </div>
+
+        </div>
+      ) : (
+        <div className="hidden md:flex md:w-1/2 h-full relative bg-gradient-to-br from-[#120a22] to-[#080911] overflow-hidden flex-col justify-between p-10 lg:p-14">
+          
+          {/* Animated Background poster */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-35 transition-all duration-1000 scale-105"
+            style={{ backgroundImage: `url(${showcasePosters[posterIndex].bg})` }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#060609] via-[#060609]/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0c0c12] via-transparent to-[#060609]/40" />
+
+          {/* Top badge */}
+          <div className="relative z-10 flex items-center justify-end">
+            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-amber-400 text-xs font-black">
+              <Star className="w-4 h-4 fill-amber-400" />
+              <span>{showcasePosters[posterIndex].rating}</span>
+            </div>
+          </div>
+
+          {/* Center Poster Title */}
+          <div className="relative z-10 space-y-3">
+            <h3 className="text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+              {showcasePosters[posterIndex].title}
+            </h3>
+            <p className="text-xs sm:text-sm text-white/70 leading-relaxed max-w-md">
+              {showcasePosters[posterIndex].overview || (isFr 
+                ? 'Accédez à des milliers de films et séries, organisez vos Watch Parties en direct.' 
+                : 'Stream thousands of movies and host synchronized Watch Parties.')}
+            </p>
+          </div>
+
+          {/* Bottom indicators */}
+          <div className="relative z-10 flex items-center gap-2 pt-4">
+            {showcasePosters.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPosterIndex(i)}
+                className={`h-2 rounded-full transition-all cursor-pointer ${
+                  posterIndex === i ? 'w-10 bg-[#a855f7]' : 'w-2 bg-white/20 hover:bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+
+        </div>
+      )}
 
     </div>
   );
