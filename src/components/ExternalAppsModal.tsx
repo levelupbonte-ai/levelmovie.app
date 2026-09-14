@@ -9,15 +9,16 @@ import { LevelOppaApp } from './apps/LevelOppaApp';
 import { LevelDayApp } from './apps/LevelDayApp';
 import { LevelReviewsApp } from './apps/LevelReviewsApp';
 import { LevelAnimeApp } from './apps/LevelAnimeApp';
-import { LevelMovieLogo } from '../constants';
+import { LevelStudioApp } from './apps/LevelStudioApp';
+import { LevelMovieLogo, LevelStudioLogo } from '../constants';
 
 interface LevelApp {
-  id: 'level-anime' | 'level-music' | 'level-oppa' | 'level-day' | 'level-reviews';
+  id: 'level-anime' | 'level-music' | 'level-oppa' | 'level-day' | 'level-reviews' | 'level-studio';
   name: string;
   category: string;
   tagline: string;
   description: string;
-  iconType: 'anime' | 'music' | 'oppa' | 'weather' | 'reviews';
+  iconType: 'anime' | 'music' | 'oppa' | 'weather' | 'reviews' | 'studio';
   badge: string;
   badgeColor: string;
   rating: string;
@@ -34,6 +35,7 @@ interface ExternalAppsModalProps {
   onRequireAuth?: () => void;
   showToast?: (msg: string, type?: string) => void;
   onStartParty?: (movie: any) => void;
+  onOpenVitrine?: () => void;
 }
 
 export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
@@ -43,7 +45,8 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
   user,
   onRequireAuth,
   showToast,
-  onStartParty
+  onStartParty,
+  onOpenVitrine
 }) => {
   const isFr = lang === 'fr';
 
@@ -148,6 +151,26 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
         isFr ? 'Certification par Clé privée LevelUp' : 'LevelUp private key verification',
         isFr ? 'Synchronisation directe avec la base Supabase' : 'Direct Supabase database syncing'
       ]
+    },
+    {
+      id: 'level-studio',
+      name: 'LevelStudio',
+      category: isFr ? 'Studio Web & Création Digitale' : 'Web Studio & Digital Creation',
+      tagline: isFr ? 'Création de sites web professionnels, vitrines & événementiel' : 'Pro web design, showcase sites & bespoke software',
+      description: isFr 
+        ? 'Studio officiel de conception web pour vos projets d’entreprise (dès $560) et événements interactifs (dès $230) avec garantie zéro risque : maquette avant paiement.'
+        : 'Official digital studio crafting business websites (from $560) and interactive event sites (from $230) with zero upfront risk.',
+      iconType: 'studio',
+      badge: 'Studio Pro',
+      badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
+      rating: '5.0',
+      downloads: '18.9k',
+      accentColor: 'from-sky-600/30 via-indigo-600/10 to-transparent',
+      features: [
+        isFr ? 'Création de site web vitrine pro : débute à $560' : 'Starter website creation starting at $560',
+        isFr ? 'Invitations & sites événementiels interactifs : débute à $230' : 'Interactive event & invitation sites at $230',
+        isFr ? 'Approche "Build First" sans engagement financier préalable' : 'Zero-risk build-first guarantee'
+      ]
     }
   ];
 
@@ -194,6 +217,8 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
         return <Sun className="w-7 h-7 text-amber-400" />;
       case 'reviews':
         return <MessageSquare className="w-7 h-7 text-emerald-400" />;
+      case 'studio':
+        return <LevelStudioLogo className="w-7 h-7" useGradient={true} />;
       default:
         return <Layers className="w-7 h-7 text-purple-400" />;
     }
@@ -308,6 +333,22 @@ export const ExternalAppsModal: React.FC<ExternalAppsModalProps> = ({
       {currentAppId === 'level-reviews' && (
         <div key={`app-reviews-${refreshKey}`} className="flex-1 w-full h-full overflow-hidden">
           <LevelReviewsApp onClose={() => setCurrentAppId(null)} lang={lang} user={user} onRequireAuth={onRequireAuth} />
+        </div>
+      )}
+
+      {currentAppId === 'level-studio' && (
+        <div key={`app-studio-${refreshKey}`} className="flex-1 w-full h-full overflow-hidden">
+          <LevelStudioApp 
+            onClose={() => setCurrentAppId(null)} 
+            lang={lang} 
+            user={user} 
+            onOpenVitrine={() => {
+              if (onOpenVitrine) {
+                onClose();
+                onOpenVitrine();
+              }
+            }} 
+          />
         </div>
       )}
 

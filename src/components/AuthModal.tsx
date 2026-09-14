@@ -4,7 +4,7 @@ import {
   User, UserPlus, LogOut, LogIn, ArrowRight, Star, Camera,
   Upload, CheckCircle2, Calendar, RefreshCw, BadgeCheck, ShieldAlert, Crown
 } from 'lucide-react';
-import { LevelMovieLogo, LevelMusicLogo, LevelDayLogo, DEFAULT_AVATARS, AvatarPreset, recordWeeklyLogin, LevelUpEcosystemStar } from '../constants';
+import { LevelMovieLogo, LevelMusicLogo, LevelDayLogo, LevelStudioLogo, DEFAULT_AVATARS, AvatarPreset, recordWeeklyLogin, LevelUpEcosystemStar } from '../constants';
 import { LevelAvatar } from './LevelAvatar';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -149,22 +149,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const ecosystemShowcasePosters = [
     {
-      title: isFr ? 'Sites Web Haute Conversion & Sur-Mesure' : 'High-Converting Bespoke Websites',
+      title: isFr ? 'LevelUp Ecosystem • Compte Membre Unique' : 'LevelUp Ecosystem • Unified Member Account',
       bg: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1280&q=80',
-      rating: 'PageSpeed 99+',
-      overview: isFr ? 'Architecture moderne, vitesse instantanée et intégration Stripe & IA fluide.' : 'Cutting-edge architecture, instant loading and seamless Stripe & AI integrations.'
+      rating: 'Ecosystem Hub',
+      overview: isFr ? 'Un compte unique pour vos projets web sur-mesure, vos services cloud et toutes les applications LevelUp.' : 'A single unified account for your bespoke web projects, cloud services, and all LevelUp applications.'
     },
     {
-      title: isFr ? 'Construit d\'abord, payez après validation' : 'Build First, Pay After Approval',
+      title: isFr ? 'LevelMovie • Cinéma 4K & Salons Synchronisés' : 'LevelMovie • 4K Cinema & Synced Watch Parties',
+      bg: 'https://image.tmdb.org/t/p/w1280/8YFL5QQVPy3AgrEQxNYVSgiPEbe.jpg',
+      rating: isFr ? 'Inclus dans votre compte' : 'Included in your account',
+      overview: isFr ? 'Streaming haute définition, salons Watch Party en direct et synchronisation instantanée sans réinscription.' : 'High-definition streaming, live Watch Parties and synchronized rooms with no duplicate signups.'
+    },
+    {
+      title: isFr ? 'Zéro Acompte Initial • Développé avant validation' : 'Zero Upfront Deposit • Built Before Payment',
       bg: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1280&q=80',
       rating: isFr ? 'Garantie Totale' : 'Satisfaction Guaranteed',
-      overview: isFr ? 'Zéro acompte initial. Nous réalisons votre produit, vous inspectez chaque détail avant le paiement.' : 'Zero upfront deposit. We build your product, you inspect every detail before payment.'
+      overview: isFr ? 'Nous concevons vos sites web et applications sur-mesure. Vous inspectez chaque détail avant le moindre paiement.' : 'We engineer your bespoke websites and apps. You inspect every single detail before any payment.'
     },
     {
-      title: isFr ? 'Applications Web & Solutions Cloud' : 'Web Applications & Cloud Solutions',
-      bg: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1280&q=80',
-      rating: 'Full-Stack Cloud',
-      overview: isFr ? 'Portails SaaS, APIs temps réel et intégrations intelligentes taillées pour votre croissance.' : 'SaaS portals, real-time APIs, and smart integrations tailored for scale.'
+      title: isFr ? 'LevelMusic & LevelDay • Utilitaires Cloud Inclus' : 'LevelMusic & LevelDay • Free Cloud Utilities',
+      bg: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1280&q=80',
+      rating: 'Ecosystem Suite',
+      overview: isFr ? 'Lecteur audio haute fidélité et météo dynamique connectés directement à votre profil LevelUp.' : 'High fidelity music player and live weather connected directly to your LevelUp profile.'
     }
   ];
 
@@ -359,6 +365,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           const vip = recordWeeklyLogin();
 
           setLoading(false);
+          const userObj = { name: displayName, email: data.user.email || '', photo: displayPhoto, uid, handle: displayHandle };
+          window.dispatchEvent(new CustomEvent('levelup_auth_state_change', {
+            detail: { user: userObj }
+          }));
+          window.dispatchEvent(new CustomEvent('levelmovie_profile_change', {
+            detail: { name: displayName, photo: displayPhoto, email: data.user.email || '', uid, handle: displayHandle }
+          }));
           onLoginSuccess(data.user, displayName, data.user.email || '', displayPhoto, displayHandle, age);
           if (vip.isVipNow || vip.info.isVip) {
             showToast(isFr ? `👑 Bienvenue, ${displayName} ! Statut VIP Actif (${vip.info.weeklyLoginsCount}/4j)` : `👑 Welcome back, ${displayName}! VIP Active (${vip.info.weeklyLoginsCount}/4d)`, 'success');
@@ -387,6 +400,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           // Record weekly activity for VIP loyalty
           const vip = recordWeeklyLogin();
 
+          const userObj = { name, email: loginEmail.trim(), photo: DEFAULT_AVATARS[0].id, uid, handle };
+          window.dispatchEvent(new CustomEvent('levelup_auth_state_change', {
+            detail: { user: userObj }
+          }));
+          window.dispatchEvent(new CustomEvent('levelmovie_profile_change', {
+            detail: { name, photo: DEFAULT_AVATARS[0].id, email: loginEmail.trim(), uid, handle }
+          }));
           onLoginSuccess({ id: uid, email: loginEmail.trim() }, name, loginEmail.trim(), DEFAULT_AVATARS[0].id, handle, age);
           if (vip.isVipNow || vip.info.isVip) {
             showToast(isFr ? `👑 Connexion réussie ! Statut VIP Actif (${vip.info.weeklyLoginsCount}/4j)` : `👑 Signed in! VIP Active (${vip.info.weeklyLoginsCount}/4d)`, 'success');
@@ -564,6 +584,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         recordWeeklyLogin();
 
         setLoading(false);
+        const userObj = { name: fullName, email: regEmail.trim(), photo: regAvatar, uid, handle: cleanHandle };
+        window.dispatchEvent(new CustomEvent('levelup_auth_state_change', {
+          detail: { user: userObj }
+        }));
+        window.dispatchEvent(new CustomEvent('levelmovie_profile_change', {
+          detail: { name: fullName, photo: regAvatar, email: regEmail.trim(), uid, handle: cleanHandle }
+        }));
         onLoginSuccess(
           data.user || { id: uid, email: regEmail.trim() },
           fullName,
@@ -596,6 +623,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           // Record weekly activity
           recordWeeklyLogin();
 
+          const userObj = { name: fullName, email: regEmail.trim(), photo: regAvatar, uid, handle: cleanHandle };
+          window.dispatchEvent(new CustomEvent('levelup_auth_state_change', {
+            detail: { user: userObj }
+          }));
+          window.dispatchEvent(new CustomEvent('levelmovie_profile_change', {
+            detail: { name: fullName, photo: regAvatar, email: regEmail.trim(), uid, handle: cleanHandle }
+          }));
           onLoginSuccess(
             { id: uid, email: regEmail.trim() },
             fullName,
@@ -804,6 +838,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 
                 {/* Logo & Titre */}
                 <div className="text-center mb-8">
+                  {appName === 'LevelUp Ecosystem' && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#7c3aed]/15 border border-[#a855f7]/30 text-[#c084fc] text-[11px] font-bold mb-3 shadow-inner">
+                      <LevelUpEcosystemStar className="w-3.5 h-3.5 text-[#a855f7]" color="currentColor" />
+                      <span>{isFr ? 'Compte Unique Écosystème' : 'Unified Ecosystem Account'}</span>
+                    </div>
+                  )}
                   <div className="mx-auto mb-3.5 flex items-center justify-center">
                     {appName === 'LevelUp Ecosystem' ? (
                       <LevelUpEcosystemStar className="w-12 h-12 text-[#a855f7]" color="currentColor" />
@@ -880,13 +920,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 
                 {/* En-tête */}
                 <div className="text-center mb-6">
+                  {appName === 'LevelUp Ecosystem' && (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#7c3aed]/15 border border-[#a855f7]/30 text-[#c084fc] text-[11px] font-bold mb-2.5">
+                      <LevelUpEcosystemStar className="w-3 h-3 text-[#a855f7]" color="currentColor" />
+                      <span>{isFr ? 'Compte Unique LevelUp Ecosystem' : 'Unified LevelUp Ecosystem Account'}</span>
+                    </div>
+                  )}
                   <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
                     {isFr ? 'Créer un compte' : 'Create Account'}
                   </h2>
                   <p className="text-xs mt-1 max-w-xs mx-auto text-white/60">
                     {isFr 
-                      ? 'Choisissez votre méthode d’inscription :' 
-                      : 'Choose your preferred signup method:'}
+                      ? (appName === 'LevelUp Ecosystem' ? 'Votre compte est automatiquement valable sur LevelMovie et toute la suite LevelUp.' : 'Choisissez votre méthode d’inscription :') 
+                      : (appName === 'LevelUp Ecosystem' ? 'Your account is automatically valid on LevelMovie and the entire LevelUp suite.' : 'Choose your preferred signup method:')}
                   </p>
                 </div>
 
@@ -952,11 +998,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             {currentView === 'view-login' && (
               <div className="animate-in fade-in duration-150">
                 <div className="text-center mb-6">
+                  {appName === 'LevelUp Ecosystem' && (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#7c3aed]/15 border border-[#a855f7]/30 text-[#c084fc] text-[11px] font-bold mb-2.5">
+                      <LevelUpEcosystemStar className="w-3 h-3 text-[#a855f7]" color="currentColor" />
+                      <span>{isFr ? 'Compte Unique LevelUp Ecosystem' : 'Unified LevelUp Ecosystem Account'}</span>
+                    </div>
+                  )}
                   <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                    {isFr ? 'Connexion' : 'Sign In'}
+                    {appName === 'LevelUp Ecosystem' ? (isFr ? 'Connexion Ecosystem' : 'Ecosystem Sign In') : (isFr ? 'Connexion' : 'Sign In')}
                   </h2>
                   <p className="text-xs mt-1 text-white/50">
-                    {isFr ? 'Identifiez-vous pour accéder à vos contenus :' : 'Sign in to access your contents:'}
+                    {isFr 
+                      ? (appName === 'LevelUp Ecosystem' ? 'Un seul compte pour LevelMovie, vos Watch Parties et tout l\'écosystème :' : 'Identifiez-vous pour accéder à vos contenus :')
+                      : (appName === 'LevelUp Ecosystem' ? 'One unified account for LevelMovie, Watch Parties and all ecosystem services:' : 'Sign in to access your contents:')}
                   </p>
                 </div>
 
@@ -1890,27 +1944,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
             {/* Apps preview cards with REAL logos (sans bulles) */}
             <div className="grid grid-cols-1 gap-2.5 pt-2">
-              <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#a855f7]/50 transition-colors flex items-center gap-3.5 shadow-sm">
-                <LevelMovieLogo className="w-8 h-8 shrink-0 text-[#c084fc]" useGradient={true} />
+              <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#a855f7]/50 transition-colors flex items-center gap-3.5 shadow-sm">
+                <LevelMovieLogo className="w-7 h-7 shrink-0 text-[#c084fc]" useGradient={true} />
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-white">LevelMovie</div>
                   <div className="text-[11px] text-white/50 truncate">Cinéma Ultra-HD 4K & Salons synchronisés</div>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-indigo-500/50 transition-colors flex items-center gap-3.5 shadow-sm">
-                <LevelMusicLogo className="w-8 h-8 shrink-0" useGradient={true} />
+              <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10 hover:border-indigo-500/50 transition-colors flex items-center gap-3.5 shadow-sm">
+                <LevelMusicLogo className="w-7 h-7 shrink-0" useGradient={true} />
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-white">LevelMusic</div>
                   <div className="text-[11px] text-white/50 truncate">Audio haute fidélité & Salons d’écoute partagés</div>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-amber-500/50 transition-colors flex items-center gap-3.5 shadow-sm">
-                <LevelDayLogo className="w-8 h-8 shrink-0" useGradient={true} />
+              <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10 hover:border-amber-500/50 transition-colors flex items-center gap-3.5 shadow-sm">
+                <LevelDayLogo className="w-7 h-7 shrink-0" useGradient={true} />
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-white">LevelDay</div>
                   <div className="text-[11px] text-white/50 truncate">Météo en direct & assistant climatique quotidien</div>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10 hover:border-sky-500/50 transition-colors flex items-center gap-3.5 shadow-sm">
+                <LevelStudioLogo className="w-7 h-7 shrink-0" useGradient={true} />
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white">LevelStudio</div>
+                  <div className="text-[11px] text-white/50 truncate">Création de sites web professionnels & Studio créatif (dès $560)</div>
                 </div>
               </div>
             </div>

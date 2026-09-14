@@ -12,6 +12,7 @@ import { AuthModal } from './components/AuthModal';
 import { VitrineSitesModal } from './components/VitrineSitesModal';
 import { LevelAvatar } from './components/LevelAvatar';
 import { LevelMovieLogo, LevelUpEcosystemStar } from './constants';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
 
 type AppRoute = 'ecosystem' | 'movie' | 'music' | 'weather';
 
@@ -59,33 +60,95 @@ export default function App() {
     email: string;
     photo?: string | null;
     uid?: string;
+    handle?: string;
   } | null>(() => {
     if (typeof window !== 'undefined') {
       const email = localStorage.getItem('levelmovie_user_email');
       const name = localStorage.getItem('levelmovie_user_name') || localStorage.getItem('levelmovie_username');
-      const photo = localStorage.getItem('levelmovie_user_photo') || localStorage.getItem('lm_photo');
+      const photo = localStorage.getItem('levelmovie_custom_avatar') || localStorage.getItem('levelmovie_user_photo') || localStorage.getItem('lm_photo');
       const uid = localStorage.getItem('levelmovie_user_uid');
-      if (email && name) {
-        return { email, name, photo, uid: uid || 'usr_saved' };
+      const handle = localStorage.getItem('levelmovie_user_handle');
+      if (email || uid || name) {
+        return {
+          email: email || '',
+          name: name || (email ? email.split('@')[0] : 'Membre'),
+          photo: photo || null,
+          uid: uid || 'usr_saved',
+          handle: handle || ''
+        };
       }
     }
     return null;
   });
+
+  // Synchronize authentication session with Supabase and ecosystem events
+  useEffect(() => {
+    if (isSupabaseConfigured() && supabase) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          const userMeta = session.user.user_metadata || {};
+          const name = userMeta.full_name || userMeta.first_name || session.user.email?.split('@')[0] || 'Membre';
+          const email = session.user.email || '';
+          const photo = userMeta.avatar_url || localStorage.getItem('levelmovie_custom_avatar') || localStorage.getItem('lm_photo') || null;
+          const uid = session.user.id;
+          const handle = userMeta.username || localStorage.getItem('levelmovie_user_handle') || (email ? email.split('@')[0] : 'membre');
+          
+          const userObj = { name, email, photo, uid, handle };
+          setCurrentUser(userObj);
+          localStorage.setItem('levelmovie_user_uid', uid);
+          localStorage.setItem('levelmovie_user_name', name);
+          localStorage.setItem('levelmovie_username', name);
+          if (email) localStorage.setItem('levelmovie_user_email', email);
+          if (handle) localStorage.setItem('levelmovie_user_handle', handle);
+          if (photo) {
+            localStorage.setItem('levelmovie_user_photo', photo);
+            localStorage.setItem('lm_photo', photo);
+          }
+          localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
+        }
+      });
+    }
+
+    const handleAuthEvent = (e: any) => {
+      const detail = e.detail;
+      if (detail?.user) {
+        setCurrentUser(detail.user);
+      } else if (detail?.action === 'logout') {
+        setCurrentUser(null);
+      }
+    };
+    window.addEventListener('levelup_auth_state_change', handleAuthEvent);
+    return () => {
+      window.removeEventListener('levelup_auth_state_change', handleAuthEvent);
+    };
+  }, []);
 
   const showToast = (text: string, type: string = 'info') => {
     setToastMsg({ text, type });
     setTimeout(() => setToastMsg(null), 4000);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      if (isSupabaseConfigured() && supabase) {
+        await supabase.auth.signOut();
+      }
+    } catch (_) {}
+
     localStorage.removeItem('levelmovie_user_email');
     localStorage.removeItem('levelmovie_user_name');
     localStorage.removeItem('levelmovie_username');
     localStorage.removeItem('levelmovie_user_photo');
+    localStorage.removeItem('levelmovie_custom_avatar');
     localStorage.removeItem('lm_photo');
     localStorage.removeItem('levelmovie_user_uid');
     localStorage.removeItem('levelmovie_user_handle');
+    localStorage.removeItem('levelmovie_user_age');
+    localStorage.removeItem('active_party_id');
     setCurrentUser(null);
+    window.dispatchEvent(new CustomEvent('levelup_auth_state_change', {
+      detail: { action: 'logout', user: null }
+    }));
     showToast('Vous avez été déconnecté avec succès.', 'info');
   };
 
@@ -94,7 +157,7 @@ export default function App() {
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',
-    projectType: 'Starter Website ($350)',
+    projectType: 'Starter Website ($560)',
     message: ''
   });
   const [contactSent, setContactSent] = useState(false);
@@ -178,7 +241,7 @@ export default function App() {
       setContactForm({
         name: '',
         email: '',
-        projectType: 'Starter Website ($350)',
+        projectType: 'Starter Website ($560)',
         message: ''
       });
     }, 2200);
@@ -189,7 +252,12 @@ export default function App() {
       {/* SEPARATE DEDICATED APP VIEW: LEVELMOVIE (/levelmovie) */}
       {currentAppView === 'movie' && (
         <div className="relative w-full min-h-screen levelmovie-app bg-[#060608]">
-          <LevelMovieApp onBackToEcosystem={() => navigateTo('ecosystem')} />
+          <LevelMovieApp
+            onBackToEcosystem={() => navigateTo('ecosystem')}
+            ecosystemUser={currentUser}
+            onEcosystemUserChange={(userObj) => setCurrentUser(userObj)}
+            onEcosystemLogout={handleLogout}
+          />
         </div>
       )}
 
@@ -505,7 +573,7 @@ export default function App() {
               <p className="text-gray-500 text-xs mb-6 h-10">Ideal for weddings, galas, birthdays, or brand releases.</p>
               <div className="mb-6">
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Starting at</span>
-                <div className="text-3xl font-extrabold text-gray-900 mt-1">$120</div>
+                <div className="text-3xl font-extrabold text-gray-900 mt-1">$230</div>
               </div>
               <ul className="space-y-3 mb-8 flex-1 text-sm">
                 <li className="flex items-start gap-2.5">
@@ -527,10 +595,10 @@ export default function App() {
               </ul>
               <button
                 type="button"
-                onClick={() => openInquiryWithPackage('Virtual Invitation & Event ($120)', 'Hello, I would like to order or discuss a Virtual Invitation & Event website.')}
+                onClick={() => openInquiryWithPackage('Virtual Invitation & Event ($230)', 'Hello, I would like to order or discuss a Virtual Invitation & Event website.')}
                 className="block w-full py-2.5 px-4 bg-white text-gray-900 font-medium text-center rounded-none border border-gray-300 hover:bg-gray-100 transition-colors text-sm shadow-sm cursor-pointer"
               >
-                Order Now ($120)
+                Order Now ($230)
               </button>
             </div>
 
@@ -540,7 +608,7 @@ export default function App() {
               <p className="text-gray-500 text-xs mb-6 h-10">The essential package to establish your professional presence.</p>
               <div className="mb-6">
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Starting at</span>
-                <div className="text-3xl font-extrabold text-gray-900 mt-1">$350</div>
+                <div className="text-3xl font-extrabold text-gray-900 mt-1">$560</div>
               </div>
               <ul className="space-y-3 mb-8 flex-1 text-sm">
                 <li className="flex items-start gap-2.5">
@@ -562,10 +630,10 @@ export default function App() {
               </ul>
               <button
                 type="button"
-                onClick={() => openInquiryWithPackage('Starter Website ($350)', 'Hello, I would like to start a Starter Website project with the zero-risk build-first workflow.')}
+                onClick={() => openInquiryWithPackage('Starter Website ($560)', 'Hello, I would like to start a Starter Website project with the zero-risk build-first workflow.')}
                 className="block w-full py-2.5 px-4 bg-white text-gray-900 font-medium text-center rounded-none border border-gray-300 hover:bg-gray-100 transition-colors text-sm shadow-sm cursor-pointer"
               >
-                Get Started ($350)
+                Get Started ($560)
               </button>
             </div>
 
@@ -716,6 +784,25 @@ export default function App() {
                       </span>
                     </h4>
                     <p className="text-gray-400 text-sm">Discover trending releases, summaries, trailers, and stream movies, series, and anime in HD.</p>
+                  </div>
+                </li>
+
+                {/* LevelStudio Web & Digital Creation */}
+                <li
+                  onClick={() => setVitrineModalOpen(true)}
+                  className="flex items-start gap-4 p-3 rounded-none hover:bg-white/5 transition-colors cursor-pointer group"
+                >
+                  <div className="w-10 h-10 rounded-none bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0 text-sky-400 mt-1 group-hover:bg-sky-600 group-hover:text-white transition-colors">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-semibold mb-1 group-hover:text-sky-300 transition-colors flex items-center gap-2">
+                      <span>LevelStudio</span>
+                      <span className="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-none bg-sky-900/60 text-sky-300 border border-sky-500/30 flex items-center gap-1.5">
+                        <span>Début à 560$</span>
+                      </span>
+                    </h4>
+                    <p className="text-gray-400 text-sm">Design & développement sur-mesure de sites web vitrines professionnels, e-commerce et plateformes immersives.</p>
                   </div>
                 </li>
               </ul>
@@ -1068,10 +1155,19 @@ export default function App() {
                 <li>
                   <button
                     type="button"
-                    onClick={() => openInquiryWithPackage('Starter Website ($350)')}
+                    onClick={() => openInquiryWithPackage('Starter Website ($560)')}
                     className="hover:text-white transition-colors text-left cursor-pointer"
                   >
-                    Starter Website Order
+                    Starter Website Order ($560)
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => openInquiryWithPackage('Virtual Invitation & Event ($230)')}
+                    className="hover:text-white transition-colors text-left cursor-pointer"
+                  >
+                    Event & Invitation Website ($230)
                   </button>
                 </li>
                 <li>
@@ -1109,6 +1205,15 @@ export default function App() {
                     className="hover:text-white transition-colors text-left cursor-pointer flex items-center gap-1.5"
                   >
                     <span>LevelDay</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setVitrineModalOpen(true)}
+                    className="hover:text-white transition-colors text-left cursor-pointer flex items-center gap-1.5 text-sky-400 font-medium"
+                  >
+                    <span className="text-sky-400">✦</span>
+                    <span>LevelStudio (Web & Apps)</span>
                   </button>
                 </li>
                 <li><a href="#security" className="hover:text-white transition-colors">Cybersecurity Center</a></li>
@@ -1197,8 +1302,8 @@ export default function App() {
                     onChange={e => setContactForm(prev => ({ ...prev, projectType: e.target.value }))}
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-none text-sm focus:outline-none focus:border-[#7c3aed] focus:bg-white transition-all"
                   >
-                    <option value="Virtual Invitation & Event ($120)">Virtual Invitation & Event ($120)</option>
-                    <option value="Starter Website ($350)">Starter Website ($350)</option>
+                    <option value="Virtual Invitation & Event ($230)">Virtual Invitation & Event ($230)</option>
+                    <option value="Starter Website ($560)">Starter Website ($560)</option>
                     <option value="Business Pro ($800)">Business Pro ($800)</option>
                     <option value="Ecosystem Premium (Custom Quote)">Ecosystem Premium (Custom Quote)</option>
                     <option value="Other Custom Project">Other Custom Project</option>
@@ -1242,16 +1347,41 @@ export default function App() {
         subtitle="Accédez à votre espace membre, projets et services exclusifs."
         lang="fr"
         showToast={showToast}
-        onLoginSuccess={(loggedUser, name, email, photo) => {
+        onLoginSuccess={(loggedUser, name, email, photo, handle, age) => {
           const uid = loggedUser?.uid || loggedUser?.id || `usr_${Date.now()}`;
-          const userObj = { name, email, photo, uid };
+          const cleanName = name || (email ? email.split('@')[0] : 'Membre');
+          const cleanHandle = handle || cleanName.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'membre';
+          const userObj = { name: cleanName, email, photo, uid, handle: cleanHandle };
           setCurrentUser(userObj);
           if (email) localStorage.setItem('levelmovie_user_email', email);
-          if (name) localStorage.setItem('levelmovie_user_name', name);
-          if (photo) localStorage.setItem('levelmovie_user_photo', photo);
+          if (cleanName) {
+            localStorage.setItem('levelmovie_user_name', cleanName);
+            localStorage.setItem('levelmovie_username', cleanName);
+            localStorage.setItem('lm_guest_party_name', cleanName);
+          }
+          if (photo) {
+            localStorage.setItem('levelmovie_user_photo', photo);
+            localStorage.setItem('levelmovie_custom_avatar', photo);
+            localStorage.setItem('lm_photo', photo);
+          }
+          if (cleanHandle) {
+            localStorage.setItem('levelmovie_user_handle', cleanHandle);
+          }
+          if (age) {
+            localStorage.setItem('levelmovie_user_age', String(age));
+          }
           localStorage.setItem('levelmovie_user_uid', uid);
+          localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
+
+          window.dispatchEvent(new CustomEvent('levelup_auth_state_change', {
+            detail: { user: userObj }
+          }));
+          window.dispatchEvent(new CustomEvent('levelmovie_profile_change', {
+            detail: { name: cleanName, photo, email, uid, handle: cleanHandle }
+          }));
+
           setAuthModalOpen(false);
-          showToast(`Bienvenue sur LevelUp Ecosystem, ${name} !`, 'success');
+          showToast(`Bienvenue sur LevelUp Ecosystem, ${cleanName} !`, 'success');
         }}
       />
 
@@ -1266,7 +1396,7 @@ export default function App() {
         onSelectDesignForProject={(design) => {
           setVitrineModalOpen(false);
           openInquiryWithPackage(
-            `Starter Website ($350) - Design: ${design.title}`,
+            `Starter Website ($560) - Design: ${design.title}`,
             `Bonjour l'équipe LevelUp,\n\nJe souhaite lancer mon projet basé sur le design "${design.title}" (${design.category}). Pouvez-vous préparer un premier prototype sans frais ?`
           );
         }}

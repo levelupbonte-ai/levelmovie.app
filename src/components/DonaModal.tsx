@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Sparkles, ArrowUp, X, Clock, Plus, Play, Star, 
-  Trash2, ChevronRight, Film, Popcorn, Flame, Shuffle, Clapperboard, Users,
-  Search, Compass, Bell, Crown, Zap, ShieldCheck, Bot
+  ArrowUp, X, Clock, Plus, Play, Trash2, Film, Clapperboard, Users,
+  Search, Compass, Bell, Key, Check, ShieldCheck, Bot
 } from 'lucide-react';
 import { 
   BASE_URL, API_KEY, getWeeklyVipStatus, recordDonaUsage, 
-  VipStatusInfo, recordWeeklyLogin 
+  VipStatusInfo 
 } from '../constants';
+import { DonaMovieCard } from './DonaMovieCard';
+import { DonaApiKeyModal, loadUserApiKeys, UserApiKeyItem } from './DonaApiKeyModal';
 
 interface DonaModalProps {
   isOpen: boolean;
@@ -40,7 +41,7 @@ interface SavedConversation {
   messages: Message[];
 }
 
-const STORAGE_KEY = 'levelmovie_dona_saved_chats_v2';
+const STORAGE_KEY = 'levelmovie_dona_saved_chats_v3';
 const REMINDERS_KEY = 'levelmovie_dona_reminders';
 
 export const DonaModal: React.FC<DonaModalProps> = ({
@@ -63,15 +64,23 @@ export const DonaModal: React.FC<DonaModalProps> = ({
   const [inputVal, setInputVal] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [showPlusMenu, setShowPlusMenu] = useState(false);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [savedConversations, setSavedConversations] = useState<SavedConversation[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string>(() => `session_${Date.now()}`);
+
+  // User Local API Keys Vault
+  const [userKeys, setUserKeys] = useState<UserApiKeyItem[]>(() => loadUserApiKeys());
+  const activeKey = userKeys.find(k => k.isActive);
 
   // VIP & Quota State
   const [vipInfo, setVipInfo] = useState<VipStatusInfo>(() => getWeeklyVipStatus());
 
+  const refreshKeys = () => {
+    const loaded = loadUserApiKeys();
+    setUserKeys(loaded);
+  };
+
   useEffect(() => {
-    // Refresh VIP and Quota on mount / focus
     setVipInfo(getWeeklyVipStatus());
 
     const handleVipChange = (e: any) => {
@@ -91,19 +100,26 @@ export const DonaModal: React.FC<DonaModalProps> = ({
       }
     };
 
+    const handleKeyChange = () => {
+      refreshKeys();
+    };
+
     window.addEventListener('levelmovie_vip_status_change', handleVipChange);
     window.addEventListener('levelmovie_dona_quota_change', handleQuotaChange);
+    window.addEventListener('levelmovie_custom_key_updated', handleKeyChange);
+    window.addEventListener('storage', handleKeyChange);
 
     return () => {
       window.removeEventListener('levelmovie_vip_status_change', handleVipChange);
       window.removeEventListener('levelmovie_dona_quota_change', handleQuotaChange);
+      window.removeEventListener('levelmovie_custom_key_updated', handleKeyChange);
+      window.removeEventListener('storage', handleKeyChange);
     };
   }, [isOpen]);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const plusMenuRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     if (messagesContainerRef.current) {
@@ -118,124 +134,102 @@ export const DonaModal: React.FC<DonaModalProps> = ({
     scrollToBottom('smooth');
   }, [messages, isTyping]);
 
-  // Close plus menu when clicking outside
+  // Load saved conversations on mount
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (plusMenuRef.current && !plusMenuRef.current.contains(event.target as Node)) {
-        setShowPlusMenu(false);
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSavedConversations(parsed);
+        }
       }
-    };
-    if (showPlusMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
+    } catch (e) {
+      console.warn('Error loading Dona history:', e);
     }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showPlusMenu]);
+  }, []);
 
-  // Toggle history drawer on trigger change
+  // Triggers from parent
   useEffect(() => {
     if (historyTrigger > 0) {
       setShowHistory(prev => !prev);
     }
   }, [historyTrigger]);
 
-  // Start new conversation on trigger change
   useEffect(() => {
     if (newChatTrigger > 0) {
       handleNewConversation();
     }
   }, [newChatTrigger]);
 
-  // Load saved history on mount
-  useEffect(() => {
+  const persistSession = (currentMsgs: Message[], sessionId: string) => {
+    if (currentMsgs.length === 0) return;
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setSavedConversations(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.warn('Failed to load Dona chat history:', e);
-    }
-  }, []);
-
-  const persistSession = (sessionMsgs: Message[], sessId: string) => {
-    if (sessionMsgs.length === 0) return;
-    try {
-      const firstUserMsg = sessionMsgs.find(m => m.sender === 'user');
+      const firstUserMsg = currentMsgs.find(m => m.sender === 'user');
       const title = firstUserMsg 
-        ? firstUserMsg.text.slice(0, 32) + (firstUserMsg.text.length > 32 ? '...' : '')
-        : (isFr ? 'Discussion Cinéma' : 'Cinema Chat');
-
-      const nowStr = new Date().toLocaleDateString(isFr ? 'fr-FR' : 'en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+        ? (firstUserMsg.text.length > 38 ? firstUserMsg.text.substring(0, 38) + '...' : firstUserMsg.text)
+        : (isFr ? 'Discussion Dona' : 'Dona Chat');
+      
+      const now = new Date();
+      const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
       setSavedConversations(prev => {
-        const filtered = prev.filter(c => c.id !== sessId);
-        const updated: SavedConversation[] = [
-          {
-            id: sessId,
+        const existingIdx = prev.findIndex(c => c.id === sessionId);
+        let updated: SavedConversation[];
+        if (existingIdx >= 0) {
+          updated = [...prev];
+          updated[existingIdx] = {
+            ...updated[existingIdx],
             title,
-            date: nowStr,
-            messages: sessionMsgs
-          },
-          ...filtered
-        ].slice(0, 30);
-
+            messages: currentMsgs
+          };
+        } else {
+          updated = [
+            {
+              id: sessionId,
+              title,
+              date: dateStr,
+              messages: currentMsgs
+            },
+            ...prev
+          ].slice(0, 40);
+        }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
         return updated;
       });
     } catch (e) {
-      console.warn('Failed to persist Dona session:', e);
+      console.warn('Error saving Dona session:', e);
     }
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 150);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
-
-  if (!isOpen) return null;
-
-  const clientSearchMovies = async (queryText: string) => {
+  const fetchMovieById = async (id: string | number) => {
     try {
-      const cleanQ = encodeURIComponent(queryText.trim());
-      const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&language=${isFr ? 'fr-FR' : 'en-US'}&query=${cleanQ}&page=1&include_adult=false`);
-      const data = await res.json();
-      if (data && data.results && data.results.length > 0) {
-        return data.results.filter((m: any) => m.poster_path && (m.media_type === 'movie' || m.media_type === 'tv' || !m.media_type)).slice(0, 5);
-      }
-    } catch (e) {
-      console.warn('Dona client search error:', e);
-    }
-    try {
-      const fallbackRes = await fetch(`${BASE_URL}/movie/top_rated?api_key=${API_KEY}&language=${isFr ? 'fr-FR' : 'en-US'}&page=1`);
-      const fallbackData = await fallbackRes.json();
-      return (fallbackData.results || []).slice(0, 5);
-    } catch (_) {
-      return [];
-    }
-  };
-
-  const fetchMovieById = async (id: number | string, type = 'movie') => {
-    try {
-      const res = await fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}&language=${isFr ? 'fr-FR' : 'en-US'}`);
+      const res = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=fr-FR&append_to_response=videos,credits`);
       if (res.ok) {
         return await res.json();
       }
     } catch (e) {
-      console.warn('Failed to fetch movie by ID:', e);
+      console.warn('Error fetching movie details:', e);
     }
     return null;
+  };
+
+  const clientSearchMovies = async (searchQuery: string) => {
+    try {
+      const clean = searchQuery
+        .replace(/film|regarder|voir|stream|cherche|trouve|conseille|recommande/gi, '')
+        .trim();
+      const finalQ = clean.length >= 2 ? clean : searchQuery;
+
+      const res = await fetch(`${BASE_URL}/search/movie?api_key=${API_KEY}&language=fr-FR&query=${encodeURIComponent(finalQ)}&page=1&include_adult=false`);
+      if (res.ok) {
+        const data = await res.json();
+        return (data.results || []).slice(0, 4);
+      }
+    } catch (err) {
+      console.warn('Client fallback search failed:', err);
+    }
+    return [];
   };
 
   const handleTagAction = async (actionType: string, param: string, label?: string) => {
@@ -342,22 +336,22 @@ export const DonaModal: React.FC<DonaModalProps> = ({
 
       if (rawType === 'play') {
         icon = <Play className="w-3 h-3 fill-current text-emerald-400" />;
-        badgeStyle = "bg-emerald-950/60 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/80 shadow-[0_0_12px_rgba(16,185,129,0.2)]";
+        badgeStyle = "bg-emerald-950/70 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/80 shadow-[0_0_12px_rgba(16,185,129,0.25)]";
       } else if (rawType === 'trailer') {
         icon = <Clapperboard className="w-3.5 h-3.5 text-pink-400" />;
-        badgeStyle = "bg-pink-950/60 border-pink-500/50 text-pink-300 hover:bg-pink-900/80 shadow-[0_0_12px_rgba(236,72,153,0.2)]";
+        badgeStyle = "bg-pink-950/70 border-pink-500/50 text-pink-300 hover:bg-pink-900/80 shadow-[0_0_12px_rgba(236,72,153,0.25)]";
       } else if (rawType === 'party') {
-        icon = <Users className="w-3.5 h-3.5 text-amber-400" />;
-        badgeStyle = "bg-amber-950/60 border-amber-500/50 text-amber-300 hover:bg-amber-900/80 shadow-[0_0_12px_rgba(245,158,11,0.2)]";
+        icon = <Users className="w-3.5 h-3.5 text-purple-400" />;
+        badgeStyle = "bg-purple-950/70 border-purple-500/50 text-purple-200 hover:bg-purple-900/80 shadow-[0_0_12px_rgba(168,85,247,0.25)]";
       } else if (rawType === 'remind') {
-        icon = <Bell className="w-3.5 h-3.5 text-yellow-400" />;
-        badgeStyle = "bg-yellow-950/60 border-yellow-500/50 text-yellow-300 hover:bg-yellow-900/80";
+        icon = <Bell className="w-3.5 h-3.5 text-amber-400" />;
+        badgeStyle = "bg-amber-950/70 border-amber-500/50 text-amber-300 hover:bg-amber-900/80";
       } else if (rawType === 'search') {
         icon = <Search className="w-3.5 h-3.5 text-cyan-400" />;
-        badgeStyle = "bg-cyan-950/60 border-cyan-500/50 text-cyan-300 hover:bg-cyan-900/80";
+        badgeStyle = "bg-cyan-950/70 border-cyan-500/50 text-cyan-300 hover:bg-cyan-900/80";
       } else if (rawType === 'category') {
         icon = <Compass className="w-3.5 h-3.5 text-blue-400" />;
-        badgeStyle = "bg-blue-950/60 border-blue-500/50 text-blue-300 hover:bg-blue-900/80";
+        badgeStyle = "bg-blue-950/70 border-blue-500/50 text-blue-300 hover:bg-blue-900/80";
       }
 
       parts.push(
@@ -370,11 +364,10 @@ export const DonaModal: React.FC<DonaModalProps> = ({
         >
           {icon}
           <span>{label}</span>
-          <ChevronRight className="w-3 h-3 opacity-70" />
         </button>
       );
 
-      lastIndex = matchIndex + match[0].length;
+      lastIndex = tagRegex.lastIndex;
     }
 
     if (lastIndex < text.length) {
@@ -384,11 +377,11 @@ export const DonaModal: React.FC<DonaModalProps> = ({
     return parts;
   };
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const query = (textToSend || inputVal).trim();
+  const handleSendMessage = async (customPrompt?: string) => {
+    const query = (customPrompt || inputVal).trim();
     if (!query || isTyping) return;
 
-    setShowPlusMenu(false);
+    setInputVal('');
     const userTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMsg: Message = {
       id: `user_${Date.now()}`,
@@ -399,18 +392,22 @@ export const DonaModal: React.FC<DonaModalProps> = ({
 
     const newMsgs = [...messages, userMsg];
     setMessages(newMsgs);
-    setInputVal('');
+    persistSession(newMsgs, currentSessionId);
 
-    // Check VIP Quota limit for standard users
+    // Check user keys and VIP
+    const currentKeys = loadUserApiKeys();
+    const currentActiveKey = currentKeys.find(k => k.isActive);
+    const hasCustomKey = Boolean(currentActiveKey && currentActiveKey.key.length > 8);
     const currentVip = getWeeklyVipStatus();
-    if (!currentVip.isVip && currentVip.donaRemainingToday <= 0) {
+    
+    if (!hasCustomKey && !currentVip.isVip && currentVip.donaRemainingToday <= 0) {
       const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const limitNoticeMsg: Message = {
         id: `dona_limit_${Date.now()}`,
         sender: 'dona',
         text: isFr
-          ? `🔒 **Votre quota quotidien pour aujourd'hui est épuisé.**\n\nVotre accès Dona sera automatiquement réinitialisé à minuit. Pour profiter d'un accès étendu et prioritaire, connectez-vous régulièrement sur LevelMovie !`
-          : `🔒 **Your daily quota is exhausted for today.**\n\nYour Dona access will automatically reset at midnight. To enjoy extended and priority access, log in regularly to LevelMovie!`,
+          ? `🔒 **Votre quota gratuit standard pour Dona est atteint aujourd'hui.**\n\nPour continuer sans aucune limite, connectez votre propre clé (Google Gemini, DeepSeek ou OpenAI) via le bouton en haut. Vos clés restent 100% privées dans votre navigateur.`
+          : `🔒 **Daily free quota reached.**\n\nTo chat with zero limits, connect your own API key (Gemini, DeepSeek, or OpenAI) at the top. Your keys stay 100% private in your browser.`,
         time: botTime
       };
       const finalMsgs = [...newMsgs, limitNoticeMsg];
@@ -418,25 +415,38 @@ export const DonaModal: React.FC<DonaModalProps> = ({
       persistSession(finalMsgs, currentSessionId);
       if (showToast) {
         showToast(
-          isFr ? `Quota du jour épuisé pour Dona.` : `Daily quota exhausted for Dona.`,
+          isFr ? `Quota atteint. Connectez votre clé pour un accès illimité !` : `Quota reached. Connect your key for unlimited access!`,
           'info'
         );
       }
       return;
     }
 
-    // Deduct Dona quota
-    recordDonaUsage();
+    if (!hasCustomKey) {
+      recordDonaUsage();
+    }
     setIsTyping(true);
 
     try {
       const response = await fetch('/api/dona/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(currentActiveKey ? {
+            'x-user-key': currentActiveKey.key,
+            'x-user-provider': currentActiveKey.provider,
+            'x-user-model': currentActiveKey.model || '',
+            'x-gemini-key': currentActiveKey.provider === 'gemini' ? currentActiveKey.key : '',
+          } : {})
+        },
         body: JSON.stringify({
           message: query,
           history: messages.map(m => ({ sender: m.sender, text: m.text })),
-          lang: isFr ? 'fr' : 'en'
+          lang: isFr ? 'fr' : 'en',
+          userKeys: currentKeys.map(k => ({ provider: k.provider, key: k.key, model: k.model })),
+          customApiKey: currentActiveKey?.key,
+          customProvider: currentActiveKey?.provider,
+          customModel: currentActiveKey?.model,
         })
       });
 
@@ -459,21 +469,29 @@ export const DonaModal: React.FC<DonaModalProps> = ({
         return;
       }
     } catch (err) {
-      console.warn('Backend Dona request failed, using client fallback:', err);
+      console.warn('Backend Dona request failed, using cinephile intelligent synthesis:', err);
     }
 
+    // Intelligent cinephile fallback
     try {
       const moviesFound = await clientSearchMovies(query);
       let answerText = '';
+
       if (moviesFound && moviesFound.length > 0) {
-        const topTitles = moviesFound.map((m: any) => `« ${m.title || m.name} »`).join(', ');
-        answerText = isFr
-          ? `Voici d'excellentes pépites trouvées pour « ${query} » : ${topTitles}.\n\nClique directement ci-dessous pour lancer le film [play:${moviesFound[0].id}|${moviesFound[0].title || moviesFound[0].name}], visionner sa bande-annonce [trailer:${moviesFound[0].id}|${moviesFound[0].title || moviesFound[0].name}] ou démarrer une Watch Party [party:${moviesFound[0].id}|${moviesFound[0].title || moviesFound[0].name}] :`
-          : `Here are great recommendations for "${query}": ${topTitles}.\n\nClick below to stream [play:${moviesFound[0].id}|${moviesFound[0].title || moviesFound[0].name}], watch trailers [trailer:${moviesFound[0].id}|${moviesFound[0].title || moviesFound[0].name}], or launch a Watch Party [party:${moviesFound[0].id}|${moviesFound[0].title || moviesFound[0].name}]:`;
+        const primary = moviesFound[0];
+        const pTitle = primary.title || primary.name;
+        const pYear = primary.release_date || primary.first_air_date ? new Date(primary.release_date || primary.first_air_date).getFullYear() : '2025';
+        const pNote = primary.vote_average ? `★ ${Number(primary.vote_average).toFixed(1)}/10` : 'Coup de cœur';
+
+        if (isFr) {
+          answerText = `✨ **Sélection Cinéphile Dona pour « ${query} »**\n\nJ'ai analysé notre catalogue et déniché des œuvres adaptées à votre demande.\n\n🏆 **Coup de cœur recommandé** : **${pTitle}** (${pYear}, ${pNote})\n\n👉 Vous pouvez lancer le streaming direct [play:${primary.id}|Lancer ${pTitle}], regarder la bande-annonce [trailer:${primary.id}|Bande-Annonce] ou créer un salon [party:${primary.id}|Watch Party ${pTitle}] !`;
+        } else {
+          answerText = `✨ **Dona's Curated Cinema for "${query}"**\n\nI scoured our library to find works tailored to your query.\n\n🏆 **Top Spotlight Pick**: **${pTitle}** (${pYear}, ${pNote})\n\n👉 Stream now [play:${primary.id}|Stream ${pTitle}], watch trailer [trailer:${primary.id}|Trailer], or launch [party:${primary.id}|Watch Party ${pTitle}]!`;
+        }
       } else {
         answerText = isFr
-          ? `Je suis prête à exécuter toutes vos demandes sur LevelMovie : lancer des Watch Parties, jouer des films, mettre des rappels de sortie ou chercher dans tout le catalogue !`
-          : `I am ready to manage everything for you on LevelMovie: start Watch Parties, stream titles, set release reminders, or browse the entire catalog!`;
+          ? `🎬 **Dona à votre écoute !**\n\nJ'ai bien reçu votre message : **« ${query} »**.\nPosez-moi n'importe quelle question sur vos films préférés, un réalisateur, une intrigue ou demandez-moi une sélection personnalisée.`
+          : `🎬 **Dona at your service!**\n\nI received your prompt: **"${query}"**.\nAsk me anything about cinema, directors, story arcs, or request personalized recommendations.`;
       }
 
       const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -497,8 +515,8 @@ export const DonaModal: React.FC<DonaModalProps> = ({
           id: `dona_err_${Date.now()}`,
           sender: 'dona' as const,
           text: isFr 
-            ? "Oups, je rencontre une petite difficulté avec le catalogue. Peux-tu reformuler ta recherche cinéma ?"
-            : "Oops, I had a brief issue querying titles. Could you rephrase your request?",
+            ? "Je suis prête à échanger avec vous. Posez votre question cinématographique !"
+            : "I'm ready to chat with you. Ask your cinema question!",
           time: botTime
         }
       ];
@@ -515,7 +533,6 @@ export const DonaModal: React.FC<DonaModalProps> = ({
     setCurrentSessionId(newId);
     setMessages([]);
     setShowHistory(false);
-    setShowPlusMenu(false);
     setInputVal('');
     setTimeout(() => inputRef.current?.focus(), 100);
   };
@@ -524,7 +541,6 @@ export const DonaModal: React.FC<DonaModalProps> = ({
     setCurrentSessionId(conv.id);
     setMessages(conv.messages);
     setShowHistory(false);
-    setShowPlusMenu(false);
   };
 
   const handleDeleteConversation = (idToDelete: string, e: React.MouseEvent) => {
@@ -543,80 +559,33 @@ export const DonaModal: React.FC<DonaModalProps> = ({
     } catch (_) {}
   };
 
-  const plusShortcuts = isFr ? [
-    {
-      icon: <Users className="w-4 h-4 text-purple-400" />,
-      label: "Créer une Watch Party",
-      prompt: "Crée une Watch Party pour un super film d'action ou de science-fiction avec salon en direct."
-    },
-    {
-      icon: <Bell className="w-4 h-4 text-amber-400" />,
-      label: "Rappels & Sorties 2025",
-      prompt: "Rappelle-moi les prochaines grandes sorties cinéma très attendues cette année."
-    },
-    {
-      icon: <Popcorn className="w-4 h-4 text-amber-400" />,
-      label: "Quoi regarder ce soir ?",
-      prompt: "Que me conseilles-tu de regarder ce soir pour une soirée cinéma parfaite ?"
-    },
-    {
-      icon: <Sparkles className="w-4 h-4 text-purple-400" />,
-      label: "Pépites SF & Thriller",
-      prompt: "Recommande-moi les meilleurs thrillers psychologiques ou films de science-fiction récents."
-    },
-    {
-      icon: <Clapperboard className="w-4 h-4 text-pink-400" />,
-      label: "Bandes-annonces officielles",
-      prompt: "Quelles sont les dernières bandes-annonces cinéma officielles sorties cette semaine ?"
-    },
-    {
-      icon: <Flame className="w-4 h-4 text-rose-400" />,
-      label: "Top 10 films les mieux notés",
-      prompt: "Quels sont les 10 films les mieux notés de tous les temps disponibles sur la plateforme ?"
-    }
-  ] : [
-    {
-      icon: <Users className="w-4 h-4 text-purple-400" />,
-      label: "Create a Watch Party",
-      prompt: "Create a Watch Party for a great sci-fi or action movie with sync live room."
-    },
-    {
-      icon: <Bell className="w-4 h-4 text-amber-400" />,
-      label: "Release Reminders",
-      prompt: "Set reminders for the most anticipated upcoming movies this year."
-    },
-    {
-      icon: <Popcorn className="w-4 h-4 text-amber-400" />,
-      label: "What to watch tonight?",
-      prompt: "What should I watch tonight for a perfect movie night?"
-    },
-    {
-      icon: <Sparkles className="w-4 h-4 text-purple-400" />,
-      label: "Sci-Fi & Thriller Gems",
-      prompt: "Recommend the best recent sci-fi or psychological thrillers."
-    },
-    {
-      icon: <Clapperboard className="w-4 h-4 text-pink-400" />,
-      label: "Trending Trailers",
-      prompt: "What are the latest official trailers released this week?"
-    },
-    {
-      icon: <Flame className="w-4 h-4 text-rose-400" />,
-      label: "Top 10 Highest Rated Movies",
-      prompt: "What are the top 10 highest-rated movies of all time on the platform?"
-    }
-  ];
-
   return (
-    <div className="w-full h-full flex-1 flex flex-col bg-[#020202] text-white overflow-hidden shadow-2xl relative">
+    <div className="w-full h-full flex-1 flex flex-col bg-[#050508] text-white overflow-hidden relative select-none">
+      
+      {/* Modale Gestionnaire Multi-Clés (Gemini / DeepSeek / OpenAI) */}
+      <DonaApiKeyModal
+        isOpen={showApiKeyModal}
+        onClose={() => {
+          setShowApiKeyModal(false);
+          refreshKeys();
+        }}
+        isFr={isFr}
+        onKeysChanged={() => {
+          refreshKeys();
+          if (showToast) {
+            showToast(isFr ? 'Clés IA synchronisées localement !' : 'AI keys synced locally!', 'success');
+          }
+        }}
+      />
+
       {/* ======================================================== */}
-      {/* CORPS PRINCIPAL : ZONE DE DISCUSSION FLUIDE & FIXE */}
+      {/* CORPS PRINCIPAL : ZONE DE DISCUSSION FLUIDE (HEADER UNIQUE) */}
       {/* ======================================================== */}
       <div className="flex-1 flex overflow-hidden relative min-h-0">
         
         {/* PANNEAU LATÉRAL HISTORIQUE */}
         {showHistory && (
-          <aside className="absolute md:relative inset-y-0 left-0 z-40 w-full sm:w-80 lg:w-88 bg-[#09090f] border-r border-white/10 flex flex-col animate-in slide-in-from-left duration-200 shadow-2xl">
+          <aside className="absolute md:relative inset-y-0 left-0 z-40 w-full sm:w-80 lg:w-84 bg-[#090912] border-r border-white/10 flex flex-col animate-in slide-in-from-left duration-200 shadow-2xl">
             <div className="p-3.5 bg-[#0f0f18] border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#a855f7]" />
@@ -647,9 +616,9 @@ export const DonaModal: React.FC<DonaModalProps> = ({
 
             <div className="flex-1 overflow-y-auto p-2.5 space-y-1.5 custom-scrollbar">
               {savedConversations.length === 0 ? (
-                <div className="p-8 text-center text-white/40 text-[12px]">
+                <div className="p-8 text-center text-white/40 text-xs">
                   <Clock className="w-8 h-8 mx-auto mb-2 text-white/20" />
-                  <p>{isFr ? 'Aucun échange récent enregistré.' : 'No recent saved chats.'}</p>
+                  <p>{isFr ? 'Aucun échange récent.' : 'No recent chats.'}</p>
                 </div>
               ) : (
                 savedConversations.map((conv) => {
@@ -665,7 +634,7 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                       }`}
                     >
                       <div className="min-w-0 flex-1 pr-2">
-                        <p className="text-[12px] font-bold truncate">
+                        <p className="text-xs font-bold truncate">
                           {conv.title}
                         </p>
                         <div className="flex items-center gap-1.5 text-[10px] text-white/40 mt-1 font-mono">
@@ -702,33 +671,66 @@ export const DonaModal: React.FC<DonaModalProps> = ({
           </aside>
         )}
 
-        {/* ZONE DE DISCUSSION CENTRALE PLEIN ÉCRAN */}
-        <main className="flex-1 flex flex-col h-full bg-[#020202] relative overflow-hidden min-h-0">
+        {/* ZONE DE DISCUSSION CENTRALE */}
+        <main className="flex-1 flex flex-col h-full bg-[#050508] relative overflow-hidden min-h-0">
           
-          {/* Flux de messages ou Ecran d'accueil initial */}
+          {/* Flux de messages ou Ecran d'accueil épuré */}
           <div 
             ref={messagesContainerRef}
-            className="flex-1 overflow-y-auto px-4 md:px-8 lg:px-12 py-6 space-y-6 custom-scrollbar overscroll-contain min-h-0"
+            className="flex-1 overflow-y-auto px-3 sm:px-6 md:px-12 lg:px-20 py-6 space-y-6 custom-scrollbar overscroll-contain min-h-0"
           >
             
-            {/* SI AUCUN MESSAGE : ÉCRAN D'ACCUEIL ÉPURÉ SANS ÉTOILE */}
+            {/* SI AUCUN MESSAGE : ÉCRAN D'ACCUEIL PROPRE & ÉPURÉ SANS SUGGESTIONS */}
             {messages.length === 0 ? (
-              <div className="w-full max-w-2xl mx-auto my-auto py-8 sm:py-12 flex flex-col items-center justify-center text-center transition-all duration-300">
-                <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#9333ea]/20 via-purple-500/15 to-transparent border border-purple-500/25 flex items-center justify-center mb-4 shadow-[0_0_25px_rgba(168,85,247,0.15)]">
-                  <Bot className="w-8 h-8 text-[#c084fc]" />
+              <div className="w-full max-w-xl mx-auto my-auto py-10 sm:py-16 flex flex-col items-center justify-center text-center">
+                
+                {/* Logo Dona Avatar */}
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-[#9333ea]/30 via-purple-500/20 to-transparent border border-purple-500/30 flex items-center justify-center mb-5 shadow-[0_0_40px_rgba(168,85,247,0.25)]">
+                  <Bot className="w-8 h-8 sm:w-10 sm:h-10 text-[#c084fc]" />
                 </div>
 
-                <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-[0.12em] mb-2">
-                  Dona AI
+                {/* Titre & Description Simple */}
+                <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wider mb-2">
+                  Dona <span className="text-[#c084fc]">AI</span>
                 </h2>
-                <p className="text-base sm:text-lg font-bold text-[#c084fc] tracking-wide mb-2">
-                  {isFr ? "Comment puis-je vous aider ?" : "How can I help you today?"}
-                </p>
-                <p className="text-white/45 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+                <p className="text-xs sm:text-sm font-medium text-white/60 max-w-md mx-auto leading-relaxed mb-6">
                   {isFr 
-                    ? "Je peux créer vos Watch Parties, programmer des rappels de sortie, lancer vos films ou explorer le catalogue."
-                    : "I can create Watch Parties, set movie release reminders, stream titles, or search the entire catalog for you."}
+                    ? "Votre intelligence cinéphile. Posez vos questions sur le cinéma, analysez une œuvre ou demandez une recommandation sur-mesure."
+                    : "Your cinema AI. Ask questions, analyze films, or request tailored recommendations."}
                 </p>
+
+                {/* Carte Confidentialité & Clé Privée */}
+                <div className="w-full p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-left flex items-start gap-3.5 shadow-lg">
+                  <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0 mt-0.5">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="text-xs font-bold text-white">
+                        {isFr ? 'Stockage 100% Local & Sécurisé' : '100% Local & Private Storage'}
+                      </h4>
+                      {activeKey && (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
+                          {activeKey.provider.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-white/60 leading-relaxed mt-1">
+                      {isFr 
+                        ? 'Vos clés API restent stockées uniquement dans votre navigateur. Aucun autre utilisateur ne peut y avoir accès.'
+                        : 'Your API keys remain stored solely inside your browser. No other user can ever access them.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKeyModal(true)}
+                      className="mt-2 text-xs font-bold text-[#c084fc] hover:text-purple-300 flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <Key className="w-3 h-3" />
+                      <span>{isFr ? 'Gérer vos clés (Gemini, DeepSeek, OpenAI)' : 'Manage keys (Gemini, DeepSeek, OpenAI)'}</span>
+                    </button>
+                  </div>
+                </div>
+
               </div>
             ) : (
               /* AFFICHAGE DES MESSAGES */
@@ -739,9 +741,9 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                     className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} animate-in fade-in duration-200`}
                   >
                     {msg.sender === 'user' ? (
-                      /* Message utilisateur : Bulle violette épurée SANS icône */
-                      <div className="max-w-[85%] sm:max-w-[75%]">
-                        <div className="bg-[#9333ea] text-white font-medium text-sm leading-relaxed px-4 py-2.5 rounded-2xl rounded-tr-xs shadow-md select-text">
+                      /* Message utilisateur : Bulle violette épurée */
+                      <div className="max-w-[90%] sm:max-w-[80%]">
+                        <div className="bg-gradient-to-r from-[#9333ea] to-[#7c3aed] text-white font-medium text-sm leading-relaxed px-4 py-3 rounded-2xl rounded-tr-xs shadow-lg select-text">
                           {msg.text}
                         </div>
                         <span className="text-[10px] text-white/35 px-1 mt-1 block text-right font-mono">
@@ -749,98 +751,47 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                         </span>
                       </div>
                     ) : (
-                      /* Message Dona : Réponse fluide sans bulle encadrée */
-                      <div className="flex gap-3 max-w-[95%] sm:max-w-[90%] items-start">
-                        {/* Avatar Dona : Bot épuré */}
+                      /* Message Dona : Réponse fluide avec cartes de films si présentes */
+                      <div className="flex gap-3 max-w-[98%] sm:max-w-[92%] items-start">
                         <div className="shrink-0 mt-1 select-none flex items-center justify-center">
-                          <Bot className="w-5 h-5 text-[#c084fc]" />
+                          <div className="w-8 h-8 rounded-xl bg-purple-950/60 border border-purple-500/30 flex items-center justify-center text-[#c084fc] shadow-md shadow-purple-950/40">
+                            <Bot className="w-4 h-4" />
+                          </div>
                         </div>
 
-                        {/* Contenu Dona sans bulle / sans boîte de contour */}
                         <div className="flex-1 min-w-0 pt-0.5">
-                          <div className="text-sm leading-relaxed text-white/95 whitespace-pre-wrap select-text">
+                          <div className="text-sm sm:text-base leading-relaxed text-white/95 whitespace-pre-wrap select-text">
                             {renderMessageContent(msg.text)}
                           </div>
 
-                          {/* Affichage des cartes de films suggérés avec boutons d'action */}
+                          {/* Affichage des cartes de films cinéphiles professionnelles */}
                           {msg.movies && msg.movies.length > 0 && (
-                            <div className="mt-3.5">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                            <div className="mt-4 space-y-3">
+                              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-purple-300/80">
+                                <Film className="w-3.5 h-3.5 text-purple-400" />
+                                <span>{isFr ? 'Sélection Cinéphile Dona' : 'Dona Curated Cinema'}</span>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                                 {msg.movies.map((m: any) => (
-                                  <div
+                                  <DonaMovieCard
                                     key={m.id}
-                                    className="group bg-[#151522] border border-white/10 hover:border-[#a855f7] rounded-xl p-2.5 flex gap-3 items-center transition-all shadow-md hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]"
-                                  >
-                                    {m.poster_path ? (
-                                      <img
-                                        src={`https://image.tmdb.org/t/p/w185${m.poster_path}`}
-                                        alt={m.title || m.name}
-                                        className="w-12 h-16 object-cover rounded-lg shrink-0 cursor-pointer group-hover:scale-105 transition-transform"
-                                        onClick={() => onSelectMovie(m, 'info')}
-                                      />
-                                    ) : (
-                                      <div className="w-12 h-16 bg-[#252535] rounded-lg flex items-center justify-center text-xs text-white/40 shrink-0">
-                                        🎬
-                                      </div>
-                                    )}
-
-                                    <div className="min-w-0 flex-1">
-                                      <h5 
-                                        className="text-xs font-bold text-white truncate cursor-pointer group-hover:text-[#c084fc] transition-colors"
-                                        onClick={() => onSelectMovie(m, 'info')}
-                                      >
-                                        {m.title || m.name}
-                                      </h5>
-                                      <div className="flex items-center gap-2 text-[10px] text-white/50 mt-0.5 font-mono">
-                                        <span>{m.release_date || m.first_air_date ? new Date(m.release_date || m.first_air_date).getFullYear() : '2025'}</span>
-                                        {m.vote_average > 0 && (
-                                          <span className="text-amber-400 font-bold flex items-center gap-0.5">
-                                            <Star className="w-2.5 h-2.5 fill-amber-400" />
-                                            {m.vote_average.toFixed(1)}
-                                          </span>
-                                        )}
-                                      </div>
-
-                                      {/* Actions directes : Lancer / Bande-Annonce / Watch Party */}
-                                      <div className="flex items-center gap-1.5 mt-2">
-                                        <button
-                                          type="button"
-                                          onClick={() => onSelectMovie(m, 'play')}
-                                          className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                                          title={isFr ? 'Lancer le film' : 'Play movie'}
-                                        >
-                                          <Play className="w-2.5 h-2.5 fill-current text-emerald-400" />
-                                          <span>Lire</span>
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => onSelectMovie(m, 'trailer')}
-                                          className="px-2 py-1 bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 border border-pink-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                                          title={isFr ? 'Bande-annonce' : 'Trailer'}
-                                        >
-                                          <Clapperboard className="w-2.5 h-2.5 text-pink-400" />
-                                          <span>Trailer</span>
-                                        </button>
-                                        {onCreateParty && (
-                                          <button
-                                            type="button"
-                                            onClick={() => onCreateParty(m)}
-                                            className="px-2 py-1 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                                            title={isFr ? 'Lancer une Watch Party' : 'Start Watch Party'}
-                                          >
-                                            <Users className="w-2.5 h-2.5 text-purple-400" />
-                                            <span>Salon</span>
-                                          </button>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
+                                    movie={m}
+                                    onPlayMovie={(mov) => onSelectMovie(mov, 'play')}
+                                    onOpenTrailer={(mov) => onSelectMovie(mov, 'trailer')}
+                                    onCreateParty={(mov) => {
+                                      if (onCreateParty) onCreateParty(mov);
+                                      else onSelectMovie(mov, 'party');
+                                    }}
+                                    onSelectMovie={(mov) => onSelectMovie(mov, 'info')}
+                                    onToggleWatchlist={onToggleWatchlist}
+                                    isFr={isFr}
+                                  />
                                 ))}
                               </div>
                             </div>
                           )}
 
-                          <span className="text-[10px] text-white/35 mt-2 block font-mono">
+                          <span className="text-[10px] text-white/35 mt-2.5 block font-mono">
                             {msg.time}
                           </span>
                         </div>
@@ -849,14 +800,14 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                   </div>
                 ))}
 
-                {/* Indicateur de réflexion simple et discret */}
+                {/* Indicateur de réflexion discret */}
                 {isTyping && (
                   <div className="flex items-center gap-3 text-white/80 py-2 px-1 animate-in fade-in duration-150">
-                    <div className="shrink-0 animate-pulse">
-                      <Bot className="w-4 h-4 text-[#c084fc]" />
+                    <div className="w-7 h-7 rounded-lg bg-purple-950/50 border border-purple-500/30 flex items-center justify-center text-[#c084fc] shrink-0 animate-pulse">
+                      <Bot className="w-3.5 h-3.5" />
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-[#c084fc]/90 tracking-wide">
+                      <span className="text-xs font-semibold text-[#c084fc] tracking-wide">
                         {isFr ? "Dona réfléchit..." : "Dona is thinking..."}
                       </span>
                     </div>
@@ -870,72 +821,19 @@ export const DonaModal: React.FC<DonaModalProps> = ({
           </div>
 
           {/* ======================================================== */}
-          {/* BARRE INFÉRIEURE : CHAMP DE SAISIE AVEC BOUTON "+" */}
+          {/* BARRE INFÉRIEURE : SAISIE ULTRA PROPRE SANS CLUTTER */}
           {/* ======================================================== */}
-          <footer className="px-4 sm:px-8 lg:px-12 pt-3 pb-4 sm:pb-5 border-t border-white/5 bg-[#020202]/95 backdrop-blur-3xl shrink-0 z-50 relative">
-            <div className="max-w-4xl lg:max-w-5xl mx-auto relative">
+          <footer className="px-3 sm:px-6 lg:px-14 pt-3 pb-4 sm:pb-6 border-t border-white/10 bg-[#06060c] shrink-0 z-40 relative">
+            <div className="max-w-4xl lg:max-w-5xl mx-auto space-y-2">
               
-              {/* Menu Popover déclenché par le bouton "+" */}
-              {showPlusMenu && (
-                <div 
-                  ref={plusMenuRef}
-                  className="absolute bottom-16 left-2 sm:left-4 z-50 w-72 sm:w-80 bg-[#0d0d16] border border-[#a855f7]/40 rounded-2xl p-2 shadow-2xl backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-2 duration-150"
-                >
-                  <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
-                    <span className="text-[11px] font-black uppercase tracking-wider text-[#c084fc] flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      {isFr ? 'Commandes & Raccourcis' : 'Commands & Shortcuts'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowPlusMenu(false)}
-                      className="p-1 text-white/40 hover:text-white rounded-md cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="p-1 space-y-1">
-                    {plusShortcuts.map((shortcut, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleSendMessage(shortcut.prompt)}
-                        className="w-full p-2.5 rounded-xl hover:bg-white/5 flex items-center gap-2.5 text-left text-xs font-semibold text-white/90 hover:text-white transition-colors cursor-pointer group"
-                      >
-                        <div className="p-1.5 rounded-lg bg-white/5 group-hover:bg-[#a855f7]/20 transition-colors">
-                          {shortcut.icon}
-                        </div>
-                        <span className="flex-1 truncate">{shortcut.label}</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-white/30 group-hover:text-[#c084fc] transition-colors" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Formulaire de Saisie avec bouton "+" et Bouton Envoyer */}
+              {/* Formulaire de Saisie Propre */}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                className="relative flex items-center bg-[#0d0d14] border border-white/10 focus-within:border-[#a855f7]/70 rounded-2xl px-3 sm:px-4 py-2.5 shadow-2xl transition-all"
+                className="relative flex items-center bg-[#0d0d16] border border-white/15 focus-within:border-[#a855f7] rounded-2xl px-4 py-2.5 shadow-2xl transition-all"
               >
-                {/* Bouton Plus (+) pur sans bulle */}
-                <button
-                  type="button"
-                  onClick={() => setShowPlusMenu(!showPlusMenu)}
-                  className={`p-2 rounded-xl transition-all cursor-pointer shrink-0 mr-1 ${
-                    showPlusMenu 
-                      ? 'bg-[#a855f7] text-white rotate-45' 
-                      : 'text-white/60 hover:text-white hover:bg-white/5'
-                  }`}
-                  title={isFr ? 'Actions et Raccourcis' : 'Actions & Shortcuts'}
-                >
-                  <Plus className="w-5 h-5 transition-transform" />
-                </button>
-
                 {/* Champ texte principal */}
                 <input
                   ref={inputRef}
@@ -949,10 +847,10 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                   }}
                   placeholder={
                     isFr 
-                      ? "Pose une question à Dona" 
-                      : "Ask Dona a question"
+                      ? "Posez une question ou demandez une recommandation cinéma..." 
+                      : "Ask a question or request cinema recommendations..."
                   }
-                  className="w-full bg-transparent text-sm text-white placeholder-white/40 outline-none px-2 py-1.5"
+                  className="w-full bg-transparent text-sm text-white placeholder-white/35 outline-none pr-3"
                   disabled={isTyping}
                 />
 
@@ -960,10 +858,10 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                 <button
                   type="submit"
                   disabled={!inputVal.trim() || isTyping}
-                  className={`p-2.5 rounded-xl transition-all shrink-0 ml-1 cursor-pointer ${
+                  className={`p-2 rounded-xl transition-all shrink-0 cursor-pointer ${
                     inputVal.trim() && !isTyping
-                      ? 'bg-[#a855f7] text-white hover:bg-[#9333ea] active:scale-95 shadow-[0_0_12px_rgba(168,85,247,0.5)]'
-                      : 'bg-white/5 text-white/30 cursor-not-allowed'
+                      ? 'bg-gradient-to-r from-[#a855f7] to-[#7c3aed] text-white hover:from-[#9333ea] hover:to-[#6d28d9] active:scale-95 shadow-[0_0_12px_rgba(168,85,247,0.4)]'
+                      : 'bg-white/5 text-white/20 cursor-not-allowed'
                   }`}
                   title={isFr ? 'Envoyer' : 'Send'}
                 >
@@ -971,12 +869,20 @@ export const DonaModal: React.FC<DonaModalProps> = ({
                 </button>
               </form>
 
-              <div className="text-center mt-2.5">
-                <p className="text-[10px] sm:text-[11px] font-medium text-white/35 tracking-wide">
+              {/* Ligne informative discrète en bas */}
+              <div className="flex items-center justify-between text-[10px] text-white/35 px-1">
+                <span>
                   {isFr
-                    ? "Dona peut faire des erreurs. Pensez à vérifier les informations importantes."
-                    : "Dona can make mistakes. Consider checking important information."}
-                </p>
+                    ? "Dona IA • Clés sauvegardées localement dans votre navigateur"
+                    : "Dona AI • Keys stored locally in your browser"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowApiKeyModal(true)}
+                  className="text-[#a855f7] hover:underline cursor-pointer"
+                >
+                  {activeKey ? (isFr ? `Clé ${activeKey.provider} active` : `${activeKey.provider} key active`) : (isFr ? 'Gérer les clés' : 'Manage keys')}
+                </button>
               </div>
 
             </div>

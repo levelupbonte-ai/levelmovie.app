@@ -83,7 +83,7 @@ export const SITE_DESIGNS: SiteDesign[] = [
     badge: 'Best-Seller',
     badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
     description: 'Une présence numérique d’exception pour agences de design, architectes, studios de marque et cabinets de conseil cherchant une élégance sobre et percutante.',
-    priceNote: '$350 • Starter Website',
+    priceNote: '$560 • Starter Website',
     palette: ['#0b0b10', '#181824', '#a855f7', '#f4f4f5'],
     features: [
       'Micro-interactions et transitions au scroll fluides',
@@ -231,7 +231,7 @@ export const SITE_DESIGNS: SiteDesign[] = [
     badge: 'Restauration',
     badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     description: 'Une vitrine gourmande et raffinée pour restaurants gastronomiques, bistrots chics, bars à cocktails et traiteurs événementiels.',
-    priceNote: '$350 • Starter Website',
+    priceNote: '$560 • Starter Website',
     palette: ['#0d110f', '#16221c', '#10b981', '#f0fdf4'],
     features: [
       'Système de réservation en direct connecté par e-mail et SMS',
@@ -268,7 +268,7 @@ export const SITE_DESIGNS: SiteDesign[] = [
     badge: 'Médical & Clinique',
     badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     description: 'Développé pour cabinets médicaux, cliniques esthétiques, dentistes, kinésithérapeutes et centres de bien-être haut de gamme.',
-    priceNote: '$350 • Starter Website',
+    priceNote: '$560 • Starter Website',
     palette: ['#0c1219', '#152232', '#3b82f6', '#eff6ff'],
     features: [
       'Synchronisation calendrier ou lien Doctolib / agenda personnalisé',

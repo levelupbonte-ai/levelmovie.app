@@ -5,7 +5,7 @@ import {
   Home, Tv, Clapperboard, History, AlertOctagon, Bookmark,
   ArrowDown, ArrowUp, ArrowLeft, Plus, Users, Mail, AlertTriangle, CheckCircle, XCircle,
   Building, Lock, Menu, Sparkles, Compass, ShieldCheck, Zap,
-  Clock, SquarePen, Calendar, Bot, WifiOff, Loader2
+  Clock, SquarePen, Calendar, Bot, WifiOff, Loader2, Key
 } from 'lucide-react';
 import {
   doc, setDoc, getDoc, deleteDoc, collection, addDoc, onSnapshot, query, orderBy, limit, getDocs, arrayUnion,
@@ -32,6 +32,7 @@ import { AuthModal, AuthView } from './components/AuthModal';
 import { MandatoryProfileCompletionModal } from './components/MandatoryProfileCompletionModal';
 import { LevelAvatar } from './components/LevelAvatar';
 import { DonaModal } from './components/DonaModal';
+import { DonaApiKeyModal, loadUserApiKeys } from './components/DonaApiKeyModal';
 import { CinematicPosterWall } from './components/CinematicPosterWall';
 import { AvatarPickerModal } from './components/AvatarPickerModal';
 import { MaintenanceScreen } from './components/MaintenanceScreen';
@@ -79,27 +80,99 @@ const detectUserRegionLang = (): string => {
   }
 };
 
-export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () => void } = {}) {
+export interface LevelMovieAppProps {
+  onBackToEcosystem?: () => void;
+  ecosystemUser?: {
+    name: string;
+    email: string;
+    photo?: string | null;
+    uid?: string;
+    handle?: string;
+  } | null;
+  onEcosystemUserChange?: (user: { name: string; email: string; photo?: string | null; uid?: string; handle?: string } | null) => void;
+  onEcosystemLogout?: () => void;
+}
+
+export function LevelMovieApp({
+  onBackToEcosystem,
+  ecosystemUser,
+  onEcosystemUserChange,
+  onEcosystemLogout
+}: LevelMovieAppProps = {}) {
   const [lang, setLang] = useState(detectUserRegionLang);
   const [contentLang, setContentLang] = useState(localStorage.getItem('levelmovie_content_lang') || 'all');
   const [isMaintenance, setIsMaintenance] = useState(false);
 
   const [fbUser, setFbUser] = useState<any>(null);
   const [user, setUser] = useState<any>(() => {
+    if (ecosystemUser?.uid || ecosystemUser?.email) {
+      return { uid: ecosystemUser.uid || 'usr_saved', email: ecosystemUser.email || '' };
+    }
     const savedUid = localStorage.getItem('levelmovie_user_uid');
     const savedEmail = localStorage.getItem('levelmovie_user_email');
     return savedUid ? { uid: savedUid, email: savedEmail || '' } : null;
   });
   const [userPhoto, setUserPhoto] = useState<string | null>(() => {
-    return localStorage.getItem('levelmovie_custom_avatar') || localStorage.getItem('levelmovie_user_photo') || localStorage.getItem('lm_photo') || null;
+    return ecosystemUser?.photo || localStorage.getItem('levelmovie_custom_avatar') || localStorage.getItem('levelmovie_user_photo') || localStorage.getItem('lm_photo') || null;
   });
   const [userName, setUserName] = useState<string>(() => {
-    return localStorage.getItem('levelmovie_username') || localStorage.getItem('levelmovie_user_name') || '';
+    return ecosystemUser?.name || localStorage.getItem('levelmovie_username') || localStorage.getItem('levelmovie_user_name') || '';
   });
   const [userEmail, setUserEmail] = useState<string>(() => {
-    return localStorage.getItem('levelmovie_user_email') || '';
+    return ecosystemUser?.email || localStorage.getItem('levelmovie_user_email') || '';
   });
-  const [userHandle, setUserHandle] = useState<string>(() => localStorage.getItem('levelmovie_user_handle') || '');
+  const [userHandle, setUserHandle] = useState<string>(() => {
+    return ecosystemUser?.handle || localStorage.getItem('levelmovie_user_handle') || '';
+  });
+
+  // Synchronize authentication with ecosystem parent and cross-window events
+  useEffect(() => {
+    if (ecosystemUser) {
+      const uid = ecosystemUser.uid || localStorage.getItem('levelmovie_user_uid') || `usr_${Date.now()}`;
+      setUser({ uid, email: ecosystemUser.email });
+      if (ecosystemUser.name) setUserName(ecosystemUser.name);
+      if (ecosystemUser.email) setUserEmail(ecosystemUser.email);
+      if (ecosystemUser.photo) setUserPhoto(ecosystemUser.photo);
+      if (ecosystemUser.handle) setUserHandle(ecosystemUser.handle);
+      localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
+      setShowLoginModal(false);
+      setShowMandatoryOnboarding(false);
+    } else if (ecosystemUser === null && user) {
+      setUser(null);
+      setUserName('');
+      setUserEmail('');
+      setUserPhoto(null);
+      setUserHandle('');
+    }
+  }, [ecosystemUser]);
+
+  useEffect(() => {
+    const handleEcosystemAuthChange = (e: any) => {
+      const detail = e.detail;
+      if (detail?.user) {
+        const u = detail.user;
+        const uid = u.uid || localStorage.getItem('levelmovie_user_uid') || `usr_${Date.now()}`;
+        setUser({ uid, email: u.email });
+        if (u.name) setUserName(u.name);
+        if (u.email) setUserEmail(u.email);
+        if (u.photo) setUserPhoto(u.photo);
+        if (u.handle) setUserHandle(u.handle);
+        localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
+        setShowLoginModal(false);
+        setShowMandatoryOnboarding(false);
+      } else if (detail?.action === 'logout') {
+        setUser(null);
+        setUserName('');
+        setUserEmail('');
+        setUserPhoto(null);
+        setUserHandle('');
+      }
+    };
+    window.addEventListener('levelup_auth_state_change', handleEcosystemAuthChange);
+    return () => {
+      window.removeEventListener('levelup_auth_state_change', handleEcosystemAuthChange);
+    };
+  }, []);
   const [showMandatoryOnboarding, setShowMandatoryOnboarding] = useState(false);
   const [onboardingOAuthUser, setOnboardingOAuthUser] = useState<any>(null);
   const [authError, setAuthError] = useState('');
@@ -197,6 +270,31 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
   const [showDona, setShowDona] = useState(false);
   const [donaHistoryTrigger, setDonaHistoryTrigger] = useState(0);
   const [donaNewChatTrigger, setDonaNewChatTrigger] = useState(0);
+  const [donaApiKeyModalOpen, setDonaApiKeyModalOpen] = useState(false);
+  const [activeUserKey, setActiveUserKey] = useState<any>(() => {
+    const keys = loadUserApiKeys();
+    return keys.find(k => k.isActive) || null;
+  });
+  const [customGeminiKey, setCustomGeminiKey] = useState<string>(() => {
+    const keys = loadUserApiKeys();
+    const active = keys.find(k => k.isActive);
+    return active?.key || localStorage.getItem('levelmovie_custom_gemini_key') || localStorage.getItem('user_gemini_api_key') || '';
+  });
+
+  useEffect(() => {
+    const handleKeyChange = () => {
+      const keys = loadUserApiKeys();
+      const active = keys.find(k => k.isActive) || null;
+      setActiveUserKey(active);
+      setCustomGeminiKey(active?.key || '');
+    };
+    window.addEventListener('levelmovie_custom_key_updated', handleKeyChange);
+    window.addEventListener('storage', handleKeyChange);
+    return () => {
+      window.removeEventListener('levelmovie_custom_key_updated', handleKeyChange);
+      window.removeEventListener('storage', handleKeyChange);
+    };
+  }, []);
   const [animeSubTab, setAnimeSubTab] = useState<'home' | 'explore' | 'releases'>('home');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [loginBackdrops, setLoginBackdrops] = useState<string[]>([]);
@@ -585,8 +683,13 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
         if (!sessionUser) return;
         const uid = sessionUser.id || sessionUser.uid;
         const userMeta = sessionUser.user_metadata || {};
+        const savedEmail = localStorage.getItem('levelmovie_user_email');
         const isCompleted = userMeta.profile_completed === true || 
-          localStorage.getItem(`lm_profile_completed_${uid}`) === 'true';
+          localStorage.getItem(`lm_profile_completed_${uid}`) === 'true' ||
+          (savedEmail && savedEmail === sessionUser.email) ||
+          !!localStorage.getItem('levelmovie_username') ||
+          !!localStorage.getItem('levelmovie_user_name') ||
+          !!ecosystemUser?.name;
 
         if (!isCompleted) {
           console.log('⚡ [Mandatory Onboarding] Première connexion OAuth détectée sans profil complété:', sessionUser.email);
@@ -595,12 +698,12 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
           setShowLoginModal(false);
         } else {
           setUser({ uid, email: sessionUser.email });
-          const name = userMeta.full_name || userMeta.first_name || sessionUser.email?.split('@')[0] || t.defaultUser;
+          const name = userMeta.full_name || userMeta.first_name || localStorage.getItem('levelmovie_username') || localStorage.getItem('levelmovie_user_name') || ecosystemUser?.name || sessionUser.email?.split('@')[0] || t.defaultUser;
           setUserName(name);
           if (sessionUser.email) setUserEmail(sessionUser.email);
-          const photo = userMeta.avatar_url || localStorage.getItem('levelmovie_user_photo') || null;
+          const photo = userMeta.avatar_url || localStorage.getItem('levelmovie_custom_avatar') || localStorage.getItem('levelmovie_user_photo') || localStorage.getItem('lm_photo') || ecosystemUser?.photo || null;
           if (photo) setUserPhoto(photo);
-          const handle = userMeta.username || localStorage.getItem('levelmovie_user_handle') || '';
+          const handle = userMeta.username || localStorage.getItem('levelmovie_user_handle') || ecosystemUser?.handle || '';
           if (handle) setUserHandle(handle);
           setShowLoginModal(false);
           setShowMandatoryOnboarding(false);
@@ -1227,7 +1330,12 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
 
     localStorage.removeItem('levelmovie_user_uid');
     localStorage.removeItem('levelmovie_user_name');
+    localStorage.removeItem('levelmovie_username');
     localStorage.removeItem('levelmovie_user_email');
+    localStorage.removeItem('levelmovie_user_photo');
+    localStorage.removeItem('levelmovie_custom_avatar');
+    localStorage.removeItem('levelmovie_user_handle');
+    localStorage.removeItem('levelmovie_user_age');
     localStorage.removeItem('lm_photo');
     localStorage.removeItem('lm_now_playing');
     localStorage.removeItem('active_party_id');
@@ -1235,12 +1343,23 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
     setUserName('');
     setUserEmail('');
     setUserPhoto(null);
+    setUserHandle('');
     setSelectedMovie(null);
     setPartyId(null);
     setPartyData(null);
     setCurrentCategory('home');
     setShowLoginModal(false);
     setIsLoggingOut(false);
+
+    if (onEcosystemLogout) {
+      onEcosystemLogout();
+    }
+    if (onEcosystemUserChange) {
+      onEcosystemUserChange(null);
+    }
+    window.dispatchEvent(new CustomEvent('levelup_auth_state_change', {
+      detail: { action: 'logout', user: null }
+    }));
     showToast(lang === 'fr' ? 'Déconnexion réussie' : 'Logged out', 'success');
   };
 
@@ -1294,43 +1413,36 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
       {/* VUE DONA : HEADER STRICTEMENT FIXE & CHAT FLUIDE        */}
       {/* ======================================================== */}
       {currentCategory === 'dona' ? (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: donaViewportHeight ? `${donaViewportHeight}px` : '100dvh',
-            maxHeight: donaViewportHeight ? `${donaViewportHeight}px` : '100dvh',
-            width: '100%',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            zIndex: 60,
-            overscrollBehavior: 'none',
-          }}
-          className="bg-[#020202]"
-        >
-          {/* HEADER UNIQUE DONA - FIXE EN HAUT, NE BOUGE JAMAIS LORSQUE LE CLAVIER SORT */}
-          <header className="safe-top-header shrink-0 h-14 md:h-16 w-full bg-[#060608]/95 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-3.5 sm:px-6 md:px-10 z-50 shadow-md">
-            <div className="flex items-center space-x-3 md:space-x-8">
-              <div 
-                className="flex items-center cursor-pointer outline-none group transition-transform active:scale-95 select-none" 
+        <div className="w-full h-[100dvh] flex flex-col bg-[#050508] text-white overflow-hidden relative">
+          {/* HEADER UNIQUE DONA - FIXE EN HAUT, FLUIDE ET RESPONSIVE */}
+          <header className="safe-top-header shrink-0 h-14 md:h-16 w-full bg-[#060608]/95 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-3 sm:px-6 md:px-10 z-50 shadow-md">
+            <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-8">
+              {/* Bouton Retour Accueil & Logo Dona */}
+              <button 
+                type="button"
+                className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer outline-none group transition-transform active:scale-95 select-none p-1 -ml-1 rounded-xl hover:bg-white/5" 
                 onClick={() => {
                   setCurrentCategory('home');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 title={lang === 'fr' ? 'Retourner à l’accueil' : 'Return to Home'}
               >
-                <div className="md:hidden flex items-center justify-center p-1">
-                  <LevelMovieLogo className="w-7 h-7 transition-transform group-hover:scale-110" color="#a855f7" />
+                <ChevronLeft className="w-5 h-5 text-white/70 group-hover:text-white transition-colors" />
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-xl bg-purple-950/60 border border-purple-500/30 flex items-center justify-center text-[#c084fc] shadow-inner">
+                    <Bot className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col text-left leading-none">
+                    <span className="text-sm font-black tracking-wide text-white flex items-center gap-1.5">
+                      <span>Dona</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    </span>
+                    <span className="hidden sm:inline text-[10px] text-white/40 font-mono">IA Cinéphile</span>
+                  </div>
                 </div>
-                <h1 className="hidden md:flex text-xl md:text-2xl font-black tracking-widest leading-none drop-shadow-lg items-center">
-                  <span className="text-white">Level</span><span className="text-[#a855f7]">Movie</span>
-                </h1>
-              </div>
+              </button>
 
+              {/* Navigation Desktop */}
               <nav className="hidden lg:flex space-x-6 text-[12px] font-bold uppercase tracking-widest text-white/60">
                 <button onClick={() => setCurrentCategory('home')} className="transition-colors hover:text-white outline-none cursor-pointer">{t.home}</button>
                 <button 
@@ -1355,8 +1467,26 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
               </nav>
             </div>
 
-            {/* BOUTONS ACTIONS DONA (UNIFIÉ : MOBILE & PC) */}
-            <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
+            {/* BOUTONS ACTIONS DONA (UNIFIÉ & COMPACT SUR MOBILE) */}
+            <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4">
+              {/* Clé API Multi-Fournisseurs (BYOK) */}
+              <button
+                type="button"
+                onClick={() => setDonaApiKeyModalOpen(true)}
+                className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+                  activeUserKey 
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25'
+                    : 'bg-[#a855f7]/15 border-[#a855f7]/40 text-[#c084fc] hover:bg-[#a855f7]/25'
+                }`}
+                title={lang === 'fr' ? 'Gérer vos clés API privées (Gemini, DeepSeek, OpenAI)' : 'Manage your private API keys'}
+              >
+                <Key className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">
+                  {activeUserKey ? `${activeUserKey.provider.toUpperCase()} Active` : (lang === 'fr' ? 'Clé API' : 'API Key')}
+                </span>
+                {activeUserKey && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+              </button>
+
               {/* 1. Montre / Horloge (Historique) */}
               <button
                 type="button"
@@ -1422,7 +1552,7 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
             </div>
           </header>
 
-          {/* CONTENU CENTRAL DU CHAT QUI DÉFILE SOUS LE HEADER FIXE */}
+          {/* CONTENU CENTRAL DU CHAT QUI PREND TOUTE LA HAUTEUR MOBILE */}
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative">
             <DonaModal
               isOpen={true}
@@ -1436,6 +1566,8 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
               }}
               onOpenSettings={() => setShowSettings(true)}
               onOpenSupport={() => setShowSupport(true)}
+              onToggleWatchlist={toggleWatchlist}
+              showToast={showToast}
               lang={lang}
               historyTrigger={donaHistoryTrigger}
               newChatTrigger={donaNewChatTrigger}
@@ -1952,17 +2084,24 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
         lang={lang}
       />
 
-      {/* MODAL AUTH / CONNEXION & INSCRIPTION PLEIN ECRAN */}
+      {/* MODAL AUTH / CONNEXION & INSCRIPTION PLEIN ECRAN - COMPTE UNIQUE LEVELUP ECOSYSTEM */}
       <AuthModal
         isOpen={showLoginModal}
         initialView={authModalInitialView}
+        appName="LevelUp Ecosystem"
+        subtitle={lang === 'fr' 
+          ? "Compte Unique LevelUp Ecosystem • Accédez à LevelMovie, vos salons Watch Party et tous les services LevelUp." 
+          : "Unified LevelUp Ecosystem Account • Access LevelMovie, Watch Parties and all LevelUp services."}
         onClose={() => {
           setShowLoginModal(false);
           setAuthModalInitialView('view-main');
         }}
         onLoginSuccess={(loggedUser, name, email, photo, handle, age) => {
-          setUser(loggedUser);
-          setUserName(name);
+          const uid = loggedUser?.uid || loggedUser?.id || `usr_${Date.now()}`;
+          const cleanName = name || (email ? email.split('@')[0] : 'Membre');
+          const cleanHandle = handle || cleanName.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'membre';
+          setUser({ uid, email });
+          setUserName(cleanName);
           setUserEmail(email);
           if (photo) {
             setUserPhoto(photo);
@@ -1970,14 +2109,14 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
             localStorage.setItem('levelmovie_user_photo', photo);
             localStorage.setItem('lm_photo', photo);
           }
-          if (name) {
-            localStorage.setItem('levelmovie_username', name);
-            localStorage.setItem('levelmovie_user_name', name);
-            localStorage.setItem('lm_guest_party_name', name);
+          if (cleanName) {
+            localStorage.setItem('levelmovie_username', cleanName);
+            localStorage.setItem('levelmovie_user_name', cleanName);
+            localStorage.setItem('lm_guest_party_name', cleanName);
           }
-          if (handle) {
-            setUserHandle(handle);
-            localStorage.setItem('levelmovie_user_handle', handle);
+          if (cleanHandle) {
+            setUserHandle(cleanHandle);
+            localStorage.setItem('levelmovie_user_handle', cleanHandle);
           }
           if (email) {
             localStorage.setItem('levelmovie_user_email', email);
@@ -1985,21 +2124,30 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
           if (age) {
             localStorage.setItem('levelmovie_user_age', String(age));
           }
-          const uid = loggedUser?.uid || loggedUser?.id;
-          if (uid) {
-            localStorage.setItem('levelmovie_user_uid', uid);
-          }
+          localStorage.setItem('levelmovie_user_uid', uid);
+          localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
+
           partySyncService.setMember({
             uid: uid || effectiveUid,
-            name: name || effectiveUserName,
+            name: cleanName || effectiveUserName,
             photo: photo || effectiveUserPhoto || ''
           });
+
+          const userObj = { name: cleanName, email, photo, uid, handle: cleanHandle };
+          if (onEcosystemUserChange) {
+            onEcosystemUserChange(userObj);
+          }
+          window.dispatchEvent(new CustomEvent('levelup_auth_state_change', {
+            detail: { user: userObj }
+          }));
           window.dispatchEvent(new CustomEvent('levelmovie_profile_change', {
-            detail: { name, photo, handle, email, uid }
+            detail: { name: cleanName, photo, handle: cleanHandle, email, uid }
           }));
           window.dispatchEvent(new CustomEvent('levelmovie_avatar_change', {
             detail: { avatar: photo }
           }));
+          setShowLoginModal(false);
+          setShowMandatoryOnboarding(false);
         }}
         lang={lang}
         showToast={showToast}
@@ -2035,6 +2183,7 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
             localStorage.setItem('levelmovie_user_email', email);
           }
           localStorage.setItem('levelmovie_user_uid', uid);
+          localStorage.setItem(`lm_profile_completed_${uid}`, 'true');
           if (age) {
             localStorage.setItem('levelmovie_user_age', String(age));
           }
@@ -2043,6 +2192,13 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
             name,
             photo
           });
+          const userObj = { name, email, photo, uid, handle };
+          if (onEcosystemUserChange) {
+            onEcosystemUserChange(userObj);
+          }
+          window.dispatchEvent(new CustomEvent('levelup_auth_state_change', {
+            detail: { user: userObj }
+          }));
           window.dispatchEvent(new CustomEvent('levelmovie_profile_change', {
             detail: { name, photo, handle, email, uid }
           }));
@@ -2293,6 +2449,19 @@ export function LevelMovieApp({ onBackToEcosystem }: { onBackToEcosystem?: () =>
         showToast={showToast}
         onStatusChange={setIsNetworkOffline}
         openDetailTrigger={openOfflineDetailTrigger}
+      />
+
+      {/* MODAL CLÉ API MULTI-FOURNISSEURS DONA */}
+      <DonaApiKeyModal
+        isOpen={donaApiKeyModalOpen}
+        onClose={() => setDonaApiKeyModalOpen(false)}
+        isFr={lang === 'fr'}
+        onKeysChanged={() => {
+          const keys = loadUserApiKeys();
+          const active = keys.find(k => k.isActive) || null;
+          setActiveUserKey(active);
+          setCustomGeminiKey(active?.key || '');
+        }}
       />
     </div>
   );

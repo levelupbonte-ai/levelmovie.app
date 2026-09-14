@@ -140,6 +140,37 @@ export const LevelDayLogo = ({
   );
 };
 
+export const LevelStudioLogo = ({ 
+  className = "w-6 h-6", 
+  color,
+  useGradient = true
+}: { 
+  className?: string; 
+  color?: string;
+  useGradient?: boolean;
+}) => {
+  const gradId = "lvl_studio_logo_grad";
+  const strokeColor = useGradient ? `url(#${gradId})` : (color || "currentColor");
+  const fillColor = useGradient ? `url(#${gradId})` : (color || "currentColor");
+
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="50%" stopColor="#818cf8" />
+          <stop offset="100%" stopColor="#c084fc" />
+        </linearGradient>
+      </defs>
+      <rect x="3" y="3" width="18" height="13" rx="2" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M7 8L10 11L7 14" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12 14H16" stroke={strokeColor} strokeWidth="2" strokeLinecap="round"/>
+      <path d="M8 20H16" stroke={strokeColor} strokeWidth="2" strokeLinecap="round"/>
+      <path d="M12 16V20" stroke={strokeColor} strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
+};
+
 export const TikTokHomeIcon = ({ className = "w-5 h-5", fill = "currentColor" }: { className?: string; fill?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
     <path d="M12 2.5L2 11.2H5.2V21.5H10.2V15.2C10.2 14.2 11 13.4 12 13.4C13 13.4 13.8 14.2 13.8 15.2V21.5H18.8V11.2H22L12 2.5Z" />

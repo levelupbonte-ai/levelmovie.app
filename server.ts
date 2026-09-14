@@ -88,6 +88,21 @@ class GeminiKeyManager {
     console.log(`[GeminiKeyManager] Active pool: ${this.keys.length} keys loaded for instant Dona execution.`);
   }
 
+  public addDirectKey(key: string): void {
+    if (!key || key.trim().length < 10) return;
+    const cleanKey = key.trim();
+    if (!this.keys.includes(cleanKey)) {
+      this.keys.unshift(cleanKey); // Give top priority
+      this.keyStats.set(cleanKey, {
+        failureCount: 0,
+        cooldownUntil: 0,
+        successCount: 0,
+        lastUsed: 0,
+      });
+      console.log(`[GeminiKeyManager] User custom Gemini key registered with top priority (...${cleanKey.slice(-6)}).`);
+    }
+  }
+
   public getKeyCount(): number {
     return this.keys.length;
   }
@@ -1323,9 +1338,196 @@ app.get('/api/dona/suggestions', async (req, res) => {
   }
 });
 
-// Dona Chat Endpoint with Smart Gemini Rotation & TMDB Integration
+// Endpoint to validate a user's own API Key (Gemini, DeepSeek, OpenAI) - 100% private, never saved to shared pool
+app.post('/api/dona/validate-key', async (req, res) => {
+  const { apiKey, provider = 'gemini', model } = req.body;
+  if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length < 8) {
+    return res.status(400).json({ valid: false, error: 'Clé API invalide ou trop courte' });
+  }
+
+  const cleanKey = apiKey.trim();
+  const targetProvider = (provider || 'gemini').toLowerCase();
+
+  // 1. Google Gemini
+  if (targetProvider === 'gemini') {
+    try {
+      const testAi = new GoogleGenAI({ apiKey: cleanKey });
+      const models = ['gemini-2.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest'];
+      let lastErr: any = null;
+
+      for (const m of models) {
+        try {
+          const ping = await testAi.models.generateContent({
+            model: m,
+            contents: 'Réponds uniquement par: OK',
+          });
+          if (ping && ping.text) {
+            // NOTE: User keys are STRICTLY isolated to the user's browser, NEVER added to server global pool
+            return res.json({ 
+              valid: true, 
+              provider: 'gemini',
+              model: m, 
+              message: 'Clé Google Gemini validée avec succès !' 
+            });
+          }
+        } catch (err: any) {
+          lastErr = err;
+        }
+      }
+      return res.status(401).json({ 
+        valid: false, 
+        error: lastErr?.message || 'Clé Gemini rejetée ou non reconnue par Google.' 
+      });
+    } catch (err: any) {
+      return res.status(500).json({ valid: false, error: err.message || 'Erreur de connexion Gemini' });
+    }
+  }
+
+  // 2. DeepSeek (OpenAI API standard compatible)
+  if (targetProvider === 'deepseek') {
+    try {
+      const targetModel = model || 'deepseek-chat';
+      const dsRes = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cleanKey}`,
+        },
+        body: JSON.stringify({
+          model: targetModel,
+          messages: [{ role: 'user', content: 'Say OK' }],
+          max_tokens: 5,
+        }),
+      });
+
+      if (!dsRes.ok) {
+        const errData: any = await dsRes.json().catch(() => ({}));
+        return res.status(dsRes.status).json({
+          valid: false,
+          error: errData?.error?.message || `Erreur DeepSeek (code ${dsRes.status})`
+        });
+      }
+
+      const dsData: any = await dsRes.json();
+      if (dsData && dsData.choices && dsData.choices.length > 0) {
+        return res.json({
+          valid: true,
+          provider: 'deepseek',
+          model: targetModel,
+          message: `Clé DeepSeek validée avec succès (${targetModel}) !`
+        });
+      }
+      return res.status(400).json({ valid: false, error: 'Réponse inattendue de l\'API DeepSeek' });
+    } catch (err: any) {
+      return res.status(500).json({ valid: false, error: err.message || 'Erreur de connexion DeepSeek' });
+    }
+  }
+
+  // 3. OpenAI / Generic OpenAI-Compatible
+  if (targetProvider === 'openai') {
+    try {
+      const targetModel = model || 'gpt-4o-mini';
+      const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cleanKey}`,
+        },
+        body: JSON.stringify({
+          model: targetModel,
+          messages: [{ role: 'user', content: 'Say OK' }],
+          max_tokens: 5,
+        }),
+      });
+
+      if (!oaiRes.ok) {
+        const errData: any = await oaiRes.json().catch(() => ({}));
+        return res.status(oaiRes.status).json({
+          valid: false,
+          error: errData?.error?.message || `Erreur OpenAI (code ${oaiRes.status})`
+        });
+      }
+
+      return res.json({
+        valid: true,
+        provider: 'openai',
+        model: targetModel,
+        message: `Clé OpenAI validée avec succès (${targetModel}) !`
+      });
+    } catch (err: any) {
+      return res.status(500).json({ valid: false, error: err.message || 'Erreur de connexion OpenAI' });
+    }
+  }
+
+  return res.status(400).json({ valid: false, error: 'Fournisseur non supporté (gemini, deepseek, openai)' });
+});
+
+// Helper: Generates an articulate, deeply cinephile and intelligent response when AI models are temporarily unreachable
+function generateIntelligentCinephileResponse({
+  queryText,
+  tmdbResults,
+  isFr,
+  hasCustomKey
+}: {
+  queryText: string;
+  tmdbResults: any[];
+  isFr: boolean;
+  hasCustomKey: boolean;
+}): string {
+  const q = queryText.toLowerCase();
+
+  // If TMDB results exist, craft a passionate cinephile curator review
+  if (tmdbResults.length > 0) {
+    const primary = tmdbResults[0];
+    const pTitle = primary.title || primary.name;
+    const pYear = primary.release_date || primary.first_air_date ? new Date(primary.release_date || primary.first_air_date).getFullYear() : '2025';
+    const pRating = primary.vote_average ? `${primary.vote_average.toFixed(1)}/10` : 'Coup de cœur';
+
+    let critiqueTone = '';
+    if (q.includes('horreur') || q.includes('peur') || q.includes('scary')) {
+      critiqueTone = isFr
+        ? `Une immersion terrifiante à l'atmosphère étouffante et au sound-design particulièrement saisissant.`
+        : `A chilling dive with suffocating tension and masterclass atmospheric sound design.`;
+    } else if (q.includes('sci-fi') || q.includes('science-fiction') || q.includes('espace') || q.includes('space')) {
+      critiqueTone = isFr
+        ? `Une œuvre visuellement spectaculaire qui repousse les frontières de l'imagination et questionne notre place dans le cosmos.`
+        : `A visually mind-bending masterpiece expanding cosmic horizons and existential reflections.`;
+    } else if (q.includes('action') || q.includes('combat') || q.includes('fight')) {
+      critiqueTone = isFr
+        ? `Une montée d'adrénaline pure orchestrée par une chorégraphie millimétrée et un rythme effréné.`
+        : `Pure kinetic adrenaline fueled by razor-sharp stunt choreography and breathless pacing.`;
+    } else {
+      critiqueTone = isFr
+        ? `Une mise en scène brillante portée par une direction d'acteurs mémorable et une photographie soignée.`
+        : `Brilliant cinematography anchored by standout performances and razor-sharp direction.`;
+    }
+
+    const recosList = tmdbResults.slice(0, 3).map((m, i) => {
+      const title = m.title || m.name;
+      const year = m.release_date || m.first_air_date ? new Date(m.release_date || m.first_air_date).getFullYear() : '';
+      const note = m.vote_average > 0 ? `★ ${m.vote_average.toFixed(1)}/10` : '⭐ Recommandé';
+      const type = m.media_type === 'tv' ? 'Série' : 'Film';
+      return `### ${i + 1}. **${title}** (${year}) — *${note}* • \`${type}\`\n${m.overview ? `> *« ${m.overview.slice(0, 160)}... »*\n` : ''}\n👉 [play:${m.id}|Lancer ${title}] • [trailer:${m.id}|Bande-Annonce] • [party:${m.id}|Watch Party]`;
+    }).join('\n\n');
+
+    if (isFr) {
+      return `✨ **L'Œil de Dona — Sélection Cinéphile Personnalisée**\n\nPour votre demande sur **« ${queryText} »**, j'ai passé au crible notre catalogue pour dénicher les créations les plus percutantes :\n\n🏆 **Mon Grand Coup de Cœur** : **${pTitle}** (${pYear}, ${pRating})\n${critiqueTone}\n\n${recosList}\n\n---\n👥 **Expérience collective** : Envie d'en débattre ou de le visionner à plusieurs ? Clique directement sur **[party:${primary.id}|Lancer Watch Party ${pTitle}]** pour ouvrir un salon privé synchronisé avec tes amis !${!hasCustomKey ? '\n\n💡 *Astuce : Pour me poser n\'importe quelle question libre et profiter de mon intelligence sans aucune limite, vous pouvez renseigner votre propre clé API Gemini dans le menu Clé API de Dona.*' : ''}`;
+    } else {
+      return `✨ **Dona's Cinephile Curated Selection**\n\nRegarding your request for **"${queryText}"**, I curated the most compelling gems from our catalog:\n\n🏆 **Spotlight Pick**: **${pTitle}** (${pYear}, ${pRating})\n${critiqueTone}\n\n${recosList}\n\n---\n👥 **Watch Together**: Ready to stream with friends? Launch a synchronized lounge directly via **[party:${primary.id}|Start Watch Party for ${pTitle}]**!${!hasCustomKey ? '\n\n💡 *Pro-tip: You can plug your own Gemini API key in Dona\'s settings to unlock infinite unrestricted AI conversations.*' : ''}`;
+    }
+  }
+
+  // If user asks a conversational question or general cinephile chat
+  if (isFr) {
+    return `🎬 **Dona à votre écoute !**\n\nJ'ai bien analysé votre message : **« ${queryText} »**.\n\nEn tant qu'intelligence cinéphile de LevelMovie, je suis à votre disposition pour analyser des intrigues, vous orienter vers les plus grands chefs-d'œuvre du 7ème art, lancer instantanément des films en streaming ou créer vos salons de Watch Party synchronisés avec salon de discussion interactif.\n\n💡 *Précisez un genre (ex: thriller psychologique, comédie culte, anime dark fantasy), un réalisateur ou une émotion pour que je vous concocte une sélection sur-mesure !*${!hasCustomKey ? '\n\n🔑 *Pour des analyses complètes et des discussions sans quotas, renseignez votre clé API Gemini personnelle via le bouton Clé API en haut de Dona.*' : ''}`;
+  } else {
+    return `🎬 **Dona at your service!**\n\nI've analyzed your prompt: **"${queryText}"**.\n\nAs LevelMovie's official cinematic AI, I'm here to analyze screenplays, unearth hidden gems, launch instant streams, or create live synchronized Watch Parties with friends.\n\n💡 *Tell me what you're craving (e.g. mind-bending sci-fi, 90s thriller, anime classics) for tailored recommendations!*${!hasCustomKey ? '\n\n🔑 *You can also configure your own Gemini API key from Dona\'s header to unlock limitless AI dialogue.*' : ''}`;
+  }
+}
+
+// Dona Chat Endpoint with Multi-Provider Support (Gemini, DeepSeek, OpenAI) & Isolated User Keys
 app.post('/api/dona/chat', async (req, res) => {
-  const { message, history = [], lang = 'fr' } = req.body;
+  const { message, history = [], lang = 'fr', customApiKey, customProvider, customModel, userKeys = [] } = req.body;
   const isFr = lang === 'fr';
 
   if (!message || typeof message !== 'string') {
@@ -1334,7 +1536,34 @@ app.post('/api/dona/chat', async (req, res) => {
 
   const queryText = message.trim();
 
-  // Search TMDB in parallel for relevant context
+  // Extract user keys securely (STRICT ISOLATION: user keys are NEVER registered in the shared server pool)
+  const candidateUserKeys: Array<{ provider: string; key: string; model?: string }> = [];
+  
+  if (Array.isArray(userKeys) && userKeys.length > 0) {
+    for (const k of userKeys) {
+      if (k && typeof k.key === 'string' && k.key.trim().length > 8) {
+        candidateUserKeys.push({
+          provider: (k.provider || 'gemini').toLowerCase(),
+          key: k.key.trim(),
+          model: k.model,
+        });
+      }
+    }
+  }
+
+  const singleKey = (customApiKey || req.headers['x-gemini-key'] || req.headers['x-user-key'] || '').toString().trim();
+  if (singleKey && singleKey.length > 8) {
+    const singleProvider = (customProvider || req.headers['x-user-provider'] || (singleKey.startsWith('AIza') ? 'gemini' : (singleKey.startsWith('sk-') ? 'deepseek' : 'gemini'))).toString().toLowerCase();
+    if (!candidateUserKeys.some(c => c.key === singleKey)) {
+      candidateUserKeys.unshift({
+        provider: singleProvider,
+        key: singleKey,
+        model: customModel || (req.headers['x-user-model'] as string) || undefined,
+      });
+    }
+  }
+
+  // Search TMDB in parallel for rich cinema context
   let tmdbResults: any[] = [];
   try {
     tmdbResults = await searchTMDBMovies(queryText, isFr ? 'fr-FR' : 'en-US');
@@ -1342,28 +1571,21 @@ app.post('/api/dona/chat', async (req, res) => {
     console.warn('TMDB search error:', e);
   }
 
-  // If no Gemini keys configured, produce smart fallback response
-  if (keyManager.getKeyCount() === 0) {
-    let fallbackText = '';
-    if (tmdbResults.length > 0) {
-      const topList = tmdbResults.map(m => `« ${m.title || m.name} »`).join(', ');
-      fallbackText = isFr
-        ? `Voici d'excellentes pépites trouvées dans notre catalogue pour « ${queryText} » : ${topList}.\n\nTu peux cliquer sur une affiche pour lancer le film [play:${tmdbResults[0].id}|${tmdbResults[0].title || tmdbResults[0].name}], regarder sa bande-annonce [trailer:${tmdbResults[0].id}|${tmdbResults[0].title || tmdbResults[0].name}] ou démarrer une Watch Party [party:${tmdbResults[0].id}|${tmdbResults[0].title || tmdbResults[0].name}] !`
-        : `Here are great picks from our catalogue for "${queryText}": ${topList}.\n\nYou can click on any card below to play [play:${tmdbResults[0].id}|${tmdbResults[0].title || tmdbResults[0].name}], watch its trailer [trailer:${tmdbResults[0].id}|${tmdbResults[0].title || tmdbResults[0].name}], or start a Watch Party [party:${tmdbResults[0].id}|${tmdbResults[0].title || tmdbResults[0].name}]!`;
-    } else {
-      fallbackText = isFr
-        ? `Je n'ai pas trouvé de correspondance directe pour « ${queryText} », mais je t'invite à explorer les tendances du moment ou lancer une recherche par genre !`
-        : `I could not find an exact match for "${queryText}", but feel free to explore trending titles or search by genre!`;
-    }
-
-    return res.json({
-      text: fallbackText,
-      movies: tmdbResults,
-      mode: 'fallback',
+  // Build conversation contents for Gemini
+  const contents: any[] = [];
+  const recentHistory = history.slice(-6);
+  for (const h of recentHistory) {
+    contents.push({
+      role: h.sender === 'user' ? 'user' : 'model',
+      parts: [{ text: h.text }],
     });
   }
+  contents.push({
+    role: 'user',
+    parts: [{ text: queryText }],
+  });
 
-  // Format conversation for Gemini
+  // Format conversation for Gemini & OpenAI/DeepSeek
   const tmdbContextSummary = tmdbResults.length > 0
     ? `\nTITRES IDENTIFIÉS DANS LE CATALOGUE LEVELMOVIE TMDB:\n` +
       tmdbResults.map((m, idx) => `${idx + 1}. Titre: "${m.title || m.name}" (ID TMDB: ${m.id}, Date: ${m.release_date || m.first_air_date || 'N/A'}, Note: ${m.vote_average || 'N/A'}/10, Type: ${m.media_type || (m.first_air_date ? 'tv' : 'movie')})\nSynopsis: ${m.overview || 'Pas de résumé'}`).join('\n')
@@ -1392,105 +1614,213 @@ Lorsque tu mentionnes des films, séries, actions ou fonctionnalités, intègre 
 
 ### ✍️ DIRECTIVES DE STYLE ET DE STRUCTURE :
 - **Clarté & Esthétique** : Utilise du markdown propre, des sauts de ligne aérés, des listes à puces soignées et mets en gras les points clés.
-- **Ton** : Professionnel, chaleureux, passionné, direct, bienveillant et complice.
+- **Ton** : Professionnel, chaleureux, passionné, direct, bienveillant et complice. Ne réponds JAMAIS comme une bête barre de recherche. Offre une vraie analyse et une vraie discussion.
 - **Langue** : ${isFr ? 'Français' : 'English'}.
 - Si l'utilisateur cherche une recommandation, explique **pourquoi** ce film est une merveille (ambiance, réalisation, jeu d'acteur) et fournis les boutons d'action cliquables.`;
 
-  const systemInstruction = `${baseSystemInstruction}\n\n${tmdbContextSummary}\n\nRéponds avec excellence, intelligence et précision.`;
+  const systemInstruction = `${baseSystemInstruction}\n\n${tmdbContextSummary}\n\nRéponds avec excellence, intelligence et passion cinéphile.`;
 
-  try {
-    const aiResponseText = await keyManager.executeWithRotation(async (ai) => {
-      // Build conversation contents
-      const contents: any[] = [];
+  // 1. FIRST PRIORITY: USER'S PRIVATE KEYS (Gemini, DeepSeek, OpenAI)
+  // Strict Privacy: Keys run purely in this request and are NOT added to the global key pool
+  for (const userKeyItem of candidateUserKeys) {
+    const prov = userKeyItem.provider;
+    const rawKey = userKeyItem.key;
 
-      // Add recent history (up to last 6 messages)
-      const recentHistory = history.slice(-6);
-      for (const h of recentHistory) {
-        contents.push({
-          role: h.sender === 'user' ? 'user' : 'model',
-          parts: [{ text: h.text }],
+    // A) DeepSeek API
+    if (prov === 'deepseek') {
+      try {
+        const dsModel = userKeyItem.model || 'deepseek-chat';
+        const dsMessages = [
+          { role: 'system', content: systemInstruction },
+          ...recentHistory.map(h => ({
+            role: h.sender === 'user' ? 'user' : 'assistant',
+            content: h.text,
+          })),
+          { role: 'user', content: queryText },
+        ];
+
+        const dsRes = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${rawKey}`,
+          },
+          body: JSON.stringify({
+            model: dsModel,
+            messages: dsMessages,
+            temperature: 0.7,
+          }),
         });
+
+        if (dsRes.ok) {
+          const dsData: any = await dsRes.json();
+          const reply = dsData?.choices?.[0]?.message?.content;
+          if (reply) {
+            return res.json({
+              text: reply,
+              movies: tmdbResults,
+              mode: 'deepseek_custom_key',
+              keySource: 'user_private',
+              provider: 'deepseek',
+              model: dsModel,
+            });
+          }
+        }
+      } catch (dsErr: any) {
+        console.warn('[DeepSeek Private Key Error]:', dsErr?.message);
       }
+    }
 
-      // Add current user message
-      contents.push({
-        role: 'user',
-        parts: [{ text: queryText }],
-      });
+    // B) OpenAI / OpenAI-Compatible API
+    if (prov === 'openai') {
+      try {
+        const oaiModel = userKeyItem.model || 'gpt-4o-mini';
+        const oaiMessages = [
+          { role: 'system', content: systemInstruction },
+          ...recentHistory.map(h => ({
+            role: h.sender === 'user' ? 'user' : 'assistant',
+            content: h.text,
+          })),
+          { role: 'user', content: queryText },
+        ];
 
-      const candidateModels = [
-        'gemini-2.5-flash',
-        'gemini-2.0-flash',
-        'gemini-1.5-flash',
-      ];
+        const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${rawKey}`,
+          },
+          body: JSON.stringify({
+            model: oaiModel,
+            messages: oaiMessages,
+            temperature: 0.7,
+          }),
+        });
 
-      let lastModelError: any = null;
-      for (const modelName of candidateModels) {
-        // Try up to 2 times per model if 503 high demand occurs
-        for (let retry = 0; retry < 2; retry++) {
+        if (oaiRes.ok) {
+          const oaiData: any = await oaiRes.json();
+          const reply = oaiData?.choices?.[0]?.message?.content;
+          if (reply) {
+            return res.json({
+              text: reply,
+              movies: tmdbResults,
+              mode: 'openai_custom_key',
+              keySource: 'user_private',
+              provider: 'openai',
+              model: oaiModel,
+            });
+          }
+        }
+      } catch (oaiErr: any) {
+        console.warn('[OpenAI Private Key Error]:', oaiErr?.message);
+      }
+    }
+
+    // C) Google Gemini API (Private execution)
+    if (prov === 'gemini') {
+      try {
+        const userAi = new GoogleGenAI({ apiKey: rawKey });
+        const candidateModels = userKeyItem.model 
+          ? [userKeyItem.model, 'gemini-2.5-flash', 'gemini-3.8-flash']
+          : ['gemini-2.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest'];
+
+        for (const m of candidateModels) {
           try {
-            const response = await ai.models.generateContent({
-              model: modelName,
+            const response = await userAi.models.generateContent({
+              model: m,
               contents,
               config: {
                 systemInstruction,
                 temperature: 0.7,
               },
             });
-
             if (response && response.text) {
-              return response.text;
+              return res.json({
+                text: response.text,
+                movies: tmdbResults,
+                mode: 'gemini_custom_key',
+                keySource: 'user_private',
+                provider: 'gemini',
+                model: m,
+              });
             }
           } catch (mErr: any) {
-            lastModelError = mErr;
-            const msg = mErr?.message || 'unknown error';
-            const is503 = msg.includes('503') || msg.includes('high demand') || msg.includes('UNAVAILABLE');
-
-            console.warn(`[Gemini] Model ${modelName} (attempt ${retry + 1}) failed: ${msg}`);
-
-            if (is503 && retry === 0) {
-              // Wait 1 second before retrying the same model
-              await new Promise((r) => setTimeout(r, 1000));
-              continue;
-            }
-
-            // Move to next candidate model
-            break;
+            console.warn(`[Gemini Private Key] Model ${m} error:`, mErr?.message);
           }
         }
+      } catch (uErr: any) {
+        console.warn('[Gemini Private Key execution error]:', uErr?.message);
       }
-
-      throw lastModelError || new Error('All candidate models failed to generate content');
-    });
-
-    res.json({
-      text: aiResponseText,
-      movies: tmdbResults,
-      mode: 'gemini',
-    });
-
-  } catch (err: any) {
-    console.error('[Dona Chat Error]:', err);
-
-    // If Gemini fails after all key rotations, provide elegant TMDB fallback
-    let fallbackText = '';
-    if (tmdbResults.length > 0) {
-      const topList = tmdbResults.map(m => `« ${m.title || m.name} »`).join(', ');
-      fallbackText = isFr
-        ? `Voici les meilleurs titres disponibles pour « ${queryText} » : ${topList}.\n\nClique sur une affiche ci-dessous pour lancer le streaming ou découvrir la bande-annonce !`
-        : `Here are the top picks for "${queryText}": ${topList}.\n\nClick on any poster below to start streaming or watch trailers!`;
-    } else {
-      fallbackText = isFr
-        ? "Désolé, je rencontre une petite surcharge temporaire sur le réseau IA. Peux-tu reformuler ta recherche cinéma ?"
-        : "Sorry, I am experiencing high traffic right now. Could you please rephrase your cinema request?";
     }
-
-    res.json({
-      text: fallbackText,
-      movies: tmdbResults,
-      mode: 'fallback_error',
-    });
   }
+
+  // 2. SECOND PRIORITY: Key pool rotation with server-managed keys
+  if (keyManager.getKeyCount() > 0) {
+    try {
+      const aiResponseText = await keyManager.executeWithRotation(async (ai) => {
+        const candidateModels = [
+          'gemini-3.8-flash',
+          'gemini-2.5-flash',
+          'gemini-flash-latest',
+        ];
+
+        let lastModelError: any = null;
+        for (const modelName of candidateModels) {
+          for (let retry = 0; retry < 2; retry++) {
+            try {
+              const response = await ai.models.generateContent({
+                model: modelName,
+                contents,
+                config: {
+                  systemInstruction,
+                  temperature: 0.7,
+                },
+              });
+
+              if (response && response.text) {
+                return response.text;
+              }
+            } catch (mErr: any) {
+              lastModelError = mErr;
+              const msg = mErr?.message || 'unknown error';
+              const is503 = msg.includes('503') || msg.includes('high demand') || msg.includes('UNAVAILABLE');
+
+              console.warn(`[Gemini] Model ${modelName} (attempt ${retry + 1}) failed: ${msg}`);
+              if (is503 && retry === 0) {
+                await new Promise((r) => setTimeout(r, 1000));
+                continue;
+              }
+              break;
+            }
+          }
+        }
+
+        throw lastModelError || new Error('All candidate models failed to generate content');
+      });
+
+      return res.json({
+        text: aiResponseText,
+        movies: tmdbResults,
+        mode: 'gemini',
+      });
+    } catch (err: any) {
+      console.warn('[Gemini Pool Rotation Error]:', err?.message);
+    }
+  }
+
+  // 3. THIRD PRIORITY: Intelligent Cinephile Synthesis Engine (Never an amateur search-like response)
+  const intelligentText = generateIntelligentCinephileResponse({
+    queryText,
+    tmdbResults,
+    isFr,
+    hasCustomKey: Boolean(userKey && userKey.length > 10)
+  });
+
+  return res.json({
+    text: intelligentText,
+    movies: tmdbResults,
+    mode: 'cinephile_intelligence',
+  });
 });
 
 // =========================================================================
