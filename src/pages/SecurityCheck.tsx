@@ -61,7 +61,7 @@ export default function SecurityCheck() {
       {/* Hero */}
       <section className="py-16 sm:py-24 px-4 sm:px-8 border-b border-white/[0.08] bg-[#0B0B14]">
         <div className="max-w-4xl mx-auto space-y-6 text-left" data-reveal>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7C3AED]/15 border border-[#7C3AED]/30 text-xs text-[#A78BFA] font-semibold uppercase tracking-wider">
+          <div className="text-xs font-semibold uppercase tracking-wider text-[#A78BFA]">
             Technical Hardening
           </div>
 

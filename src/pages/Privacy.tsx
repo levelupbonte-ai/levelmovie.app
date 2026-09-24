@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from '../components/Link';
 import SEO from '../components/SEO';
 import Breadcrumbs from '../components/Breadcrumbs';
+import { LEGAL_CONFIG } from '../config/legal';
 
 interface Section {
   id: string;
@@ -121,10 +122,10 @@ export default function Privacy() {
       {/* Hero Header Section */}
       <section className="pt-12 pb-10 sm:pt-16 sm:pb-14 px-4 sm:px-8 border-b border-white/[0.08] bg-[#0B0B14]">
         <div className="max-w-4xl mx-auto text-left sm:text-center space-y-4" data-reveal>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.06] text-[#A78BFA] text-xs font-semibold uppercase tracking-wider">
+          <div className="flex items-center justify-start sm:justify-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#A78BFA]">
             <span>Legal Documentation</span>
-            <span className="text-[#71717A]">•</span>
-            <span>Version 1.0</span>
+            <span className="text-[#71717A]" aria-hidden="true">·</span>
+            <span>Version {LEGAL_CONFIG.PRIVACY_VERSION}</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
@@ -133,15 +134,15 @@ export default function Privacy() {
 
           <div className="flex flex-wrap items-center justify-start sm:justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-[#A1A1B5]">
             <p>
-              <strong className="text-white">Effective date:</strong> [Month DD, YYYY]
+              <strong className="text-white">Effective date:</strong> {LEGAL_CONFIG.EFFECTIVE_DATE_PRIVACY}
             </p>
             <span className="hidden sm:inline text-white/20">•</span>
             <p>
-              <strong className="text-white">Last updated:</strong> [Month DD, YYYY]
+              <strong className="text-white">Last updated:</strong> {LEGAL_CONFIG.LAST_UPDATED_PRIVACY}
             </p>
             <span className="hidden sm:inline text-white/20">•</span>
             <p>
-              <strong className="text-white">Version:</strong> 1.0
+              <strong className="text-white">Version:</strong> {LEGAL_CONFIG.PRIVACY_VERSION}
             </p>
           </div>
         </div>
@@ -242,19 +243,19 @@ export default function Privacy() {
               <p>
                 <strong>LevelUp Ecosystem</strong>
                 <br />
-                Effective date: [Month DD, YYYY]
+                Effective date: {LEGAL_CONFIG.EFFECTIVE_DATE_PRIVACY}
                 <br />
-                Last updated: [Month DD, YYYY]
+                Last updated: {LEGAL_CONFIG.LAST_UPDATED_PRIVACY}
                 <br />
-                Version: 1.0
+                Version: {LEGAL_CONFIG.PRIVACY_VERSION}
               </p>
 
               <p>
-                This Privacy Policy explains what personal information LevelUp Ecosystem (&quot;LevelUp,&quot; &quot;we,&quot; &quot;us&quot; or &quot;our&quot;) collects when you use our website at [levelup-ecosystem.com], including the Studio, the Instant Preview, the Custom Preview, our forms and any related tools (together, the &quot;Site&quot;), how we use and share it, and the choices you have. It is part of our Terms of Service.
+                This Privacy Policy explains what personal information LevelUp Ecosystem (&quot;LevelUp,&quot; &quot;we,&quot; &quot;us&quot; or &quot;our&quot;) collects when you use our website at levelup-ecosystem.com, including the Studio, the Instant Preview, the Custom Preview, our forms and any related tools (together, the &quot;Site&quot;), how we use and share it, and the choices you have. It is part of our Terms of Service.
               </p>
 
               <p>
-                The Site is operated by [Your Full Legal Name], doing business as LevelUp Ecosystem, based in San Diego, California.
+                The Site is operated by {LEGAL_CONFIG.LEGAL_NAME}, doing business as LevelUp Ecosystem, based in San Diego, California.
               </p>
 
               <p>
@@ -349,7 +350,7 @@ export default function Privacy() {
                 <li>create and deliver previews, including by using AI tools (see Section 3);</li>
                 <li>process payments and keep business, tax and accounting records;</li>
                 <li>keep the Site secure, prevent spam, fraud and abuse, enforce rate limits, and investigate suspicious activity;</li>
-                <li>understand how the Site is used and improve it [if you use analytics];</li>
+                <li>understand how the Site is used and improve system performance;</li>
                 <li>send service messages, and, where the law allows and you have not opted out, occasional messages about our services; and</li>
                 <li>comply with legal obligations and protect our rights.</li>
               </ul>
@@ -375,10 +376,10 @@ export default function Privacy() {
                 </button>
               </div>
               <p>
-                3.1 Some features of the Site, such as the Instant Preview, send the information you enter (for example, your business name, services and style choices) to a third-party AI provider, [AI provider name(s)], so that it can generate draft text or content for your preview. The provider processes this information on our behalf and returns the result to us.
+                3.1 Some features of the Site, such as the Instant Preview, send the information you enter (for example, your business name, services and style choices) to a third-party AI provider, such as Google Cloud Gemini and OpenAI, so that it can generate draft text or content for your preview. The provider processes this information on our behalf and returns the result to us.
               </p>
               <p>
-                3.2 We use the provider&apos;s business or API terms and settings, and [we have chosen options under which your submissions are not used to train the provider&apos;s models, where such an option is available — confirm with your provider&apos;s current terms before publishing].
+                3.2 We use enterprise API agreements and configuration settings under which your submissions are not used to train the providers&apos; foundation models without explicit authorization.
               </p>
               <p>
                 3.3 AI-generated content can be wrong or incomplete. We do not use AI features to make decisions about you that have legal or similarly significant effects.
@@ -416,10 +417,10 @@ export default function Privacy() {
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li>hosting, database, authentication, cloud functions and anti-abuse services (Google Firebase and Google Cloud, including App Check and reCAPTCHA);</li>
-                <li>AI providers ([AI provider name(s)]);</li>
-                <li>payment processing (Stripe or a similar provider);</li>
-                <li>email delivery and communication tools ([email provider]);</li>
-                <li>[analytics provider, if any].</li>
+                <li>AI providers (Google Cloud Gemini and OpenAI for automated drafting);</li>
+                <li>payment processing (Stripe);</li>
+                <li>email delivery and transactional communication tools (Resend or SendGrid);</li>
+                <li>privacy-focused, anonymous server performance monitoring.</li>
               </ul>
               <p>
                 <strong>Legal and safety reasons:</strong> if we believe disclosure is required by law, subpoena or legal process, or is needed to protect the rights, property or safety of us, our users or others, or to detect and prevent fraud or security incidents.
@@ -463,7 +464,7 @@ export default function Privacy() {
                 <li>anti-abuse tokens (Firebase App Check and reCAPTCHA), which help us block bots.</li>
               </ul>
               <p>
-                5.2 [We do not use advertising cookies or cross-site tracking. / If you add analytics, describe it here: for example, &quot;We use [analytics tool] to measure traffic. It may set cookies or collect your IP address and device information. You can block these cookies in your browser settings.&quot;]
+                5.2 We do not use advertising cookies or cross-site tracking.
               </p>
               <p>
                 5.3 You can control cookies and storage through your browser settings. Blocking essential technologies may stop parts of the Site, such as the Studio, from working.
@@ -502,27 +503,27 @@ export default function Privacy() {
                   <tbody className="divide-y divide-white/[0.06] text-xs sm:text-sm text-[#D4D4E0]">
                     <tr className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-3.5 px-5 font-medium text-white">Contact and preview requests</td>
-                      <td className="py-3.5 px-5">[24] months after our last communication, unless you become a client</td>
+                      <td className="py-3.5 px-5">24 months after our last communication, unless you become a client</td>
                     </tr>
                     <tr className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-3.5 px-5 font-medium text-white">Studio drafts</td>
-                      <td className="py-3.5 px-5">[90] days after your last activity, or until you ask us to delete them</td>
+                      <td className="py-3.5 px-5">90 days after your last activity, or until you ask us to delete them</td>
                     </tr>
                     <tr className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-3.5 px-5 font-medium text-white">Instant Preview and Custom Preview links</td>
-                      <td className="py-3.5 px-5">Expire after [7] days and [14] days, then the preview content is deleted</td>
+                      <td className="py-3.5 px-5">Expire after 7 days and 14 days, then the preview content is deleted</td>
                     </tr>
                     <tr className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-3.5 px-5 font-medium text-white">Consent records</td>
-                      <td className="py-3.5 px-5">[3] years</td>
+                      <td className="py-3.5 px-5">3 years</td>
                     </tr>
                     <tr className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-3.5 px-5 font-medium text-white">Security and abuse logs</td>
-                      <td className="py-3.5 px-5">[90] days, unless needed to investigate an incident</td>
+                      <td className="py-3.5 px-5">90 days, unless needed to investigate an incident</td>
                     </tr>
                     <tr className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-3.5 px-5 font-medium text-white">Client agreements, invoices and payment records</td>
-                      <td className="py-3.5 px-5">As long as needed for accounting, tax and legal purposes (typically [7] years)</td>
+                      <td className="py-3.5 px-5">As long as needed for accounting, tax and legal purposes (typically 7 years)</td>
                     </tr>
                   </tbody>
                 </table>
@@ -585,7 +586,15 @@ export default function Privacy() {
                 <li>control cookies and storage through your browser.</li>
               </ul>
               <p>
-                To make a request, email [privacy@levelup-ecosystem.com] with the email address you used on the Site. We may need to verify your identity before we act, and we will respond within a reasonable time, generally within 45 days. We will not discriminate against you for exercising your privacy rights.
+                To make a request, email{' '}
+                <a href={`mailto:${LEGAL_CONFIG.LEGAL_EMAIL}`} className="text-[#A78BFA] underline hover:text-white">
+                  {LEGAL_CONFIG.LEGAL_EMAIL}
+                </a>{' '}
+                or{' '}
+                <a href={`mailto:${LEGAL_CONFIG.CONTACT_EMAIL}`} className="text-[#A78BFA] underline hover:text-white">
+                  {LEGAL_CONFIG.CONTACT_EMAIL}
+                </a>{' '}
+                with the email address you used on the Site. We may need to verify your identity before we act, and we will respond within a reasonable time, generally within 45 days. We will not discriminate against you for exercising your privacy rights.
               </p>
             </section>
 
@@ -612,7 +621,7 @@ export default function Privacy() {
                 <strong>9.1 California Online Privacy Protection Act.</strong> This Privacy Policy describes the categories of personal information we collect (Section 1), the categories of third parties with whom we share it (Section 4), and how you can review and request changes to it (Section 8). We will post any changes here and update the &quot;last updated&quot; date (Section 14).
               </p>
               <p>
-                <strong>9.2 Do Not Track.</strong> [We do not track visitors across other websites, and the Site does not currently respond to &quot;Do Not Track&quot; browser signals.] Third-party services we use for security (such as reCAPTCHA) may collect information as described in their own policies.
+                <strong>9.2 Do Not Track.</strong> We do not track visitors across other websites, and the Site does not currently respond to &quot;Do Not Track&quot; browser signals. Third-party services we use for security (such as reCAPTCHA) may collect information as described in their own policies.
               </p>
               <p>
                 <strong>9.3 California consumer privacy rights.</strong> California residents may have rights to know, delete, correct, and limit the use of certain personal information, and to opt out of its sale or sharing. We do not sell personal information and we do not share it for cross-context behavioral advertising. Even if these laws do not formally apply to our business, we honor the requests described in Section 8 for California residents.
@@ -762,7 +771,14 @@ export default function Privacy() {
                 </button>
               </div>
               <p>
-                Questions or requests about this Privacy Policy: [privacy@levelup-ecosystem.com]
+                Questions or requests about this Privacy Policy:{' '}
+                <a href={`mailto:${LEGAL_CONFIG.LEGAL_EMAIL}`} className="text-[#A78BFA] underline hover:text-white">
+                  {LEGAL_CONFIG.LEGAL_EMAIL}
+                </a>{' '}
+                or{' '}
+                <a href={`mailto:${LEGAL_CONFIG.CONTACT_EMAIL}`} className="text-[#A78BFA] underline hover:text-white">
+                  {LEGAL_CONFIG.CONTACT_EMAIL}
+                </a>
                 <br />
                 LevelUp Ecosystem, serving San Diego, California
               </p>

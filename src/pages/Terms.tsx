@@ -139,9 +139,9 @@ export default function Terms() {
       {/* Hero Header Section */}
       <section className="pt-12 pb-10 sm:pt-16 sm:pb-14 px-4 sm:px-8 border-b border-white/[0.08] bg-[#0B0B14]">
         <div className="max-w-4xl mx-auto text-left sm:text-center space-y-4" data-reveal>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.06] text-[#A78BFA] text-xs font-semibold uppercase tracking-wider">
+          <div className="flex items-center justify-start sm:justify-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#A78BFA]">
             <span>Legal Documentation</span>
-            <span className="text-[#71717A]">•</span>
+            <span className="text-[#71717A]" aria-hidden="true">·</span>
             <span>Version {LEGAL_CONFIG.TERMS_VERSION}</span>
           </div>
 
@@ -266,7 +266,7 @@ export default function Terms() {
               </p>
 
               <p>
-                These Terms of Service (the &quot;Terms&quot;) govern your access to and use of the LevelUp Ecosystem website at [levelup-ecosystem.com] and all related pages, tools and content, including the Studio, the Instant Preview, the Custom Preview and any other feature we offer through the website (together, the &quot;Site&quot;).
+                These Terms of Service (the &quot;Terms&quot;) govern your access to and use of the LevelUp Ecosystem website at levelup-ecosystem.com and all related pages, tools and content, including the Studio, the Instant Preview, the Custom Preview and any other feature we offer through the website (together, the &quot;Site&quot;).
               </p>
 
               <p>
@@ -533,7 +533,7 @@ export default function Terms() {
                 <li>use the Site to send spam or unsolicited communications.</li>
               </ul>
               <p>
-                7.1 <strong>Security reports.</strong> If you believe you have found a security vulnerability on the Site, please report it to [security@levelup-ecosystem.com] (see also our security contact file at /.well-known/security.txt). Act in good faith, do not access, change or delete data that is not yours, do not disrupt the Site, and give us a reasonable time to respond before sharing details publicly.
+                7.1 <strong>Security reports.</strong> If you believe you have found a security vulnerability on the Site, please report it to <a href={`mailto:${LEGAL_CONFIG.SECURITY_EMAIL}`} className="text-[#A78BFA] underline hover:text-white">{LEGAL_CONFIG.SECURITY_EMAIL}</a> (see also our security contact file at /.well-known/security.txt). Act in good faith, do not access, change or delete data that is not yours, do not disrupt the Site, and give us a reasonable time to respond before sharing details publicly.
               </p>
               <p>
                 7.2 We may investigate violations, remove content, restrict or suspend access, and report unlawful activity to the appropriate authorities.
@@ -596,7 +596,7 @@ export default function Terms() {
                 9.2 Payments are processed by third-party payment providers such as Stripe. We do not receive or store your full payment card number. Your use of a payment provider is subject to that provider&apos;s terms and privacy policy.
               </p>
               <p>
-                9.3 <strong>Recurring plans.</strong> If you choose a recurring plan (for example, a monthly Care Plan), the price, billing frequency, renewal terms and cancellation method will be shown to you clearly before you sign up, and we will ask for your express consent to the recurring charge. Unless your agreement says otherwise, you can cancel at any time before the next billing date by [emailing us at billing@levelup-ecosystem.com / using the cancellation link in your account or invoice email], and the cancellation takes effect at the end of the current billing period. Nothing in these Terms limits any cancellation or refund right you have under applicable law.
+                9.3 <strong>Recurring plans.</strong> If you choose a recurring plan (for example, a monthly Care Plan), the price, billing frequency, renewal terms and cancellation method will be shown to you clearly before you sign up, and we will ask for your express consent to the recurring charge. Unless your agreement says otherwise, you can cancel at any time before the next billing date by emailing us at <a href={`mailto:${LEGAL_CONFIG.BILLING_EMAIL}`} className="text-[#A78BFA] underline hover:text-white">{LEGAL_CONFIG.BILLING_EMAIL}</a> or using the cancellation link in your invoice email, and the cancellation takes effect at the end of the current billing period. Nothing in these Terms limits any cancellation or refund right you have under applicable law.
               </p>
               <p>
                 9.4 Deposits, refunds and late payments are governed by your Service Agreement.
@@ -635,7 +635,7 @@ export default function Terms() {
                 10.4 <strong>Portfolio.</strong> We will not publicly display your project or your business name as a client without your permission, which may be given in a Service Agreement or in writing.
               </p>
               <p>
-                10.5 <strong>Copyright complaints.</strong> If you believe that content on the Site infringes your copyright, send a written notice to [legal@levelup-ecosystem.com] that includes: (a) your name and contact information; (b) a description of the copyrighted work; (c) the location of the content on the Site; (d) a statement that you have a good-faith belief the use is not authorized; (e) a statement, under penalty of perjury, that the information in your notice is accurate and that you are the owner or authorized to act for the owner; and (f) your physical or electronic signature. We may remove content and end the access of users who repeatedly infringe.
+                10.5 <strong>Copyright complaints.</strong> If you believe that content on the Site infringes your copyright, send a written notice to <a href={`mailto:${LEGAL_CONFIG.LEGAL_EMAIL}`} className="text-[#A78BFA] underline hover:text-white">{LEGAL_CONFIG.LEGAL_EMAIL}</a> that includes: (a) your name and contact information; (b) a description of the copyrighted work; (c) the location of the content on the Site; (d) a statement that you have a good-faith belief the use is not authorized; (e) a statement, under penalty of perjury, that the information in your notice is accurate and that you are the owner or authorized to act for the owner; and (f) your physical or electronic signature. We may remove content and end the access of users who repeatedly infringe.
               </p>
             </section>
 
@@ -841,7 +841,7 @@ export default function Terms() {
                 16.2 You may stop using the Site at any time. You may ask us to delete your Studio projects by contacting us.
               </p>
               <p>
-                16.3 By default, drafts may be deleted after [90] days of inactivity, and preview links expire after [7] days for Instant Previews and [14] days for Custom Previews.
+                16.3 By default, drafts may be deleted after 90 days of inactivity, and preview links expire after 7 days for Instant Previews and 14 days for Custom Previews.
               </p>
               <p>
                 16.4 Sections that by their nature should survive termination will survive, including Sections 5, 6, 10, 13, 14, 15, 17 and 18.
@@ -898,7 +898,7 @@ export default function Terms() {
                 18.1 <strong>Governing law.</strong> These Terms and any dispute arising out of or related to them or the Site are governed by the laws of the State of California and applicable U.S. federal law, without regard to conflict-of-law rules.
               </p>
               <p>
-                18.2 <strong>Informal resolution first.</strong> Before starting any formal proceeding, you agree to contact us at [legal@levelup-ecosystem.com] with a written description of the problem and your contact details, and to give us at least 30 days to try to resolve it.
+                18.2 <strong>Informal resolution first.</strong> Before starting any formal proceeding, you agree to contact us at <a href={`mailto:${LEGAL_CONFIG.LEGAL_EMAIL}`} className="text-[#A78BFA] underline hover:text-white">{LEGAL_CONFIG.LEGAL_EMAIL}</a> with a written description of the problem and your contact details, and to give us at least 30 days to try to resolve it.
               </p>
               <p>
                 18.3 <strong>Courts.</strong> If the dispute is not resolved, and except for claims that either of us may bring in small claims court, any legal action must be brought in the state or federal courts located in San Diego County, California, and you and we consent to their jurisdiction and venue.
@@ -943,7 +943,7 @@ export default function Terms() {
                 19.5 <strong>No third-party beneficiaries.</strong> These Terms do not give rights to anyone other than you and us, except that our owner, contractors and service providers benefit from Sections 13 to 15.
               </p>
               <p>
-                19.6 <strong>California notice.</strong> Under California Civil Code Section 1789.3, California users are entitled to the following notice: [verify current details before publishing] the Complaint Assistance Unit of the Division of Consumer Services of the California Department of Consumer Affairs may be contacted in writing at 1625 North Market Blvd., Suite N 112, Sacramento, CA 95834, or by telephone at (800) 952-5210.
+                19.6 <strong>California notice.</strong> Under California Civil Code Section 1789.3, California users are entitled to the following notice: the Complaint Assistance Unit of the Division of Consumer Services of the California Department of Consumer Affairs may be contacted in writing at 1625 North Market Blvd., Suite N 112, Sacramento, CA 95834, or by telephone at (800) 952-5210.
               </p>
             </section>
 
@@ -966,7 +966,12 @@ export default function Terms() {
                   {copiedSection === 'section-20' && <span className="text-[10px]">Copied!</span>}
                 </button>
               </div>
-              <p>Questions about these Terms: [legal@levelup-ecosystem.com]</p>
+              <p>
+                Questions about these Terms:{' '}
+                <a href={`mailto:${LEGAL_CONFIG.LEGAL_EMAIL}`} className="text-[#A78BFA] underline hover:text-white">
+                  {LEGAL_CONFIG.LEGAL_EMAIL}
+                </a>
+              </p>
               <p>
                 LevelUp Ecosystem, serving San Diego, California
               </p>

@@ -222,7 +222,11 @@ export default function PreviewInstant() {
           /* Instant Preview Generator Form */
           <form ref={formRef} onSubmit={handleSubmit} className="rounded-3xl bg-[#14141F] border border-white/[0.08] p-6 sm:p-10 space-y-6">
             <div className="p-4 rounded-2xl bg-[#0B0B14] border border-[#7C3AED]/30 flex items-start gap-3 text-xs text-[#A1A1B5]">
-              <span className="text-[#A78BFA] text-base leading-none">💡</span>
+              <span className="p-1 rounded bg-[#7C3AED]/20 text-[#A78BFA] shrink-0 mt-0.5" aria-hidden="true">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
               <div>
                 <strong className="text-white">Quick Draft:</strong> This will generate a basic layout structure. For a complete, personalized website with custom booking integrations, choose the <a href="/preview/custom" className="text-[#A78BFA] underline">Custom preview</a>.
               </div>

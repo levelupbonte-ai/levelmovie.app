@@ -8,9 +8,6 @@
   --color-brand-lavender: #A78BFA;
 }
 
-@view-transition {
-  navigation: auto;
-}
 
 @layer base {
   html {

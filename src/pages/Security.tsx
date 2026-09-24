@@ -6,43 +6,43 @@ import Breadcrumbs from '../components/Breadcrumbs';
 export default function Security() {
   const securityPractices = [
     {
-      icon: '🛡️',
+      num: '01',
       title: 'HTTPS & Modern Transport Security',
       description:
         'All traffic is strictly encrypted in transit using modern TLS with HTTP Strict Transport Security (HSTS) and automatic redirection from HTTP to HTTPS.',
     },
     {
-      icon: '🔒',
+      num: '02',
       title: 'Strict HTTP Security Headers',
       description:
         'Every response includes Content-Security-Policy (CSP), X-Content-Type-Options: nosniff, Referrer-Policy, Permissions-Policy, and X-Frame-Options to mitigate cross-site scripting (XSS) and clickjacking.',
     },
     {
-      icon: '🚫',
+      num: '03',
       title: 'Deny-By-Default Database & Storage Rules',
       description:
         'Cloud Firestore and Storage rules deny all access by default. Operations require strict authentication, resource ownership verification, key allowlists, and volumetric bounds.',
     },
     {
-      icon: '🔑',
+      num: '04',
       title: 'Zero Secrets in the Browser',
       description:
         'Client-side bundles contain no private API keys, service credentials, or database secrets. Sensitive workflows and AI processing execute in isolated backend Cloud Functions.',
     },
     {
-      icon: '⚡',
+      num: '05',
       title: 'Backend Input Validation & Rate Limiting',
       description:
         'Public forms and preview pipelines enforce server-side schema validation, honeypot traps, sliding-window rate limits, and App Check verification to prevent abuse.',
     },
     {
-      icon: '🔐',
+      num: '06',
       title: 'Two-Factor Authentication (2FA) & IAM Hygiene',
       description:
         'Infrastructure accounts, domain management, GitHub source repositories, and deployment consoles require hardware or authenticator-based 2FA with least-privilege IAM roles.',
     },
     {
-      icon: '📊',
+      num: '07',
       title: 'Cloud Audit Logging & Alerting',
       description:
         'Automated monitoring tracks permission denials, unusual traffic spikes, and runtime anomalies via structured audit logs without retaining raw client PII.',
@@ -66,10 +66,10 @@ export default function Security() {
 
         {/* Header Block */}
         <div className="space-y-4 text-center sm:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7C3AED]/15 border border-[#7C3AED]/30 text-[#DDD6FE] text-xs font-semibold">
+          <div className="flex items-center justify-start sm:justify-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#A78BFA]">
             <span>Engineering Transparency</span>
-            <span className="text-[#71717A]">•</span>
-            <span className="text-[#A78BFA]">Verified Practices</span>
+            <span className="text-[#71717A]" aria-hidden="true">·</span>
+            <span>Verified Practices</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
             How I keep your site secure
@@ -82,7 +82,9 @@ export default function Security() {
         {/* Realism & Disclaimer Callout */}
         <div className="p-5 sm:p-6 rounded-2xl bg-[#14141F] border border-white/[0.08] text-xs sm:text-sm text-[#A1A1B5] leading-relaxed space-y-2">
           <div className="font-semibold text-white flex items-center gap-2">
-            <span>ℹ️</span>
+            <svg className="w-4 h-4 text-[#A78BFA] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             <span>Honest Security Commitment</span>
           </div>
           <p>
@@ -97,7 +99,9 @@ export default function Security() {
               key={idx}
               className="p-6 rounded-2xl bg-[#14141F] border border-white/[0.06] hover:border-white/[0.12] transition-colors space-y-3"
             >
-              <div className="text-2xl">{practice.icon}</div>
+              <div className="w-8 h-8 rounded-lg bg-[#7C3AED]/15 text-[#A78BFA] font-mono text-xs font-bold flex items-center justify-center">
+                {practice.num}
+              </div>
               <h3 className="text-base sm:text-lg font-bold text-white">{practice.title}</h3>
               <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed">
                 {practice.description}

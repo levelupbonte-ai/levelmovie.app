@@ -132,14 +132,17 @@ export default function PreviewCustom() {
                 <span>Request ID:</span>
                 <span className="font-mono text-[#A78BFA]">{requestId || 'prv_custom'}</span>
               </div>
-              <p>
-                🔒 <strong className="text-white">Private link:</strong> Your preview will be hosted at <code className="text-[#DDD6FE]">preview.levelup-ecosystem.com/&lt;private-id&gt;</code> with search engine indexing disabled (<code className="text-[#DDD6FE]">noindex</code>).
+              <p className="flex items-start gap-2">
+                <span className="text-[#A78BFA] font-bold">·</span>
+                <span><strong className="text-white">Private link:</strong> Your preview will be hosted at <code className="text-[#DDD6FE]">preview.levelup-ecosystem.com/&lt;private-id&gt;</code> with search engine indexing disabled (<code className="text-[#DDD6FE]">noindex</code>).</span>
               </p>
-              <p>
-                ⏳ <strong className="text-white">Validity:</strong> The private preview link remains active for 14 days.
+              <p className="flex items-start gap-2">
+                <span className="text-[#A78BFA] font-bold">·</span>
+                <span><strong className="text-white">Validity:</strong> The private preview link remains active for 14 days.</span>
               </p>
-              <p>
-                📬 <strong className="text-white">Delivered to:</strong> {email}
+              <p className="flex items-start gap-2">
+                <span className="text-[#A78BFA] font-bold">·</span>
+                <span><strong className="text-white">Delivered to:</strong> {email}</span>
               </p>
             </div>
 
