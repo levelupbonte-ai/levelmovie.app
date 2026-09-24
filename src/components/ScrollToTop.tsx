@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 
+/**
+ * Ensures clean page top alignment on new document load unless a hash anchor is targeted.
+ */
 export default function ScrollToTop() {
-  const { pathname } = useLocation();
-
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if (!window.location.hash) {
+      window.scrollTo(0, 0);
+    }
+  }, []);
 
   return null;
 }

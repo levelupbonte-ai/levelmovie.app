@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import SEO from '../components/SEO';
 import Breadcrumbs from '../components/Breadcrumbs';
 import { Link } from '../components/Link';
 import { recordConsent } from '../config/legal';
 
 export default function Contact() {
+  const formRef = useRef<HTMLFormElement>(null);
   const [name, setName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
@@ -39,7 +40,7 @@ export default function Contact() {
     setSubmitStatus('idle');
     setErrorMessage('');
 
-    try {
+    const sendTask = async () => {
       // Record user clickwrap consent with server timestamp and version IDs
       recordConsent('Contact Form');
 
@@ -63,6 +64,22 @@ export default function Contact() {
         if (hiddenLink.parentNode) hiddenLink.parentNode.removeChild(hiddenLink);
       }, 100);
 
+      return true;
+    };
+
+    try {
+      if (typeof window !== 'undefined' && window.LevelUpLoader && formRef.current) {
+        await window.LevelUpLoader.wrap(sendTask, {
+          container: formRef.current,
+          delay: 300,
+          minVisible: 500,
+          slowAfter: 8000,
+          failAfter: 20000,
+          onRetry: () => handleSubmit(e),
+        });
+      } else {
+        await sendTask();
+      }
       setSubmitStatus('success');
     } catch {
       setSubmitStatus('error');
@@ -230,7 +247,7 @@ export default function Contact() {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-1">
                   <h3 className="text-xl font-bold text-white">
                     Request a free preview or get in touch

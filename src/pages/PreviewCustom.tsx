@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import SEO from '../components/SEO';
 import { Link } from '../components/Link';
 import { recordConsent } from '../config/legal';
 
 export default function PreviewCustom() {
+  const formRef = useRef<HTMLFormElement>(null);
   const [name, setName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [businessType, setBusinessType] = useState('Barbershop or Salon');
@@ -40,7 +41,7 @@ export default function PreviewCustom() {
     setIsSubmitting(true);
     setErrorMessage('');
 
-    try {
+    const submitTask = async () => {
       // Record user clickwrap consent with server timestamp and version IDs
       recordConsent('Custom Preview Request');
 
@@ -49,26 +50,22 @@ export default function PreviewCustom() {
 
       const newId = 'prv_' + Math.random().toString(36).substring(2, 10);
       setRequestId(newId);
+      return newId;
+    };
 
-      // Record in local state and draft email notification
-      const payload = {
-        id: newId,
-        type: 'custom',
-        status: 'new',
-        createdAt: new Date().toISOString(),
-        name,
-        businessName,
-        businessType,
-        city,
-        email,
-        phone,
-        socialLink,
-        servicesOffered,
-        preferredColors,
-        exampleSites,
-      };
-
-      // Do not store personal data in client localStorage to preserve browser privacy
+    try {
+      if (typeof window !== 'undefined' && window.LevelUpLoader && formRef.current) {
+        await window.LevelUpLoader.wrap(submitTask, {
+          container: formRef.current,
+          delay: 300,
+          minVisible: 500,
+          slowAfter: 8000,
+          failAfter: 20000,
+          onRetry: () => handleSubmit(e),
+        });
+      } else {
+        await submitTask();
+      }
       setSubmitted(true);
     } catch {
       setErrorMessage('Could not send your request. Please email contact@levelup-ecosystem.com directly.');
@@ -162,7 +159,7 @@ export default function PreviewCustom() {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="rounded-3xl bg-[#14141F] border border-white/[0.08] p-6 sm:p-10 space-y-6">
+          <form ref={formRef} onSubmit={handleSubmit} className="rounded-3xl bg-[#14141F] border border-white/[0.08] p-6 sm:p-10 space-y-6">
             
             {/* Honeypot anti-spam field */}
             <div className="hidden" aria-hidden="true" style={{ display: 'none' }}>

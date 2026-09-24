@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-    <title>Page not found | LevelUp Ecosystem</title>
-    <meta name="description" content="The page you're looking for doesn't exist or has moved." />
+    <title>404: This page shattered | LevelUp Ecosystem</title>
+    <meta name="description" content="The page you're looking for doesn't exist or has moved. Let's put things back together." />
     <meta name="robots" content="noindex" />
     <meta name="theme-color" content="#0B0B14" />
 
@@ -57,7 +57,7 @@
       .nav-links {
         display: flex;
         align-items: center;
-        gap: 1.75rem;
+        gap: 1.5rem;
         font-size: 0.875rem;
         font-weight: 500;
       }
@@ -78,6 +78,7 @@
         transition: all 0.2s ease;
         display: inline-flex;
         align-items: center;
+        white-space: nowrap;
       }
       .btn-preview:hover {
         background-color: #8B5CF6;
@@ -108,38 +109,93 @@
         position: absolute;
         width: 180px;
         height: 180px;
-        background: radial-gradient(circle, rgba(124, 58, 237, 0.22) 0%, rgba(124, 58, 237, 0) 70%);
+        background: radial-gradient(circle, rgba(124, 58, 237, 0.25) 0%, rgba(124, 58, 237, 0) 70%);
         border-radius: 50%;
         filter: blur(20px);
         pointer-events: none;
       }
       .star-svg {
-        width: 160px;
-        height: 160px;
+        width: 170px;
+        height: 170px;
         position: relative;
         z-index: 2;
         overflow: visible;
       }
 
-      /* Detached floating facet animation */
-      @keyframes floatFacet {
-        0%, 100% {
-          transform: translate(-9px, -13px) rotate(-6deg);
-        }
-        50% {
-          transform: translate(-14px, -20px) rotate(-12deg);
-        }
+      /* 0.0 - 0.4s: flicker like failing light */
+      @keyframes failingLight {
+        0%, 100% { opacity: 1; }
+        20% { opacity: 0.35; }
+        40% { opacity: 0.95; }
+        60% { opacity: 0.25; }
+        80% { opacity: 0.9; }
       }
-      .floating-facet {
-        transform-origin: 45px 22px;
-        animation: floatFacet 3.5s ease-in-out infinite;
-        filter: drop-shadow(0 5px 12px rgba(124, 58, 237, 0.55));
+
+      /* 0.4 - 0.9s: trembling stepped shake */
+      @keyframes starTremble {
+        0%, 100% { transform: translate(0, 0); }
+        15% { transform: translate(-1.5px, 1px); }
+        30% { transform: translate(1.5px, -1px); }
+        45% { transform: translate(-1px, -1.5px); }
+        60% { transform: translate(1.5px, 1px); }
+        75% { transform: translate(-1.5px, 0.5px); }
+        90% { transform: translate(1px, -1px); }
+      }
+
+      /* 0.4 - 0.9s: draw cracks from center to tips */
+      @keyframes drawCrack {
+        0% { stroke-dashoffset: 50; opacity: 0; }
+        20% { opacity: 1; }
+        100% { stroke-dashoffset: 0; opacity: 1; }
+      }
+
+      @keyframes slowFloatA {
+        0%, 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
+        50% { transform: translate(calc(var(--dx) - 2px), calc(var(--dy) - 4px)) rotate(calc(var(--rot) - 2deg)); }
+      }
+      @keyframes slowFloatB {
+        0%, 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
+        50% { transform: translate(calc(var(--dx) + 3px), calc(var(--dy) + 3px)) rotate(calc(var(--rot) + 2deg)); }
+      }
+
+      .star-shattered-scene {
+        animation: failingLight 0.4s ease-out 1, starTremble 0.5s ease-in-out 0.4s 1;
+      }
+
+      .shatter-crack {
+        stroke: #DDD3FF;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-dasharray: 50;
+        animation: drawCrack 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+      }
+
+      .broken-facet {
+        transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), fill 0.7s ease, opacity 0.7s ease, filter 0.7s ease;
+        transform-origin: 50px 54.4px;
+        transform: translate(var(--dx), var(--dy)) rotate(var(--rot));
+        animation: slowFloatA 6s ease-in-out 1.6s infinite;
+      }
+      .broken-facet.float-alt {
+        animation: slowFloatB 6s ease-in-out 1.6s infinite;
+      }
+
+      body.reassembled .broken-facet {
+        transform: translate(0, 0) rotate(0) !important;
+        animation: none !important;
+        filter: drop-shadow(0 0 12px rgba(124, 58, 237, 0.8));
+      }
+      body.reassembled .shatter-crack {
+        opacity: 0 !important;
+        transition: opacity 0.5s ease;
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .floating-facet {
+        .star-shattered-scene,
+        .shatter-crack,
+        .broken-facet {
           animation: none !important;
-          transform: translate(-10px, -14px) rotate(-6deg) !important;
+          transition: none !important;
         }
       }
 
@@ -175,6 +231,7 @@
         border-radius: 9999px;
         transition: all 0.2s ease;
         box-shadow: 0 4px 18px rgba(124, 58, 237, 0.35);
+        cursor: pointer;
       }
       .btn-home:hover {
         background-color: #8B5CF6;
@@ -199,6 +256,7 @@
         justify-content: center;
         gap: 1.5rem;
         font-size: 0.875rem;
+        flex-wrap: wrap;
       }
       .links-row a {
         color: #A1A1B5;
@@ -282,12 +340,12 @@
         <a href="/" class="logo">
           <img src="/levelup-logo.svg" alt="LevelUp Ecosystem" style="height: 40px; width: auto; display: block;" />
         </a>
-        <div style="display: flex; align-items: center; gap: 2rem;">
+        <div style="display: flex; align-items: center; gap: 1.5rem;">
           <nav class="nav-links">
             <a href="/services" class="nav-link">Services</a>
             <a href="/projects" class="nav-link">Projects</a>
             <a href="/pricing" class="nav-link">Pricing</a>
-            <a href="/process" class="nav-link">How we build</a>
+            <a href="/contact" class="nav-link">Contact</a>
           </nav>
           <a href="/preview" class="btn-preview">Get a free preview</a>
         </div>
@@ -298,56 +356,47 @@
     <main class="main-content">
       <div class="error-card">
         
-        <!-- Faceted Star with Detached Floating Facet (160px) -->
+        <!-- Faceted Broken Star (viewBox 0 0 100 100, C=50,54.4) -->
         <div class="star-wrapper">
           <div class="star-glow"></div>
-          <svg class="star-svg" viewBox="0 0 100 100" fill="none" aria-hidden="true">
-            <!-- Missing piece vacancy outline -->
-            <path
-              d="M 50,50 L 39.42,35.44 L 50,6 Z"
-              stroke="#7C3AED"
-              stroke-width="0.9"
-              stroke-dasharray="2.5 2.5"
-              fill="rgba(124, 58, 237, 0.12)"
-            />
+          <svg class="star-svg star-shattered-scene" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+            <!-- Center sparks & dust -->
+            <circle cx="50" cy="54.4" r="2" fill="#DDD3FF" opacity="0.6" />
+            <circle cx="53" cy="51" r="1.3" fill="#A78BFA" opacity="0.5" />
+            <circle cx="47" cy="57" r="1.2" fill="#FFFFFF" opacity="0.6" />
 
-            <!-- Arm 0: Right facet -->
-            <path d="M 50,50 L 50,6 L 60.58,35.44 Z" fill="#8B5CF6" />
+            <!-- Cracks Drawing Outward -->
+            <line x1="50" y1="54.4" x2="50" y2="10" class="shatter-crack" />
+            <line x1="50" y1="54.4" x2="93.75" y2="40.18" class="shatter-crack" />
+            <line x1="50" y1="54.4" x2="77.04" y2="91.61" class="shatter-crack" />
+            <line x1="50" y1="54.4" x2="22.96" y2="91.61" class="shatter-crack" />
+            <line x1="50" y1="54.4" x2="6.25" y2="40.18" class="shatter-crack" />
 
-            <!-- Arm 1: Right -->
-            <path d="M 50,50 L 60.58,35.44 L 91.85,36.4 Z" fill="#7C3AED" />
-            <path d="M 50,50 L 91.85,36.4 L 67.12,55.56 Z" fill="#581C87" />
-
-            <!-- Arm 2: Bottom-Right -->
-            <path d="M 50,50 L 67.12,55.56 L 75.86,85.6 Z" fill="#4C1D95" />
-            <path d="M 50,50 L 75.86,85.6 L 50,68 Z" fill="#3B0764" />
-
-            <!-- Arm 3: Bottom-Left -->
-            <path d="M 50,50 L 50,68 L 24.14,85.6 Z" fill="#581C87" />
-            <path d="M 50,50 L 24.14,85.6 L 32.88,55.56 Z" fill="#7C3AED" />
-
-            <!-- Arm 4: Left -->
-            <path d="M 50,50 L 32.88,55.56 L 8.15,36.4 Z" fill="#8B5CF6" />
-            <path d="M 50,50 L 8.15,36.4 L 39.42,35.44 Z" fill="#C4B5FD" />
-
-            <!-- Detached, floating piece with floating animation -->
-            <g class="floating-facet">
-              <path d="M 50,50 L 39.42,35.44 L 50,6 Z" fill="#DDD6FE" />
-            </g>
+            <!-- 10 Facets (Exact Geometry, drifting outward) -->
+            <path d="M 50,54.4 L 38.54,38.62 L 50,10 Z" fill="#B8ACD4" class="broken-facet" style="--dx: -14px; --dy: -20px; --rot: -8deg;" />
+            <path d="M 50,54.4 L 50,10 L 61.46,38.62 Z" fill="#9E8EBE" class="broken-facet float-alt" style="--dx: 14px; --dy: -20px; --rot: 8deg;" />
+            <path d="M 50,54.4 L 61.46,38.62 L 93.75,40.18 Z" fill="#5E3C8A" class="broken-facet" style="--dx: 30px; --dy: -8px; --rot: 12deg;" />
+            <path d="M 50,54.4 L 93.75,40.18 L 68.55,60.43 Z" fill="#4C2872" class="broken-facet float-alt" style="--dx: 26px; --dy: 14px; --rot: 15deg;" />
+            <path d="M 50,54.4 L 68.55,60.43 L 77.04,91.61 Z" fill="#5E3C8A" class="broken-facet" style="--dx: 18px; --dy: 30px; --rot: 10deg;" />
+            <path d="M 50,54.4 L 77.04,91.61 L 50,73.9 Z" fill="#421E66" class="broken-facet float-alt" style="--dx: 6px; --dy: 34px; --rot: 5deg;" />
+            <path d="M 50,54.4 L 50,73.9 L 22.96,91.61 Z" fill="#5E3C8A" class="broken-facet" style="--dx: -6px; --dy: 34px; --rot: -5deg;" />
+            <path d="M 50,54.4 L 22.96,91.61 L 31.45,60.43 Z" fill="#421E66" class="broken-facet float-alt" style="--dx: -18px; --dy: 30px; --rot: -10deg;" />
+            <path d="M 50,54.4 L 31.45,60.43 L 6.25,40.18 Z" fill="#5E3C8A" class="broken-facet" style="--dx: -26px; --dy: 14px; --rot: -15deg;" />
+            <path d="M 50,54.4 L 6.25,40.18 L 38.54,38.62 Z" fill="#4C2872" class="broken-facet float-alt" style="--dx: -30px; --dy: -8px; --rot: -12deg;" />
           </svg>
         </div>
 
         <!-- 404 Headline & Description -->
         <div class="error-code">404</div>
-        <h1 class="error-title">This page took a wrong turn</h1>
-        <p class="error-desc">The page you're looking for doesn't exist or has moved.</p>
+        <h1 class="error-title">This page shattered.</h1>
+        <p class="error-desc">The page you're looking for doesn't exist or has moved. Let's put things back together.</p>
 
-        <!-- Primary Button -->
+        <!-- Primary Button with Repair Interaction -->
         <div>
-          <a href="/" class="btn-home">Back to home</a>
+          <a href="/" id="repair-home-btn" class="btn-home">Back to home</a>
         </div>
 
-        <!-- Secondary Links -->
+        <!-- Secondary Links: Services, Projects, Pricing, Contact -->
         <div class="secondary-links">
           <div class="secondary-links-label">Or explore these pages</div>
           <div class="links-row">
@@ -356,8 +405,6 @@
             <a href="/projects">Projects</a>
             <span class="links-divider">•</span>
             <a href="/pricing">Pricing</a>
-            <span class="links-divider">•</span>
-            <a href="/preview">Free Preview</a>
             <span class="links-divider">•</span>
             <a href="/contact">Contact</a>
           </div>
@@ -381,16 +428,16 @@
           <div>
             <h4 class="footer-heading">Services</h4>
             <ul class="footer-links">
-              <li><a href="/services">Local Business Sites</a></li>
-              <li><a href="/services">Creator & Influencer Sites</a></li>
-              <li><a href="/services">Portfolios</a></li>
-              <li><a href="/services">Security Check</a></li>
+              <li><a href="/services/local-business-websites">Local Business Sites</a></li>
+              <li><a href="/services/creator-websites">Creator & Influencer Sites</a></li>
+              <li><a href="/services/portfolio-websites">Portfolios</a></li>
+              <li><a href="/services/security-check">Security Check</a></li>
             </ul>
           </div>
           <div>
             <h4 class="footer-heading">Company</h4>
             <ul class="footer-links">
-              <li><a href="/projects">Work</a></li>
+              <li><a href="/projects">Work & Projects</a></li>
               <li><a href="/pricing">Pricing</a></li>
               <li><a href="/process">How we build</a></li>
               <li><a href="/about">About</a></li>
@@ -412,10 +459,38 @@
           <div style="display: flex; gap: 1.5rem;">
             <a href="/privacy" style="text-decoration: underline;">Privacy Policy</a>
             <a href="/terms" style="text-decoration: underline;">Terms of Service</a>
+            <a href="/sitemap" style="text-decoration: underline;">Sitemap</a>
           </div>
-          <div>Built in San Diego</div>
+          <div>Built in San Diego, CA</div>
         </div>
       </div>
     </footer>
+
+    <!-- Interactive Reassembly Script -->
+    <script>
+      (function() {
+        var btn = document.getElementById('repair-home-btn');
+        if (!btn) return;
+        var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function reassemble() {
+          if (!prefersReduced) {
+            document.body.classList.add('reassembled');
+          }
+        }
+
+        btn.addEventListener('mouseenter', reassemble);
+        btn.addEventListener('focus', reassemble);
+
+        btn.addEventListener('click', function(e) {
+          if (prefersReduced) return;
+          e.preventDefault();
+          reassemble();
+          setTimeout(function() {
+            window.location.href = '/';
+          }, 700);
+        });
+      })();
+    </script>
   </body>
 </html>

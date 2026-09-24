@@ -9,6 +9,16 @@ interface PageLayoutProps {
 
 export default function PageLayout({ currentPath, children }: PageLayoutProps) {
   useEffect(() => {
+    if (!window.LevelUpLoader && !document.getElementById('levelup-loader-script')) {
+      const s = document.createElement('script');
+      s.id = 'levelup-loader-script';
+      s.src = '/assets/js/loader.js';
+      s.defer = true;
+      document.head.appendChild(s);
+    }
+  }, []);
+
+  useEffect(() => {
     // Complete progress bar on mount
     const bar = document.getElementById('page-progress-bar');
     if (bar) {
@@ -50,7 +60,25 @@ export default function PageLayout({ currentPath, children }: PageLayoutProps) {
     };
 
     document.addEventListener('click', handleLinkClick);
-    return () => document.removeEventListener('click', handleLinkClick);
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        if (window.LevelUpLoader) {
+          window.LevelUpLoader.hideNavigationOverlay();
+        }
+        const bar = document.getElementById('page-progress-bar');
+        if (bar) {
+          bar.classList.remove('active', 'loading', 'finish');
+          bar.style.width = '0%';
+        }
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => {
+      document.removeEventListener('click', handleLinkClick);
+      window.removeEventListener('pageshow', handlePageShow);
+    };
   }, []);
 
   // IntersectionObserver for scroll-reveal animations

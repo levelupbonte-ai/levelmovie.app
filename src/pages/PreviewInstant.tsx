@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import SEO from '../components/SEO';
 import { Link } from '../components/Link';
 import { recordConsent } from '../config/legal';
 
 export default function PreviewInstant() {
+  const formRef = useRef<HTMLFormElement>(null);
   const [businessName, setBusinessName] = useState('');
   const [businessType, setBusinessType] = useState('Barbershop');
   const [city, setCity] = useState('');
@@ -11,15 +12,40 @@ export default function PreviewInstant() {
   const [colors, setColors] = useState('');
   const [socialLink, setSocialLink] = useState('');
   const [consent, setConsent] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'form' | 'demo'>('form');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!consent) return;
     recordConsent('Instant Preview Generator');
-    setSubmitted(true);
+
+    const generateTask = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      return true;
+    };
+
+    if (typeof window !== 'undefined' && window.LevelUpLoader && formRef.current) {
+      setIsGenerating(true);
+      try {
+        await window.LevelUpLoader.wrap(generateTask, {
+          container: formRef.current,
+          delay: 300,
+          minVisible: 500,
+          slowAfter: 8000,
+          failAfter: 20000,
+          onRetry: () => handleSubmit(e),
+        });
+        setSubmitted(true);
+      } finally {
+        setIsGenerating(false);
+      }
+    } else {
+      await generateTask();
+      setSubmitted(true);
+    }
   };
 
   return (
@@ -194,7 +220,7 @@ export default function PreviewInstant() {
           </div>
         ) : (
           /* Instant Preview Generator Form */
-          <form onSubmit={handleSubmit} className="rounded-3xl bg-[#14141F] border border-white/[0.08] p-6 sm:p-10 space-y-6">
+          <form ref={formRef} onSubmit={handleSubmit} className="rounded-3xl bg-[#14141F] border border-white/[0.08] p-6 sm:p-10 space-y-6">
             <div className="p-4 rounded-2xl bg-[#0B0B14] border border-[#7C3AED]/30 flex items-start gap-3 text-xs text-[#A1A1B5]">
               <span className="text-[#A78BFA] text-base leading-none">💡</span>
               <div>

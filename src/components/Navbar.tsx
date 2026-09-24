@@ -101,15 +101,15 @@ export default function Navbar({ currentPath }: NavbarProps) {
         </div>
 
         {/* DESKTOP NAV */}
-        <div className="hidden lg:flex items-center gap-7">
-          <nav className="flex items-center gap-6 text-sm font-medium">
+        <div className="hidden lg:flex items-center gap-4 xl:gap-7 shrink-0">
+          <nav className="flex items-center gap-4 xl:gap-6 text-sm font-medium">
             {navLinks.map((link) => {
               const active = isActive(link.path);
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`relative py-1 transition-colors ${
+                  className={`relative py-1 transition-colors whitespace-nowrap ${
                     active ? 'text-white font-semibold' : 'text-[#A1A1B5] hover:text-white'
                   }`}
                 >
@@ -124,17 +124,17 @@ export default function Navbar({ currentPath }: NavbarProps) {
 
           <Link
             to="/preview"
-            className="px-5 py-2 text-xs sm:text-sm font-semibold rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white transition-all duration-200 hover:shadow-[0_0_18px_rgba(124,58,237,0.45)] active:scale-95 shrink-0"
+            className="px-4 xl:px-5 py-2 text-xs sm:text-sm font-semibold rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white transition-all duration-200 hover:shadow-[0_0_18px_rgba(124,58,237,0.45)] active:scale-95 whitespace-nowrap shrink-0"
           >
             Get a free preview
           </Link>
         </div>
 
         {/* MOBILE & TABLET ACTIONS */}
-        <div className="lg:hidden flex items-center gap-2.5">
+        <div className="lg:hidden flex items-center gap-2">
           <Link
             to="/preview"
-            className="px-3.5 py-1.5 text-xs font-semibold rounded-full bg-[#7C3AED] text-white active:scale-95"
+            className="px-3 py-1.5 text-xs font-semibold rounded-full bg-[#7C3AED] text-white active:scale-95 whitespace-nowrap shrink-0"
           >
             Preview
           </Link>

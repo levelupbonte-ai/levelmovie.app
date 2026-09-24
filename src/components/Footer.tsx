@@ -106,7 +106,7 @@ export default function Footer() {
 
             <Link
               to="/preview"
-              className="px-5 py-2.5 text-xs sm:text-sm font-semibold rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white transition-all duration-200 hover:shadow-[0_0_15px_rgba(124,58,237,0.4)] active:scale-95 text-center shrink-0 w-full sm:w-auto"
+              className="px-5 py-2.5 text-xs sm:text-sm font-semibold rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white transition-all duration-200 hover:shadow-[0_0_15px_rgba(124,58,237,0.4)] active:scale-95 text-center shrink-0 w-full sm:w-auto whitespace-nowrap"
             >
               Get a free preview
             </Link>
