@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import SEO from '../components/SEO';
+import { Link } from '../components/Link';
+import { recordConsent } from '../config/legal';
 
 export default function PreviewInstant() {
   const [businessName, setBusinessName] = useState('');
@@ -8,12 +10,15 @@ export default function PreviewInstant() {
   const [services, setServices] = useState('');
   const [colors, setColors] = useState('');
   const [socialLink, setSocialLink] = useState('');
+  const [consent, setConsent] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'form' | 'demo'>('form');
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!consent) return;
+    recordConsent('Instant Preview Generator');
     setSubmitted(true);
   };
 
@@ -92,17 +97,22 @@ export default function PreviewInstant() {
             {/* Top Draft Notice */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#0B0B14] border border-white/[0.08] relative z-10">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 rounded bg-[#7C3AED]/20 text-[#A78BFA] text-[11px] font-bold uppercase tracking-wider">
-                  AI-generated draft
-                </span>
+                <Link
+                  to="/terms"
+                  className="px-2.5 py-1 rounded bg-[#7C3AED]/20 hover:bg-[#7C3AED]/30 text-[#A78BFA] hover:text-white text-[11px] font-bold uppercase tracking-wider inline-flex items-center gap-1 transition-colors"
+                  title="AI-generated draft terms apply - Read Terms of Service"
+                >
+                  <span>AI-generated draft</span>
+                  <span className="text-[10px]">↗</span>
+                </Link>
                 <span className="text-xs text-[#71717A]">Expires in 7 days</span>
               </div>
-              <a
-                href="/preview/custom"
+              <Link
+                to="/preview/custom"
                 className="text-xs text-[#A78BFA] hover:text-white underline font-medium"
               >
                 Want a custom version? Request a custom preview
-              </a>
+              </Link>
             </div>
 
             {/* Mock Draft Content */}
@@ -272,10 +282,35 @@ export default function PreviewInstant() {
               />
             </div>
 
+            {/* Consent Checkbox */}
+            <div className="pt-2">
+              <label className="flex items-start gap-3 cursor-pointer text-xs text-[#A1A1B5] leading-relaxed">
+                <input
+                  type="checkbox"
+                  required
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  className="mt-0.5 rounded border-white/20 bg-[#0B0B14] text-[#7C3AED] focus:ring-[#7C3AED]"
+                />
+                <span>
+                  I have read and agree to the{' '}
+                  <Link to="/terms" className="text-white underline hover:text-[#A78BFA]">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link to="/privacy" className="text-white underline hover:text-[#A78BFA]">
+                    Privacy Policy
+                  </Link>
+                  , and I understand previews are AI-generated drafts.
+                </span>
+              </label>
+            </div>
+
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full py-3.5 px-6 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-semibold text-sm transition-all duration-200 cursor-pointer shadow-md shadow-[#7C3AED]/25"
+                disabled={!consent}
+                className="w-full py-3.5 px-6 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] disabled:bg-[#7C3AED]/50 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all duration-200 cursor-pointer shadow-md shadow-[#7C3AED]/25"
               >
                 Generate my preview
               </button>

@@ -1,13 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import '../index.css';
 import PageLayout from '../components/PageLayout';
 import Contact from '../pages/Contact';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <PageLayout currentPath="/contact">
-      <Contact />
-    </PageLayout>
+    <BrowserRouter>
+      <PageLayout currentPath="/contact">
+        <Contact />
+      </PageLayout>
+    </BrowserRouter>
   </React.StrictMode>
 );

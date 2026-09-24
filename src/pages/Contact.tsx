@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import SEO from '../components/SEO';
 import Breadcrumbs from '../components/Breadcrumbs';
+import { Link } from '../components/Link';
+import { recordConsent } from '../config/legal';
 
 export default function Contact() {
   const [name, setName] = useState('');
@@ -8,6 +10,7 @@ export default function Contact() {
   const [email, setEmail] = useState('');
   const [serviceType, setServiceType] = useState('Local Business Site');
   const [message, setMessage] = useState('');
+  const [consent, setConsent] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -21,6 +24,11 @@ export default function Contact() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!consent) {
+      setErrorMessage('Please accept the Terms of Service and Privacy Policy before submitting.');
+      setSubmitStatus('error');
+      return;
+    }
     if (!name.trim() || !email.trim()) {
       setErrorMessage('Please provide both your name and a valid email address.');
       setSubmitStatus('error');
@@ -32,6 +40,9 @@ export default function Contact() {
     setErrorMessage('');
 
     try {
+      // Record user clickwrap consent with server timestamp and version IDs
+      recordConsent('Contact Form');
+
       await new Promise((resolve) => setTimeout(resolve, 850));
 
       const subject = encodeURIComponent(`Inquiry / Preview Request: ${businessName || name} (${serviceType})`);
@@ -312,10 +323,33 @@ export default function Contact() {
                   />
                 </div>
 
+                <div className="pt-1">
+                  <label className="flex items-start gap-3 cursor-pointer text-xs text-[#A1A1B5] leading-relaxed">
+                    <input
+                      type="checkbox"
+                      required
+                      checked={consent}
+                      onChange={(e) => setConsent(e.target.checked)}
+                      className="mt-0.5 rounded border-white/20 bg-[#0B0B14] text-[#7C3AED] focus:ring-[#7C3AED]"
+                    />
+                    <span>
+                      I have read and agree to the{' '}
+                      <Link to="/terms" className="text-white underline hover:text-[#A78BFA]">
+                        Terms of Service
+                      </Link>{' '}
+                      and{' '}
+                      <Link to="/privacy" className="text-white underline hover:text-[#A78BFA]">
+                        Privacy Policy
+                      </Link>
+                      , and I understand previews are AI-generated drafts.
+                    </span>
+                  </label>
+                </div>
+
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3.5 px-6 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] disabled:opacity-50 text-white font-bold text-sm transition-all duration-200 shadow-md shadow-[#7C3AED]/25 cursor-pointer active:scale-98"
+                  disabled={isSubmitting || !consent}
+                  className="w-full py-3.5 px-6 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm transition-all duration-200 shadow-md shadow-[#7C3AED]/25 cursor-pointer active:scale-98"
                 >
                   {isSubmitting ? 'Submitting request...' : 'Send request for free preview'}
                 </button>

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import SEO from '../components/SEO';
+import { Link } from '../components/Link';
+import { recordConsent } from '../config/legal';
 
 export default function PreviewCustom() {
   const [name, setName] = useState('');
@@ -31,7 +33,7 @@ export default function PreviewCustom() {
     }
 
     if (!consent) {
-      setErrorMessage('Please accept the Privacy Policy to proceed.');
+      setErrorMessage('Please accept the Terms of Service and Privacy Policy before submitting.');
       return;
     }
 
@@ -39,6 +41,9 @@ export default function PreviewCustom() {
     setErrorMessage('');
 
     try {
+      // Record user clickwrap consent with server timestamp and version IDs
+      recordConsent('Custom Preview Request');
+
       // Simulate real transmission and create a secure reference
       await new Promise((resolve) => setTimeout(resolve, 800));
 
@@ -335,7 +340,15 @@ export default function PreviewCustom() {
                   className="mt-0.5 rounded border-white/20 bg-[#0B0B14] text-[#7C3AED] focus:ring-[#7C3AED]"
                 />
                 <span>
-                  I agree to the <a href="/privacy" target="_blank" className="text-white underline hover:text-[#A78BFA]">Privacy Policy</a> and understand that information submitted may be processed by AI tools to design and construct my preview.
+                  I have read and agree to the{' '}
+                  <Link to="/terms" className="text-white underline hover:text-[#A78BFA]">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link to="/privacy" className="text-white underline hover:text-[#A78BFA]">
+                    Privacy Policy
+                  </Link>
+                  , and I understand previews are AI-generated drafts.
                 </span>
               </label>
             </div>
@@ -344,8 +357,8 @@ export default function PreviewCustom() {
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3.5 px-6 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] disabled:bg-[#7C3AED]/50 text-white font-semibold text-sm transition-all duration-200 shadow-md shadow-[#7C3AED]/25 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={isSubmitting || !consent}
+                className="w-full py-3.5 px-6 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] disabled:bg-[#7C3AED]/50 disabled:opacity-50 text-white font-semibold text-sm transition-all duration-200 shadow-md shadow-[#7C3AED]/25 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>

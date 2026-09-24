@@ -143,3 +143,50 @@
     background-position: 200% 0;
   }
 }
+
+/* Print Stylesheet */
+@media print {
+  html, body {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  nav,
+  footer,
+  #page-progress-bar,
+  #reading-progress-bar,
+  #branded-loader,
+  .no-print,
+  .sticky-toc,
+  .back-to-top-btn,
+  button {
+    display: none !important;
+  }
+
+  .print-clean {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #111827 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .important-callout {
+    background-color: #f9fafb !important;
+    border-left: 4px solid #4f46e5 !important;
+    color: #111827 !important;
+  }
+
+  a {
+    color: #111827 !important;
+    text-decoration: underline !important;
+  }
+
+  a[href^="http"]:after,
+  a[href^="/"]:after {
+    content: " (" attr(href) ")";
+    font-size: 80%;
+    color: #4b5563;
+  }
+}
