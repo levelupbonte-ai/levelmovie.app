@@ -102,6 +102,10 @@ export default function NotFound() {
               Pricing
             </a>
             <span className="text-white/20 select-none">•</span>
+            <a href="/preview" className="hover:text-white transition-colors">
+              Free preview
+            </a>
+            <span className="text-white/20 select-none">•</span>
             <a href="/contact" className="hover:text-white transition-colors">
               Contact
             </a>

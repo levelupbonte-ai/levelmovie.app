@@ -46,11 +46,11 @@ export default function Home() {
           <div className="lg:col-span-6 space-y-6 sm:space-y-7 text-left">
             
             <div className="text-xs sm:text-sm font-bold tracking-wider text-[#A78BFA] uppercase">
-              San Diego Web Studio & Security
+              Independent Web Studio & Security
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.12]">
-              Secure websites for San Diego businesses and creators.
+              Secure websites for businesses and creators.
             </h1>
 
             <p className="text-base sm:text-lg text-[#A1A1B5] leading-relaxed font-normal max-w-xl">
@@ -60,10 +60,10 @@ export default function Home() {
             <div className="pt-2 space-y-3">
               <div>
                 <Link
-                  to="/contact"
+                  to="/preview"
                   className="inline-flex items-center px-7 py-3.5 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold text-sm sm:text-base transition-all duration-200 hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] active:scale-95 cursor-pointer"
                 >
-                  Get a free preview →
+                  Get a free preview
                 </Link>
               </div>
 
@@ -110,9 +110,9 @@ export default function Home() {
                 <span className="text-[#A78BFA] font-medium">Final Stop Barber Shop & Salon</span>
                 <Link
                   to="/projects/final-stop"
-                  className="text-white hover:underline"
+                  className="text-white hover:underline font-medium"
                 >
-                  View Case Study →
+                  View Case Study
                 </Link>
               </div>
 
@@ -142,7 +142,7 @@ export default function Home() {
                 to="/process"
                 className="text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
               >
-                Learn how I build with AI & security checks →
+                Learn how I build with AI & security checks
               </Link>
             </div>
           </div>
@@ -202,7 +202,7 @@ export default function Home() {
                 Featured Client Work
               </h2>
               <p className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                Real results for a San Diego business
+                Real results for a modern business
               </p>
             </div>
             <div>
@@ -210,7 +210,7 @@ export default function Home() {
                 to="/projects"
                 className="text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
               >
-                View all projects →
+                View all projects
               </Link>
             </div>
           </div>
@@ -237,7 +237,7 @@ export default function Home() {
                   Final Stop Barber Shop & Salon
                 </h3>
                 <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                  A high-speed, mobile-first website for a premier San Diego unisex barbershop and braiding lounge with integrated 24/7 online appointment booking.
+                  A high-speed, mobile-first website for a premier unisex barbershop and braiding lounge with integrated 24/7 online appointment booking.
                 </p>
               </div>
 
@@ -246,7 +246,7 @@ export default function Home() {
                   to="/projects/final-stop"
                   className="block w-full py-2.5 px-5 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white text-xs sm:text-sm font-semibold text-center transition-all duration-200 shadow-md shadow-[#7C3AED]/25"
                 >
-                  Read full case study →
+                  Read full case study
                 </Link>
 
                 <a
@@ -255,7 +255,7 @@ export default function Home() {
                   rel="noopener noreferrer"
                   className="block w-full py-2 px-4 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-white text-xs font-medium text-center border border-white/[0.1] transition-all"
                 >
-                  Visit finalstop.org ↗
+                  Visit finalstop.org
                 </a>
               </div>
             </div>
@@ -285,7 +285,7 @@ export default function Home() {
                 to="/services"
                 className="text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
               >
-                Explore all 9 categories →
+                Explore all categories
               </Link>
             </div>
           </div>
@@ -308,8 +308,8 @@ export default function Home() {
               </div>
 
               <div className="pt-2 border-t border-white/[0.06]">
-                <Link to="/contact" className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors">
-                  Get a free preview →
+                <Link to="/preview" className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors">
+                  Get a free preview
                 </Link>
               </div>
             </div>
@@ -330,8 +330,8 @@ export default function Home() {
               </div>
 
               <div className="pt-2 border-t border-white/[0.06]">
-                <Link to="/contact" className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors">
-                  Get a free preview →
+                <Link to="/preview" className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors">
+                  Get a free preview
                 </Link>
               </div>
             </div>
@@ -352,8 +352,8 @@ export default function Home() {
               </div>
 
               <div className="pt-2 border-t border-white/[0.06]">
-                <Link to="/contact" className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors">
-                  Get a free preview →
+                <Link to="/preview" className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors">
+                  Get a free preview
                 </Link>
               </div>
             </div>
@@ -386,7 +386,7 @@ export default function Home() {
               to="/process"
               className="px-6 py-3 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white text-xs sm:text-sm font-semibold transition-all duration-200 shadow-md shadow-[#7C3AED]/25"
             >
-              Read full process breakdown →
+              Read full process breakdown
             </Link>
 
             <span className="text-xs text-[#A1A1B5]">
@@ -419,10 +419,10 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <Link
-              to="/contact"
+              to="/preview"
               className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold text-sm transition-all duration-200 hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] active:scale-95 text-center"
             >
-              Get a free preview →
+              Get a free preview
             </Link>
 
             <button

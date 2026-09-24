@@ -13,6 +13,9 @@ import Pricing from './pages/Pricing';
 import Process from './pages/Process';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import PreviewHub from './pages/PreviewHub';
+import PreviewCustom from './pages/PreviewCustom';
+import PreviewInstant from './pages/PreviewInstant';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 
@@ -33,6 +36,9 @@ export default function App() {
             <Route path="/process" element={<Process />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/preview" element={<PreviewHub />} />
+            <Route path="/preview/custom" element={<PreviewCustom />} />
+            <Route path="/preview/instant" element={<PreviewInstant />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="*" element={<Navigate to="/" replace />} />

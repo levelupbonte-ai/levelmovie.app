@@ -130,10 +130,10 @@ export default function Process() {
           </p>
           <div>
             <Link
-              to="/contact"
+              to="/preview"
               className="inline-block px-8 py-3.5 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold text-sm transition-all shadow-md shadow-[#7C3AED]/25"
             >
-              Get a free preview →
+              Get a free preview
             </Link>
           </div>
         </div>

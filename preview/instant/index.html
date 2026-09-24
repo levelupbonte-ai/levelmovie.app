@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    
+    <title>Instant Website Preview | LevelUp Ecosystem</title>
+    <meta name="title" content="Instant Website Preview | LevelUp Ecosystem" />
+    <meta name="description" content="Generate an automated AI draft of your website in about a minute." />
+    <meta name="keywords" content="instant website draft, automated site preview, AI website generator" />
+    <meta name="author" content="LevelUp Ecosystem" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#0B0B14" />
+
+    <link rel="canonical" href="https://levelup-ecosystem.com/preview/instant" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="LevelUp Ecosystem" />
+    <meta property="og:url" content="https://levelup-ecosystem.com/preview/instant" />
+    <meta property="og:title" content="Instant Website Preview | LevelUp Ecosystem" />
+    <meta property="og:description" content="Generate an automated AI draft of your website in about a minute." />
+    <meta property="og:image" content="/icon.svg" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Instant Website Preview | LevelUp Ecosystem" />
+    <meta name="twitter:description" content="Generate an automated AI draft of your website in about a minute." />
+    <meta name="twitter:image" content="/icon.svg" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Critical Inline Styles for Branded Loader (First-load only) -->
+    <style id="branded-loader-css">
+      #branded-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        background-color: #0B0B14;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s;
+        pointer-events: all;
+      }
+      #branded-loader.loader-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .loader-star-svg {
+        width: 100px;
+        height: 100px;
+        overflow: visible;
+      }
+      .loader-facet {
+        opacity: 0;
+        transform-origin: 50px 50px;
+        transform: scale(0.6);
+        animation: facetStagger 0.32s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+      }
+      @keyframes facetStagger {
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      .lf-1 { animation-delay: 0.04s; }
+      .lf-2 { animation-delay: 0.11s; }
+      .lf-3 { animation-delay: 0.18s; }
+      .lf-4 { animation-delay: 0.25s; }
+      .lf-5 { animation-delay: 0.32s; }
+      .lf-6 { animation-delay: 0.39s; }
+      .lf-7 { animation-delay: 0.46s; }
+      .lf-8 { animation-delay: 0.53s; }
+      .lf-9 { animation-delay: 0.60s; }
+      .lf-10 { animation-delay: 0.67s; }
+
+      @media (prefers-reduced-motion: reduce) {
+        #branded-loader {
+          display: none !important;
+        }
+        .loader-facet {
+          animation: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      }
+    </style>
+    <noscript>
+      <style>
+        #branded-loader { display: none !important; }
+      </style>
+    </noscript>
+  </head>
+  <body class="bg-[#0B0B14] text-white font-sans antialiased selection:bg-[#7C3AED] selection:text-white overflow-x-hidden min-h-screen">
+    <!-- Branded First-Load Overlay -->
+    <div id="branded-loader" aria-hidden="true">
+      <svg class="loader-star-svg" viewBox="0 0 100 100" fill="none">
+        <path class="loader-facet lf-1" d="M 50,50 L 39.42,35.44 L 50,6 Z" fill="#DDD6FE" />
+        <path class="loader-facet lf-2" d="M 50,50 L 50,6 L 60.58,35.44 Z" fill="#8B5CF6" />
+        <path class="loader-facet lf-3" d="M 50,50 L 60.58,35.44 L 91.85,36.4 Z" fill="#7C3AED" />
+        <path class="loader-facet lf-4" d="M 50,50 L 91.85,36.4 L 67.12,55.56 Z" fill="#581C87" />
+        <path class="loader-facet lf-5" d="M 50,50 L 67.12,55.56 L 75.86,85.6 Z" fill="#4C1D95" />
+        <path class="loader-facet lf-6" d="M 50,50 L 75.86,85.6 L 50,68 Z" fill="#3B0764" />
+        <path class="loader-facet lf-7" d="M 50,50 L 50,68 L 24.14,85.6 Z" fill="#581C87" />
+        <path class="loader-facet lf-8" d="M 50,50 L 24.14,85.6 L 32.88,55.56 Z" fill="#7C3AED" />
+        <path class="loader-facet lf-9" d="M 50,50 L 32.88,55.56 L 8.15,36.4 Z" fill="#8B5CF6" />
+        <path class="loader-facet lf-10" d="M 50,50 L 8.15,36.4 L 39.42,35.44 Z" fill="#C4B5FD" />
+      </svg>
+    </div>
+    <script>
+      (function() {
+        var loader = document.getElementById('branded-loader');
+        if (!loader) return;
+        var hasLoaded = false;
+        try {
+          hasLoaded = sessionStorage.getItem('levelup_session_active') === 'true';
+        } catch(e) {}
+        if (hasLoaded) {
+          loader.style.display = 'none';
+          if (loader.parentNode) loader.parentNode.removeChild(loader);
+          return;
+        }
+        try {
+          sessionStorage.setItem('levelup_session_active', 'true');
+        } catch(e) {}
+        var start = Date.now();
+        var minTime = 600;
+        var maxTime = 1500;
+        var finished = false;
+        function hide() {
+          if (finished) return;
+          finished = true;
+          var elapsed = Date.now() - start;
+          var delay = Math.max(0, minTime - elapsed);
+          setTimeout(function() {
+            loader.classList.add('loader-hidden');
+            setTimeout(function() {
+              if (loader.parentNode) loader.parentNode.removeChild(loader);
+            }, 360);
+          }, delay);
+        }
+        if (document.readyState === 'complete') {
+          hide();
+        } else {
+          window.addEventListener('load', hide, { once: true });
+          setTimeout(hide, maxTime);
+        }
+      })();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/entries/preview-instant.tsx"></script>
+  </body>
+</html>

@@ -170,10 +170,10 @@ export default function CaseStudyFinalStop() {
             </p>
             <div>
               <Link
-                to="/contact"
+                to="/preview"
                 className="inline-block px-8 py-3.5 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold text-sm transition-all shadow-lg shadow-[#7C3AED]/25"
               >
-                Get a free preview for your business →
+                Get a free preview
               </Link>
             </div>
           </div>

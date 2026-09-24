@@ -61,9 +61,12 @@ export default function Privacy() {
           </div>
 
           <div className="p-6 rounded-2xl bg-[#0B0B14] border border-[#7C3AED]/30 space-y-2">
-            <h3 className="text-base font-bold text-white">3. Strict AI & Third-Party Protection</h3>
+            <h3 className="text-base font-bold text-white">3. AI Processing & Third-Party Protection</h3>
             <p className="text-xs sm:text-sm text-slate-300">
-              <strong>I never share clients' private data with AI tools, advertising brokers, or third parties.</strong> While I use modern AI software to assist with code boilerplate generation, confidential business records, client customer names, passwords, and private financial data are never input into public AI training models.
+              When you submit a request for an instant or custom website preview, the business information you provide (such as business name, services offered, and aesthetic preferences) may be processed by an AI provider or AI tooling solely to generate draft website copy, layouts, and preview assets.
+            </p>
+            <p className="text-xs sm:text-sm text-slate-300">
+              I never share clients' private data, passwords, customer lists, or financial records with AI training datasets or advertising brokers. Every custom preview is reviewed, tested, and directed by me before delivery.
             </p>
           </div>
 
@@ -84,7 +87,7 @@ export default function Privacy() {
           <div className="pt-6 border-t border-white/[0.08] flex items-center justify-between">
             <span className="text-xs text-[#A1A1B5]">Questions or concerns?</span>
             <Link to="/contact" className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors">
-              Contact LevelUp Ecosystem →
+              Contact LevelUp Ecosystem
             </Link>
           </div>
 

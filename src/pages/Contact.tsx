@@ -82,6 +82,14 @@ export default function Contact() {
           <p className="text-base sm:text-lg text-[#A1A1B5] max-w-2xl mx-auto leading-relaxed">
             Tell me a bit about your business or project. I will assemble a functional, interactive mobile preview within 24 to 48 hours — with zero obligation to proceed.
           </p>
+          <div className="pt-2">
+            <a
+              href="/preview"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#A78BFA] hover:text-white underline underline-offset-4 transition-colors"
+            >
+              Want an instant AI draft or tailored custom preview? Choose your preview option
+            </a>
+          </div>
         </div>
       </section>
 
@@ -130,7 +138,7 @@ export default function Contact() {
               <div className="flex items-start gap-3">
                 <span className="text-[#7C3AED] font-bold text-base">📍</span>
                 <div>
-                  <strong className="text-white">Serving San Diego, CA</strong>
+                  <strong className="text-white">Serving San Diego & Remote Clients</strong>
                   <p className="text-xs mt-0.5">Available for local meetings or remote collaboration across the US.</p>
                 </div>
               </div>
@@ -305,7 +313,7 @@ export default function Contact() {
                       <span>Sending Preview Request...</span>
                     </>
                   ) : (
-                    <span>Send Free Preview Request →</span>
+                    <span>Send Preview Request</span>
                   )}
                 </button>
 

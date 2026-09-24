@@ -72,7 +72,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
 
           {/* Solid purple pill button */}
           <a
-            href="/contact"
+            href="/preview"
             className="px-6 py-2.5 text-xs sm:text-sm font-semibold rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white transition-all duration-200 hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] active:scale-95 shrink-0"
           >
             Get a free preview
@@ -82,7 +82,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
         {/* MOBILE: Keep "Get a free preview" button visible + Clean hamburger */}
         <div className="md:hidden flex items-center gap-3">
           <a
-            href="/contact"
+            href="/preview"
             className="px-3.5 py-1.5 text-xs font-semibold rounded-full bg-[#7C3AED] text-white active:scale-95"
           >
             Preview
@@ -123,7 +123,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
 
           <div className="pt-2">
             <a
-              href="/contact"
+              href="/preview"
               onClick={() => setMobileMenuOpen(false)}
               className="block w-full py-3 rounded-xl bg-[#7C3AED] text-white font-bold text-xs text-center cursor-pointer shadow-md shadow-[#7C3AED]/25"
             >

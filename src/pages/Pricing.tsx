@@ -91,7 +91,7 @@ export default function Pricing() {
               </div>
 
               <Link
-                to="/contact"
+                to="/preview"
                 className="w-full py-3.5 px-4 rounded-full bg-white/[0.08] hover:bg-white/[0.12] text-white font-semibold text-xs sm:text-sm border border-white/[0.1] text-center transition-all cursor-pointer"
               >
                 Get a free preview
@@ -141,7 +141,7 @@ export default function Pricing() {
               </div>
 
               <Link
-                to="/contact"
+                to="/preview"
                 className="w-full py-3.5 px-4 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] text-center transition-all cursor-pointer"
               >
                 Get a free preview
@@ -184,7 +184,7 @@ export default function Pricing() {
               </div>
 
               <Link
-                to="/contact"
+                to="/preview"
                 className="w-full py-3.5 px-4 rounded-full bg-white/[0.08] hover:bg-white/[0.12] text-white font-semibold text-xs sm:text-sm border border-white/[0.1] text-center transition-all cursor-pointer"
               >
                 Get a free preview
@@ -198,7 +198,7 @@ export default function Pricing() {
               to="/contact"
               className="text-sm text-[#A78BFA] hover:text-white underline underline-offset-4 transition-colors"
             >
-              Need a standalone Security Check or customized platform? Request a custom quote →
+              Need a standalone Security Check or customized platform? Request a custom quote
             </Link>
           </div>
 

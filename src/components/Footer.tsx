@@ -108,6 +108,11 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <a href="/preview" className="hover:text-white transition-colors">
+                  Free preview
+                </a>
+              </li>
+              <li>
                 <a href="/contact" className="hover:text-white transition-colors">
                   Contact
                 </a>
@@ -130,13 +135,13 @@ export default function Footer() {
                 </a>
               </div>
               <div className="text-xs text-[#A1A1B5]">
-                Serving San Diego, CA
+                Serving San Diego & Remote Clients
               </div>
             </div>
 
             <div className="pt-2">
               <a
-                href="/contact"
+                href="/preview"
                 className="inline-block px-5 py-2.5 text-xs font-bold rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white transition-all duration-200 hover:shadow-[0_0_15px_rgba(124,58,237,0.4)] active:scale-95 cursor-pointer"
               >
                 Get a free preview
