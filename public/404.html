@@ -2,56 +2,418 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>404 - Page Not Found | LevelUp Ecosystem</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>Page not found | LevelUp Ecosystem</title>
+    <meta name="description" content="The page you're looking for doesn't exist or has moved." />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#0B0B14" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
     <style>
-      body {
+      *, *::before, *::after {
+        box-sizing: border-box;
         margin: 0;
         padding: 0;
+      }
+      body {
         background-color: #0B0B14;
         color: #A1A1B5;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* Navbar */
+      .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: rgba(11, 11, 20, 0.92);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0.85rem 1.5rem;
+      }
+      .navbar-inner {
+        max-width: 80rem;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 1.75rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+      .nav-link {
+        color: #A1A1B5;
+        transition: color 0.15s ease;
+      }
+      .nav-link:hover {
+        color: #FFFFFF;
+      }
+      .btn-preview {
+        background-color: #7C3AED;
+        color: #FFFFFF;
+        font-weight: 600;
+        font-size: 0.875rem;
+        padding: 0.625rem 1.5rem;
+        border-radius: 9999px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+      }
+      .btn-preview:hover {
+        background-color: #8B5CF6;
+        box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
+      }
+
+      /* 404 Main Content */
+      .main-content {
+        flex: 1;
         display: flex;
         align-items: center;
         justify-content: center;
-        min-height: 100vh;
+        padding: 4rem 1.5rem;
         text-align: center;
       }
-      .box {
-        max-width: 500px;
-        padding: 2rem;
+      .error-card {
+        max-width: 38rem;
+        margin: 0 auto;
       }
-      h1 {
-        color: #ffffff;
-        font-size: 2.5rem;
-        margin: 0 0 1rem 0;
+      .star-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2rem;
       }
-      p {
+      .star-glow {
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, rgba(124, 58, 237, 0.22) 0%, rgba(124, 58, 237, 0) 70%);
+        border-radius: 50%;
+        filter: blur(20px);
+        pointer-events: none;
+      }
+      .star-svg {
+        width: 160px;
+        height: 160px;
+        position: relative;
+        z-index: 2;
+        overflow: visible;
+      }
+
+      /* Detached floating facet animation */
+      @keyframes floatFacet {
+        0%, 100% {
+          transform: translate(-9px, -13px) rotate(-6deg);
+        }
+        50% {
+          transform: translate(-14px, -20px) rotate(-12deg);
+        }
+      }
+      .floating-facet {
+        transform-origin: 45px 22px;
+        animation: floatFacet 3.5s ease-in-out infinite;
+        filter: drop-shadow(0 5px 12px rgba(124, 58, 237, 0.55));
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .floating-facet {
+          animation: none !important;
+          transform: translate(-10px, -14px) rotate(-6deg) !important;
+        }
+      }
+
+      .error-code {
+        font-size: 4.5rem;
+        font-weight: 800;
+        font-family: 'Space Grotesk', monospace, sans-serif;
+        color: #7C3AED;
+        line-height: 1;
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.04em;
+      }
+      .error-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #FFFFFF;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.75rem;
+      }
+      .error-desc {
+        font-size: 1rem;
+        color: #A1A1B5;
         line-height: 1.6;
         margin-bottom: 2rem;
       }
-      .btn {
+      .btn-home {
         display: inline-block;
         background-color: #7C3AED;
-        color: #ffffff;
-        padding: 0.75rem 1.75rem;
-        border-radius: 9999px;
-        text-decoration: none;
+        color: #FFFFFF;
         font-weight: 600;
-        font-size: 0.875rem;
-        transition: background-color 0.2s;
+        font-size: 0.925rem;
+        padding: 0.8rem 2.25rem;
+        border-radius: 9999px;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 18px rgba(124, 58, 237, 0.35);
       }
-      .btn:hover {
+      .btn-home:hover {
         background-color: #8B5CF6;
+        box-shadow: 0 0 25px rgba(124, 58, 237, 0.5);
+      }
+      .secondary-links {
+        margin-top: 2.5rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .secondary-links-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #71717A;
+        margin-bottom: 1rem;
+        font-weight: 600;
+      }
+      .links-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5rem;
+        font-size: 0.875rem;
+      }
+      .links-row a {
+        color: #A1A1B5;
+        transition: color 0.15s ease;
+      }
+      .links-row a:hover {
+        color: #FFFFFF;
+      }
+      .links-divider {
+        color: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Footer */
+      .footer {
+        background-color: #0B0B14;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 3.5rem 1.5rem 2.5rem;
+      }
+      .footer-inner {
+        max-width: 80rem;
+        margin: 0 auto;
+      }
+      .footer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2.5rem;
+        margin-bottom: 3rem;
+        text-align: left;
+      }
+      .footer-heading {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #FFFFFF;
+        margin-bottom: 1rem;
+      }
+      .footer-links {
+        list-style: none;
+      }
+      .footer-links li {
+        margin-bottom: 0.6rem;
+        font-size: 0.875rem;
+      }
+      .footer-links a:hover {
+        color: #FFFFFF;
+      }
+      .footer-bottom {
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: #71717A;
+        gap: 1rem;
+      }
+
+      @media (max-width: 640px) {
+        .nav-links {
+          display: none;
+        }
+        .error-code {
+          font-size: 3.5rem;
+        }
+        .error-title {
+          font-size: 1.6rem;
+        }
+        .links-row {
+          gap: 0.9rem;
+          font-size: 0.8rem;
+        }
       }
     </style>
   </head>
   <body>
-    <div class="box">
-      <div style="color: #A78BFA; font-weight: bold; letter-spacing: 0.1em; font-size: 0.8rem; margin-bottom: 1rem;">LEVELUP ECOSYSTEM</div>
-      <h1>Page Not Found</h1>
-      <p>The page you are looking for doesn't exist or has moved.</p>
-      <a href="/" class="btn">Back to Home</a>
-    </div>
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="navbar-inner">
+        <a href="/" class="logo">
+          <img src="/levelup-logo.svg" alt="LevelUp Ecosystem" style="height: 40px; width: auto; display: block;" />
+        </a>
+        <div style="display: flex; align-items: center; gap: 2rem;">
+          <nav class="nav-links">
+            <a href="/services" class="nav-link">Services</a>
+            <a href="/projects" class="nav-link">Projects</a>
+            <a href="/pricing" class="nav-link">Pricing</a>
+            <a href="/process" class="nav-link">How we build</a>
+          </nav>
+          <a href="/contact" class="btn-preview">Get a free preview</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main 404 Section -->
+    <main class="main-content">
+      <div class="error-card">
+        
+        <!-- Faceted Star with Detached Floating Facet (160px) -->
+        <div class="star-wrapper">
+          <div class="star-glow"></div>
+          <svg class="star-svg" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+            <!-- Missing piece vacancy outline -->
+            <path
+              d="M 50,50 L 39.42,35.44 L 50,6 Z"
+              stroke="#7C3AED"
+              stroke-width="0.9"
+              stroke-dasharray="2.5 2.5"
+              fill="rgba(124, 58, 237, 0.12)"
+            />
+
+            <!-- Arm 0: Right facet -->
+            <path d="M 50,50 L 50,6 L 60.58,35.44 Z" fill="#8B5CF6" />
+
+            <!-- Arm 1: Right -->
+            <path d="M 50,50 L 60.58,35.44 L 91.85,36.4 Z" fill="#7C3AED" />
+            <path d="M 50,50 L 91.85,36.4 L 67.12,55.56 Z" fill="#581C87" />
+
+            <!-- Arm 2: Bottom-Right -->
+            <path d="M 50,50 L 67.12,55.56 L 75.86,85.6 Z" fill="#4C1D95" />
+            <path d="M 50,50 L 75.86,85.6 L 50,68 Z" fill="#3B0764" />
+
+            <!-- Arm 3: Bottom-Left -->
+            <path d="M 50,50 L 50,68 L 24.14,85.6 Z" fill="#581C87" />
+            <path d="M 50,50 L 24.14,85.6 L 32.88,55.56 Z" fill="#7C3AED" />
+
+            <!-- Arm 4: Left -->
+            <path d="M 50,50 L 32.88,55.56 L 8.15,36.4 Z" fill="#8B5CF6" />
+            <path d="M 50,50 L 8.15,36.4 L 39.42,35.44 Z" fill="#C4B5FD" />
+
+            <!-- Detached, floating piece with floating animation -->
+            <g class="floating-facet">
+              <path d="M 50,50 L 39.42,35.44 L 50,6 Z" fill="#DDD6FE" />
+            </g>
+          </svg>
+        </div>
+
+        <!-- 404 Headline & Description -->
+        <div class="error-code">404</div>
+        <h1 class="error-title">This page took a wrong turn</h1>
+        <p class="error-desc">The page you're looking for doesn't exist or has moved.</p>
+
+        <!-- Primary Button -->
+        <div>
+          <a href="/" class="btn-home">Back to home</a>
+        </div>
+
+        <!-- Secondary Links -->
+        <div class="secondary-links">
+          <div class="secondary-links-label">Or explore these pages</div>
+          <div class="links-row">
+            <a href="/services">Services</a>
+            <span class="links-divider">•</span>
+            <a href="/projects">Projects</a>
+            <span class="links-divider">•</span>
+            <a href="/pricing">Pricing</a>
+            <span class="links-divider">•</span>
+            <a href="/contact">Contact</a>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-grid">
+          <div>
+            <a href="/" style="display: inline-block; margin-bottom: 1rem;">
+              <img src="/levelup-logo.svg" alt="LevelUp Ecosystem" style="height: 36px; width: auto;" />
+            </a>
+            <p style="font-size: 0.875rem; line-height: 1.6; color: #A1A1B5;">
+              Secure websites for San Diego businesses and creators.
+            </p>
+          </div>
+          <div>
+            <h4 class="footer-heading">Services</h4>
+            <ul class="footer-links">
+              <li><a href="/services">Local Business Sites</a></li>
+              <li><a href="/services">Creator & Influencer Sites</a></li>
+              <li><a href="/services">Portfolios</a></li>
+              <li><a href="/services">Security Check</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="footer-heading">Company</h4>
+            <ul class="footer-links">
+              <li><a href="/projects">Work</a></li>
+              <li><a href="/pricing">Pricing</a></li>
+              <li><a href="/process">How we build</a></li>
+              <li><a href="/about">About</a></li>
+              <li><a href="/contact">Contact</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="footer-heading">Contact</h4>
+            <p style="font-size: 0.875rem; margin-bottom: 0.5rem;">
+              <a href="mailto:contact@levelup-ecosystem.com" style="color: #FFFFFF; font-weight: 500;">contact@levelup-ecosystem.com</a>
+            </p>
+            <p style="font-size: 0.75rem; color: #71717A; margin-bottom: 1rem;">Serving San Diego, CA</p>
+            <a href="/contact" class="btn-preview" style="font-size: 0.75rem; padding: 0.5rem 1.25rem;">Get a free preview</a>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <div>© 2026 LevelUp Ecosystem. All rights reserved.</div>
+          <div style="display: flex; gap: 1.5rem;">
+            <a href="/privacy" style="text-decoration: underline;">Privacy Policy</a>
+            <a href="/terms" style="text-decoration: underline;">Terms of Service</a>
+          </div>
+          <div>Built in San Diego</div>
+        </div>
+      </div>
+    </footer>
   </body>
 </html>

@@ -29,3 +29,71 @@
     color: #FFFFFF;
   }
 }
+
+/* 404 Floating facet animation */
+@keyframes floatPiece {
+  0%, 100% {
+    transform: translate(-8px, -11px) rotate(-5deg);
+  }
+  50% {
+    transform: translate(-13px, -18px) rotate(-11deg);
+  }
+}
+
+/* Page fade-in on load (200ms to 300ms) */
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-fade-in {
+  animation: pageFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-fade-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  @keyframes floatPiece {
+    0%, 100% {
+      transform: translate(-8px, -11px);
+    }
+  }
+}
+
+/* Thin purple top progress bar */
+#page-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, #7C3AED 0%, #A78BFA 100%);
+  z-index: 999999;
+  pointer-events: none;
+  opacity: 0;
+  transition: width 0.35s cubic-bezier(0.1, 0.5, 0.1, 1), opacity 0.2s ease;
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.7);
+}
+
+#page-progress-bar.active {
+  opacity: 1;
+}
+
+#page-progress-bar.loading {
+  width: 75%;
+}
+
+#page-progress-bar.finish {
+  width: 100%;
+  opacity: 0;
+  transition: width 0.15s ease-out, opacity 0.25s 0.15s ease-out;
+}
