@@ -133,9 +133,8 @@ export default function Star3DHero() {
     // Dynamic import Three.js from self-hosted vendor file
     const initThree = async () => {
       try {
-        // Self-hosted ES module
-        // @ts-ignore
-        const THREE = await import(/* @vite-ignore */ '/assets/js/vendor/three.module.js');
+        // Dynamic import Three.js from installed package (code-split)
+        const THREE = await import('three');
 
         if (isDisposed || !canvasRef.current || !containerRef.current) return;
 
@@ -326,19 +325,19 @@ export default function Star3DHero() {
         fill="none"
         aria-hidden="true"
       >
-        <!-- Arm 0: Top -->
+        {/* Arm 0: Top */}
         <polygon points="50,50 39.42,35.44 50,6" fill="#DDD6FE" />
         <polygon points="50,50 50,6 60.58,35.44" fill="#8B5CF6" />
-        <!-- Arm 1: Right -->
+        {/* Arm 1: Right */}
         <polygon points="50,50 60.58,35.44 91.85,36.4" fill="#7C3AED" />
         <polygon points="50,50 91.85,36.4 67.12,55.56" fill="#581C87" />
-        <!-- Arm 2: Bottom-Right -->
+        {/* Arm 2: Bottom-Right */}
         <polygon points="50,50 67.12,55.56 75.86,85.6" fill="#4C1D95" />
         <polygon points="50,50 75.86,85.6 50,68" fill="#3B0764" />
-        <!-- Arm 3: Bottom-Left -->
+        {/* Arm 3: Bottom-Left */}
         <polygon points="50,50 50,68 24.14,85.6" fill="#581C87" />
         <polygon points="50,50 24.14,85.6 32.88,55.56" fill="#7C3AED" />
-        <!-- Arm 4: Left -->
+        {/* Arm 4: Left */}
         <polygon points="50,50 32.88,55.56 8.15,36.4" fill="#8B5CF6" />
         <polygon points="50,50 8.15,36.4 39.42,35.44" fill="#C4B5FD" />
       </svg>
