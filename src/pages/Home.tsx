@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from '../components/Link';
 import SEO from '../components/SEO';
+import Star3DHero from '../components/Star3DHero';
+import FloatingWindowsHero from '../components/FloatingWindowsHero';
 
 export default function Home() {
   const [copiedEmail, setCopiedEmail] = useState(false);
@@ -22,7 +24,7 @@ export default function Home() {
       {/* ------------------------------------------------------------- */}
       {/* HERO SECTION : Subtle radial purple glow, faceted shapes      */}
       {/* ------------------------------------------------------------- */}
-      <section className="relative pt-14 pb-20 sm:pt-20 sm:pb-28 px-4 sm:px-8 border-b border-white/[0.08] overflow-hidden">
+      <section className="relative pt-10 pb-20 sm:pt-16 sm:pb-28 px-4 sm:px-8 border-b border-white/[0.08] overflow-hidden">
         {/* Subtle radial purple glow echoing logo */}
         <div className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[#7C3AED]/12 rounded-full blur-[140px] pointer-events-none" />
 
@@ -52,11 +54,20 @@ export default function Home() {
           </svg>
         </div>
 
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
           {/* Left Column */}
           <div className="lg:col-span-6 space-y-6 sm:space-y-7 text-left" data-reveal>
-            <div className="text-xs sm:text-sm font-bold tracking-wider text-[#A78BFA] uppercase">
-              Independent Web Studio & Security
+            {/* Signature 3D Star insignia alongside header metadata */}
+            <div className="flex items-center gap-4">
+              <Star3DHero />
+              <div>
+                <div className="text-xs sm:text-sm font-bold tracking-wider text-[#A78BFA] uppercase">
+                  Independent Web Studio & Security
+                </div>
+                <div className="text-xs text-[#A1A1B5] font-mono mt-0.5">
+                  Built in San Diego, CA
+                </div>
+              </div>
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.12]">
@@ -99,34 +110,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Column : Laptop Screen Showcase */}
-          <div className="lg:col-span-6 flex justify-center" data-reveal>
-            <div className="relative w-full max-w-lg rounded-2xl overflow-hidden bg-[#14141F] border border-white/[0.08] p-3 sm:p-5 shadow-2xl hover:border-[#7C3AED]/40 transition-all duration-300">
-              <div className="relative rounded-xl overflow-hidden aspect-[16/10] bg-black/40 flex items-center justify-center">
-                <img
-                  src="/laptop-hero.jpg"
-                  alt="Modern website preview on laptop screen"
-                  width="600"
-                  height="375"
-                  fetchPriority="high"
-                  className="w-full h-full object-cover rounded-lg shadow-inner hover:scale-[1.03] transition-transform duration-300"
-                />
-
-                <div className="absolute bottom-4 left-4 bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/[0.12] text-xs font-semibold text-white shadow-lg">
-                  Live Client Site
-                </div>
-              </div>
-
-              <div className="pt-3 flex items-center justify-between text-xs text-[#A1A1B5]">
-                <span className="text-[#A78BFA] font-medium">Final Stop Barber Shop & Salon</span>
-                <Link
-                  to="/projects/final-stop"
-                  className="text-white hover:underline font-medium"
-                >
-                  View Case Study
-                </Link>
-              </div>
-            </div>
+          {/* Right Column : Floating Windows Scene (CSS 3D, No WebGL) */}
+          <div className="lg:col-span-6 flex justify-center py-4" data-reveal>
+            <FloatingWindowsHero />
           </div>
         </div>
       </section>
@@ -221,14 +207,19 @@ export default function Home() {
 
           <div className="bg-[#14141F] border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-12 gap-0 hover:border-[#7C3AED]/40 transition-all duration-300" data-reveal>
             <div className="lg:col-span-7 aspect-video sm:aspect-[16/10] overflow-hidden border-b lg:border-b-0 lg:border-r border-white/[0.08] relative">
-              <img
-                src="/finalstop-preview.jpg"
-                alt="Final Stop Barber Shop & Salon website showcase"
-                loading="lazy"
-                width="700"
-                height="438"
-                className="w-full h-full object-cover object-top hover:scale-[1.03] transition-transform duration-500"
-              />
+              <picture>
+                <source type="image/avif" srcSet="/assets/img/finalstop-desktop.avif" />
+                <source type="image/webp" srcSet="/assets/img/finalstop-desktop.webp" />
+                <img
+                  src="/assets/img/finalstop-desktop.jpg"
+                  alt="Final Stop Barber Shop & Salon desktop website showcase"
+                  loading="lazy"
+                  decoding="async"
+                  width="1000"
+                  height="625"
+                  className="w-full h-full object-cover object-top hover:scale-[1.03] transition-transform duration-500"
+                />
+              </picture>
               <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md px-3 py-1 rounded-md text-[11px] font-semibold text-white border border-white/[0.12]">
                 Live Client Site
               </div>
@@ -297,7 +288,20 @@ export default function Home() {
             {/* Service 1 */}
             <div className="p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all flex flex-col justify-between space-y-6" data-reveal>
               <div className="space-y-4">
-                <span className="text-xs font-mono font-bold text-[#A78BFA]">01</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-[#A78BFA]">01</span>
+                  <div className="w-10 h-10 rounded-xl bg-[#1A1A2E]/80 border border-white/[0.08] p-1.5 flex items-center justify-center">
+                    <img
+                      src="/assets/img/icons/local-business.svg"
+                      alt=""
+                      width="32"
+                      height="32"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
                 <h3 className="text-xl font-bold text-white">Local Business Sites</h3>
                 <p className="text-sm text-[#A1A1B5] leading-relaxed">
                   Tailored for barbers, salons, med spas, gyms, and local professionals. Features seamless 24/7 online appointment booking, digital menus, and Google Maps integration.
@@ -316,7 +320,20 @@ export default function Home() {
             {/* Service 2 */}
             <div className="p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all flex flex-col justify-between space-y-6" data-reveal>
               <div className="space-y-4">
-                <span className="text-xs font-mono font-bold text-[#A78BFA]">02</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-[#A78BFA]">02</span>
+                  <div className="w-10 h-10 rounded-xl bg-[#1A1A2E]/80 border border-white/[0.08] p-1.5 flex items-center justify-center">
+                    <img
+                      src="/assets/img/icons/creator-sites.svg"
+                      alt=""
+                      width="32"
+                      height="32"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
                 <h3 className="text-xl font-bold text-white">Creator & Influencer Hubs</h3>
                 <p className="text-sm text-[#A1A1B5] leading-relaxed">
                   Replace fragile link-in-bio trees with an independent digital home. Centralize your links, interactive media kit for brand deals, and direct email list signup.
@@ -335,7 +352,20 @@ export default function Home() {
             {/* Service 3 */}
             <div className="p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all flex flex-col justify-between space-y-6" data-reveal>
               <div className="space-y-4">
-                <span className="text-xs font-mono font-bold text-[#A78BFA]">03</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-[#A78BFA]">03</span>
+                  <div className="w-10 h-10 rounded-xl bg-[#1A1A2E]/80 border border-white/[0.08] p-1.5 flex items-center justify-center">
+                    <img
+                      src="/assets/img/icons/portfolios.svg"
+                      alt=""
+                      width="32"
+                      height="32"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
                 <h3 className="text-xl font-bold text-white">Portfolios</h3>
                 <p className="text-sm text-[#A1A1B5] leading-relaxed">
                   Clean, fast portfolio websites for students, designers, photographers, developers and artists. Showcase your work with fast image loading and downloadable resumes.
@@ -354,7 +384,20 @@ export default function Home() {
             {/* Service 4 */}
             <div className="p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all flex flex-col justify-between space-y-6" data-reveal>
               <div className="space-y-4">
-                <span className="text-xs font-mono font-bold text-[#A78BFA]">04</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-[#A78BFA]">04</span>
+                  <div className="w-10 h-10 rounded-xl bg-[#1A1A2E]/80 border border-white/[0.08] p-1.5 flex items-center justify-center">
+                    <img
+                      src="/assets/img/icons/online-stores.svg"
+                      alt=""
+                      width="32"
+                      height="32"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
                 <h3 className="text-xl font-bold text-white">Small Online Stores</h3>
                 <p className="text-sm text-[#A1A1B5] leading-relaxed">
                   Simple, secure online stores for products, merch and digital downloads, with checkout handled by trusted payment providers like Stripe and Apple Pay.
@@ -373,7 +416,20 @@ export default function Home() {
             {/* Service 5 */}
             <div className="p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all flex flex-col justify-between space-y-6" data-reveal>
               <div className="space-y-4">
-                <span className="text-xs font-mono font-bold text-[#A78BFA]">05</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-[#A78BFA]">05</span>
+                  <div className="w-10 h-10 rounded-xl bg-[#1A1A2E]/80 border border-white/[0.08] p-1.5 flex items-center justify-center">
+                    <img
+                      src="/assets/img/icons/security-check.svg"
+                      alt=""
+                      width="32"
+                      height="32"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
                 <h3 className="text-xl font-bold text-white">Security Check</h3>
                 <p className="text-sm text-[#A1A1B5] leading-relaxed">
                   A plain-English review of your website's security basics: database rules, HTTPS, exposed keys, backups and account protection to prevent breaches.
@@ -392,7 +448,20 @@ export default function Home() {
             {/* Service 6 */}
             <div className="p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all flex flex-col justify-between space-y-6" data-reveal>
               <div className="space-y-4">
-                <span className="text-xs font-mono font-bold text-[#A78BFA]">06</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-[#A78BFA]">06</span>
+                  <div className="w-10 h-10 rounded-xl bg-[#1A1A2E]/80 border border-white/[0.08] p-1.5 flex items-center justify-center">
+                    <img
+                      src="/assets/img/icons/care-plans.svg"
+                      alt=""
+                      width="32"
+                      height="32"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
                 <h3 className="text-xl font-bold text-white">Care Plans</h3>
                 <p className="text-sm text-[#A1A1B5] leading-relaxed">
                   Hosting, backups, quick edits and basic security monitoring to keep your website updated and running smoothly without technical headaches.

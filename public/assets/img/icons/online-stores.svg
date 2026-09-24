@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+    <!-- Faceted Shopping Bag / E-Commerce Cart -->
+    <!-- Handles (Faceted arch) -->
+    <polygon points="40,12 50,10 50,22 42,22" fill="#DDD6FE" />
+    <polygon points="50,10 60,12 58,22 50,22" fill="#C4B5FD" />
+    <polygon points="34,22 42,22 40,32 32,32" fill="#A78BFA" />
+    <polygon points="60,12 68,22 60,32 58,22" fill="#7C3AED" />
+    <!-- Bag Front Facets (Top-Left Lit) -->
+    <!-- Top folded edge -->
+    <polygon points="22,32 50,28 50,38 24,40" fill="#DDD6FE" />
+    <polygon points="50,28 78,32 76,40 50,38" fill="#8B5CF6" />
+    <!-- Front Upper-Left Diamond -->
+    <polygon points="24,40 50,38 46,62 26,62" fill="#A78BFA" />
+    <polygon points="50,38 76,40 74,62 46,62" fill="#7C3AED" />
+    <!-- Lower Bag Facets -->
+    <polygon points="26,62 46,62 42,88 28,88" fill="#7C3AED" />
+    <polygon points="46,62 74,62 72,88 42,88" fill="#581C87" />
+    <!-- Side depth facet -->
+    <polygon points="76,40 84,36 82,82 72,88" fill="#4C1D95" />
+    <polygon points="78,32 84,36 76,40" fill="#6D28D9" />
+    <!-- Base shadow -->
+    <polygon points="28,88 72,88 76,92 24,92" fill="#3B0764" />
+  </svg>

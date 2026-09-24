@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+    <!-- Faceted Storefront / Local Building -->
+    <!-- Roof Peak & Left Awning Facet (Top-Left Light: #DDD6FE, #A78BFA) -->
+    <polygon points="50,12 20,34 50,42" fill="#DDD6FE" />
+    <polygon points="50,12 50,42 80,34" fill="#8B5CF6" />
+    <polygon points="20,34 10,48 50,42" fill="#A78BFA" />
+    <polygon points="80,34 50,42 90,48" fill="#6D28D9" />
+    <!-- Awning under-facets -->
+    <polygon points="10,48 26,48 30,58 14,58" fill="#7C3AED" />
+    <polygon points="26,48 42,48 46,58 30,58" fill="#6D28D9" />
+    <polygon points="42,48 58,48 62,58 46,58" fill="#581C87" />
+    <polygon points="58,48 74,48 78,58 62,58" fill="#4C1D95" />
+    <polygon points="74,48 90,48 86,58 78,58" fill="#3B0764" />
+    <!-- Faceted Columns & Body -->
+    <polygon points="16,58 32,58 30,88 18,88" fill="#8B5CF6" />
+    <polygon points="32,58 48,58 48,70 32,70" fill="#DDD6FE" />
+    <polygon points="32,70 48,70 46,88 30,88" fill="#7C3AED" />
+    <!-- Door / Center Entrance -->
+    <polygon points="48,58 68,58 66,88 48,88" fill="#581C87" />
+    <polygon points="52,62 64,62 62,84 52,84" fill="#3B0764" />
+    <!-- Right Column (Shadowed: #4C1D95, #3B0764) -->
+    <polygon points="68,58 84,58 82,88 66,88" fill="#4C1D95" />
+    <!-- Base step -->
+    <polygon points="12,88 88,88 84,94 16,94" fill="#3B0764" />
+  </svg>

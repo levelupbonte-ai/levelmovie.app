@@ -41,23 +41,78 @@ export default function Projects() {
         <div className="max-w-5xl mx-auto space-y-16">
           
           {/* Project 1 : Final Stop */}
-          <div className="bg-[#14141F] border border-white/[0.08] rounded-3xl overflow-hidden shadow-2xl hover:border-[#7C3AED]/40 transition-all" data-reveal>
+          <div className="bg-[#14141F] border border-white/[0.08] rounded-3xl overflow-hidden shadow-2xl hover:border-[#7C3AED]/40 transition-all p-6 sm:p-8 space-y-8" data-reveal>
             
-            <div className="aspect-[16/9] sm:aspect-[21/9] overflow-hidden relative border-b border-white/[0.08]">
-              <img
-                src="/finalstop-preview.jpg"
-                alt="Final Stop Barber Shop & Salon live website"
-                loading="lazy"
-                width="800"
-                height="343"
-                className="w-full h-full object-cover object-top hover:scale-[1.01] transition-transform duration-500"
-              />
-              <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-semibold text-white border border-white/[0.12]">
-                Active Client Site • Live in Production
+            {/* Device Frames Showcase : Desktop + Phone */}
+            <div className="relative rounded-2xl bg-[#0F0F1A] border border-white/[0.08] p-4 sm:p-8 overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                {/* Desktop Device Frame (8 cols) */}
+                <div className="lg:col-span-8 rounded-xl bg-[#14141F] border border-white/[0.12] shadow-2xl overflow-hidden">
+                  {/* Browser chrome */}
+                  <div className="flex items-center justify-between px-3 py-2 bg-[#0B0B14] border-b border-white/[0.08]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]/80" />
+                    </div>
+                    <div className="text-[11px] font-mono text-[#A1A1B5] bg-[#14141F] px-3 py-0.5 rounded border border-white/[0.06]">
+                      https://finalstop.org
+                    </div>
+                    <span className="text-[10px] text-[#10B981] font-semibold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" /> Live
+                    </span>
+                  </div>
+
+                  <picture>
+                    <source type="image/avif" srcSet="/assets/img/finalstop-desktop.avif" />
+                    <source type="image/webp" srcSet="/assets/img/finalstop-desktop.webp" />
+                    <img
+                      src="/assets/img/finalstop-desktop.jpg"
+                      alt="Final Stop Barber Shop & Salon desktop website screenshot"
+                      loading="lazy"
+                      decoding="async"
+                      width="1000"
+                      height="625"
+                      className="w-full h-auto object-cover block"
+                    />
+                  </picture>
+                </div>
+
+                {/* Mobile Device Frame (4 cols) */}
+                <div className="lg:col-span-4 flex justify-center">
+                  <div className="w-48 sm:w-56 rounded-[32px] bg-[#0B0B14] p-2.5 border-2 border-white/[0.14] shadow-2xl">
+                    <div className="w-20 h-3 mx-auto bg-black rounded-full mb-2 flex items-center justify-end px-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#7C3AED]/70" />
+                    </div>
+                    <div className="rounded-[24px] overflow-hidden bg-black aspect-[9/18.5]">
+                      <picture>
+                        <source type="image/avif" srcSet="/assets/img/finalstop-mobile.avif" />
+                        <source type="image/webp" srcSet="/assets/img/finalstop-mobile.webp" />
+                        <img
+                          src="/assets/img/finalstop-mobile.jpg"
+                          alt="Final Stop Barber Shop mobile booking flow screenshot"
+                          loading="lazy"
+                          decoding="async"
+                          width="380"
+                          height="780"
+                          className="w-full h-full object-cover object-top block"
+                        />
+                      </picture>
+                    </div>
+                    <div className="mt-2 text-center text-[10px] text-[#A1A1B5] font-mono">
+                      Mobile Booking Flow
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between text-xs text-[#A1A1B5]">
+                <span className="text-white font-medium">Real client screenshots inside responsive device frames</span>
+                <span className="text-[#A78BFA] font-mono text-[11px]">Desktop &amp; Mobile Responsive</span>
               </div>
             </div>
 
-            <div className="p-8 sm:p-10 space-y-6">
+            <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-wider text-[#A78BFA]">

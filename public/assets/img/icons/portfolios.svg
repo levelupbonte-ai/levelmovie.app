@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+    <!-- Faceted Portfolio Showcase / Gallery Canvas -->
+    <!-- Frame Top & Left (lit from top-left) -->
+    <polygon points="14,16 86,16 78,26 24,26" fill="#DDD6FE" />
+    <polygon points="14,16 24,26 24,76 14,84" fill="#C4B5FD" />
+    <!-- Frame Right & Bottom (in shadow) -->
+    <polygon points="86,16 86,84 76,76 78,26" fill="#6D28D9" />
+    <polygon points="14,84 86,84 76,76 24,76" fill="#4C1D95" />
+    <!-- Inner Faceted Artwork: Mountain & Sun -->
+    <!-- Sun -->
+    <polygon points="38,34 46,30 50,38 42,42" fill="#DDD6FE" />
+    <polygon points="46,30 54,34 50,38" fill="#A78BFA" />
+    <!-- Main Faceted Peak -->
+    <polygon points="44,40 28,72 48,64" fill="#A78BFA" />
+    <polygon points="44,40 48,64 62,72" fill="#7C3AED" />
+    <!-- Secondary Peak -->
+    <polygon points="60,48 50,66 66,62" fill="#8B5CF6" />
+    <polygon points="60,48 66,62 74,72" fill="#581C87" />
+    <!-- Base Ground facets -->
+    <polygon points="24,72 48,64 74,72 24,76" fill="#3B0764" />
+  </svg>

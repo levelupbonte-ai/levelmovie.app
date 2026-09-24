@@ -4,6 +4,15 @@ import SEO from '../components/SEO';
 import Breadcrumbs from '../components/Breadcrumbs';
 
 export default function Services() {
+  const serviceIcons: Record<string, string> = {
+    'local-business': '/assets/img/icons/local-business.svg',
+    creators: '/assets/img/icons/creator-sites.svg',
+    portfolios: '/assets/img/icons/portfolios.svg',
+    ecommerce: '/assets/img/icons/online-stores.svg',
+    'security-check': '/assets/img/icons/security-check.svg',
+    'care-plans': '/assets/img/icons/care-plans.svg',
+  };
+
   const serviceCategories = [
     {
       id: 'local-business',
@@ -203,13 +212,28 @@ export default function Services() {
               data-reveal
             >
               <div className="lg:col-span-7 space-y-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono font-bold text-[#A78BFA] px-2.5 py-1 rounded bg-[#7C3AED]/10 border border-[#7C3AED]/20">
-                    {service.number}
-                  </span>
-                  <span className="text-xs uppercase tracking-wider font-semibold text-[#A1A1B5]">
-                    {service.subtitle}
-                  </span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-mono font-bold text-[#A78BFA] px-2.5 py-1 rounded bg-[#7C3AED]/10 border border-[#7C3AED]/20">
+                      {service.number}
+                    </span>
+                    <span className="text-xs uppercase tracking-wider font-semibold text-[#A1A1B5]">
+                      {service.subtitle}
+                    </span>
+                  </div>
+                  {serviceIcons[service.id] && (
+                    <div className="w-10 h-10 rounded-xl bg-[#1A1A2E]/80 border border-white/[0.08] p-1.5 flex items-center justify-center shrink-0">
+                      <img
+                        src={serviceIcons[service.id]}
+                        alt=""
+                        width="32"
+                        height="32"
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-white">

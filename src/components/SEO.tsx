@@ -21,7 +21,7 @@ export default function SEO({
   description,
   canonical,
   ogType = 'website',
-  ogImage = '/icon-512.png',
+  ogImage = '/assets/img/og-image.png',
   noindex = false,
   breadcrumbs,
   jsonLd,
@@ -46,7 +46,7 @@ export default function SEO({
       let tag = document.querySelector(`link[rel="${rel}"]`);
       if (!tag) {
         tag = document.createElement('link');
-        tag.setAttribute('rel', rel);
+        tag.setAttribute(rel, rel);
         document.head.appendChild(tag);
       }
       tag.setAttribute('href', href);
@@ -69,13 +69,16 @@ export default function SEO({
     setMetaTag('property', 'og:type', ogType);
     setMetaTag('property', 'og:url', resolvedCanonical);
     setMetaTag('property', 'og:site_name', 'LevelUp Ecosystem');
-    setMetaTag('property', 'og:image', ogImage.startsWith('http') ? ogImage : `${currentOrigin}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`);
+    const fullOgImage = ogImage.startsWith('http') ? ogImage : `${currentOrigin}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`;
+    setMetaTag('property', 'og:image', fullOgImage);
+    setMetaTag('property', 'og:image:width', '1200');
+    setMetaTag('property', 'og:image:height', '630');
 
     // 5. Twitter
     setMetaTag('name', 'twitter:card', 'summary_large_image');
     setMetaTag('name', 'twitter:title', title);
     setMetaTag('name', 'twitter:description', description);
-    setMetaTag('name', 'twitter:image', ogImage.startsWith('http') ? ogImage : `${currentOrigin}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`);
+    setMetaTag('name', 'twitter:image', fullOgImage);
 
     // 6. JSON-LD scripts management
     const scriptId = 'page-seo-jsonld';
