@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 100" fill="none">
+  <!-- 3D Faceted Origami Star -->
+  <g transform="translate(10, 0)">
+    <!-- Arm 0: Top -->
+    <!-- Arm 0 left (brightest highlight from top-left) -->
+    <path d="M 50,50 L 39.42,35.44 L 50,6 Z" fill="#DDD6FE" />
+    <!-- Arm 0 right -->
+    <path d="M 50,50 L 50,6 L 60.58,35.44 Z" fill="#8B5CF6" />
+
+    <!-- Arm 1: Right -->
+    <!-- Arm 1 top -->
+    <path d="M 50,50 L 60.58,35.44 L 91.85,36.4 Z" fill="#7C3AED" />
+    <!-- Arm 1 bottom -->
+    <path d="M 50,50 L 91.85,36.4 L 67.12,55.56 Z" fill="#581C87" />
+
+    <!-- Arm 2: Bottom-Right (Deep Shadow) -->
+    <!-- Arm 2 top-right -->
+    <path d="M 50,50 L 67.12,55.56 L 75.86,85.6 Z" fill="#4C1D95" />
+    <!-- Arm 2 bottom-left -->
+    <path d="M 50,50 L 75.86,85.6 L 50,68 Z" fill="#3B0764" />
+
+    <!-- Arm 3: Bottom-Left -->
+    <!-- Arm 3 bottom-right -->
+    <path d="M 50,50 L 50,68 L 24.14,85.6 Z" fill="#581C87" />
+    <!-- Arm 3 left -->
+    <path d="M 50,50 L 24.14,85.6 L 32.88,55.56 Z" fill="#7C3AED" />
+
+    <!-- Arm 4: Left -->
+    <!-- Arm 4 bottom -->
+    <path d="M 50,50 L 32.88,55.56 L 8.15,36.4 Z" fill="#8B5CF6" />
+    <!-- Arm 4 top (light facing) -->
+    <path d="M 50,50 L 8.15,36.4 L 39.42,35.44 Z" fill="#C4B5FD" />
+  </g>
+
+  <!-- LevelUp Text -->
+  <text 
+    x="126" 
+    y="53" 
+    fill="#FFFFFF" 
+    font-family="system-ui, -apple-system, 'Inter', 'Poppins', sans-serif" 
+    font-size="46" 
+    font-weight="600" 
+    letter-spacing="-0.02em"
+  >LevelUp</text>
+
+  <!-- ECOSYSTEM Text -->
+  <text 
+    x="128" 
+    y="79" 
+    fill="#A78BFA" 
+    font-family="system-ui, -apple-system, 'Inter', 'Poppins', sans-serif" 
+    font-size="15" 
+    font-weight="500" 
+    letter-spacing="0.36em"
+  >ECOSYSTEM</text>
+</svg>

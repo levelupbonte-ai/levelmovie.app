@@ -1,20 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <defs>
-    <linearGradient id="lvl_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#d8b4fe"/>
-      <stop offset="50%" stop-color="#a855f7"/>
-      <stop offset="100%" stop-color="#6366f1"/>
-    </linearGradient>
-    <linearGradient id="bg_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#180b29"/>
-      <stop offset="50%" stop-color="#0a0514"/>
-      <stop offset="100%" stop-color="#030008"/>
-    </linearGradient>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Arm 0: Top -->
+  <path d="M 50,50 L 39.42,35.44 L 50,6 Z" fill="#DDD6FE" />
+  <path d="M 50,50 L 50,6 L 60.58,35.44 Z" fill="#8B5CF6" />
 
-  <rect width="512" height="512" rx="128" fill="url(#bg_grad)" />
-  <rect width="508" height="508" x="2" y="2" rx="126" stroke="rgba(168,85,247,0.4)" stroke-width="4" fill="none" />
+  <!-- Arm 1: Right -->
+  <path d="M 50,50 L 60.58,35.44 L 91.85,36.4 Z" fill="#7C3AED" />
+  <path d="M 50,50 L 91.85,36.4 L 67.12,55.56 Z" fill="#581C87" />
 
-  <path d="M140 100 V340 C140 375.3 168.7 404 204 404 H370" stroke="url(#lvl_grad)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <path d="M228 175 C228 156.4 248.5 145 264.4 154.7 L370 219.7 C385.4 229.2 385.4 251.8 370 261.3 L264.4 326.3 C248.5 336 228 324.6 228 306 V175 Z" fill="url(#lvl_grad)" />
+  <!-- Arm 2: Bottom-Right -->
+  <path d="M 50,50 L 67.12,55.56 L 75.86,85.6 Z" fill="#4C1D95" />
+  <path d="M 50,50 L 75.86,85.6 L 50,68 Z" fill="#3B0764" />
+
+  <!-- Arm 3: Bottom-Left -->
+  <path d="M 50,50 L 50,68 L 24.14,85.6 Z" fill="#581C87" />
+  <path d="M 50,50 L 24.14,85.6 L 32.88,55.56 Z" fill="#7C3AED" />
+
+  <!-- Arm 4: Left -->
+  <path d="M 50,50 L 32.88,55.56 L 8.15,36.4 Z" fill="#8B5CF6" />
+  <path d="M 50,50 L 8.15,36.4 L 39.42,35.44 Z" fill="#C4B5FD" />
 </svg>
