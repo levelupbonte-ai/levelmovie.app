@@ -1,0 +1,8 @@
+Contact: mailto:security@levelup-ecosystem.com
+Contact: https://levelup-ecosystem.com/contact
+Preferred-Languages: en, fr
+Canonical: https://levelup-ecosystem.com/.well-known/security.txt
+Policy: https://levelup-ecosystem.com/security
+Hiring: https://levelup-ecosystem.com/about
+Expires: 2027-09-24T00:00:00.000Z
+Acknowledgments: https://levelup-ecosystem.com/security

@@ -48,10 +48,11 @@ export default function Footer() {
     },
     {
       id: 'legal',
-      title: 'Legal',
+      title: 'Legal & Trust',
       links: [
         { label: 'Privacy Policy', href: '/privacy' },
         { label: 'Terms of Service', href: '/terms' },
+        { label: 'Security Practices', href: '/security' },
         { label: 'Sitemap', href: '/sitemap' },
       ],
     },

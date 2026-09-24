@@ -28,8 +28,8 @@ export default function Navbar({ currentPath }: NavbarProps) {
           const currentY = window.scrollY;
           setIsScrolled(currentY > 20);
 
-          // Mobile hide on scroll down, show on scroll up
-          if (window.innerWidth < 768) {
+          // Mobile & Tablet hide on scroll down, show on scroll up
+          if (window.innerWidth < 1024) {
             if (currentY > 70 && currentY > lastScrollY.current + 5) {
               setIsVisible(false);
             } else if (currentY < lastScrollY.current - 5 || currentY <= 50) {
@@ -101,7 +101,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
         </div>
 
         {/* DESKTOP NAV */}
-        <div className="hidden md:flex items-center gap-7">
+        <div className="hidden lg:flex items-center gap-7">
           <nav className="flex items-center gap-6 text-sm font-medium">
             {navLinks.map((link) => {
               const active = isActive(link.path);
@@ -130,8 +130,8 @@ export default function Navbar({ currentPath }: NavbarProps) {
           </Link>
         </div>
 
-        {/* MOBILE ACTIONS */}
-        <div className="md:hidden flex items-center gap-2.5">
+        {/* MOBILE & TABLET ACTIONS */}
+        <div className="lg:hidden flex items-center gap-2.5">
           <Link
             to="/preview"
             className="px-3.5 py-1.5 text-xs font-semibold rounded-full bg-[#7C3AED] text-white active:scale-95"
@@ -167,9 +167,9 @@ export default function Navbar({ currentPath }: NavbarProps) {
         </div>
       </div>
 
-      {/* MOBILE DRAWER */}
+      {/* MOBILE & TABLET DRAWER */}
       {mobileMenuOpen && (
-        <div className="md:hidden pt-4 pb-4 px-4 border-t border-white/[0.08] mt-2 space-y-3 bg-[#0B0B14]">
+        <div className="lg:hidden pt-4 pb-4 px-4 border-t border-white/[0.08] mt-2 space-y-3 bg-[#0B0B14]">
           <div className="flex flex-col space-y-1 text-sm font-semibold text-slate-200">
             {navLinks.map((link) => (
               <Link

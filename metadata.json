@@ -1,8 +1,6 @@
 {
   "name": "LevelUp Ecosystem",
   "description": "Secure websites with online booking and built-in protection for businesses, creators & professionals.",
-  "requestFramePermissions": [
-    "geolocation"
-  ],
+  "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

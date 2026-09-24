@@ -28,7 +28,13 @@ export default defineConfig({
       'three',
     ],
   },
+  esbuild: {
+    drop: ['console', 'debugger'],
+    legalComments: 'none',
+  },
   build: {
+    sourcemap: false,
+    minify: 'esbuild',
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
@@ -52,6 +58,7 @@ export default defineConfig({
         sitemap: resolve(__dirname, 'sitemap/index.html'),
         privacy: resolve(__dirname, 'privacy/index.html'),
         terms: resolve(__dirname, 'terms/index.html'),
+        security: resolve(__dirname, 'security/index.html'),
         notFound: resolve(__dirname, '404.html'),
       },
     },

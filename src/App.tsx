@@ -26,6 +26,7 @@ import PreviewInstant from './pages/PreviewInstant';
 import Sitemap from './pages/Sitemap';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import Security from './pages/Security';
 import NotFound from './pages/NotFound';
 
 function AppContent() {
@@ -107,6 +108,7 @@ function AppContent() {
           <Route path="/sitemap" element={<Sitemap />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/security" element={<Security />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

@@ -68,14 +68,7 @@ export default function PreviewCustom() {
         exampleSites,
       };
 
-      try {
-        const stored = JSON.parse(localStorage.getItem('levelup_preview_requests') || '[]');
-        stored.push(payload);
-        localStorage.setItem('levelup_preview_requests', JSON.stringify(stored));
-      } catch {
-        // Storage optional
-      }
-
+      // Do not store personal data in client localStorage to preserve browser privacy
       setSubmitted(true);
     } catch {
       setErrorMessage('Could not send your request. Please email contact@levelup-ecosystem.com directly.');
