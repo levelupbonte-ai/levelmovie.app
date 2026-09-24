@@ -7,6 +7,7 @@ export default function NotFound() {
       <SEO
         title="Page not found | LevelUp Ecosystem"
         description="The page you're looking for doesn't exist or has moved."
+        noindex={true}
       />
 
       <div className="max-w-2xl mx-auto text-center space-y-8">

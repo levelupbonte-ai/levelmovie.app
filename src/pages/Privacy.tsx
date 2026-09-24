@@ -1,17 +1,28 @@
 import React from 'react';
 import { Link } from '../components/Link';
 import SEO from '../components/SEO';
+import Breadcrumbs from '../components/Breadcrumbs';
 
 export default function Privacy() {
   return (
     <div>
       <SEO
-        title="Privacy Policy"
-        description="Privacy Policy for LevelUp Ecosystem. Learn how your data is handled and protected."
+        title="Privacy Policy | LevelUp Ecosystem"
+        description="Privacy Policy for LevelUp Ecosystem. Learn how your data is handled and protected with zero third-party tracking."
+        canonical="/privacy"
+        breadcrumbs={[
+          { name: 'Privacy Policy', url: '/privacy' }
+        ]}
+      />
+
+      <Breadcrumbs
+        items={[
+          { name: 'Privacy Policy', url: '/privacy' }
+        ]}
       />
 
       <section className="py-16 sm:py-24 px-4 sm:px-8 border-b border-white/[0.08] bg-[#0B0B14]">
-        <div className="max-w-4xl mx-auto text-center space-y-4">
+        <div className="max-w-4xl mx-auto text-center space-y-4" data-reveal>
           <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
             Legal & Trust
           </span>
@@ -25,12 +36,11 @@ export default function Privacy() {
       </section>
 
       <section className="py-16 sm:py-24 px-4 sm:px-8 bg-[#0B0B14]">
-        <div className="max-w-3xl mx-auto bg-[#14141F] border border-white/[0.08] p-8 sm:p-12 rounded-3xl space-y-8 text-left text-sm sm:text-base text-[#A1A1B5] leading-relaxed">
-          
+        <div className="max-w-3xl mx-auto bg-[#14141F] border border-white/[0.08] p-8 sm:p-12 rounded-3xl space-y-8 text-left text-sm sm:text-base text-[#A1A1B5] leading-relaxed" data-reveal>
           <div className="space-y-3">
             <h2 className="text-xl font-bold text-white">Introduction</h2>
             <p>
-              LevelUp Ecosystem is an independent web design and security studio based in San Diego, CA. This Privacy Policy details how I collect, use, and protect your personal and business information when you visit this website or communicate regarding our web design and security services.
+              LevelUp Ecosystem is an independent web design and security studio based in San Diego, CA. This Privacy Policy details how we collect, use, and protect your personal and business information when you visit this website or communicate regarding our web design and security services.
             </p>
           </div>
 
@@ -39,58 +49,56 @@ export default function Privacy() {
             <p>
               We only collect information that you explicitly and voluntarily submit through our contact form, email communications, or project consultation calls:
             </p>
-            <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-300">
-              <li>Your full name and professional title</li>
-              <li>Your business or organization name</li>
-              <li>Your email address and phone number</li>
-              <li>Project requirements, design preferences, and service menu details</li>
+            <ul className="list-disc pl-5 space-y-1.5 text-slate-300">
+              <li>Name and contact details (email address, phone number).</li>
+              <li>Business details, website URL, and branding assets you share.</li>
+              <li>Communication history related to design previews and service inquiries.</li>
             </ul>
           </div>
 
           <div className="space-y-3">
             <h2 className="text-xl font-bold text-white">2. How We Use Your Information</h2>
             <p>
-              Your information is used strictly to fulfill your request:
+              Your information is used strictly to fulfill your direct requests:
             </p>
-            <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-300">
-              <li>Building your free 24-48 hour mobile preview</li>
-              <li>Communicating project scope, quotes, and delivery timelines</li>
-              <li>Configuring your website domain, SSL, and booking system</li>
-              <li>Providing ongoing support and maintenance if enrolled in the Care plan</li>
+            <ul className="list-disc pl-5 space-y-1.5 text-slate-300">
+              <li>Generating your free interactive mobile website preview.</li>
+              <li>Delivering requested security audit reports and proposals.</li>
+              <li>Communicating regarding ongoing site builds, launches, and maintenance.</li>
             </ul>
+            <p className="text-xs text-[#A78BFA] pt-1">
+              We never sell, rent, or trade your contact information to third-party advertisers or data brokers.
+            </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#0B0B14] border border-[#7C3AED]/30 space-y-2">
-            <h3 className="text-base font-bold text-white">3. AI Processing & Third-Party Protection</h3>
-            <p className="text-xs sm:text-sm text-slate-300">
-              When you submit a request for an instant or custom website preview, the business information you provide (such as business name, services offered, and aesthetic preferences) may be processed by an AI provider or AI tooling solely to generate draft website copy, layouts, and preview assets.
-            </p>
-            <p className="text-xs sm:text-sm text-slate-300">
-              I never share clients' private data, passwords, customer lists, or financial records with AI training datasets or advertising brokers. Every custom preview is reviewed, tested, and directed by me before delivery.
+          <div className="space-y-3">
+            <h2 className="text-xl font-bold text-white">3. Third-Party AI Services & Confidentiality</h2>
+            <p>
+              While we utilize modern AI coding assistants to accelerate boilerplate development, we never input your proprietary client records, private financial numbers, or sensitive credentials into public training datasets. All client credentials and proprietary codebases remain strictly quarantined.
             </p>
           </div>
 
           <div className="space-y-3">
             <h2 className="text-xl font-bold text-white">4. Data Security</h2>
             <p>
-              All traffic to this site is encrypted with standard TLS/HTTPS. I maintain strict access control, multi-factor authentication (2FA) across all administrative tools, and never retain unencrypted credentials.
+              As a studio focused on security, we adhere to fundamental industry defenses: all web traffic is encrypted via HTTPS (TLS), administrative accounts enforce two-factor authentication, and contact endpoints are guarded by honeypot verification.
             </p>
           </div>
 
           <div className="space-y-3">
-            <h2 className="text-xl font-bold text-white">5. Your Rights</h2>
+            <h2 className="text-xl font-bold text-white">5. Contact Us</h2>
             <p>
-              You have the right to request a copy of the data I have on file or request immediate deletion of your contact records at any time. Simply email <a href="mailto:contact@levelup-ecosystem.com" className="text-white hover:text-[#A78BFA] underline">contact@levelup-ecosystem.com</a>.
+              If you have any questions regarding this policy or wish to have your submitted data purged from our correspondence archives, please contact:
+            </p>
+            <p className="font-semibold text-white">
+              LevelUp Ecosystem<br />
+              San Diego, CA<br />
+              Email:{' '}
+              <a href="mailto:contact@levelup-ecosystem.com" className="text-[#A78BFA] hover:underline">
+                contact@levelup-ecosystem.com
+              </a>
             </p>
           </div>
-
-          <div className="pt-6 border-t border-white/[0.08] flex items-center justify-between">
-            <span className="text-xs text-[#A1A1B5]">Questions or concerns?</span>
-            <Link to="/contact" className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors">
-              Contact LevelUp Ecosystem
-            </Link>
-          </div>
-
         </div>
       </section>
     </div>

@@ -28,19 +28,34 @@
     background-color: #7C3AED;
     color: #FFFFFF;
   }
+
+  /* Prevent iOS Safari auto-zoom on input focus: inputs must be >= 16px font-size */
+  @media screen and (max-width: 767px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+
+  input,
+  textarea,
+  select {
+    touch-action: manipulation;
+  }
 }
 
-/* 404 Floating facet animation */
+/* 404 & background floating facet animation */
 @keyframes floatPiece {
   0%, 100% {
-    transform: translate(-8px, -11px) rotate(-5deg);
+    transform: translate(-6px, -8px) rotate(-4deg);
   }
   50% {
-    transform: translate(-13px, -18px) rotate(-11deg);
+    transform: translate(-10px, -14px) rotate(-9deg);
   }
 }
 
-/* Page fade-in on load (200ms to 300ms) */
+/* Page fade-in on load */
 @keyframes pageFadeIn {
   from {
     opacity: 0;
@@ -56,15 +71,30 @@
   animation: pageFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Scroll reveal animations: max 12px drift, smooth opacity */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .page-fade-in {
+  .page-fade-in,
+  [data-reveal] {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+    transition: none !important;
   }
   @keyframes floatPiece {
     0%, 100% {
-      transform: translate(-8px, -11px);
+      transform: translate(-4px, -6px);
     }
   }
 }
@@ -96,4 +126,20 @@
   width: 100%;
   opacity: 0;
   transition: width 0.15s ease-out, opacity 0.25s 0.15s ease-out;
+}
+
+/* Shimmer placeholder */
+.img-shimmer {
+  background: linear-gradient(90deg, #14141F 0%, #1f1f2e 50%, #14141F 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite linear;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }

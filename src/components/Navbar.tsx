@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link } from './Link';
 
 interface NavbarProps {
   currentPath?: string;
@@ -7,6 +8,10 @@ interface NavbarProps {
 export default function Navbar({ currentPath }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [path, setPath] = useState(currentPath || '');
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const ticking = useRef(false);
 
   useEffect(() => {
     if (!currentPath && typeof window !== 'undefined') {
@@ -16,17 +21,51 @@ export default function Navbar({ currentPath }: NavbarProps) {
     }
   }, [currentPath]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!ticking.current) {
+        window.requestAnimationFrame(() => {
+          const currentY = window.scrollY;
+          setIsScrolled(currentY > 20);
+
+          // Mobile hide on scroll down, show on scroll up
+          if (window.innerWidth < 768) {
+            if (currentY > 70 && currentY > lastScrollY.current + 5) {
+              setIsVisible(false);
+            } else if (currentY < lastScrollY.current - 5 || currentY <= 50) {
+              setIsVisible(true);
+            }
+          } else {
+            setIsVisible(true);
+          }
+
+          lastScrollY.current = Math.max(0, currentY);
+          ticking.current = false;
+        });
+        ticking.current = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const navLinks = [
     { label: 'Services', path: '/services' },
     { label: 'Projects', path: '/projects' },
     { label: 'Pricing', path: '/pricing' },
-    { label: 'How we build', path: '/process' }
+    { label: 'How we build', path: '/process' },
+    { label: 'About', path: '/about' },
+    { label: 'Contact', path: '/contact' },
   ];
 
   const isActive = (targetPath: string) => {
     const cleanPath = path.replace(/\/index\.html$/, '').replace(/\/$/, '') || '/';
     const cleanTarget = targetPath.replace(/\/$/, '') || '/';
 
+    if (cleanTarget === '/services') {
+      return cleanPath.startsWith('/services');
+    }
     if (cleanTarget === '/projects') {
       return cleanPath.startsWith('/projects');
     }
@@ -34,101 +73,128 @@ export default function Navbar({ currentPath }: NavbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0B0B14]/90 backdrop-blur-md border-b border-white/[0.08] px-4 sm:px-8 py-3 transition-all">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        
-        {/* LOGO: Left side, ~40px height */}
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ease-out border-b border-white/[0.08] ${
+        isScrolled
+          ? 'bg-[#0B0B14]/95 backdrop-blur-md shadow-lg shadow-black/20 py-2 sm:py-2.5'
+          : 'bg-[#0B0B14]/80 backdrop-blur-sm py-3.5 sm:py-4'
+      } ${isVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}`}
+      style={{
+        paddingTop: 'max(0.6rem, env(safe-area-inset-top, 0px))',
+        viewTransitionName: 'nav',
+      }}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between gap-4">
+        {/* LOGO */}
         <div className="shrink-0">
-          <a href="/" className="flex items-center group">
+          <Link to="/" className="flex items-center group">
             <img
               src="/levelup-logo.svg"
               alt="LevelUp Ecosystem"
-              className="h-10 sm:h-11 w-auto select-none transition-transform group-hover:scale-[1.01]"
+              className={`w-auto select-none transition-all duration-200 group-hover:scale-[1.01] ${
+                isScrolled ? 'h-8 sm:h-9' : 'h-9 sm:h-10'
+              }`}
+              width="160"
+              height="36"
             />
-          </a>
+          </Link>
         </div>
 
-        {/* DESKTOP NAV: Links + Purple "Get a free preview" Button */}
-        <div className="hidden md:flex items-center gap-8">
-          <nav className="flex items-center gap-7 text-sm font-medium">
+        {/* DESKTOP NAV */}
+        <div className="hidden md:flex items-center gap-7">
+          <nav className="flex items-center gap-6 text-sm font-medium">
             {navLinks.map((link) => {
               const active = isActive(link.path);
               return (
-                <a
+                <Link
                   key={link.path}
-                  href={link.path}
+                  to={link.path}
                   className={`relative py-1 transition-colors ${
-                    active ? 'text-white' : 'text-[#A1A1B5] hover:text-white'
+                    active ? 'text-white font-semibold' : 'text-[#A1A1B5] hover:text-white'
                   }`}
                 >
                   {link.label}
                   {active && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#7C3AED] rounded-full"></span>
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#7C3AED] rounded-full" />
                   )}
-                </a>
+                </Link>
               );
             })}
           </nav>
 
-          {/* Solid purple pill button */}
-          <a
-            href="/preview"
-            className="px-6 py-2.5 text-xs sm:text-sm font-semibold rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white transition-all duration-200 hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] active:scale-95 shrink-0"
+          <Link
+            to="/preview"
+            className="px-5 py-2 text-xs sm:text-sm font-semibold rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white transition-all duration-200 hover:shadow-[0_0_18px_rgba(124,58,237,0.45)] active:scale-95 shrink-0"
           >
             Get a free preview
-          </a>
+          </Link>
         </div>
 
-        {/* MOBILE: Keep "Get a free preview" button visible + Clean hamburger */}
-        <div className="md:hidden flex items-center gap-3">
-          <a
-            href="/preview"
+        {/* MOBILE ACTIONS */}
+        <div className="md:hidden flex items-center gap-2.5">
+          <Link
+            to="/preview"
             className="px-3.5 py-1.5 text-xs font-semibold rounded-full bg-[#7C3AED] text-white active:scale-95"
           >
             Preview
-          </a>
+          </Link>
 
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle navigation menu"
-            className="p-2 text-white cursor-pointer focus:outline-none"
+            aria-expanded={mobileMenuOpen}
+            className="p-2 text-white cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] rounded-lg"
           >
-            <div className="w-6 h-4.5 flex flex-col justify-between">
-              <span className={`block h-0.5 w-6 bg-white transition-transform ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
-              <span className={`block h-0.5 w-6 bg-white transition-opacity ${mobileMenuOpen ? 'opacity-0' : ''}`}></span>
-              <span className={`block h-0.5 w-6 bg-white transition-transform ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+            <div className="w-5 h-4 flex flex-col justify-between">
+              <span
+                className={`block h-0.5 w-5 bg-white transition-transform duration-200 ${
+                  mobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''
+                }`}
+              />
+              <span
+                className={`block h-0.5 w-5 bg-white transition-opacity duration-200 ${
+                  mobileMenuOpen ? 'opacity-0' : ''
+                }`}
+              />
+              <span
+                className={`block h-0.5 w-5 bg-white transition-transform duration-200 ${
+                  mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''
+                }`}
+              />
             </div>
           </button>
         </div>
-
       </div>
 
       {/* MOBILE DRAWER */}
       {mobileMenuOpen && (
-        <div className="md:hidden pt-4 pb-3 px-3 border-t border-white/[0.08] mt-3 space-y-2 animate-in fade-in">
+        <div className="md:hidden pt-4 pb-4 px-4 border-t border-white/[0.08] mt-2 space-y-3 bg-[#0B0B14]">
           <div className="flex flex-col space-y-1 text-sm font-semibold text-slate-200">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.path}
-                href={link.path}
+                to={link.path}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`text-left py-2.5 px-3 rounded-xl transition-colors ${
-                  isActive(link.path) ? 'bg-white/[0.08] text-white' : 'text-[#A1A1B5] hover:bg-white/[0.05]'
+                  isActive(link.path)
+                    ? 'bg-white/[0.08] text-white'
+                    : 'text-[#A1A1B5] hover:bg-white/[0.05]'
                 }`}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </div>
 
           <div className="pt-2">
-            <a
-              href="/preview"
+            <Link
+              to="/preview"
               onClick={() => setMobileMenuOpen(false)}
               className="block w-full py-3 rounded-xl bg-[#7C3AED] text-white font-bold text-xs text-center cursor-pointer shadow-md shadow-[#7C3AED]/25"
             >
               Get a free preview
-            </a>
+            </Link>
           </div>
         </div>
       )}

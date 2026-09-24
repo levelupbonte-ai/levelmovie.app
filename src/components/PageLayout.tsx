@@ -43,7 +43,6 @@ export default function PageLayout({ currentPath, children }: PageLayoutProps) {
           bar.style.width = '0%';
           bar.classList.remove('finish');
           bar.classList.add('active');
-          // Force layout reflow
           void bar.offsetWidth;
           bar.classList.add('loading');
         }
@@ -53,6 +52,39 @@ export default function PageLayout({ currentPath, children }: PageLayoutProps) {
     document.addEventListener('click', handleLinkClick);
     return () => document.removeEventListener('click', handleLinkClick);
   }, []);
+
+  // IntersectionObserver for scroll-reveal animations
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const elements = document.querySelectorAll<HTMLElement>('[data-reveal]');
+
+    if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+      elements.forEach((el) => el.classList.add('is-revealed'));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.08,
+        rootMargin: '0px 0px -30px 0px',
+      }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      elements.forEach((el) => observer.unobserve(el));
+      observer.disconnect();
+    };
+  }, [currentPath, children]);
 
   return (
     <div className="min-h-screen bg-[#0B0B14] text-[#A1A1B5] font-sans selection:bg-[#7C3AED] selection:text-white flex flex-col relative">

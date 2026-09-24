@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from '../components/Link';
 import SEO from '../components/SEO';
+import Breadcrumbs from '../components/Breadcrumbs';
 
 export default function Services() {
   const serviceCategories = [
@@ -9,7 +10,9 @@ export default function Services() {
       number: '01',
       title: 'Local Business Sites',
       subtitle: 'Barbers, salons, med spas, gyms, restaurants, local pros',
-      description: 'Lightning-fast mobile websites designed to convert local searchers into paying clients. I set up 24/7 direct online appointment booking, digital service menus with clear pricing, and Google Maps integration so customers can find and visit you without friction.',
+      pageUrl: '/services/local-business-websites',
+      pageAnchor: 'Explore local business websites with booking →',
+      description: 'Lightning-fast mobile websites designed to convert local searchers into paying clients. We set up 24/7 direct online appointment booking, digital service menus with clear pricing, and Google Maps integration so customers can find and visit you without friction.',
       includes: [
         'Mobile-first responsive design',
         '24/7 automated online booking integration',
@@ -24,7 +27,9 @@ export default function Services() {
       number: '02',
       title: 'Creator & Influencer Sites',
       subtitle: 'Link in bio, creator hubs, media kits, newsletters',
-      description: 'Stop relying solely on rented social platforms or clumsy multi-link trees. I create a centralized, custom-branded hub that organizes your content, showcases your follower analytics for brand sponsors, and captures fan emails into a list you own.',
+      pageUrl: '/services/creator-websites',
+      pageAnchor: 'Explore creator websites with media kit →',
+      description: 'Stop relying solely on rented social platforms or clumsy multi-link trees. We create a centralized, custom-branded hub that organizes your content, showcases your follower analytics for brand sponsors, and captures fan emails into a list you own.',
       includes: [
         'Custom link-in-bio hub with fast mobile load',
         'Downloadable media kit for brand deals',
@@ -39,6 +44,8 @@ export default function Services() {
       number: '03',
       title: 'Portfolios',
       subtitle: 'Students, emerging pros, artists, photographers, musicians',
+      pageUrl: '/services/portfolio-websites',
+      pageAnchor: 'Explore portfolio website design →',
       description: 'A clean, high-impact portfolio that lets your work speak for itself. Designed specifically for job interviews, freelance inquiries, and gallery submissions with crisp media presentations and easy contact pathways.',
       includes: [
         'Curated case study & project galleries',
@@ -54,6 +61,8 @@ export default function Services() {
       number: '04',
       title: 'Online Stores',
       subtitle: 'Mini boutiques, branded merch, digital products',
+      pageUrl: '/services/online-stores',
+      pageAnchor: 'Explore small online store setup →',
       description: 'Simple, frictionless e-commerce without the bloated monthly overhead of enterprise platforms. Sell physical items, artist merch, or downloadable digital goods with secure payment gateways and automatic confirmation receipts.',
       includes: [
         'Streamlined product catalog & checkout',
@@ -69,7 +78,9 @@ export default function Services() {
       number: '05',
       title: 'Landing Pages',
       subtitle: 'Product launches, upcoming events, seasonal promotions',
-      description: 'Single-page websites engineered for one single purpose: conversion. Whether you are validating a new business concept, promoting a workshop, or driving paid ad traffic, I craft a focused visual journey that turns visitors into leads.',
+      pageUrl: '/preview',
+      pageAnchor: 'Request a custom landing page preview →',
+      description: 'Single-page websites engineered for one single purpose: conversion. Whether you are validating a new business concept, promoting a workshop, or driving ad traffic, we craft a focused visual journey that turns visitors into leads.',
       includes: [
         'Laser-focused conversion-oriented architecture',
         'Clear call-to-action hierarchy',
@@ -84,7 +95,9 @@ export default function Services() {
       number: '06',
       title: 'Community & Non-Profits',
       subtitle: 'Clubs, faith communities, student organizations, charities',
-      description: 'Keep your members informed, welcome newcomers, and accept donations online. I build dependable websites with community event calendars, donation integrations, and resources that are simple to navigate.',
+      pageUrl: '/preview',
+      pageAnchor: 'Request a community website preview →',
+      description: 'Keep your members informed, welcome newcomers, and accept donations online. We build dependable websites with community event calendars, donation integrations, and resources that are simple to navigate.',
       includes: [
         'Upcoming event schedule & announcements',
         'Secure online donation & membership dues processing',
@@ -98,7 +111,9 @@ export default function Services() {
       id: 'events',
       number: '07',
       title: 'Events & Gatherings',
-      subtitle: 'Weddings, milestone birthdays, celebrations with RSVP',
+      subtitle: 'Milestones, celebrations, RSVP coordination',
+      pageUrl: '/preview',
+      pageAnchor: 'Request an event website preview →',
       description: 'Interactive, memorable websites for personal or professional events. Replace paper chaos with live digital RSVP tracking, interactive venue directions, dietary preference forms, and photo gallery sharing.',
       includes: [
         'Live RSVP management with automated spreadsheet syncing',
@@ -114,7 +129,9 @@ export default function Services() {
       number: '08',
       title: 'Security Check',
       subtitle: 'Security audit, 2FA implementation, anti-phishing hygiene',
-      description: 'A practical cybersecurity service for business owners. I audit your domain registrar, DNS records, website hosting, and staff logins to eliminate vulnerabilities, implement robust two-factor authentication, and educate you on current phishing tactics.',
+      pageUrl: '/services/security-check',
+      pageAnchor: 'Explore website security check service →',
+      description: 'A practical cybersecurity service for business owners. We audit your domain registrar, DNS records, website hosting, and staff logins to eliminate vulnerabilities, implement robust two-factor authentication, and educate you on current phishing tactics.',
       includes: [
         'Comprehensive audit of domain registrar & DNS configuration',
         'Enforcement of mandatory 2FA on hosting & business email accounts',
@@ -127,8 +144,10 @@ export default function Services() {
     {
       id: 'maintenance',
       number: '09',
-      title: 'Maintenance & Care',
+      title: 'Maintenance & Care Plans',
       subtitle: 'High-speed hosting, monthly updates, backups, local SEO',
+      pageUrl: '/services/care-plans',
+      pageAnchor: 'Explore monthly website care plans →',
       description: 'A hands-off ongoing service for clients who want their site running smoothly without lifting a finger. Includes ultra-fast cloud hosting, automated offsite backups, routine security audits, and on-demand content edits.',
       includes: [
         'High-speed global cloud hosting included',
@@ -136,7 +155,7 @@ export default function Services() {
         'Monthly security patches & framework updates',
         'Up to 2 hours of on-demand content updates per month (photos, prices)',
         'Quarterly local SEO health check',
-        'Direct email & phone support with me'
+        'Direct email & phone support'
       ]
     }
   ];
@@ -144,18 +163,28 @@ export default function Services() {
   return (
     <div>
       <SEO
-        title="Web Design & Security Services"
-        description="Comprehensive web design and security services for San Diego businesses, creators, and professionals. 24/7 online booking, portfolios, and practical security audits."
+        title="Website Design Services | LevelUp Ecosystem"
+        description="Websites for local businesses, creators, portfolios, stores and events, plus security checks and monthly care plans."
+        canonical="/services"
+        breadcrumbs={[
+          { name: 'Services', url: '/services' }
+        ]}
+      />
+
+      <Breadcrumbs
+        items={[
+          { name: 'Services', url: '/services' }
+        ]}
       />
 
       {/* Header Banner */}
       <section className="py-16 sm:py-24 px-4 sm:px-8 border-b border-white/[0.08] bg-[#0B0B14]">
-        <div className="max-w-4xl mx-auto text-center space-y-4">
+        <div className="max-w-4xl mx-auto text-center space-y-4" data-reveal>
           <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
-            What I Do
+            What We Do
           </span>
           <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            Services & Specialties
+            Website Design Services & Specialties
           </h1>
           <p className="text-base sm:text-lg text-[#A1A1B5] max-w-2xl mx-auto leading-relaxed">
             Every website is custom built, mobile-optimized, and configured with genuine security best practices from day one.
@@ -171,6 +200,7 @@ export default function Services() {
               key={service.id}
               id={service.id}
               className="p-8 sm:p-10 rounded-3xl bg-[#14141F] border border-white/[0.08] hover:border-white/[0.16] transition-all grid grid-cols-1 lg:grid-cols-12 gap-8 items-start scroll-mt-24"
+              data-reveal
             >
               <div className="lg:col-span-7 space-y-4">
                 <div className="flex items-center gap-3">
@@ -190,12 +220,18 @@ export default function Services() {
                   {service.description}
                 </p>
 
-                <div className="pt-2">
+                <div className="pt-2 flex flex-wrap gap-4 items-center">
                   <Link
-                    to="/contact"
+                    to={service.pageUrl}
                     className="inline-flex items-center text-sm font-bold text-[#A78BFA] hover:text-white transition-colors"
                   >
-                    Request a free preview for {service.title} →
+                    {service.pageAnchor}
+                  </Link>
+                  <Link
+                    to="/preview"
+                    className="inline-flex items-center text-xs font-semibold text-[#A1A1B5] hover:text-white transition-colors"
+                  >
+                    Request a free preview →
                   </Link>
                 </div>
               </div>
@@ -219,14 +255,37 @@ export default function Services() {
         </div>
       </section>
 
+      {/* Local Spotlight Section */}
+      <section className="py-16 sm:py-20 px-4 sm:px-8 bg-[#0B0B14] border-t border-white/[0.08]">
+        <div className="max-w-4xl mx-auto rounded-3xl bg-[#14141F] border border-white/[0.08] p-8 sm:p-12 text-left space-y-4" data-reveal>
+          <div className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
+            Local Business Focus
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+            Looking for Local Web Design in San Diego?
+          </h2>
+          <p className="text-sm sm:text-base text-[#A1A1B5] leading-relaxed">
+            We work directly with local businesses across San Diego County—including barbershops, salons, fitness studios, and local services. We handle Google Maps optimization, local structured schema, and automated booking.
+          </p>
+          <div className="pt-2">
+            <Link
+              to="/web-design-san-diego"
+              className="inline-flex items-center text-sm font-bold text-[#A78BFA] hover:text-white transition-colors"
+            >
+              Learn about our San Diego web design services →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Call to action */}
       <section className="py-20 px-4 sm:px-8 bg-[#14141F] border-t border-white/[0.08]">
-        <div className="max-w-3xl mx-auto text-center space-y-6">
+        <div className="max-w-3xl mx-auto text-center space-y-6" data-reveal>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
             Have a custom requirement or need an audit?
           </h2>
           <p className="text-sm sm:text-base text-[#A1A1B5]">
-            I build tailored solutions for businesses with unique booking systems, inventory rules, or specialized security needs.
+            We build tailored solutions for businesses with unique booking systems, inventory rules, or specialized security needs.
           </p>
           <div>
             <Link
@@ -238,7 +297,6 @@ export default function Services() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }

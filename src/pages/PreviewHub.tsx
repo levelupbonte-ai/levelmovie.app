@@ -7,6 +7,7 @@ export default function PreviewHub() {
       <SEO
         title="Get a Free Preview | LevelUp Ecosystem"
         description="See your new website before you decide. Choose between an instant AI draft or a custom preview designed and reviewed by me."
+        noindex={true}
       />
 
       {/* Hero Header */}

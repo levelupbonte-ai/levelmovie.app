@@ -84,6 +84,7 @@ export default function PreviewCustom() {
       <SEO
         title="Request a Custom Preview | LevelUp Ecosystem"
         description="Request a custom website preview designed and reviewed by me. Delivered to your email within 24 to 48 business hours."
+        noindex={true}
       />
 
       <div className="max-w-3xl mx-auto">
@@ -196,7 +197,7 @@ export default function PreviewCustom() {
                   placeholder="Taylor Morgan"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
                 />
               </div>
 
@@ -208,7 +209,7 @@ export default function PreviewCustom() {
                   placeholder="Apex Barber Lounge"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
                 />
               </div>
             </div>
@@ -220,7 +221,7 @@ export default function PreviewCustom() {
                 <select
                   value={businessType}
                   onChange={(e) => setBusinessType(e.target.value)}
-                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white focus:outline-none focus:border-[#7C3AED]"
                 >
                   <option value="Barbershop or Salon">Barbershop or Salon</option>
                   <option value="Med Spa or Clinic">Med Spa or Clinic</option>
@@ -242,7 +243,7 @@ export default function PreviewCustom() {
                   placeholder="e.g. San Diego, Austin, Miami..."
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
                 />
               </div>
             </div>
@@ -257,7 +258,7 @@ export default function PreviewCustom() {
                   placeholder="taylor@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
                 />
               </div>
 
@@ -268,7 +269,7 @@ export default function PreviewCustom() {
                   placeholder="(619) 000-0000"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
                 />
               </div>
             </div>
@@ -281,7 +282,7 @@ export default function PreviewCustom() {
                 placeholder="instagram.com/mybusiness or current website URL"
                 value={socialLink}
                 onChange={(e) => setSocialLink(e.target.value)}
-                className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
               />
             </div>
 
@@ -294,7 +295,7 @@ export default function PreviewCustom() {
                 placeholder="List your key services (e.g. Haircuts, Beard Trims, VIP packages with online booking)..."
                 value={servicesOffered}
                 onChange={(e) => setServicesOffered(e.target.value)}
-                className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
               />
             </div>
 
@@ -307,7 +308,7 @@ export default function PreviewCustom() {
                   placeholder="Dark and modern, gold and black, clean white..."
                   value={preferredColors}
                   onChange={(e) => setPreferredColors(e.target.value)}
-                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
                 />
               </div>
 
@@ -318,7 +319,7 @@ export default function PreviewCustom() {
                   placeholder="Links or names of websites you like"
                   value={exampleSites}
                   onChange={(e) => setExampleSites(e.target.value)}
-                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
                 />
               </div>
             </div>

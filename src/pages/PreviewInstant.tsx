@@ -22,6 +22,7 @@ export default function PreviewInstant() {
       <SEO
         title="Instant Website Preview | LevelUp Ecosystem"
         description="Generate an instant AI draft of your website in ~1 minute. Basic draft for look and feel."
+        noindex={true}
       />
 
       <div className="max-w-3xl mx-auto">
@@ -200,7 +201,7 @@ export default function PreviewInstant() {
                   placeholder="e.g. Skyline Fade Lounge"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
                 />
               </div>
 
@@ -209,7 +210,7 @@ export default function PreviewInstant() {
                 <select
                   value={businessType}
                   onChange={(e) => setBusinessType(e.target.value)}
-                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white focus:outline-none focus:border-[#7C3AED]"
                 >
                   <option value="Barbershop">Barbershop</option>
                   <option value="Hair or Nail Salon">Hair or Nail Salon</option>
@@ -232,7 +233,7 @@ export default function PreviewInstant() {
                   placeholder="e.g. San Diego, Denver, Chicago..."
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
                 />
               </div>
 
@@ -243,7 +244,7 @@ export default function PreviewInstant() {
                   placeholder="Dark slate and violet, black and gold..."
                   value={colors}
                   onChange={(e) => setColors(e.target.value)}
-                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
                 />
               </div>
             </div>
@@ -256,7 +257,7 @@ export default function PreviewInstant() {
                 placeholder="e.g. Men's haircuts, beard grooming, hot towel shave..."
                 value={services}
                 onChange={(e) => setServices(e.target.value)}
-                className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
               />
             </div>
 
@@ -267,7 +268,7 @@ export default function PreviewInstant() {
                 placeholder="instagram.com/yourbusiness"
                 value={socialLink}
                 onChange={(e) => setSocialLink(e.target.value)}
-                className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
+                className="w-full bg-[#0B0B14] border border-white/[0.1] rounded-xl px-4 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#7C3AED]"
               />
             </div>
 

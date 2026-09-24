@@ -1,4 +1,6 @@
 User-agent: *
-Allow: /
+Disallow: /preview/
+Disallow: /preview/*
+Disallow: /404.html
 
 Sitemap: https://levelup-ecosystem.com/sitemap.xml
