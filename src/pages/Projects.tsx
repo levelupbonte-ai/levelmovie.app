@@ -1,191 +1,229 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from '../components/Link';
 import SEO from '../components/SEO';
 import Breadcrumbs from '../components/Breadcrumbs';
+import WorkShowcaseItem, { ShowcaseProject } from '../components/WorkShowcaseItem';
+
+const SHOWCASE_PROJECTS: ShowcaseProject[] = [
+  {
+    id: 'final-stop',
+    isRealClient: true,
+    statusBadge: 'Live project',
+    eyebrow: 'Live Client Deployment • San Diego, CA',
+    title: 'Final Stop Barber Shop & Salon',
+    shortDescription:
+      'Fast, mobile-first booking platform and web presence for a premier grooming and braiding lounge, replacing an unmaintained social link tree with 24/7 client booking.',
+    tags: ['Local Business', 'Online Booking', 'Google Calendar Sync'],
+    clientLink: 'https://finalstop.org',
+    caseStudyLink: '/projects/final-stop',
+    metrics: [
+      { value: '< 1.8s', label: 'Mobile speed' },
+      { value: '40%+', label: 'Online bookings' },
+      { value: '100%', label: 'HTTPS encrypted' },
+    ],
+    image: {
+      avif1400: '/assets/img/finalstop-desktop.avif',
+      webp1400: '/assets/img/finalstop-desktop.webp',
+      fallbackJpg: '/assets/img/finalstop-desktop.jpg',
+      alt: 'Final Stop Barber Shop & Salon live website desktop interface',
+      width: 1000,
+      height: 625,
+    },
+  },
+  {
+    id: 'aura-acoustics',
+    isRealClient: false,
+    statusBadge: 'Concept',
+    eyebrow: 'Example Build • E-Commerce & Hardware',
+    title: 'AURA Studio Acoustics',
+    shortDescription:
+      'Minimalist dark-mode digital storefront engineered for bespoke studio sound monitors and analog audio hardware, featuring clean product grids and instant checkout.',
+    tags: ['E-commerce', 'Product Grid', 'Dark UI'],
+    image: {
+      avif1400: '/assets/img/projects/concept-audio-store-1400.avif',
+      webp1400: '/assets/img/projects/concept-audio-store-1400.webp',
+      avif800: '/assets/img/projects/concept-audio-store-800.avif',
+      webp800: '/assets/img/projects/concept-audio-store-800.webp',
+      fallbackJpg: '/assets/img/projects/concept-audio-store.jpg',
+      alt: 'AURA Studio Acoustics bespoke audio equipment digital storefront concept',
+      width: 1376,
+      height: 768,
+    },
+  },
+  {
+    id: 'monolith-lighting',
+    isRealClient: false,
+    statusBadge: 'Example build',
+    eyebrow: 'Example Build • Architecture & Spatial Design',
+    title: 'Monolith Architectural Lighting',
+    shortDescription:
+      'Full-bleed editorial portfolio and project catalog for an architectural lighting design studio, pairing dramatic spatial photography with bespoke project intake.',
+    tags: ['Portfolio', 'Editorial Layout', 'High Contrast'],
+    image: {
+      avif1400: '/assets/img/projects/concept-architecture-studio-1400.avif',
+      webp1400: '/assets/img/projects/concept-architecture-studio-1400.webp',
+      avif800: '/assets/img/projects/concept-architecture-studio-800.avif',
+      webp800: '/assets/img/projects/concept-architecture-studio-800.webp',
+      fallbackJpg: '/assets/img/projects/concept-architecture-studio.jpg',
+      alt: 'Monolith Architectural Lighting design studio portfolio showcase concept',
+      width: 1376,
+      height: 768,
+    },
+  },
+  {
+    id: 'kinetic-recovery',
+    isRealClient: false,
+    statusBadge: 'Concept',
+    eyebrow: 'Example Build • Wellness & Private Membership',
+    title: 'Kinetic Recovery Club',
+    shortDescription:
+      'Modern booking platform and private membership portal for a contrast therapy and cold-plunge sanctuary, featuring dynamic session reservations and tier access.',
+    tags: ['Online Booking', 'Membership Flow', 'Dark Theme'],
+    image: {
+      avif1400: '/assets/img/projects/concept-wellness-booking-1400.avif',
+      webp1400: '/assets/img/projects/concept-wellness-booking-1400.webp',
+      webp800: '/assets/img/projects/concept-wellness-booking-800.webp',
+      fallbackJpg: '/assets/img/projects/concept-wellness-booking-1400.webp',
+      alt: 'Kinetic Recovery Club private wellness sanctuary booking concept',
+      width: 1376,
+      height: 768,
+    },
+  },
+];
 
 export default function Projects() {
+  const [activeFilter, setActiveFilter] = useState<'all' | 'live' | 'concepts'>('all');
+
+  const filteredProjects = SHOWCASE_PROJECTS.filter((item) => {
+    if (activeFilter === 'live') return item.isRealClient;
+    if (activeFilter === 'concepts') return !item.isRealClient;
+    return true;
+  });
+
   return (
-    <div>
+    <div className="min-h-screen bg-[#0B0B14] text-white">
       <SEO
-        title="Client Work & Case Studies | LevelUp Ecosystem"
-        description="Explore real websites built by LevelUp Ecosystem, including the Final Stop Barber Shop & Salon case study."
+        title="Work & Examples Showcase | LevelUp Ecosystem"
+        description="Explore live client deployments and concept builds designed by LevelUp Ecosystem: online booking, e-commerce, and high-performance dark themes."
         canonical="/projects"
-        breadcrumbs={[
-          { name: 'Projects', url: '/projects' }
-        ]}
+        breadcrumbs={[{ name: 'Projects', url: '/projects' }]}
       />
 
-      <Breadcrumbs
-        items={[
-          { name: 'Projects', url: '/projects' }
-        ]}
-      />
+      <Breadcrumbs items={[{ name: 'Projects', url: '/projects' }]} />
 
-      {/* Header */}
-      <section className="py-16 sm:py-24 px-4 sm:px-8 border-b border-white/[0.08] bg-[#0B0B14]">
+      {/* Hero Header */}
+      <section className="pt-14 pb-12 sm:pt-20 sm:pb-16 px-4 sm:px-8 border-b border-white/[0.08] bg-[#0B0B14]">
         <div className="max-w-4xl mx-auto text-center space-y-4" data-reveal>
           <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
-            Portfolio & Proof
+            Work &amp; Examples Showcase
           </span>
-          <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            Client Work & Case Studies
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight">
+            Engineered for Impact.
           </h1>
           <p className="text-base sm:text-lg text-[#A1A1B5] max-w-2xl mx-auto leading-relaxed">
-            Real websites serving businesses and creators every day. Verified mobile speed, clean booking flows, and robust security.
+            Full-width showcase of live client websites and tailored concept builds. No bloated page builders, no slow templates — just fast, secure digital architecture.
           </p>
+
+          {/* Distinction & Transparency Notice */}
+          <div className="pt-3 max-w-xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs text-[#A1A1B5] bg-white/[0.03] border border-white/[0.08]">
+              <span className="flex items-center gap-1.5 font-medium text-white">
+                <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                Live Project
+              </span>
+              <span className="text-white/20">vs</span>
+              <span className="flex items-center gap-1.5 font-medium text-[#C4B5FD]">
+                <span className="w-2 h-2 rounded-full bg-[#A78BFA]" />
+                Concept Build
+              </span>
+              <span className="text-white/30 hidden sm:inline">•</span>
+              <span className="hidden sm:inline text-[#71717A]">
+                Always clearly badged
+              </span>
+            </div>
+          </div>
+
+          {/* Segmented Filter Control */}
+          <div className="pt-6 flex justify-center">
+            <div className="inline-flex items-center gap-1 p-1 bg-white/[0.04] border border-white/[0.08] rounded-xl">
+              <button
+                type="button"
+                onClick={() => setActiveFilter('all')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                  activeFilter === 'all'
+                    ? 'bg-[#7C3AED] text-white shadow-md shadow-[#7C3AED]/25'
+                    : 'text-[#A1A1B5] hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                All Examples ({SHOWCASE_PROJECTS.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter('live')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  activeFilter === 'live'
+                    ? 'bg-[#064E3B] text-[#6EE7B7] border border-[#10B981]/40'
+                    : 'text-[#A1A1B5] hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+                Live Client (1)
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter('concepts')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  activeFilter === 'concepts'
+                    ? 'bg-[#1F1B38] text-[#C4B5FD] border border-[#7C3AED]/40'
+                    : 'text-[#A1A1B5] hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA]" />
+                Concept Builds (3)
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Main Showcase */}
-      <section className="py-16 sm:py-24 px-4 sm:px-8 bg-[#0B0B14]">
-        <div className="max-w-5xl mx-auto space-y-16">
-          
-          {/* Project 1 : Final Stop */}
-          <div className="bg-[#14141F] border border-white/[0.08] rounded-3xl overflow-hidden shadow-2xl hover:border-[#7C3AED]/40 transition-all p-6 sm:p-8 space-y-8" data-reveal>
-            
-            {/* Device Frames Showcase : Desktop + Phone */}
-            <div className="relative rounded-2xl bg-[#0F0F1A] border border-white/[0.08] p-4 sm:p-8 overflow-hidden">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-                {/* Desktop Device Frame (8 cols) */}
-                <div className="lg:col-span-8 rounded-xl bg-[#14141F] border border-white/[0.12] shadow-2xl overflow-hidden">
-                  {/* Browser chrome */}
-                  <div className="flex items-center justify-between px-3 py-2 bg-[#0B0B14] border-b border-white/[0.08]">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]/80" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]/80" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]/80" />
-                    </div>
-                    <div className="text-[11px] font-mono text-[#A1A1B5] bg-[#14141F] px-3 py-0.5 rounded border border-white/[0.06]">
-                      https://finalstop.org
-                    </div>
-                    <span className="text-[10px] text-[#10B981] font-semibold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" /> Live
-                    </span>
-                  </div>
+      {/* Full-Bleed Showcase Stream */}
+      <main className="divide-y divide-white/[0.06]">
+        {filteredProjects.map((project, index) => (
+          <WorkShowcaseItem
+            key={project.id}
+            project={project}
+            index={index}
+            isEager={index === 0 && activeFilter === 'all'}
+          />
+        ))}
+      </main>
 
-                  <picture>
-                    <source type="image/avif" srcSet="/assets/img/finalstop-desktop.avif" />
-                    <source type="image/webp" srcSet="/assets/img/finalstop-desktop.webp" />
-                    <img
-                      src="/assets/img/finalstop-desktop.jpg"
-                      alt="Final Stop Barber Shop & Salon desktop website screenshot"
-                      loading="lazy"
-                      decoding="async"
-                      width="1000"
-                      height="625"
-                      className="w-full h-auto object-cover block"
-                    />
-                  </picture>
-                </div>
-
-                {/* Mobile Device Frame (4 cols) */}
-                <div className="lg:col-span-4 flex justify-center">
-                  <div className="w-48 sm:w-56 rounded-[32px] bg-[#0B0B14] p-2.5 border-2 border-white/[0.14] shadow-2xl">
-                    <div className="w-20 h-3 mx-auto bg-black rounded-full mb-2 flex items-center justify-end px-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#7C3AED]/70" />
-                    </div>
-                    <div className="rounded-[24px] overflow-hidden bg-black aspect-[9/18.5]">
-                      <picture>
-                        <source type="image/avif" srcSet="/assets/img/finalstop-mobile.avif" />
-                        <source type="image/webp" srcSet="/assets/img/finalstop-mobile.webp" />
-                        <img
-                          src="/assets/img/finalstop-mobile.jpg"
-                          alt="Final Stop Barber Shop mobile booking flow screenshot"
-                          loading="lazy"
-                          decoding="async"
-                          width="380"
-                          height="780"
-                          className="w-full h-full object-cover object-top block"
-                        />
-                      </picture>
-                    </div>
-                    <div className="mt-2 text-center text-[10px] text-[#A1A1B5] font-mono">
-                      Mobile Booking Flow
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between text-xs text-[#A1A1B5]">
-                <span className="text-white font-medium">Real client screenshots inside responsive device frames</span>
-                <span className="text-[#A78BFA] font-mono text-[11px]">Desktop &amp; Mobile Responsive</span>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#A78BFA]">
-                    Local Business • Barbershop & Braiding Lounge
-                  </span>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
-                    Final Stop Barber Shop & Salon
-                  </h2>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Link
-                    to="/projects/final-stop"
-                    className="px-5 py-2.5 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-[#7C3AED]/25"
-                  >
-                    Read case study
-                  </Link>
-
-                  <a
-                    href="https://finalstop.org"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-white text-xs font-medium border border-white/[0.1] transition-all"
-                  >
-                    Visit site ↗
-                  </a>
-                </div>
-              </div>
-
-              <p className="text-sm sm:text-base text-[#A1A1B5] leading-relaxed">
-                Final Stop needed a high-performance web presence that matched their premier grooming experience. We replaced an unmaintained social link tree with a fast, mobile-first website that allows clients to book haircuts, braids, and salon treatments 24/7.
-              </p>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-white/[0.06] pt-6">
-                <div>
-                  <div className="text-xl sm:text-2xl font-bold text-white">&lt; 1.8s</div>
-                  <div className="text-xs text-[#A78BFA]">Mobile load speed</div>
-                </div>
-                <div>
-                  <div className="text-xl sm:text-2xl font-bold text-white">40%+</div>
-                  <div className="text-xs text-[#A78BFA]">Online bookings</div>
-                </div>
-                <div>
-                  <div className="text-xl sm:text-2xl font-bold text-white">100%</div>
-                  <div className="text-xs text-[#A78BFA]">HTTPS encrypted</div>
-                </div>
-                <div>
-                  <div className="text-xl sm:text-2xl font-bold text-white">Zero</div>
-                  <div className="text-xs text-[#A78BFA]">Spam leaks</div>
-                </div>
-              </div>
-            </div>
-
+      {/* Free Interactive Preview Callout Section */}
+      <section className="py-20 sm:py-28 px-4 sm:px-8 border-t border-white/[0.08] bg-[#0E0E18]">
+        <div className="max-w-4xl mx-auto rounded-3xl bg-[#14141F] border border-white/[0.08] p-8 sm:p-14 text-center space-y-6 shadow-2xl">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
+            See Your Brand In Motion
+          </span>
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Want to see what your website could look like?
+          </h2>
+          <p className="text-sm sm:text-base text-[#A1A1B5] max-w-xl mx-auto leading-relaxed">
+            We build free, bespoke mobile and desktop previews before any contracts or deposits. Test-drive your booking flow, service menu, or store layout risk-free.
+          </p>
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              to="/preview"
+              className="px-8 py-3.5 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold text-xs sm:text-sm transition-all shadow-lg shadow-[#7C3AED]/30 whitespace-nowrap"
+            >
+              Request your free preview
+            </Link>
+            <Link
+              to="/pricing"
+              className="px-6 py-3.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-white font-medium text-xs sm:text-sm border border-white/[0.1] transition-all whitespace-nowrap"
+            >
+              View pricing packages
+            </Link>
           </div>
-
-          {/* More Projects Callout */}
-          <div className="p-8 sm:p-10 rounded-3xl bg-[#14141F] border border-white/[0.08] text-center space-y-4" data-reveal>
-            <h2 className="text-xl sm:text-2xl font-bold text-white">
-              Want to see what your project could look like?
-            </h2>
-            <p className="text-sm text-[#A1A1B5] max-w-xl mx-auto">
-              We create free, interactive mobile previews for serious businesses and creators before any contract or payment.
-            </p>
-            <div className="pt-2">
-              <Link
-                to="/preview"
-                className="inline-block px-7 py-3 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold text-xs sm:text-sm transition-all shadow-md shadow-[#7C3AED]/25"
-              >
-                Request your free preview
-              </Link>
-            </div>
-          </div>
-
         </div>
       </section>
     </div>
