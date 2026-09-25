@@ -121,25 +121,6 @@ export default function Service3DShowcaseDeck() {
     return () => clearInterval(timer);
   }, [isHovered, prefersReducedMotion]);
 
-  const handlePrev = () => {
-    setActiveIndex((prev) => (prev - 1 + SERVICES.length) % SERVICES.length);
-  };
-
-  const handleNext = () => {
-    setActiveIndex((prev) => (prev + 1) % SERVICES.length);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      handlePrev();
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      handleNext();
-    }
-  };
-
-  const count = SERVICES.length;
   const currentService = SERVICES[activeIndex];
 
   return (
@@ -147,99 +128,44 @@ export default function Service3DShowcaseDeck() {
       ref={containerRef}
       tabIndex={0}
       role="region"
-      aria-label="3D Interactive Services Showcase"
-      onKeyDown={handleKeyDown}
+      aria-label="3D Interactive Service Showcase"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="relative w-full max-w-[520px] mx-auto select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-[#7C3AED]"
+      className="relative w-full max-w-[460px] mx-auto select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-[#7C3AED]"
     >
-      {/* Soft ambient purple glow behind floating 3D trio */}
-      <div className="absolute top-28 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[300px] bg-[#7C3AED]/20 rounded-full blur-[100px] pointer-events-none" />
+      {/* Soft ambient purple glow behind the big 3D asset */}
+      <div className="absolute top-28 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[320px] bg-[#7C3AED]/20 rounded-full blur-[110px] pointer-events-none" />
 
-      {/* 3D Trio Floating Stage (NO background cards, completely à découvert) */}
+      {/* Grand 3D Product Stage: ONLY the big 3D asset zooming forward, pure and uncovered */}
       <div
-        className="relative h-[240px] sm:h-[270px] w-full flex items-center justify-center"
+        className="relative h-[250px] sm:h-[290px] w-full flex items-center justify-center"
         style={{ perspective: '1000px' }}
       >
         {SERVICES.map((item, idx) => {
-          let offset = (idx - activeIndex + count) % count;
-          if (offset > count / 2) {
-            offset -= count;
-          }
-
-          const isCenter = offset === 0;
-          const isLeft = offset === -1;
-          const isRight = offset === 1;
-          const isVisible = isCenter || isLeft || isRight;
-
-          if (!isVisible) {
-            return (
-              <div
-                key={item.id}
-                aria-hidden="true"
-                className="absolute opacity-0 pointer-events-none"
-                style={{
-                  transform: 'scale(0.5) translateZ(-150px)',
-                  transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-                }}
-              />
-            );
-          }
-
-          let transformStyle = '';
-          let zIndex = 10;
-          let opacity = 0.4;
-          let sizeClass = 'w-24 h-24 sm:w-28 sm:h-28';
-
-          if (isCenter) {
-            // Front active object: Zoomed forward, large, floating à découvert
-            transformStyle = 'translateX(0) scale(1.22) translateZ(80px) rotateY(0deg)';
-            zIndex = 30;
-            opacity = 1;
-            sizeClass = 'w-36 h-36 sm:w-44 sm:h-44';
-          } else if (isLeft) {
-            // Flanking left in 3D perspective
-            transformStyle = 'translateX(-120px) sm:translateX(-145px) scale(0.78) translateZ(-50px) rotateY(22deg)';
-            zIndex = 20;
-            opacity = 0.45;
-          } else if (isRight) {
-            // Flanking right in 3D perspective
-            transformStyle = 'translateX(120px) sm:translateX(145px) scale(0.78) translateZ(-50px) rotateY(-22deg)';
-            zIndex = 20;
-            opacity = 0.45;
-          }
+          const isCurrent = idx === activeIndex;
 
           return (
             <div
               key={item.id}
-              onClick={() => {
-                if (!isCenter) setActiveIndex(idx);
-              }}
-              className={`absolute flex items-center justify-center transition-all duration-600 ease-out will-change-transform ${
-                isCenter ? 'cursor-default' : 'cursor-pointer hover:opacity-80'
-              }`}
+              className="absolute inset-0 flex items-center justify-center transition-all duration-700 ease-out will-change-[transform,opacity]"
               style={{
-                transform: transformStyle,
-                zIndex,
-                opacity,
-                transformStyle: 'preserve-3d',
+                opacity: isCurrent ? 1 : 0,
+                transform: isCurrent
+                  ? 'scale(1.18) translateZ(60px) rotateY(0deg)'
+                  : 'scale(0.85) translateZ(-80px) rotateY(12deg)',
+                pointerEvents: isCurrent ? 'auto' : 'none',
               }}
-              title={!isCenter ? `View ${item.title}` : undefined}
             >
-              {/* Pure 3D Image floating without any card or box container */}
-              <picture className={`${sizeClass} flex items-center justify-center relative select-none float-gentle`}>
+              {/* Grand 3D Product Asset: Large, borderless, no background box */}
+              <picture className="w-44 h-44 sm:w-56 sm:h-56 flex items-center justify-center relative select-none float-gentle">
                 <source srcSet={`/assets/img/icons/${item.iconName}.avif`} type="image/avif" />
                 <source srcSet={`/assets/img/icons/${item.iconName}.webp`} type="image/webp" />
                 <img
                   src={`/assets/img/icons/${item.iconName}.png`}
                   alt={item.alt}
-                  width="176"
-                  height="176"
-                  className={`w-full h-full object-contain filter transition-all duration-500 ${
-                    isCenter
-                      ? 'drop-shadow-[0_16px_30px_rgba(124,58,237,0.55)]'
-                      : 'drop-shadow-[0_6px_14px_rgba(0,0,0,0.7)]'
-                  }`}
+                  width="224"
+                  height="224"
+                  className="w-full h-full object-contain filter drop-shadow-[0_20px_35px_rgba(124,58,237,0.55)]"
                 />
               </picture>
             </div>
@@ -247,7 +173,7 @@ export default function Service3DShowcaseDeck() {
         })}
       </div>
 
-      {/* Product Details Section: Clean typography directly on dark canvas (No black box/card) */}
+      {/* Product Details Section: Clean typography directly on dark canvas */}
       <div className="pt-2 text-center space-y-2.5 max-w-md mx-auto">
         {/* Category tag & highlight */}
         <div className="flex items-center justify-center gap-2">

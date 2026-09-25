@@ -57,15 +57,6 @@ export default function Footer() {
     },
   ];
 
-  // Inline row of real links for pages that exist
-  const existingIndustryLinks = [
-    { label: 'Barbershops', href: '/websites-for/barbershops' },
-    { label: 'Salons', href: '/websites-for/salons' },
-    { label: 'Creators', href: '/services/creator-websites' },
-    { label: 'Portfolios', href: '/services/portfolio-websites' },
-    { label: 'Online stores', href: '/services/online-stores' },
-  ];
-
   return (
     <footer
       className="bg-[#0B0B14] pt-14 pb-12 px-4 sm:px-8 border-t border-white/[0.08] mt-auto text-left"
@@ -198,24 +189,6 @@ export default function Footer() {
               </div>
             );
           })}
-        </div>
-
-        {/* Inline Row of Real Links Above the Bottom Bar */}
-        <div className="pt-2 pb-1 border-t border-white/[0.08] flex flex-wrap items-center justify-start gap-x-6 gap-y-2 text-xs font-medium text-[#A1A1B5]">
-          <span className="text-white/40 uppercase tracking-wider text-[11px]">Explore:</span>
-          {existingIndustryLinks.map((item, idx) => (
-            <React.Fragment key={item.href}>
-              <Link
-                to={item.href}
-                className="hover:text-white transition-colors py-1"
-              >
-                {item.label}
-              </Link>
-              {idx < existingIndustryLinks.length - 1 && (
-                <span className="text-white/20 select-none hidden sm:inline">•</span>
-              )}
-            </React.Fragment>
-          ))}
         </div>
 
         {/* Bottom Bar: Copyright, Legal Links, Built in San Diego */}

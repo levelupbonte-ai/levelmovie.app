@@ -9,7 +9,6 @@ interface ServiceSubmenuItem {
   label: string;
   desc: string;
   path: string;
-  iconName: string;
   tag: string;
 }
 
@@ -21,8 +20,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
 
@@ -65,7 +63,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
   // Close dropdown on click outside or Escape
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
         setServicesDropdownOpen(false);
       }
     };
@@ -86,58 +84,50 @@ export default function Navbar({ currentPath }: NavbarProps) {
   const serviceItems: ServiceSubmenuItem[] = [
     {
       label: 'Barbershop Websites',
-      desc: '24/7 chair booking, rosters & local ranking',
+      desc: '24/7 chair booking, barber rosters & Google Maps local ranking.',
       path: '/websites-for/barbershops',
-      iconName: 'barbershop',
       tag: 'Chairs & Grooming',
     },
     {
       label: 'Salon & Beauty Websites',
-      desc: 'Stylist portfolios & service menus',
+      desc: 'Stylist portfolios, tiered service menus & multi-service booking.',
       path: '/websites-for/salons',
-      iconName: 'salon',
       tag: 'Hair & Esthetics',
     },
     {
       label: 'Creator Websites',
-      desc: 'Custom link-in-bio & live media kit',
+      desc: 'Independent link-in-bio hub, live collaboration media kit & newsletter.',
       path: '/services/creator-websites',
-      iconName: 'creators',
       tag: 'Creator Economy',
     },
     {
       label: 'Small Online Stores',
-      desc: 'Checkout for merch & digital downloads',
+      desc: 'Fast checkout for merch, products & digital downloads without platform fees.',
       path: '/services/online-stores',
-      iconName: 'store',
       tag: 'Lean E-Commerce',
     },
     {
       label: 'Portfolio Websites',
-      desc: 'Clean showcases on your domain',
+      desc: 'High-resolution showcases with sub-second page loads on your domain.',
       path: '/services/portfolio-websites',
-      iconName: 'portfolio',
       tag: 'Visual Showcases',
     },
     {
       label: 'Website Security Check',
-      desc: 'Plain-English technical hardening review',
+      desc: 'Plain-English technical audit of database rules, HTTPS & exposed keys.',
       path: '/services/security-check',
-      iconName: 'security',
       tag: 'Vulnerability Audit',
     },
     {
       label: 'Local Business Sites',
-      desc: 'Online booking & Google Maps ranking',
+      desc: 'Google Business Profile sync, neighborhood rankings & online booking.',
       path: '/services/local-business-websites',
-      iconName: 'booking',
       tag: 'Local Operations',
     },
     {
       label: 'Website Care Plans',
-      desc: 'Fast hosting, backups & monthly edits',
+      desc: 'Fast cloud hosting, daily backups & on-demand monthly updates.',
       path: '/services/care-plans',
-      iconName: 'care',
       tag: 'Maintenance & Care',
     },
   ];
@@ -161,30 +151,25 @@ export default function Navbar({ currentPath }: NavbarProps) {
     return cleanPath === cleanTarget;
   };
 
-  const handleMouseEnter = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setServicesDropdownOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => {
-      setServicesDropdownOpen(false);
-    }, 250);
-  };
-
   return (
     <header
+      ref={headerRef}
       className={`sticky top-0 z-50 w-full transition-all duration-300 ease-out border-b border-white/[0.08] ${
         isScrolled
-          ? 'bg-[#0B0B14]/95 backdrop-blur-md shadow-lg shadow-black/20 py-2 sm:py-2.5'
-          : 'bg-[#0B0B14]/80 backdrop-blur-sm py-3.5 sm:py-4'
+          ? 'bg-[#0B0B14]/95 backdrop-blur-md shadow-lg shadow-black/20'
+          : 'bg-[#0B0B14]/90 backdrop-blur-sm'
       } ${isVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}`}
       style={{
         paddingTop: 'max(0.6rem, env(safe-area-inset-top, 0px))',
         viewTransitionName: 'nav',
       }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between gap-4 relative">
+      {/* Top Navbar Row */}
+      <div
+        className={`max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between gap-4 transition-all duration-200 ${
+          isScrolled ? 'py-2 sm:py-2.5' : 'py-3.5 sm:py-4'
+        }`}
+      >
         {/* LOGO */}
         <div className="shrink-0">
           <Link to="/" className="flex items-center group">
@@ -203,20 +188,17 @@ export default function Navbar({ currentPath }: NavbarProps) {
         {/* DESKTOP NAV */}
         <div className="hidden lg:flex items-center gap-4 xl:gap-7 shrink-0">
           <nav className="flex items-center gap-4 xl:gap-6 text-sm font-medium">
-            {/* Services Mega-Menu Trigger */}
-            <div
-              ref={dropdownRef}
-              className="static"
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
+            {/* Services Trigger: Click toggles attached table directly below navbar */}
+            <div className="relative">
               <button
                 type="button"
-                onClick={() => setServicesDropdownOpen(!servicesDropdownOpen)}
+                onClick={() => setServicesDropdownOpen((prev) => !prev)}
                 aria-expanded={servicesDropdownOpen}
                 aria-haspopup="true"
                 className={`flex items-center gap-1.5 py-1 transition-colors whitespace-nowrap cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] rounded-md ${
-                  isServicesActive() ? 'text-white font-semibold' : 'text-[#A1A1B5] hover:text-white'
+                  isServicesActive() || servicesDropdownOpen
+                    ? 'text-white font-semibold'
+                    : 'text-[#A1A1B5] hover:text-white'
                 }`}
               >
                 <span>Services</span>
@@ -237,117 +219,6 @@ export default function Navbar({ currentPath }: NavbarProps) {
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#7C3AED] rounded-full" />
                 )}
               </button>
-
-              {/* MEGA-MENU DROPDOWN ("GROS TABLEAU DES SERVICES") */}
-              {servicesDropdownOpen && (
-                <div
-                  role="menu"
-                  aria-orientation="vertical"
-                  className="absolute left-1/2 -translate-x-1/2 top-full pt-3 w-[min(94vw,980px)] z-50 animate-in fade-in slide-in-from-top-3 duration-200"
-                >
-                  <div className="rounded-3xl bg-[#12121E]/98 backdrop-blur-2xl border border-white/[0.14] p-6 sm:p-7 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_40px_rgba(124,58,237,0.25)] text-left">
-                    
-                    {/* Header bar of Mega-Menu */}
-                    <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#A78BFA] bg-[#7C3AED]/20 px-2.5 py-0.5 rounded-full border border-[#7C3AED]/40">
-                            Nos Spécialités
-                          </span>
-                          <span className="text-xs text-[#A1A1B5] font-medium">
-                            8 solutions web sur mesure
-                          </span>
-                        </div>
-                        <h4 className="text-base font-extrabold text-white">
-                          Conçues pour la conversion, la vitesse et la sécurité
-                        </h4>
-                      </div>
-
-                      <Link
-                        to="/services"
-                        onClick={() => setServicesDropdownOpen(false)}
-                        className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors flex items-center gap-1 group"
-                      >
-                        <span>Vue d&apos;ensemble de tous les services</span>
-                        <span className="transition-transform group-hover:translate-x-1">→</span>
-                      </Link>
-                    </div>
-
-                    {/* 8 Services Grid (Gros tableau) */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 my-5">
-                      {serviceItems.map((item) => {
-                        const active = isActive(item.path);
-                        return (
-                          <Link
-                            key={item.path}
-                            to={item.path}
-                            role="menuitem"
-                            onClick={() => setServicesDropdownOpen(false)}
-                            className={`group relative p-3.5 rounded-2xl transition-all duration-200 border flex flex-col justify-between ${
-                              active
-                                ? 'bg-[#7C3AED]/15 border-[#7C3AED] shadow-[0_0_20px_rgba(124,58,237,0.25)]'
-                                : 'bg-white/[0.03] hover:bg-white/[0.07] border-white/[0.06] hover:border-[#7C3AED]/50'
-                            }`}
-                          >
-                            <div className="space-y-3">
-                              {/* Pure 3D icon à découvert + Tag */}
-                              <div className="flex items-center justify-between">
-                                <div className="w-9 h-9 relative flex items-center justify-center select-none">
-                                  <picture className="w-full h-full flex items-center justify-center">
-                                    <source srcSet={`/assets/img/icons/${item.iconName}.avif`} type="image/avif" />
-                                    <source srcSet={`/assets/img/icons/${item.iconName}.webp`} type="image/webp" />
-                                    <img
-                                      src={`/assets/img/icons/${item.iconName}.png`}
-                                      alt=""
-                                      width="36"
-                                      height="36"
-                                      className="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(124,58,237,0.35)] group-hover:scale-105 transition-transform"
-                                    />
-                                  </picture>
-                                </div>
-                                <span className="text-[10px] font-mono text-[#A78BFA]/80 font-bold uppercase">
-                                  {item.tag}
-                                </span>
-                              </div>
-
-                              <div className="space-y-1">
-                                <h5 className="text-xs font-bold text-white group-hover:text-[#DDD6FE] transition-colors leading-tight">
-                                  {item.label}
-                                </h5>
-                                <p className="text-[11px] text-[#A1A1B5] leading-relaxed line-clamp-2">
-                                  {item.desc}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="pt-2 mt-2 border-t border-white/[0.04] flex items-center justify-between text-[10px] font-semibold text-[#A78BFA] group-hover:text-white transition-colors">
-                              <span>En savoir plus</span>
-                              <span className="transition-transform group-hover:translate-x-1">→</span>
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
-
-                    {/* Mega-Menu Bottom Bar */}
-                    <div className="pt-3.5 border-t border-white/[0.08] flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2 text-[#A1A1B5]">
-                        <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-                        <span>Aperçu mobile personnalisé interactif prêt sous 24 à 48h sans engagement</span>
-                      </div>
-
-                      <Link
-                        to="/preview"
-                        onClick={() => setServicesDropdownOpen(false)}
-                        className="px-4 py-1.5 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold transition-all shadow-md shadow-[#7C3AED]/30"
-                      >
-                        Demander un aperçu gratuit →
-                      </Link>
-                    </div>
-
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Standard Nav Links */}
@@ -357,6 +228,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
                 <Link
                   key={link.path}
                   to={link.path}
+                  onClick={() => setServicesDropdownOpen(false)}
                   className={`relative py-1 transition-colors whitespace-nowrap ${
                     active ? 'text-white font-semibold' : 'text-[#A1A1B5] hover:text-white'
                   }`}
@@ -372,6 +244,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
 
           <Link
             to="/preview"
+            onClick={() => setServicesDropdownOpen(false)}
             className="px-4 xl:px-5 py-2 text-xs sm:text-sm font-semibold rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white transition-all duration-200 hover:shadow-[0_0_18px_rgba(124,58,237,0.45)] active:scale-95 whitespace-nowrap shrink-0"
           >
             Get a free preview
@@ -415,6 +288,93 @@ export default function Navbar({ currentPath }: NavbarProps) {
         </div>
       </div>
 
+      {/* ATTACHED SERVICES BOARD (COLLÉ DIRECTEMENT À LA BARRE DU HAUT, SANS AUCUNE ICÔNE) */}
+      {servicesDropdownOpen && (
+        <div
+          role="menu"
+          aria-orientation="vertical"
+          className="hidden lg:block w-full bg-[#0D0D17]/98 backdrop-blur-2xl border-t border-white/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.9)] animate-in fade-in slide-in-from-top-1 duration-200 text-left"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-8 py-7">
+            {/* Top header of the attached board */}
+            <div className="flex items-center justify-between pb-5 border-b border-white/[0.08]">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#A78BFA] bg-[#7C3AED]/20 px-2.5 py-0.5 rounded-full border border-[#7C3AED]/40">
+                  Solutions &amp; Métiers
+                </span>
+                <span className="text-xs text-[#A1A1B5]">
+                  Sites haute vitesse &lt; 2s • Réservations 24/7 • Sécurité renforcée
+                </span>
+              </div>
+
+              <Link
+                to="/services"
+                onClick={() => setServicesDropdownOpen(false)}
+                className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors flex items-center gap-1 group"
+              >
+                <span>Vue d&apos;ensemble de tous les services</span>
+                <span className="transition-transform group-hover:translate-x-1">→</span>
+              </Link>
+            </div>
+
+            {/* 4 Clean Columns of Services (NO ICONS, PURE PRO DIRECTORY) */}
+            <div className="grid grid-cols-4 gap-6 pt-6 pb-2">
+              {serviceItems.map((item, idx) => {
+                const active = isActive(item.path);
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    role="menuitem"
+                    onClick={() => setServicesDropdownOpen(false)}
+                    className={`group block p-4 rounded-2xl border transition-all duration-200 ${
+                      active
+                        ? 'bg-[#7C3AED]/15 border-[#7C3AED]/70 shadow-[0_0_20px_rgba(124,58,237,0.25)]'
+                        : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.06] hover:border-[#7C3AED]/40'
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#A78BFA]">
+                          0{idx + 1} • {item.tag}
+                        </span>
+                        <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 transition-opacity">
+                          →
+                        </span>
+                      </div>
+
+                      <h4 className="text-sm font-bold text-white group-hover:text-[#DDD6FE] transition-colors leading-tight">
+                        {item.label}
+                      </h4>
+
+                      <p className="text-xs text-[#A1A1B5] leading-relaxed line-clamp-2">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Bottom Action Strip */}
+            <div className="mt-5 pt-4 border-t border-white/[0.08] flex items-center justify-between text-xs text-[#A1A1B5]">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+                <span>Aperçu interactif personnalisé prêt sous 24 à 48h sans aucun engagement d&apos;achat</span>
+              </div>
+
+              <Link
+                to="/preview"
+                onClick={() => setServicesDropdownOpen(false)}
+                className="px-4 py-2 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold transition-all shadow-md shadow-[#7C3AED]/30 whitespace-nowrap"
+              >
+                Demander un aperçu gratuit →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MOBILE & TABLET DRAWER */}
       {mobileMenuOpen && (
         <div className="lg:hidden pt-4 pb-4 px-4 border-t border-white/[0.08] mt-2 space-y-3 bg-[#0B0B14]">
@@ -457,24 +417,13 @@ export default function Navbar({ currentPath }: NavbarProps) {
                       key={item.path}
                       to={item.path}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-2 py-2 px-3 rounded-lg text-xs transition-colors ${
+                      className={`block py-2 px-3 rounded-lg text-xs transition-colors ${
                         isActive(item.path)
                           ? 'bg-white/[0.08] text-white font-bold'
                           : 'text-[#A1A1B5] hover:text-white'
                       }`}
                     >
-                      <picture className="w-5 h-5 shrink-0">
-                        <source srcSet={`/assets/img/icons/${item.iconName}.avif`} type="image/avif" />
-                        <source srcSet={`/assets/img/icons/${item.iconName}.webp`} type="image/webp" />
-                        <img
-                          src={`/assets/img/icons/${item.iconName}.png`}
-                          alt=""
-                          width="20"
-                          height="20"
-                          className="w-full h-full object-contain"
-                        />
-                      </picture>
-                      <span>{item.label}</span>
+                      {item.label}
                     </Link>
                   ))}
                 </div>
@@ -502,7 +451,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
             <Link
               to="/preview"
               onClick={() => setMobileMenuOpen(false)}
-              className="block w-full py-3 rounded-xl bg-[#7C3AED] text-white font-bold text-xs text-center cursor-pointer shadow-md shadow-[#7C3AED]/25"
+              className="block w-full py-3 rounded-xl bg-[#7C3AED] text-white font-bold text-xs text-center cursor-pointer shadow-md shadow-[#7C3AED]/25 whitespace-nowrap"
             >
               Get a free preview
             </Link>
