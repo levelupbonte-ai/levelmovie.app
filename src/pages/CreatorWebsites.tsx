@@ -41,7 +41,7 @@ export default function CreatorWebsites() {
   return (
     <div>
       <SEO
-        title="Website for Creators & Influencers | LevelUp Ecosystem"
+        title="Creator & Influencer Websites | LevelUp Ecosystem"
         description="A professional link-in-bio page and creator website on your own domain, with a media kit page for brand collaborations."
         canonical="/services/creator-websites"
         breadcrumbs={[

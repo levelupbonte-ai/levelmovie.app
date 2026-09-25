@@ -45,6 +45,8 @@ export default defineConfig({
         serviceOnlineStores: resolve(__dirname, 'services/online-stores/index.html'),
         serviceSecurityCheck: resolve(__dirname, 'services/security-check/index.html'),
         serviceCarePlans: resolve(__dirname, 'services/care-plans/index.html'),
+        websitesForBarbershops: resolve(__dirname, 'websites-for/barbershops/index.html'),
+        websitesForSalons: resolve(__dirname, 'websites-for/salons/index.html'),
         webDesignSanDiego: resolve(__dirname, 'web-design-san-diego/index.html'),
         projects: resolve(__dirname, 'projects/index.html'),
         finalStop: resolve(__dirname, 'projects/final-stop/index.html'),

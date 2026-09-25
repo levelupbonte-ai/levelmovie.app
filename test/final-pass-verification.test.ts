@@ -86,29 +86,12 @@ describe('Final Pass Verification Tests', () => {
     assert.ok(privacySrc.includes('overflow-x-auto'), 'Retention table must have horizontal scroll on mobile');
     assert.ok(privacySrc.includes('15. Contact'));
 
-    // Check bracketed placeholders present in Privacy Policy
-    const expectedPlaceholders = [
-      '[Month DD, YYYY]',
-      '[levelup-ecosystem.com]',
-      '[Your Full Legal Name]',
-      '[if you use analytics]',
-      '[AI provider name(s)]',
-      '[we have chosen options under which your submissions are not used to train the provider',
-      '[email provider]',
-      '[analytics provider, if any]',
-      '[We do not use advertising cookies or cross-site tracking',
-      '[24]',
-      '[90]',
-      '[7]',
-      '[14]',
-      '[3]',
-      '[privacy@levelup-ecosystem.com]',
-      '[We do not track visitors across other websites'
-    ];
-
-    for (const ph of expectedPlaceholders) {
-      assert.ok(privacySrc.includes(ph), `Placeholder "${ph}" must be kept exactly without modification`);
-    }
+    // Check legal config values and sections are bound in Privacy Policy
+    assert.ok(privacySrc.includes('LEGAL_CONFIG.PRIVACY_VERSION'), 'Privacy version must be bound');
+    assert.ok(privacySrc.includes('LEGAL_CONFIG.EFFECTIVE_DATE_PRIVACY'), 'Effective date must be bound');
+    assert.ok(privacySrc.includes('LEGAL_CONFIG.LAST_UPDATED_PRIVACY'), 'Last updated date must be bound');
+    assert.ok(privacySrc.includes('LEGAL_CONFIG.LEGAL_NAME'), 'Legal name must be bound');
+    assert.ok(privacySrc.includes('LEGAL_CONFIG.LEGAL_EMAIL'), 'Legal email must be bound');
   });
 
   it('Invar 5: Firebase cleanUrls & no SPA wildcard redirects', () => {

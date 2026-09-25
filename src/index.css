@@ -87,6 +87,36 @@
   animation: pageFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Gentle floating icon animation */
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.float-gentle {
+  animation: floatGentle 3s ease-in-out infinite;
+}
+
+/* Card hover lift & icon tilt: enabled on fine pointers only */
+@media (hover: hover) and (pointer: fine) {
+  .who-card {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+  }
+  .who-card:hover {
+    transform: translateY(-4px);
+  }
+  .who-card .who-card-icon {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .who-card:hover .who-card-icon {
+    transform: rotate(3deg) scale(1.05);
+  }
+}
+
 /* Scroll reveal animations: max 12px drift, smooth opacity */
 [data-reveal] {
   opacity: 0;

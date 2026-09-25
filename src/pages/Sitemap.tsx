@@ -10,6 +10,8 @@ export default function Sitemap() {
       description: 'Web development, e-commerce, and cybersecurity services',
       links: [
         { title: 'Services Overview', href: '/services', desc: 'Summary of our web design and maintenance services' },
+        { title: 'Barbershop Websites with Online Booking', href: '/websites-for/barbershops', desc: 'Mobile-first websites with 24/7 chair booking and Google Maps' },
+        { title: 'Salon & Beauty Websites with Booking', href: '/websites-for/salons', desc: 'Stylist portfolios, service menus, and calendar booking' },
         { title: 'Local Business Websites with Booking', href: '/services/local-business-websites', desc: 'Fast websites with 24/7 online booking and Google Maps' },
         { title: 'Website for Creators & Influencers', href: '/services/creator-websites', desc: 'Custom link-in-bio hub and media kit page for sponsorships' },
         { title: 'Portfolio Website Design', href: '/services/portfolio-websites', desc: 'Fast, clean portfolios for students, designers, and pros' },
@@ -43,6 +45,7 @@ export default function Sitemap() {
       links: [
         { title: 'Privacy Policy', href: '/privacy', desc: 'How we collect, protect, and handle client information' },
         { title: 'Terms of Service', href: '/terms', desc: 'Our service agreements, rights, and responsibilities' },
+        { title: 'Security Practices', href: '/security', desc: 'Technical security standards, encryption, and protection' },
         { title: 'XML Sitemap', href: '/sitemap.xml', desc: 'Machine-readable search engine index' },
       ],
     },

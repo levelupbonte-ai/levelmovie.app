@@ -41,7 +41,7 @@ export default function OnlineStores() {
   return (
     <div>
       <SEO
-        title="Small Online Store Setup | LevelUp Ecosystem"
+        title="Online Store Setup | LevelUp Ecosystem"
         description="Simple, secure online stores for products, merch and digital downloads, with checkout handled by trusted payment providers."
         canonical="/services/online-stores"
         breadcrumbs={[

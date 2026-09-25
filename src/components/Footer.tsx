@@ -16,46 +16,54 @@ export default function Footer() {
 
   const columns: FooterColumn[] = [
     {
-      id: 'services',
-      title: 'Services',
+      id: 'popular',
+      title: 'Popular',
       links: [
-        { label: 'Local Business Websites', href: '/services/local-business-websites' },
-        { label: 'Creator Websites', href: '/services/creator-websites' },
-        { label: 'Portfolio Websites', href: '/services/portfolio-websites' },
-        { label: 'Small Online Stores', href: '/services/online-stores' },
+        { label: 'Barbershop Websites', href: '/websites-for/barbershops' },
+        { label: 'Salon & Beauty Websites', href: '/websites-for/salons' },
+        { label: 'Creator & Influencer Websites', href: '/services/creator-websites' },
+        { label: 'Online Store Setup', href: '/services/online-stores' },
         { label: 'Website Security Check', href: '/services/security-check' },
-        { label: 'Website Care Plans', href: '/services/care-plans' },
       ],
     },
     {
       id: 'company',
       title: 'Company',
       links: [
-        { label: 'Projects & Work', href: '/projects' },
-        { label: 'Pricing & Packages', href: '/pricing' },
-        { label: 'How We Build', href: '/process' },
-        { label: 'About Studio', href: '/about' },
+        { label: 'Projects', href: '/projects' },
+        { label: 'Pricing', href: '/pricing' },
+        { label: 'How we build', href: '/process' },
+        { label: 'About us', href: '/about' },
         { label: 'Contact', href: '/contact' },
       ],
     },
     {
-      id: 'local',
-      title: 'Local',
+      id: 'tools',
+      title: 'Tools',
       links: [
-        { label: 'Web Design in San Diego', href: '/web-design-san-diego' },
-        { label: 'Local Business Sites', href: '/services/local-business-websites' },
+        { label: 'Free preview', href: '/preview' },
+        { label: 'Studio', href: '/preview/instant' },
       ],
     },
     {
       id: 'legal',
-      title: 'Legal & Trust',
+      title: 'Legal',
       links: [
-        { label: 'Privacy Policy', href: '/privacy' },
-        { label: 'Terms of Service', href: '/terms' },
-        { label: 'Security Practices', href: '/security' },
+        { label: 'Terms', href: '/terms' },
+        { label: 'Privacy', href: '/privacy' },
+        { label: 'Security', href: '/security' },
         { label: 'Sitemap', href: '/sitemap' },
       ],
     },
+  ];
+
+  // Inline row of real links for pages that exist
+  const existingIndustryLinks = [
+    { label: 'Barbershops', href: '/websites-for/barbershops' },
+    { label: 'Salons', href: '/websites-for/salons' },
+    { label: 'Creators', href: '/services/creator-websites' },
+    { label: 'Portfolios', href: '/services/portfolio-websites' },
+    { label: 'Online stores', href: '/services/online-stores' },
   ];
 
   return (
@@ -136,7 +144,7 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Mobile Accordion (under 768px: accordion with smooth height transition) */}
+        {/* Mobile Accordion */}
         <div className="md:hidden divide-y divide-white/[0.08] border-b border-white/[0.08]">
           {columns.map((col) => {
             const isOpen = openSection === col.id;
@@ -192,8 +200,26 @@ export default function Footer() {
           })}
         </div>
 
+        {/* Inline Row of Real Links Above the Bottom Bar */}
+        <div className="pt-2 pb-1 border-t border-white/[0.08] flex flex-wrap items-center justify-start gap-x-6 gap-y-2 text-xs font-medium text-[#A1A1B5]">
+          <span className="text-white/40 uppercase tracking-wider text-[11px]">Explore:</span>
+          {existingIndustryLinks.map((item, idx) => (
+            <React.Fragment key={item.href}>
+              <Link
+                to={item.href}
+                className="hover:text-white transition-colors py-1"
+              >
+                {item.label}
+              </Link>
+              {idx < existingIndustryLinks.length - 1 && (
+                <span className="text-white/20 select-none hidden sm:inline">•</span>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+
         {/* Bottom Bar: Copyright, Legal Links, Built in San Diego */}
-        <div className="pt-6 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#A1A1B5]">
+        <div className="pt-4 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#A1A1B5]">
           <div>
             © 2026 LevelUp Ecosystem. All rights reserved.
           </div>
