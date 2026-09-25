@@ -101,6 +101,46 @@
   animation: floatGentle 3s ease-in-out infinite;
 }
 
+/* Ambient hero background icons slow floating */
+@keyframes ambientFloat1 {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(4deg);
+  }
+}
+
+@keyframes ambientFloat2 {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(12px) rotate(-5deg);
+  }
+}
+
+@keyframes ambientFloat3 {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(-3deg);
+  }
+}
+
+.ambient-float-1 {
+  animation: ambientFloat1 7s ease-in-out infinite;
+}
+
+.ambient-float-2 {
+  animation: ambientFloat2 8.5s ease-in-out infinite;
+}
+
+.ambient-float-3 {
+  animation: ambientFloat3 6.5s ease-in-out infinite;
+}
+
 /* Card hover lift & icon tilt: enabled on fine pointers only */
 @media (hover: hover) and (pointer: fine) {
   .who-card {

@@ -19,7 +19,7 @@ const SERVICES: ServiceItem[] = [
     title: 'Barbershop Websites',
     desc: '24/7 online chair booking, barber team rosters & Google Maps local ranking with zero phone interruptions.',
     iconName: 'barbershop',
-    alt: '3D faceted barbershop scissors and comb icon',
+    alt: 'Barbershop scissors and comb 3D icon',
     link: '/websites-for/barbershops',
     highlight: '+40% Appointments',
   },
@@ -29,7 +29,7 @@ const SERVICES: ServiceItem[] = [
     title: 'Salon & Beauty Websites',
     desc: 'Stylist portfolio showcases, transparent service tier pricing, and automated multi-service scheduling.',
     iconName: 'salon',
-    alt: '3D faceted salon hairdryer and mirror icon',
+    alt: 'Salon hairdryer and mirror 3D icon',
     link: '/websites-for/salons',
     highlight: 'Stylist Rosters',
   },
@@ -39,7 +39,7 @@ const SERVICES: ServiceItem[] = [
     title: 'Creator Websites',
     desc: 'Own your audience. Branded link-in-bio hub, live collaboration media kit, and direct newsletter capture.',
     iconName: 'creators',
-    alt: '3D faceted creator camera and play button icon',
+    alt: 'Creator camera and media 3D icon',
     link: '/services/creator-websites',
     highlight: 'Custom Domain',
   },
@@ -49,7 +49,7 @@ const SERVICES: ServiceItem[] = [
     title: 'Small Online Stores',
     desc: 'Fast checkout for merch, physical products, and instant digital downloads without high monthly platform fees.',
     iconName: 'store',
-    alt: '3D faceted shopping bag store icon',
+    alt: 'Shopping bag store 3D icon',
     link: '/services/online-stores',
     highlight: 'Zero Monthly Bloat',
   },
@@ -59,7 +59,7 @@ const SERVICES: ServiceItem[] = [
     title: 'Portfolio Websites',
     desc: 'Clean, high-resolution project showcases with sub-second page loads for designers, photographers & pros.',
     iconName: 'portfolio',
-    alt: '3D faceted portfolio gallery frame icon',
+    alt: 'Portfolio showcase 3D icon',
     link: '/services/portfolio-websites',
     highlight: '< 1s Load Speed',
   },
@@ -69,7 +69,7 @@ const SERVICES: ServiceItem[] = [
     title: 'Website Security Check',
     desc: 'Plain-English technical review of your database rules, HTTPS, exposed API keys, and account protection.',
     iconName: 'security',
-    alt: '3D faceted protective shield and padlock icon',
+    alt: 'Shield security 3D icon',
     link: '/services/security-check',
     highlight: 'Vulnerability Audit',
   },
@@ -79,7 +79,7 @@ const SERVICES: ServiceItem[] = [
     title: 'Online Booking System',
     desc: 'Calendar synchronization, automated SMS/email reminders, and seamless customer self-scheduling 24/7.',
     iconName: 'booking',
-    alt: '3D faceted appointment booking calendar icon',
+    alt: 'Booking calendar 3D icon',
     link: '/services/local-business-websites',
     highlight: '24/7 Self-Serve',
   },
@@ -89,7 +89,7 @@ const SERVICES: ServiceItem[] = [
     title: 'Website Care Plans',
     desc: 'Fast cloud hosting, automated daily backups, security monitoring, and on-demand monthly content updates.',
     iconName: 'care',
-    alt: '3D faceted wrench and heart care icon',
+    alt: 'Care and support 3D icon',
     link: '/services/care-plans',
     highlight: 'Worry-Free Support',
   },
@@ -99,8 +99,9 @@ export default function Service3DShowcaseDeck() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isAnimatingText, setIsAnimatingText] = useState(false);
 
-  // Swipe gesture tracking (touch & mouse)
+  // Swipe tracking
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const touchEndXRef = useRef<number | null>(null);
@@ -117,26 +118,34 @@ export default function Service3DShowcaseDeck() {
 
   const total = SERVICES.length;
 
+  const triggerChange = useCallback((nextIdx: number) => {
+    setIsAnimatingText(true);
+    setActiveIndex(nextIdx);
+    setTimeout(() => {
+      setIsAnimatingText(false);
+    }, 280);
+  }, []);
+
   const handleNext = useCallback(() => {
-    setActiveIndex((prev) => (prev + 1) % total);
-  }, [total]);
+    triggerChange((activeIndex + 1) % total);
+  }, [activeIndex, total, triggerChange]);
 
   const handlePrev = useCallback(() => {
-    setActiveIndex((prev) => (prev - 1 + total) % total);
-  }, [total]);
+    triggerChange((activeIndex - 1 + total) % total);
+  }, [activeIndex, total, triggerChange]);
 
-  // Gentle auto-rotation (pauses when user hovers or interacts)
+  // Gentle auto-rotation
   useEffect(() => {
     if (isHovered || prefersReducedMotion) return;
 
     const timer = setInterval(() => {
       handleNext();
-    }, 3800);
+    }, 4500);
 
     return () => clearInterval(timer);
   }, [isHovered, prefersReducedMotion, handleNext]);
 
-  // Touch Swipe for mobile (swiping with fingers)
+  // Touch swipe support (Mobile)
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsHovered(true);
     touchStartXRef.current = e.touches[0].clientX;
@@ -153,22 +162,21 @@ export default function Service3DShowcaseDeck() {
       const diffX = touchStartXRef.current - touchEndXRef.current;
       const diffY = touchStartYRef.current - (e.changedTouches[0]?.clientY ?? touchStartYRef.current);
 
-      // Only register horizontal swipe if movement is predominantly horizontal
-      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 28) {
         if (diffX > 0) {
-          handleNext(); // Finger swiped left -> next product zooms in
+          handleNext();
         } else {
-          handlePrev(); // Finger swiped right -> previous product zooms in
+          handlePrev();
         }
       }
     }
     touchStartXRef.current = null;
     touchStartYRef.current = null;
     touchEndXRef.current = null;
-    setTimeout(() => setIsHovered(false), 2200);
+    setTimeout(() => setIsHovered(false), 2000);
   };
 
-  // Mouse Drag Swipe for PC
+  // Mouse drag support (Desktop)
   const handleMouseDown = (e: React.MouseEvent) => {
     isDraggingRef.current = true;
     touchStartXRef.current = e.clientX;
@@ -183,9 +191,9 @@ export default function Service3DShowcaseDeck() {
   const handleMouseUp = () => {
     if (isDraggingRef.current && touchStartXRef.current !== null && touchEndXRef.current !== null) {
       const diff = touchStartXRef.current - touchEndXRef.current;
-      if (diff > 40) {
+      if (diff > 35) {
         handleNext();
-      } else if (diff < -40) {
+      } else if (diff < -35) {
         handlePrev();
       }
     }
@@ -194,7 +202,7 @@ export default function Service3DShowcaseDeck() {
     touchEndXRef.current = null;
   };
 
-  // Keyboard accessibility
+  // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowRight') {
       handleNext();
@@ -205,58 +213,91 @@ export default function Service3DShowcaseDeck() {
 
   const currentService = SERVICES[activeIndex];
 
-  // Calculate circular distance to render full continuous trio carousel
+  /**
+   * Conflict-Free Trio Calculation:
+   * To prevent any polygonal intersection clipping or overlapping during animation:
+   * 1. No preserve-3d on parent (elements are rendered in clean discrete Z-stacking layers).
+   * 2. Clear horizontal separation (sm: 210px between centers; element width is <= 160px, so at least 50px clearance at all times).
+   * 3. Offstage items don't animate across the screen when modulo wraps.
+   */
   const getPositionData = (index: number) => {
     let diff = (index - activeIndex) % total;
     if (diff > total / 2) diff -= total;
     if (diff < -total / 2) diff += total;
 
     if (diff === 0) {
-      // CENTER: Zoomed forward towards the user, 100% opacity, front-stage
+      // CENTER ACTIVE: Zoomed forward in the foreground, 100% clarity
       return {
-        style: 'translateX(0px) scale(1.24) translateZ(80px) rotateY(0deg)',
+        transform: 'translateX(0px) scale(1) rotateY(0deg)',
         opacity: 1,
         zIndex: 30,
-        pointer: 'cursor-grab',
+        pointer: 'cursor-default',
         isClickable: false,
+        visible: true,
       };
     } else if (diff === -1) {
-      // LEFT FLANK: Angled inwards, pushed back into perspective, preparing to leave or be pulled
+      // LEFT FLANK: In the depth background, cleanly separated on the left
       return {
-        style: 'translateX(-125px) sm:translateX(-175px) scale(0.72) translateZ(-80px) rotateY(26deg)',
-        opacity: 0.42,
+        transform: 'translateX(-135px) sm:translateX(-195px) scale(0.68) rotateY(16deg)',
+        opacity: 0.5,
         zIndex: 15,
-        pointer: 'cursor-pointer hover:opacity-75',
+        pointer: 'cursor-pointer hover:opacity-85',
         isClickable: true,
         action: handlePrev,
+        visible: true,
       };
     } else if (diff === 1) {
-      // RIGHT FLANK: Angled inwards, pushed back into perspective, next in line
+      // RIGHT FLANK: In the depth background, cleanly separated on the right
       return {
-        style: 'translateX(125px) sm:translateX(175px) scale(0.72) translateZ(-80px) rotateY(-26deg)',
-        opacity: 0.42,
+        transform: 'translateX(135px) sm:translateX(195px) scale(0.68) rotateY(-16deg)',
+        opacity: 0.55,
         zIndex: 15,
-        pointer: 'cursor-pointer hover:opacity-75',
+        pointer: 'cursor-pointer hover:opacity-85',
         isClickable: true,
         action: handleNext,
+        visible: true,
       };
-    } else if (diff < -1) {
-      // Far left in hidden queue
+    } else if (diff === 2) {
+      // VISIBLE IN THE DISTANCE: The upcoming product queued up in line (seen from afar)
       return {
-        style: 'translateX(-260px) scale(0.38) translateZ(-160px) rotateY(35deg)',
+        transform: 'translateX(225px) sm:translateX(320px) scale(0.44) rotateY(-24deg)',
+        opacity: 0.28,
+        zIndex: 6,
+        pointer: 'cursor-pointer hover:opacity-50',
+        isClickable: true,
+        action: handleNext,
+        visible: true,
+      };
+    } else if (diff === -2) {
+      // In the distance on the left (retreating product)
+      return {
+        transform: 'translateX(-225px) sm:translateX(-320px) scale(0.44) rotateY(24deg)',
+        opacity: 0.18,
+        zIndex: 6,
+        pointer: 'cursor-pointer hover:opacity-40',
+        isClickable: true,
+        action: handlePrev,
+        visible: true,
+      };
+    } else if (diff === 3) {
+      // Entering offstage
+      return {
+        transform: 'translateX(300px) sm:translateX(420px) scale(0.25) rotateY(-30deg)',
         opacity: 0,
-        zIndex: 5,
+        zIndex: 1,
         pointer: 'pointer-events-none',
         isClickable: false,
+        visible: false,
       };
     } else {
-      // Far right in hidden queue
+      // Offstage left or hidden
       return {
-        style: 'translateX(260px) scale(0.38) translateZ(-160px) rotateY(-35deg)',
+        transform: 'translateX(-300px) sm:translateX(-420px) scale(0.25) rotateY(30deg)',
         opacity: 0,
-        zIndex: 5,
+        zIndex: 1,
         pointer: 'pointer-events-none',
         isClickable: false,
+        visible: false,
       };
     }
   };
@@ -265,7 +306,7 @@ export default function Service3DShowcaseDeck() {
     <div
       tabIndex={0}
       role="region"
-      aria-label="3D Trio Product Carousel"
+      aria-label="3D Trio Product Showcase"
       onKeyDown={handleKeyDown}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
@@ -278,12 +319,12 @@ export default function Service3DShowcaseDeck() {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      className="relative w-full max-w-[520px] mx-auto select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-[#7C3AED]"
+      className="relative w-full max-w-[560px] sm:max-w-[620px] mx-auto select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-[#7C3AED]"
     >
-      {/* 3D Trio Stage: One steps aside, next zooms forward */}
+      {/* 3D Queue Stage: Clean layered depth so items never collide or intersect, with upcoming product visible in the distance */}
       <div
         className="relative h-[250px] sm:h-[290px] w-full flex items-center justify-center overflow-visible touch-pan-y"
-        style={{ perspective: '1100px', transformStyle: 'preserve-3d' }}
+        style={{ perspective: '1100px' }}
       >
         {SERVICES.map((item, idx) => {
           const pos = getPositionData(idx);
@@ -297,15 +338,16 @@ export default function Service3DShowcaseDeck() {
                 }
               }}
               title={pos.isClickable ? `View ${item.title}` : item.title}
-              className={`absolute flex items-center justify-center will-change-[transform,opacity] transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${pos.pointer}`}
+              className={`absolute flex items-center justify-center will-change-[transform,opacity] transition-all duration-600 ease-[cubic-bezier(0.2,0.85,0.25,1)] ${pos.pointer}`}
               style={{
-                transform: pos.style,
+                transform: pos.transform,
                 opacity: pos.opacity,
                 zIndex: pos.zIndex,
+                visibility: pos.visible || pos.opacity > 0 ? 'visible' : 'hidden',
               }}
             >
-              {/* Clean, professional 3D product icon without artificial halos */}
-              <div className="w-36 h-36 sm:w-48 sm:h-48 relative flex items-center justify-center select-none pointer-events-none">
+              {/* Authentic crystal-clear 3D image */}
+              <div className="w-32 h-32 sm:w-44 sm:h-44 relative flex items-center justify-center select-none pointer-events-none">
                 <picture className="w-full h-full flex items-center justify-center">
                   <source srcSet={`/assets/img/icons/${item.iconName}.avif`} type="image/avif" />
                   <source srcSet={`/assets/img/icons/${item.iconName}.webp`} type="image/webp" />
@@ -314,9 +356,9 @@ export default function Service3DShowcaseDeck() {
                     alt={item.alt}
                     width="192"
                     height="192"
-                    loading="lazy"
+                    loading="eager"
                     decoding="async"
-                    className="w-full h-full object-contain filter drop-shadow-[0_16px_28px_rgba(0,0,0,0.65)]"
+                    className="w-full h-full object-contain filter drop-shadow-[0_16px_30px_rgba(0,0,0,0.55)]"
                   />
                 </picture>
               </div>
@@ -325,8 +367,12 @@ export default function Service3DShowcaseDeck() {
         })}
       </div>
 
-      {/* Product Details Section: Dynamic title, tag & description matching the front item */}
-      <div className="pt-2 text-center space-y-2 max-w-md mx-auto">
+      {/* Product Details Section: Clean typography right below the front item */}
+      <div
+        className={`pt-2 text-center space-y-2 max-w-md mx-auto transition-opacity duration-300 ${
+          isAnimatingText ? 'opacity-40' : 'opacity-100'
+        }`}
+      >
         {/* Category tag & highlight */}
         <div className="flex items-center justify-center gap-2">
           <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-[#A78BFA]">
@@ -357,23 +403,6 @@ export default function Service3DShowcaseDeck() {
             <span>Explore {currentService.title}</span>
             <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
           </Link>
-        </div>
-
-        {/* Subtle dot indicators */}
-        <div className="flex items-center justify-center gap-1.5 pt-3">
-          {SERVICES.map((s, idx) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => setActiveIndex(idx)}
-              aria-label={`Go to ${s.title}`}
-              className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                idx === activeIndex
-                  ? 'w-6 bg-[#7C3AED]'
-                  : 'w-1.5 bg-white/20 hover:bg-white/40'
-              }`}
-            />
-          ))}
         </div>
       </div>
     </div>

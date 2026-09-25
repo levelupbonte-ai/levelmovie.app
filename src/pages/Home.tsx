@@ -39,6 +39,89 @@ export default function Home() {
         {/* Clean, deep studio radial glow */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[400px] bg-[#7C3AED]/12 rounded-full blur-[140px] pointer-events-none" />
 
+        {/* Ambient 3D floating background icons (Subtle, high-trust craft aesthetic) */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+          {/* Security Shield Icon (Top Right) */}
+          <div className="absolute -top-4 right-[3%] lg:right-[7%] w-24 h-24 sm:w-36 sm:h-36 opacity-18 lg:opacity-22 ambient-float-1 select-none">
+            <picture>
+              <source srcSet="/assets/img/icons/security.avif" type="image/avif" />
+              <source srcSet="/assets/img/icons/security.webp" type="image/webp" />
+              <img
+                src="/assets/img/icons/security.png"
+                alt=""
+                width="144"
+                height="144"
+                className="w-full h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.6)]"
+                loading="lazy"
+              />
+            </picture>
+          </div>
+
+          {/* Creator Camera Icon (Top Left / behind header badge) */}
+          <div className="absolute top-10 left-[1%] lg:left-[4%] w-20 h-20 sm:w-28 sm:h-28 opacity-14 lg:opacity-18 ambient-float-2 select-none">
+            <picture>
+              <source srcSet="/assets/img/icons/creators.avif" type="image/avif" />
+              <source srcSet="/assets/img/icons/creators.webp" type="image/webp" />
+              <img
+                src="/assets/img/icons/creators.png"
+                alt=""
+                width="112"
+                height="112"
+                className="w-full h-full object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]"
+                loading="lazy"
+              />
+            </picture>
+          </div>
+
+          {/* Store / Shopping Bag Icon (Center / behind divider) */}
+          <div className="absolute top-[45%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-28 h-28 sm:w-36 sm:h-36 opacity-10 lg:opacity-14 ambient-float-3 select-none">
+            <picture>
+              <source srcSet="/assets/img/icons/store.avif" type="image/avif" />
+              <source srcSet="/assets/img/icons/store.webp" type="image/webp" />
+              <img
+                src="/assets/img/icons/store.png"
+                alt=""
+                width="144"
+                height="144"
+                className="w-full h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.6)]"
+                loading="lazy"
+              />
+            </picture>
+          </div>
+
+          {/* Barbershop Scissors & Comb Icon (Bottom Left / under stats) */}
+          <div className="absolute -bottom-6 left-[8%] lg:left-[14%] w-20 h-20 sm:w-32 sm:h-32 opacity-14 lg:opacity-18 ambient-float-1 select-none">
+            <picture>
+              <source srcSet="/assets/img/icons/barbershop.avif" type="image/avif" />
+              <source srcSet="/assets/img/icons/barbershop.webp" type="image/webp" />
+              <img
+                src="/assets/img/icons/barbershop.png"
+                alt=""
+                width="128"
+                height="128"
+                className="w-full h-full object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]"
+                loading="lazy"
+              />
+            </picture>
+          </div>
+
+          {/* Salon / Beauty Icon (Bottom Right) */}
+          <div className="absolute -bottom-6 right-[12%] lg:right-[18%] w-22 h-22 sm:w-32 sm:h-32 opacity-15 lg:opacity-20 ambient-float-2 select-none">
+            <picture>
+              <source srcSet="/assets/img/icons/salon.avif" type="image/avif" />
+              <source srcSet="/assets/img/icons/salon.webp" type="image/webp" />
+              <img
+                src="/assets/img/icons/salon.png"
+                alt=""
+                width="128"
+                height="128"
+                className="w-full h-full object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]"
+                loading="lazy"
+              />
+            </picture>
+          </div>
+        </div>
+
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center relative z-10">
           {/* Left Column */}
           <div className="lg:col-span-6 space-y-6 sm:space-y-7 text-left" data-reveal>
@@ -297,182 +380,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ------------------------------------------------------------- */}
-      {/* SERVICES DIRECTORY (WIX-STYLE CLEAN TABLE LAYOUT)             */}
-      {/* ------------------------------------------------------------- */}
-      <section className="py-20 sm:py-28 px-4 sm:px-8 bg-[#0B0B14] border-b border-white/[0.08] relative overflow-hidden">
-        <div className="max-w-6xl mx-auto space-y-12 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 text-left" data-reveal>
-            <div className="space-y-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
-                Catalogue des Solutions &amp; Services
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                All Services &amp; Specialties
-              </h2>
-              <p className="text-sm sm:text-base text-[#A1A1B5] max-w-xl leading-relaxed">
-                Simple, transparent, without useless bloat or hidden fees. Choose your category to explore features.
-              </p>
-            </div>
-            <div>
-              <Link
-                to="/services"
-                className="text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors inline-flex items-center gap-1.5"
-              >
-                <span>View complete services directory</span>
-                <span>→</span>
-              </Link>
-            </div>
-          </div>
 
-          {/* Wix-Style Clean Directory Table (Zero bloated borders, pure clean typography) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-14 text-left" data-reveal>
-            {/* Column 1: LOCAL BUSINESS & COMMERCE */}
-            <div className="space-y-6">
-              <div className="text-xs font-bold uppercase tracking-wider text-[#A1A1B5] pb-3 border-b border-white/[0.12]">
-                Local Business &amp; Commerce
-              </div>
-              <div className="space-y-6">
-                <Link to="/websites-for/barbershops" className="group block">
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                    <span>Barbershop Websites</span>
-                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
-                    24/7 online chair booking, barber rosters &amp; Google Maps ranking with zero interruptions.
-                  </p>
-                </Link>
-
-                <Link to="/websites-for/salons" className="group block">
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                    <span>Salon &amp; Beauty Websites</span>
-                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
-                    Stylist portfolio showcases, clear pricing tiers, and automated multi-service scheduling.
-                  </p>
-                </Link>
-
-                <Link to="/services/online-stores" className="group block">
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                    <span>Small Online Stores</span>
-                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
-                    Frictionless checkout for merchandise, physical goods, and digital downloads without high fees.
-                  </p>
-                </Link>
-
-                <Link to="/services/local-business-websites" className="group block">
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                    <span>Local Business Sites</span>
-                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
-                    Google Business Profile sync, neighborhood map rankings, and click-to-navigate GPS directions.
-                  </p>
-                </Link>
-              </div>
-            </div>
-
-            {/* Column 2: CREATORS & PORTFOLIOS */}
-            <div className="space-y-6">
-              <div className="text-xs font-bold uppercase tracking-wider text-[#A1A1B5] pb-3 border-b border-white/[0.12]">
-                Creators &amp; Showcases
-              </div>
-              <div className="space-y-6">
-                <Link to="/services/creator-websites" className="group block">
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                    <span>Creator Websites</span>
-                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
-                    Custom link-in-bio hub on your own domain, media kit for brand deals, and direct newsletter capture.
-                  </p>
-                </Link>
-
-                <Link to="/services/portfolio-websites" className="group block">
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                    <span>Portfolio Websites</span>
-                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
-                    Clean, high-resolution project showcases with sub-second page loads for designers, artists &amp; pros.
-                  </p>
-                </Link>
-
-                <Link to="/preview" className="group block">
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                    <span>Landing Pages</span>
-                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
-                    Single-page websites engineered for product launches, event promotions, and lead conversion.
-                  </p>
-                </Link>
-
-                <Link to="/preview" className="group block">
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                    <span>Events &amp; Gatherings</span>
-                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
-                    Interactive digital RSVP coordination, venue directions, schedule itinerary, and photo galleries.
-                  </p>
-                </Link>
-              </div>
-            </div>
-
-            {/* Column 3: SECURITY & ESSENTIALS */}
-            <div className="space-y-6">
-              <div className="text-xs font-bold uppercase tracking-wider text-[#A1A1B5] pb-3 border-b border-white/[0.12]">
-                Security &amp; Essentials
-              </div>
-              <div className="space-y-6">
-                <Link to="/services/security-check" className="group block">
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                    <span>Website Security Check</span>
-                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
-                    Plain-English review of database rules, HTTPS, exposed API keys, backups and account protection.
-                  </p>
-                </Link>
-
-                <Link to="/services/care-plans" className="group block">
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                    <span>Website Care Plans</span>
-                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
-                    Fast cloud hosting, daily automated backups, security monitoring, and on-demand content edits.
-                  </p>
-                </Link>
-
-                <Link to="/services/local-business-websites" className="group block">
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                    <span>Online Booking System</span>
-                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
-                    Calendar sync, automated SMS/email reminders, and customer self-scheduling around the clock.
-                  </p>
-                </Link>
-
-                <Link to="/security" className="group block">
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                    <span>Engineering Hardening</span>
-                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
-                    Strict CSP headers, deny-by-default rules, honeypot anti-spam, and zero browser secrets.
-                  </p>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ------------------------------------------------------------- */}
       {/* STUDIO PHILOSOPHY & VIDEO DEMO                                */}

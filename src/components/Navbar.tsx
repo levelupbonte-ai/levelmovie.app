@@ -10,6 +10,7 @@ interface ServiceSubmenuItem {
   desc: string;
   path: string;
   tag: string;
+  iconName: string;
 }
 
 export default function Navbar({ currentPath }: NavbarProps) {
@@ -21,8 +22,20 @@ export default function Navbar({ currentPath }: NavbarProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   const headerRef = useRef<HTMLElement>(null);
+  const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
+
+  const handleServicesMouseEnter = () => {
+    if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
+    setServicesDropdownOpen(true);
+  };
+
+  const handleServicesMouseLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setServicesDropdownOpen(false);
+    }, 240);
+  };
 
   useEffect(() => {
     if (!currentPath && typeof window !== 'undefined') {
@@ -87,48 +100,56 @@ export default function Navbar({ currentPath }: NavbarProps) {
       desc: '24/7 chair booking, barber rosters & Google Maps local ranking.',
       path: '/websites-for/barbershops',
       tag: 'Chairs & Grooming',
+      iconName: 'barbershop',
     },
     {
       label: 'Salon & Beauty Websites',
       desc: 'Stylist portfolios, tiered service menus & multi-service booking.',
       path: '/websites-for/salons',
       tag: 'Hair & Esthetics',
+      iconName: 'salon',
     },
     {
       label: 'Creator Websites',
       desc: 'Independent link-in-bio hub, live collaboration media kit & newsletter.',
       path: '/services/creator-websites',
       tag: 'Creator Economy',
+      iconName: 'creators',
     },
     {
       label: 'Small Online Stores',
       desc: 'Fast checkout for merch, products & digital downloads without platform fees.',
       path: '/services/online-stores',
       tag: 'Lean E-Commerce',
+      iconName: 'store',
     },
     {
       label: 'Portfolio Websites',
       desc: 'High-resolution showcases with sub-second page loads on your domain.',
       path: '/services/portfolio-websites',
       tag: 'Visual Showcases',
+      iconName: 'portfolio',
     },
     {
       label: 'Website Security Check',
       desc: 'Plain-English technical audit of database rules, HTTPS & exposed keys.',
       path: '/services/security-check',
       tag: 'Vulnerability Audit',
+      iconName: 'security',
     },
     {
       label: 'Local Business Sites',
       desc: 'Google Business Profile sync, neighborhood rankings & online booking.',
       path: '/services/local-business-websites',
       tag: 'Local Operations',
+      iconName: 'booking',
     },
     {
       label: 'Website Care Plans',
       desc: 'Fast cloud hosting, daily backups & on-demand monthly updates.',
       path: '/services/care-plans',
       tag: 'Maintenance & Care',
+      iconName: 'care',
     },
   ];
 
@@ -188,8 +209,12 @@ export default function Navbar({ currentPath }: NavbarProps) {
         {/* DESKTOP NAV */}
         <div className="hidden lg:flex items-center gap-4 xl:gap-7 shrink-0">
           <nav className="flex items-center gap-4 xl:gap-6 text-sm font-medium">
-            {/* Services Trigger: Click toggles attached table directly below navbar */}
-            <div className="relative">
+            {/* Services Trigger: Hover or click toggles attached table directly below navbar */}
+            <div
+              className="relative"
+              onMouseEnter={handleServicesMouseEnter}
+              onMouseLeave={handleServicesMouseLeave}
+            >
               <button
                 type="button"
                 onClick={() => setServicesDropdownOpen((prev) => !prev)}
@@ -288,89 +313,255 @@ export default function Navbar({ currentPath }: NavbarProps) {
         </div>
       </div>
 
-      {/* ATTACHED SERVICES BOARD (COLLÉ DIRECTEMENT À LA BARRE DU HAUT, SANS AUCUNE ICÔNE) */}
+      {/* ATTACHED SERVICES MEGA-MENU (STYLE WIX PRO : COLONNES TYPOGRAPHIQUES ÉPURÉES, SANS CARTES LOURDES) */}
       {servicesDropdownOpen && (
         <div
           role="menu"
           aria-orientation="vertical"
-          className="hidden lg:block w-full bg-[#0D0D17]/98 backdrop-blur-2xl border-t border-white/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.9)] animate-in fade-in slide-in-from-top-1 duration-200 text-left"
+          onMouseEnter={() => {
+            if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
+          }}
+          onMouseLeave={handleServicesMouseLeave}
+          className="hidden lg:block w-full bg-[#0B0B14]/98 backdrop-blur-2xl border-t border-b border-white/[0.08] shadow-[0_24px_60px_rgba(0,0,0,0.95)] animate-in fade-in slide-in-from-top-1 duration-200 text-left"
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-8 py-7">
-            {/* Top header of the attached board */}
-            <div className="flex items-center justify-between pb-5 border-b border-white/[0.08]">
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#A78BFA] bg-[#7C3AED]/20 px-2.5 py-0.5 rounded-full border border-[#7C3AED]/40">
-                  Solutions &amp; Métiers
-                </span>
-                <span className="text-xs text-[#A1A1B5]">
-                  Sites haute vitesse &lt; 2s • Réservations 24/7 • Sécurité renforcée
-                </span>
-              </div>
-
-              <Link
-                to="/services"
-                onClick={() => setServicesDropdownOpen(false)}
-                className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors flex items-center gap-1 group"
-              >
-                <span>Vue d&apos;ensemble de tous les services</span>
-                <span className="transition-transform group-hover:translate-x-1">→</span>
-              </Link>
-            </div>
-
-            {/* 4 Clean Columns of Services (NO ICONS, PURE PRO DIRECTORY) */}
-            <div className="grid grid-cols-4 gap-6 pt-6 pb-2">
-              {serviceItems.map((item, idx) => {
-                const active = isActive(item.path);
-                return (
+          <div className="max-w-7xl mx-auto px-6 sm:px-10 py-9 space-y-9">
+            
+            {/* 3 Clean Wix-Style Columns */}
+            <div className="grid grid-cols-3 gap-12 xl:gap-16">
+              
+              {/* Column 1: CRÉATION */}
+              <div className="space-y-6">
+                <div className="text-xs font-bold uppercase tracking-widest text-[#DDD6FE] pb-2.5 border-b border-white/[0.12] flex items-center justify-between">
+                  <span>CRÉATION</span>
+                  <span className="text-[10px] text-[#71717A] font-mono">01</span>
+                </div>
+                <div className="space-y-6">
                   <Link
-                    key={item.path}
-                    to={item.path}
-                    role="menuitem"
+                    to="/services/portfolio-websites"
                     onClick={() => setServicesDropdownOpen(false)}
-                    className={`group block p-4 rounded-2xl border transition-all duration-200 ${
-                      active
-                        ? 'bg-[#7C3AED]/15 border-[#7C3AED]/70 shadow-[0_0_20px_rgba(124,58,237,0.25)]'
-                        : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.06] hover:border-[#7C3AED]/40'
-                    }`}
+                    className="group block space-y-1"
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#A78BFA]">
-                          0{idx + 1} • {item.tag}
-                        </span>
-                        <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 transition-opacity">
-                          →
-                        </span>
-                      </div>
-
-                      <h4 className="text-sm font-bold text-white group-hover:text-[#DDD6FE] transition-colors leading-tight">
-                        {item.label}
-                      </h4>
-
-                      <p className="text-xs text-[#A1A1B5] leading-relaxed line-clamp-2">
-                        {item.desc}
-                      </p>
-                    </div>
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                      <span>Portfolio en ligne</span>
+                      <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                    </h4>
+                    <p className="text-xs text-[#A1A1B5] leading-relaxed">
+                      Exposez votre travail et vos créations avec un portfolio ultra-rapide sur votre propre nom de domaine.
+                    </p>
                   </Link>
-                );
-              })}
-            </div>
 
-            {/* Bottom Action Strip */}
-            <div className="mt-5 pt-4 border-t border-white/[0.08] flex items-center justify-between text-xs text-[#A1A1B5]">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-                <span>Aperçu interactif personnalisé prêt sous 24 à 48h sans aucun engagement d&apos;achat</span>
+                  <Link
+                    to="/services/creator-websites"
+                    onClick={() => setServicesDropdownOpen(false)}
+                    className="group block space-y-1"
+                  >
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                      <span>Sites Créateurs &amp; Médias</span>
+                      <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                    </h4>
+                    <p className="text-xs text-[#A1A1B5] leading-relaxed">
+                      Page link-in-bio indépendante, kit média interactif pour partenariats marques et capture d'inscriptions.
+                    </p>
+                  </Link>
+
+                  <Link
+                    to="/preview"
+                    onClick={() => setServicesDropdownOpen(false)}
+                    className="group block space-y-1"
+                  >
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                      <span>Web design &amp; Landing Pages</span>
+                      <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                    </h4>
+                    <p className="text-xs text-[#A1A1B5] leading-relaxed">
+                      Profitez de fonctionnalités de design percutantes et modernes optimisées pour convertir vos prospects.
+                    </p>
+                  </Link>
+                </div>
               </div>
 
-              <Link
-                to="/preview"
-                onClick={() => setServicesDropdownOpen(false)}
-                className="px-4 py-2 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold transition-all shadow-md shadow-[#7C3AED]/30 whitespace-nowrap"
-              >
-                Demander un aperçu gratuit →
-              </Link>
+              {/* Column 2: BUSINESS */}
+              <div className="space-y-6">
+                <div className="text-xs font-bold uppercase tracking-widest text-[#DDD6FE] pb-2.5 border-b border-white/[0.12] flex items-center justify-between">
+                  <span>BUSINESS &amp; ACTIVITÉ</span>
+                  <span className="text-[10px] text-[#71717A] font-mono">02</span>
+                </div>
+                <div className="space-y-6">
+                  <Link
+                    to="/websites-for/barbershops"
+                    onClick={() => setServicesDropdownOpen(false)}
+                    className="group block space-y-1"
+                  >
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                      <span>Barbershop Websites</span>
+                      <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                    </h4>
+                    <p className="text-xs text-[#A1A1B5] leading-relaxed">
+                      Réservation de fauteuils 24/7, profils des barbiers et visibilité locale Google Maps.
+                    </p>
+                  </Link>
+
+                  <Link
+                    to="/websites-for/salons"
+                    onClick={() => setServicesDropdownOpen(false)}
+                    className="group block space-y-1"
+                  >
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                      <span>Salons de coiffure &amp; Beauté</span>
+                      <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                    </h4>
+                    <p className="text-xs text-[#A1A1B5] leading-relaxed">
+                      Portfolios de coiffeurs et stylistes, grilles tarifaires et planification de prestations.
+                    </p>
+                  </Link>
+
+                  <Link
+                    to="/services/online-stores"
+                    onClick={() => setServicesDropdownOpen(false)}
+                    className="group block space-y-1"
+                  >
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                      <span>Boutique en ligne</span>
+                      <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                    </h4>
+                    <p className="text-xs text-[#A1A1B5] leading-relaxed">
+                      Gérez et développez votre vente de produits, merch et téléchargements avec paiements sécurisés.
+                    </p>
+                  </Link>
+
+                  <Link
+                    to="/services/local-business-websites"
+                    onClick={() => setServicesDropdownOpen(false)}
+                    className="group block space-y-1"
+                  >
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                      <span>Réservation en ligne</span>
+                      <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                    </h4>
+                    <p className="text-xs text-[#A1A1B5] leading-relaxed">
+                      Gérez vos rendez-vous, équipes et clients avec synchronisation de calendriers en temps réel.
+                    </p>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Column 3: RESTAURANT & EXPÉRIENCES */}
+              <div className="space-y-6">
+                <div className="text-xs font-bold uppercase tracking-widest text-[#DDD6FE] pb-2.5 border-b border-white/[0.12] flex items-center justify-between">
+                  <span>COMMERCES &amp; RESTAURANTS</span>
+                  <span className="text-[10px] text-[#71717A] font-mono">03</span>
+                </div>
+                <div className="space-y-6">
+                  <Link
+                    to="/services/local-business-websites"
+                    onClick={() => setServicesDropdownOpen(false)}
+                    className="group block space-y-1"
+                  >
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                      <span>Restaurant &amp; Cafés</span>
+                      <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                    </h4>
+                    <p className="text-xs text-[#A1A1B5] leading-relaxed">
+                      Menus interactifs pour smartphones, réservation de tables et itinéraire GPS en un clic.
+                    </p>
+                  </Link>
+
+                  <Link
+                    to="/preview"
+                    onClick={() => setServicesDropdownOpen(false)}
+                    className="group block space-y-1"
+                  >
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                      <span>Événements &amp; Éphémères</span>
+                      <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                    </h4>
+                    <p className="text-xs text-[#A1A1B5] leading-relaxed">
+                      Pages RSVP, billetterie, programme et galeries pour festivals, pop-ups et lancements.
+                    </p>
+                  </Link>
+
+                  <Link
+                    to="/services"
+                    onClick={() => setServicesDropdownOpen(false)}
+                    className="group block space-y-1"
+                  >
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                      <span>Catalogue complet</span>
+                      <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                    </h4>
+                    <p className="text-xs text-[#A1A1B5] leading-relaxed">
+                      Découvrez tous nos forfaits, forfaits mensuels et options de personnalisation.
+                    </p>
+                  </Link>
+                </div>
+              </div>
+
             </div>
+
+            {/* Bottom Wix-Style Strip: LES INDISPENSABLES */}
+            <div className="pt-6 border-t border-white/[0.12] space-y-4">
+              <div className="text-[11px] font-bold uppercase tracking-widest text-[#A1A1B5]">
+                LES INDISPENSABLES
+              </div>
+              <div className="grid grid-cols-4 gap-6">
+                <Link
+                  to="/contact"
+                  onClick={() => setServicesDropdownOpen(false)}
+                  className="group block space-y-0.5"
+                >
+                  <h5 className="text-xs font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center gap-1">
+                    <span>Nom de domaine &amp; DNS</span>
+                    <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-[#A78BFA]">↗</span>
+                  </h5>
+                  <p className="text-[11px] text-[#71717A]">
+                    Configuration de votre adresse et emails pros.
+                  </p>
+                </Link>
+
+                <Link
+                  to="/services/care-plans"
+                  onClick={() => setServicesDropdownOpen(false)}
+                  className="group block space-y-0.5"
+                >
+                  <h5 className="text-xs font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center gap-1">
+                    <span>Hébergement Cloud Rapide</span>
+                    <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-[#A78BFA]">↗</span>
+                  </h5>
+                  <p className="text-[11px] text-[#71717A]">
+                    Serveurs ultra-rapides et 99.9% de disponibilité.
+                  </p>
+                </Link>
+
+                <Link
+                  to="/services/security-check"
+                  onClick={() => setServicesDropdownOpen(false)}
+                  className="group block space-y-0.5"
+                >
+                  <h5 className="text-xs font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center gap-1">
+                    <span>Sécurité Web &amp; SSL</span>
+                    <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-[#A78BFA]">↗</span>
+                  </h5>
+                  <p className="text-[11px] text-[#71717A]">
+                    En-têtes CSP stricts, protection et certificat HTTPS.
+                  </p>
+                </Link>
+
+                <Link
+                  to="/services/care-plans"
+                  onClick={() => setServicesDropdownOpen(false)}
+                  className="group block space-y-0.5"
+                >
+                  <h5 className="text-xs font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center gap-1">
+                    <span>Plans d'Entretien</span>
+                    <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-[#A78BFA]">↗</span>
+                  </h5>
+                  <p className="text-[11px] text-[#71717A]">
+                    Sauvegardes quotidiennes et mises à jour régulières.
+                  </p>
+                </Link>
+              </div>
+            </div>
+
           </div>
         </div>
       )}
@@ -417,13 +608,23 @@ export default function Navbar({ currentPath }: NavbarProps) {
                       key={item.path}
                       to={item.path}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`block py-2 px-3 rounded-lg text-xs transition-colors ${
+                      className={`flex items-center gap-2.5 py-2 px-2.5 rounded-xl text-xs transition-colors ${
                         isActive(item.path)
                           ? 'bg-white/[0.08] text-white font-bold'
-                          : 'text-[#A1A1B5] hover:text-white'
+                          : 'text-[#A1A1B5] hover:bg-white/[0.04] hover:text-white'
                       }`}
                     >
-                      {item.label}
+                      <div className="w-5 h-5 shrink-0 rounded-md bg-[#14141F] border border-white/[0.08] p-0.5 flex items-center justify-center">
+                        <img
+                          src={`/assets/img/icons/${item.iconName}.png`}
+                          alt=""
+                          width="16"
+                          height="16"
+                          className="w-full h-full object-contain"
+                          loading="lazy"
+                        />
+                      </div>
+                      <span className="truncate">{item.label}</span>
                     </Link>
                   ))}
                 </div>
