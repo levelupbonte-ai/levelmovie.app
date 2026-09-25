@@ -39,20 +39,20 @@ export default function PreviewHub() {
                 <span>AI-generated draft</span>
                 <span className="text-[10px] text-[#A78BFA]">↗</span>
               </Link>
-              <span className="text-xs text-[#71717A] font-mono">~1 min</span>
+              <span className="text-xs text-[#71717A] font-mono">5–10 min</span>
             </div>
 
             <div>
               <h2 className="text-2xl font-bold text-white mb-2">Instant preview</h2>
               <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                A quick draft created automatically in about a minute. Great for getting an idea of the look and feel.
+                An automated draft structured in 5 to 10 minutes. Great for getting an initial feel for layout, colors, and features.
               </p>
             </div>
 
             <ul className="space-y-3 pt-2 text-sm text-[#A1A1B5]">
               <li className="flex items-start gap-3">
                 <span className="text-[#A78BFA] font-bold">✓</span>
-                <span>Ready in ~1 minute</span>
+                <span>Ready in 5 to 10 minutes</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-[#A78BFA] font-bold">✓</span>

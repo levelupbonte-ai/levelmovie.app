@@ -1,13 +1,11 @@
 import React from 'react';
 import { Link } from './Link';
 
-export interface Crumb {
-  name: string;
-  url: string;
-}
-
 interface BreadcrumbsProps {
-  items: Crumb[];
+  items: Array<{
+    name: string;
+    url: string;
+  }>;
 }
 
 export default function Breadcrumbs({ items }: BreadcrumbsProps) {
