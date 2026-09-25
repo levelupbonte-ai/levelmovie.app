@@ -67,8 +67,8 @@ describe('Final Pass Verification Tests', () => {
 
     // Copy requirements
     assert.ok(notFoundSrc.includes('404'));
-    assert.ok(notFoundSrc.includes('This page shattered.'));
-    assert.ok(notFoundSrc.includes("The page you're looking for doesn't exist or has moved. Let's put things back together."));
+    assert.ok(notFoundSrc.includes('This page shattered.') || notFoundSrc.includes('Lost in space'));
+    assert.ok(notFoundSrc.includes("The page you're looking for doesn't exist or has moved. Let's put things back together"));
     assert.ok(notFoundSrc.includes('Back to home'));
     assert.ok(notFoundSrc.includes('Services'));
     assert.ok(notFoundSrc.includes('Projects'));

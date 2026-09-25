@@ -67,72 +67,34 @@ export default function NotFound() {
           90% { transform: translate(1px, -1px); }
         }
 
-        @keyframes drawCrack {
-          0% { stroke-dashoffset: 50; opacity: 0; }
-          20% { opacity: 1; }
-          100% { stroke-dashoffset: 0; opacity: 1; }
+        @keyframes chillMascotFloat {
+          0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-8px) rotate(1.5deg);
+          }
         }
 
-        @keyframes slowFloatPieceA {
-          0%, 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
-          50% { transform: translate(calc(var(--dx) - 2px), calc(var(--dy) - 4px)) rotate(calc(var(--rot) - 2deg)); }
-        }
-        @keyframes slowFloatPieceB {
-          0%, 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
-          50% { transform: translate(calc(var(--dx) + 3px), calc(var(--dy) + 3px)) rotate(calc(var(--rot) + 2deg)); }
-        }
-
-        @keyframes centerGlow {
-          0%, 100% { opacity: 0.2; transform: scale(0.95); }
-          50% { opacity: 0.45; transform: scale(1.2); }
+        @keyframes chillAuraGlow {
+          0%, 100% {
+            opacity: 0.35;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.6;
+            transform: scale(1.12);
+          }
         }
 
-        @keyframes sparkFlicker {
-          0%, 100% { opacity: 0.2; transform: scale(0.6); }
-          50% { opacity: 0.95; transform: scale(1.4); }
-        }
-
-        .star-shattered-scene {
-          animation: failingLight 0.4s ease-out 1, starTremble 0.5s ease-in-out 0.4s 1;
-        }
-
-        .shatter-crack {
-          stroke: #DDD3FF;
-          stroke-width: 1.5;
-          stroke-linecap: round;
-          stroke-dasharray: 50;
-          animation: drawCrack 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
-        }
-
-        .broken-facet {
-          transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), fill 0.7s ease, opacity 0.7s ease, filter 0.7s ease;
-          transform-origin: 50px 54.4px;
-        }
-
-        .broken-facet.is-broken {
-          transform: translate(var(--dx), var(--dy)) rotate(var(--rot));
-          animation: slowFloatPieceA 6s ease-in-out 1.6s infinite;
-        }
-        .broken-facet.is-broken.float-alt {
-          animation: slowFloatPieceB 6s ease-in-out 1.6s infinite;
-        }
-
-        .broken-facet.is-reassembled {
-          transform: translate(0, 0) rotate(0) !important;
-          animation: none !important;
-          filter: drop-shadow(0 0 16px rgba(124, 58, 237, 0.85));
+        .chill-star-mascot {
+          animation: chillMascotFloat 4.5s ease-in-out infinite;
+          filter: drop-shadow(0 18px 35px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 25px rgba(124, 58, 237, 0.45));
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .star-shattered-scene,
-          .shatter-crack,
-          .broken-facet,
-          .broken-facet.is-broken {
+          .chill-star-mascot {
             animation: none !important;
-            transition: none !important;
-          }
-          .broken-facet.is-broken {
-            transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) !important;
           }
         }
       `}</style>
@@ -140,156 +102,107 @@ export default function NotFound() {
       {/* Open, chill, classy layout without bubble container */}
       <div className="relative z-10 w-full max-w-2xl mx-auto text-center space-y-7 py-6">
 
-        {/* BROKEN STAR ANIMATION SCENE (Exact geometry: C = 50, 54.4) with Chill Sunglasses */}
-        <div className="relative inline-flex items-center justify-center my-2">
-          {/* Dim glow where center was */}
+        {/* CHILL COMPLETE INTACT STAR WITH SUNGLASSES (Exact geometry: C = 50, 54.4) */}
+        <div className="relative inline-flex items-center justify-center my-3">
+          {/* Ambient purple aura glow behind the star */}
           <div
-            className={`absolute w-52 h-52 rounded-full blur-3xl pointer-events-none transition-all duration-700 ${
-              isReassembling ? 'bg-[#7C3AED]/50 scale-125' : 'bg-[#7C3AED]/25'
-            }`}
-            style={{ animation: isReassembling ? 'none' : 'centerGlow 4s ease-in-out infinite' }}
+            className="absolute w-56 h-56 rounded-full bg-[#7C3AED]/30 blur-3xl pointer-events-none"
+            style={{ animation: 'chillAuraGlow 4s ease-in-out infinite' }}
           />
 
           <svg
-            className="w-48 h-48 sm:w-56 sm:h-56 relative z-10 overflow-visible select-none star-shattered-scene"
+            className="w-48 h-48 sm:w-56 sm:h-56 relative z-10 overflow-visible select-none chill-star-mascot"
             viewBox="0 0 100 100"
             fill="none"
             aria-hidden="true"
           >
-            {/* Center spark dots */}
-            <circle cx="50" cy="54.4" r="2" fill="#DDD3FF" style={{ animation: 'sparkFlicker 2.5s ease-in-out infinite' }} />
-            <circle cx="52" cy="50" r="1.5" fill="#A78BFA" style={{ animation: 'sparkFlicker 3.2s ease-in-out 0.8s infinite' }} />
-            <circle cx="48" cy="58" r="1.2" fill="#FFFFFF" style={{ animation: 'sparkFlicker 2.8s ease-in-out 1.2s infinite' }} />
-
-            {/* Falling dust & shards */}
-            <g className="dust-shards" opacity={isReassembling ? '0' : '0.4'}>
-              <polygon points="49,52 51,51 50,54" fill="#DDD3FF" />
-              <polygon points="53,46 54,48 52,47" fill="#A78BFA" />
-              <polygon points="45,59 47,60 46,62" fill="#8B5CF6" />
-            </g>
-
-            {/* Cracks drawing from center to outer points */}
-            {!isReassembling && (
-              <g className="cracks-group">
-                <line x1="50" y1="54.4" x2="50" y2="10" className="shatter-crack" />
-                <line x1="50" y1="54.4" x2="93.75" y2="40.18" className="shatter-crack" />
-                <line x1="50" y1="54.4" x2="77.04" y2="91.61" className="shatter-crack" />
-                <line x1="50" y1="54.4" x2="22.96" y2="91.61" className="shatter-crack" />
-                <line x1="50" y1="54.4" x2="6.25" y2="40.18" className="shatter-crack" />
-                <line x1="50" y1="54.4" x2="61.46" y2="38.62" className="shatter-crack" strokeDasharray="3,3" />
-                <line x1="50" y1="54.4" x2="38.54" y2="38.62" className="shatter-crack" strokeDasharray="3,3" />
-                <line x1="50" y1="54.4" x2="68.55" y2="60.43" className="shatter-crack" strokeDasharray="3,3" />
-                <line x1="50" y1="54.4" x2="31.45" y2="60.43" className="shatter-crack" strokeDasharray="3,3" />
-              </g>
-            )}
-
-            {/* 10 Facets (Exact Geometry, drifting outward with rotation) */}
+            {/* 10 Facets forming the 100% Complete, Solid 3D LevelUp Star (Center C = 50, 54.4) */}
             {/* Facet 0: k=0 Left */}
             <path
               d="M 50,54.4 L 38.54,38.62 L 50,10 Z"
-              fill={isReassembling ? '#FFFFFF' : '#B8ACD4'}
-              className={`broken-facet ${isReassembling ? 'is-reassembled' : 'is-broken'}`}
-              style={{ '--dx': '-14px', '--dy': '-20px', '--rot': '-8deg' } as React.CSSProperties}
+              fill="#FFFFFF"
             />
 
             {/* Facet 1: k=0 Right */}
             <path
               d="M 50,54.4 L 50,10 L 61.46,38.62 Z"
-              fill={isReassembling ? '#DDD3FF' : '#9E8EBE'}
-              className={`broken-facet float-alt ${isReassembling ? 'is-reassembled' : 'is-broken'}`}
-              style={{ '--dx': '14px', '--dy': '-20px', '--rot': '8deg' } as React.CSSProperties}
+              fill="#DDD3FF"
             />
 
             {/* Facet 2: k=1 Left */}
             <path
               d="M 50,54.4 L 61.46,38.62 L 93.75,40.18 Z"
-              fill={isReassembling ? '#8B5CF6' : '#5E3C8A'}
-              className={`broken-facet ${isReassembling ? 'is-reassembled' : 'is-broken'}`}
-              style={{ '--dx': '30px', '--dy': '-8px', '--rot': '12deg' } as React.CSSProperties}
+              fill="#8B5CF6"
             />
 
             {/* Facet 3: k=1 Right */}
             <path
               d="M 50,54.4 L 93.75,40.18 L 68.55,60.43 Z"
-              fill={isReassembling ? '#6D28D9' : '#4C2872'}
-              className={`broken-facet float-alt ${isReassembling ? 'is-reassembled' : 'is-broken'}`}
-              style={{ '--dx': '26px', '--dy': '14px', '--rot': '15deg' } as React.CSSProperties}
+              fill="#6D28D9"
             />
 
             {/* Facet 4: k=2 Left */}
             <path
               d="M 50,54.4 L 68.55,60.43 L 77.04,91.61 Z"
-              fill={isReassembling ? '#8B5CF6' : '#5E3C8A'}
-              className={`broken-facet ${isReassembling ? 'is-reassembled' : 'is-broken'}`}
-              style={{ '--dx': '18px', '--dy': '30px', '--rot': '10deg' } as React.CSSProperties}
+              fill="#8B5CF6"
             />
 
             {/* Facet 5: k=2 Right */}
             <path
               d="M 50,54.4 L 77.04,91.61 L 50,73.9 Z"
-              fill={isReassembling ? '#6D28D9' : '#421E66'}
-              className={`broken-facet float-alt ${isReassembling ? 'is-reassembled' : 'is-broken'}`}
-              style={{ '--dx': '6px', '--dy': '34px', '--rot': '5deg' } as React.CSSProperties}
+              fill="#6D28D9"
             />
 
             {/* Facet 6: k=3 Left */}
             <path
               d="M 50,54.4 L 50,73.9 L 22.96,91.61 Z"
-              fill={isReassembling ? '#8B5CF6' : '#5E3C8A'}
-              className={`broken-facet ${isReassembling ? 'is-reassembled' : 'is-broken'}`}
-              style={{ '--dx': '-6px', '--dy': '34px', '--rot': '-5deg' } as React.CSSProperties}
+              fill="#8B5CF6"
             />
 
             {/* Facet 7: k=3 Right */}
             <path
               d="M 50,54.4 L 22.96,91.61 L 31.45,60.43 Z"
-              fill={isReassembling ? '#6D28D9' : '#421E66'}
-              className={`broken-facet float-alt ${isReassembling ? 'is-reassembled' : 'is-broken'}`}
-              style={{ '--dx': '-18px', '--dy': '30px', '--rot': '-10deg' } as React.CSSProperties}
+              fill="#6D28D9"
             />
 
             {/* Facet 8: k=4 Left */}
             <path
               d="M 50,54.4 L 31.45,60.43 L 6.25,40.18 Z"
-              fill={isReassembling ? '#8B5CF6' : '#5E3C8A'}
-              className={`broken-facet ${isReassembling ? 'is-reassembled' : 'is-broken'}`}
-              style={{ '--dx': '-26px', '--dy': '14px', '--rot': '-15deg' } as React.CSSProperties}
+              fill="#8B5CF6"
             />
 
             {/* Facet 9: k=4 Right */}
             <path
               d="M 50,54.4 L 6.25,40.18 L 38.54,38.62 Z"
-              fill={isReassembling ? '#6D28D9' : '#4C2872'}
-              className={`broken-facet float-alt ${isReassembling ? 'is-reassembled' : 'is-broken'}`}
-              style={{ '--dx': '-30px', '--dy': '-8px', '--rot': '-12deg' } as React.CSSProperties}
+              fill="#6D28D9"
             />
 
-            {/* Chill Sunglasses for the Star mascot */}
+            {/* Chill Sunglasses for the complete Star mascot */}
             <g className="star-sunglasses pointer-events-none select-none" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.85))' }}>
               {/* Frame & bridge */}
-              <path d="M 33,48 Q 50,44.5 67,48" stroke="#10101A" strokeWidth="2.8" strokeLinecap="round" fill="none" />
+              <path d="M 32,48 Q 50,44.5 68,48" stroke="#0B0B14" strokeWidth="2.8" strokeLinecap="round" fill="none" />
               <line x1="47" y1="47" x2="53" y2="47" stroke="#0B0B14" strokeWidth="3.2" strokeLinecap="round" />
               {/* Left Lens */}
-              <path d="M 34,49 C 34,49 33.5,58 39,59 C 45,59.5 47.5,56 47.5,49 Z" fill="#0B0B14" stroke="#4C1D95" strokeWidth="1.2" />
+              <path d="M 33.5,49 C 33.5,49 33,58 38.5,59 C 44.5,59.5 47,56 47,49 Z" fill="#0B0B14" stroke="#4C1D95" strokeWidth="1.2" />
               {/* Right Lens */}
-              <path d="M 52.5,49 C 52.5,49 55,56 61,59.5 C 66.5,58 66,49 66,49 Z" fill="#0B0B14" stroke="#4C1D95" strokeWidth="1.2" />
+              <path d="M 53,49 C 53,49 55.5,56 61.5,59.5 C 67,58 66.5,49 66.5,49 Z" fill="#0B0B14" stroke="#4C1D95" strokeWidth="1.2" />
               {/* Specular sheen reflections */}
-              <path d="M 36.5,51 L 43,51 L 39.5,56.5 Z" fill="#C4B5FD" opacity="0.4" />
-              <path d="M 55,51 L 61.5,51 L 58,56.5 Z" fill="#C4B5FD" opacity="0.4" />
+              <path d="M 36,51 L 42.5,51 L 39,56.5 Z" fill="#C4B5FD" opacity="0.45" />
+              <path d="M 55.5,51 L 62,51 L 58.5,56.5 Z" fill="#C4B5FD" opacity="0.45" />
             </g>
           </svg>
         </div>
 
-        {/* 404 Headline & Description with Exact Specified Copy */}
+        {/* 404 Headline & Clear Description */}
         <div className="space-y-3">
           <div className="text-6xl sm:text-7xl font-extrabold text-[#7C3AED] font-mono tracking-tight select-none drop-shadow-[0_0_20px_rgba(124,58,237,0.4)]">
             404
           </div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
-            This page shattered.
+            Lost in space? Keeping it cool.
           </h1>
           <p className="text-sm sm:text-base text-[#A1A1B5] max-w-md mx-auto leading-relaxed">
-            The page you're looking for doesn't exist or has moved. Let's put things back together.
+            The page you're looking for doesn't exist or has moved. Let's put things back together and get you back on track.
           </p>
         </div>
 
