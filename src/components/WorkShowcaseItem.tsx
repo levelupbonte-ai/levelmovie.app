@@ -69,7 +69,7 @@ export default function WorkShowcaseItem({ project, index, isEager = false }: Wo
     <section
       ref={sectionRef}
       id={`project-${project.id}`}
-      className="py-14 sm:py-20 lg:py-24 border-b border-white/[0.06] last:border-b-0 overflow-hidden"
+      className="py-10 sm:py-14 lg:py-16 border-b border-white/[0.06] last:border-b-0 overflow-hidden"
     >
       {/* 5-8% side margins: max-w-[94vw] or 2xl:max-w-[1520px] with responsive px */}
       <div className="w-full max-w-[94vw] 2xl:max-w-[1520px] mx-auto px-2 sm:px-4 lg:px-8">

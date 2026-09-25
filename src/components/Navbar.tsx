@@ -49,56 +49,41 @@ export default function Navbar({ currentPath }: NavbarProps) {
     }
   }, [currentPath]);
 
-  // Mobile & Tablet Only: Anti-oscillation iOS 26 Glass Bubble Scroll Engine
+  // Mobile & Tablet Only: Smooth Apple Liquid Glass Scroll Engine
   useEffect(() => {
     const handleScroll = () => {
       if (!ticking.current) {
         window.requestAnimationFrame(() => {
           const currentY = Math.max(0, window.scrollY);
-          const isTouchOrTablet = window.innerWidth < 1024;
+          const isPhone = window.innerWidth < 768;
           const now = Date.now();
 
-          if (!isTouchOrTablet) {
-            // NEVER float on desktop (>=1024px)
+          if (!isPhone) {
+            // NEVER float on tablet (>=768px) or desktop - stays natural full-width
             if (isFloatingRef.current) {
               isFloatingRef.current = false;
               setIsMobileFloating(false);
             }
           } else {
             const diff = currentY - prevScrollY.current;
-            const timeSinceToggle = now - lastToggleTime.current;
-
-            // Cooldown of 200ms to physically prevent infinite oscillation loops
-            const canToggle = timeSinceToggle > 200;
 
             if (currentY <= 25) {
-              // Reached top of page: always restore natural full-width navbar
-              if (isFloatingRef.current && canToggle) {
+              // At the very top: immediately restore natural full-width
+              if (isFloatingRef.current) {
                 isFloatingRef.current = false;
                 setIsMobileFloating(false);
-                lastToggleTime.current = now;
-                accumulatedScrollUp.current = 0;
               }
-            } else if (diff > 0) {
-              // Scrolling DOWN: reset upward accumulation
-              accumulatedScrollUp.current = 0;
-
-              // Only float if past threshold and scrolling down
-              if (!isFloatingRef.current && currentY > 55 && canToggle) {
+            } else if (diff < -2) {
+              // Instant, fluid return to normal on ANY upward scroll gesture
+              if (isFloatingRef.current) {
+                isFloatingRef.current = false;
+                setIsMobileFloating(false);
+              }
+            } else if (diff > 2 && currentY > 40) {
+              // Scrolling DOWN: float into liquid glass capsule
+              if (!isFloatingRef.current) {
                 isFloatingRef.current = true;
                 setIsMobileFloating(true);
-                lastToggleTime.current = now;
-              }
-            } else if (diff < 0) {
-              // Scrolling UP: accumulate continuous upward movement
-              accumulatedScrollUp.current += Math.abs(diff);
-
-              // Require deliberate scroll-up intent (at least 28px) to unfloat
-              if (isFloatingRef.current && accumulatedScrollUp.current > 28 && canToggle) {
-                isFloatingRef.current = false;
-                setIsMobileFloating(false);
-                lastToggleTime.current = now;
-                accumulatedScrollUp.current = 0;
               }
             }
           }
@@ -226,7 +211,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
       {/* Backdrop overlay for mobile menu */}
       <div
         onClick={() => setMobileMenuOpen(false)}
-        className={`lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 ease-out ${
+        className={`md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 ease-out ${
           mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         aria-hidden="true"
@@ -234,43 +219,26 @@ export default function Navbar({ currentPath }: NavbarProps) {
 
       <header
         ref={headerRef}
-        className="sticky top-0 z-50 w-full pointer-events-none transition-all duration-300"
+        className="sticky top-0 z-50 w-full pointer-events-none p-0 m-0"
         style={{
-          paddingTop: 'max(0.25rem, env(safe-area-inset-top, 0px))',
           viewTransitionName: 'nav',
         }}
       >
         {/*
           RESPONSIVE HEADER CAPSULE:
-          - Keeps height stable (min-h-[56px]) so layout never jumps or triggers infinite zoom/scroll loops.
-          - Mobile Phone (<640px): w-[calc(100%-1.25rem)] max-w-md
-          - Small Tablet / Large Phone (640-768px): sm:w-[calc(100%-2rem)] sm:max-w-xl
-          - Tablet / iPad (768-1024px): md:w-[calc(100%-2.5rem)] md:max-w-3xl (generous width, no truncated look)
-          - Desktop (1024px+): ALWAYS standard natural full-width navbar
+          - Flushed to top-0 with ZERO gap when normal (scrolled up or at top)
+          - Transitions smoothly into an ultra-clean, frosted glass capsule when scrolling down
+          - No fake white lines, no stripes: genuine deep tinted frosted glass with hairline subtle border
         */}
         <div
-          className={`pointer-events-auto relative transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] min-h-[56px] flex items-center ${
+          className={`pointer-events-auto relative flex items-center transition-all duration-200 ease-out min-h-[58px] ${
             isMobileFloating
-              ? 'w-[calc(100%-1.25rem)] sm:w-[calc(100%-2rem)] md:w-[calc(100%-2.5rem)] max-w-md sm:max-w-xl md:max-w-3xl mx-auto mt-2 px-4 sm:px-6 py-2 rounded-full bg-[#0D0D18]/80 backdrop-blur-2xl border border-white/[0.22] shadow-[inset_0_1px_1.5px_0_rgba(255,255,255,0.45),0_14px_36px_-6px_rgba(0,0,0,0.85),0_0_24px_rgba(124,58,237,0.18)]'
-              : 'w-full max-w-full px-4 sm:px-6 md:px-8 py-3 mt-0 rounded-none bg-[#0B0B14]/90 backdrop-blur-md border-b border-white/[0.08] shadow-none'
-          } lg:w-full lg:max-w-full lg:mt-0 lg:px-8 lg:py-4 lg:rounded-none lg:bg-[#0B0B14]/90 lg:backdrop-blur-md lg:border-b lg:border-white/[0.08] lg:shadow-none`}
+              ? 'w-[calc(100%-1.25rem)] sm:w-[calc(100%-2rem)] max-w-md sm:max-w-xl mx-auto mt-2 px-4 sm:px-6 py-2 rounded-full bg-[#0E0E1A]/85 backdrop-blur-xl border border-white/[0.12] shadow-[0_12px_32px_-6px_rgba(0,0,0,0.8),0_0_20px_rgba(124,58,237,0.12)]'
+              : 'w-full max-w-full mx-0 mt-0 px-4 sm:px-6 md:px-8 py-3.5 rounded-none bg-[#0B0B14]/95 backdrop-blur-md border border-transparent border-b-white/[0.08] shadow-none'
+          } lg:w-full lg:max-w-full lg:mx-0 lg:mt-0 lg:px-8 lg:py-4 lg:rounded-none lg:bg-[#0B0B14]/95 lg:backdrop-blur-md lg:border-transparent lg:border-b-white/[0.08] lg:shadow-none`}
         >
-          {/* iOS 26 Glass Specular Top Highlight (Mobile/Tablet Floating only) */}
-          {isMobileFloating && (
-            <>
-              <div
-                className="lg:hidden absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none"
-                aria-hidden="true"
-              />
-              <div
-                className="lg:hidden absolute inset-0 rounded-full bg-gradient-to-b from-white/[0.1] to-transparent pointer-events-none"
-                aria-hidden="true"
-              />
-            </>
-          )}
-
           <div className="relative z-10 w-full flex items-center justify-between gap-3">
-            {/* LOGO: constant stable height to eliminate any zoom/dezoom flickering */}
+            {/* LOGO: stable height for zero jitter */}
             <div className="shrink-0 flex items-center">
               <Link to="/" className="flex items-center group">
                 <img
@@ -283,9 +251,9 @@ export default function Navbar({ currentPath }: NavbarProps) {
               </Link>
             </div>
 
-            {/* DESKTOP NAV (Standard, clean, generous on >= 1024px) */}
-            <div className="hidden lg:flex items-center gap-5 xl:gap-8 shrink-0">
-              <nav className="flex items-center gap-5 xl:gap-7 text-sm font-medium">
+            {/* DESKTOP & TABLET NAV (Standard, clean, generous on >= 768px) */}
+            <div className="hidden md:flex items-center gap-3.5 lg:gap-5 xl:gap-8 shrink-0">
+              <nav className="flex items-center gap-3.5 lg:gap-5 xl:gap-7 text-xs lg:text-sm font-medium">
                 {/* Services Trigger */}
                 <div
                   className="relative"
@@ -347,17 +315,17 @@ export default function Navbar({ currentPath }: NavbarProps) {
               <Link
                 to="/preview"
                 onClick={() => setServicesDropdownOpen(false)}
-                className="px-5 py-2 text-xs sm:text-sm font-semibold rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white transition-all duration-200 hover:shadow-[0_0_18px_rgba(124,58,237,0.45)] active:scale-95 whitespace-nowrap shrink-0"
+                className="px-4 lg:px-5 py-2 text-xs sm:text-sm font-semibold rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white transition-all duration-200 hover:shadow-[0_0_18px_rgba(124,58,237,0.45)] active:scale-95 whitespace-nowrap shrink-0"
               >
                 Get a free preview
               </Link>
             </div>
 
-            {/* MOBILE & TABLET ACTIONS */}
-            <div className="lg:hidden flex items-center gap-2 sm:gap-3">
+            {/* PHONE ACTIONS (< 768px) */}
+            <div className="md:hidden flex items-center gap-2 sm:gap-3">
               <Link
                 to="/preview"
-                className="font-semibold rounded-full bg-[#7C3AED] text-white active:scale-95 whitespace-nowrap shrink-0 px-3.5 sm:px-4 py-1.5 text-xs sm:text-sm shadow-[0_0_12px_rgba(124,58,237,0.35)] transition-all"
+                className="font-semibold rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white active:scale-95 whitespace-nowrap shrink-0 px-3.5 sm:px-4 py-1.5 text-xs sm:text-sm shadow-[0_0_12px_rgba(124,58,237,0.3)] transition-all"
               >
                 Preview
               </Link>
@@ -367,7 +335,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
                 onClick={() => setMobileMenuOpen((prev) => !prev)}
                 aria-label="Toggle navigation menu"
                 aria-expanded={mobileMenuOpen}
-                className="p-2 text-white cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] rounded-full"
+                className="p-2 text-white cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] rounded-full hover:bg-white/[0.04] transition-colors"
               >
                 <div className="w-5 h-4 flex flex-col justify-between">
                   <span
@@ -393,15 +361,15 @@ export default function Navbar({ currentPath }: NavbarProps) {
 
         {/*
           MOBILE & TABLET LIQUID GLASS MENU:
-          - Pure GPU-composited transform & opacity transition: zero layout recalculations or glitches
-          - Scales perfectly for Phone (<640px) and Tablet/iPad (640-1024px)
+          - Ultra clean frosted glass panel with subtle hairline border
+          - Responsive width: phone (<640px) and tablet/iPad (640-1024px)
         */}
         <div
-          className={`lg:hidden pointer-events-auto transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top ${
+          className={`md:hidden pointer-events-auto transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top ${
             mobileMenuOpen
               ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
-              : 'opacity-0 -translate-y-3 scale-95 pointer-events-none select-none'
-          } w-[calc(100%-1.25rem)] sm:w-[calc(100%-2rem)] md:w-[calc(100%-2.5rem)] max-w-md sm:max-w-xl md:max-w-3xl mx-auto mt-2 rounded-3xl bg-[#0D0D18]/95 backdrop-blur-2xl border border-white/[0.18] shadow-[inset_0_1px_1.5px_0_rgba(255,255,255,0.35),0_20px_50px_rgba(0,0,0,0.92),0_0_24px_rgba(124,58,237,0.18)] overflow-hidden`}
+              : 'opacity-0 -translate-y-2.5 scale-95 pointer-events-none select-none'
+          } w-[calc(100%-1.25rem)] sm:w-[calc(100%-2rem)] md:w-[calc(100%-2.5rem)] max-w-md sm:max-w-xl md:max-w-3xl mx-auto mt-2 rounded-2xl sm:rounded-3xl bg-[#0E0E1A]/95 backdrop-blur-2xl border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.85)] overflow-hidden`}
         >
           <div className="p-4 sm:p-6 space-y-4">
             <div className="flex flex-col space-y-1 text-sm font-semibold text-slate-200">
@@ -510,7 +478,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
               if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
             }}
             onMouseLeave={handleServicesMouseLeave}
-            className="pointer-events-auto hidden lg:block w-full bg-[#0B0B14]/98 backdrop-blur-2xl border-t border-b border-white/[0.08] shadow-[0_24px_60px_rgba(0,0,0,0.95)] animate-in fade-in slide-in-from-top-1 duration-200 text-left"
+            className="pointer-events-auto hidden md:block w-full bg-[#0B0B14]/98 backdrop-blur-2xl border-t border-b border-white/[0.08] shadow-[0_24px_60px_rgba(0,0,0,0.95)] animate-in fade-in slide-in-from-top-1 duration-200 text-left"
           >
             <div className="max-w-7xl mx-auto px-6 sm:px-10 py-8 space-y-8">
               {/* 3 Clean Typographic Columns */}

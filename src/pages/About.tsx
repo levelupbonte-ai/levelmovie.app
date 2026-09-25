@@ -137,10 +137,10 @@ export default function About() {
               Get a free preview
             </Link>
             <Link
-              to="/contact"
-              className="px-8 py-3.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-white font-medium text-sm border border-white/[0.1] transition-all"
+              to="/preview"
+              className="px-8 py-3.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-white font-semibold text-sm border border-white/[0.1] transition-all"
             >
-              Get in touch
+              Create your website
             </Link>
           </div>
         </div>

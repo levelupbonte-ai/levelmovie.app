@@ -279,12 +279,12 @@ export default function Home() {
               Get a free preview
             </Link>
 
-            <button
-              onClick={copyEmail}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-white font-medium text-sm border border-white/[0.1] transition-all cursor-pointer"
+            <Link
+              to="/preview"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-white font-semibold text-sm border border-white/[0.12] transition-all duration-200 text-center hover:border-white/[0.25] active:scale-95"
             >
-              {copiedEmail ? 'Email copied!' : 'contact@levelup-ecosystem.com'}
-            </button>
+              Create your website
+            </Link>
           </div>
         </div>
       </section>

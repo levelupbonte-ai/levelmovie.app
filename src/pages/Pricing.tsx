@@ -101,16 +101,22 @@ export default function Pricing() {
                     <span className="text-[#7C3AED] font-bold">✓</span> Fast mobile-responsive one-page site
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Direct contact & click-to-call action
+                    <span className="text-[#7C3AED] font-bold">✓</span> Direct contact &amp; click-to-call action
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-[#7C3AED] font-bold">✓</span> SSL Certificate (HTTPS) included
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Clean typography & brand colors
+                    <span className="text-[#7C3AED] font-bold">✓</span> Clean typography &amp; brand colors
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-[#7C3AED] font-bold">✓</span> Basic local SEO meta tags
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#7C3AED] font-bold">✓</span> Anti-bot spam defense on forms
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#7C3AED] font-bold">✓</span> Zero monthly platform subscription fees
                   </li>
                 </ul>
               </div>
@@ -188,7 +194,7 @@ export default function Pricing() {
 
                 <ul className="space-y-3 text-xs sm:text-sm text-[#A1A1B5] border-t border-white/[0.06] pt-6">
                   <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Everything in Secure
+                    <span className="text-[#7C3AED] font-bold">✓</span> Everything in Secure tier
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-[#7C3AED] font-bold">✓</span> High-speed cloud hosting included
@@ -197,13 +203,16 @@ export default function Pricing() {
                     <span className="text-[#7C3AED] font-bold">✓</span> Routine monthly security updates
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Daily automated snapshots & backups
+                    <span className="text-[#7C3AED] font-bold">✓</span> Daily automated snapshots &amp; backups
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-[#7C3AED] font-bold">✓</span> On-demand content updates (hours, prices)
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Priority support
+                    <span className="text-[#7C3AED] font-bold">✓</span> Ongoing uptime &amp; SSL monitoring
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#7C3AED] font-bold">✓</span> Priority direct developer support
                   </li>
                 </ul>
               </div>
