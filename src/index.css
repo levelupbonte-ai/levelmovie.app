@@ -206,6 +206,36 @@
   }
 }
 
+/* Product Zoom-In Showcase Effect */
+@keyframes productZoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(12px);
+    filter: blur(4px);
+  }
+  60% {
+    transform: scale(1.02) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+.animate-product-zoom {
+  animation: productZoomIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-product-zoom {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
 /* Print Stylesheet */
 @media print {
   html, body {

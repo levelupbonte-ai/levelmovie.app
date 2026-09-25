@@ -97,11 +97,11 @@ const SERVICES: ServiceItem[] = [
 
 export default function Service3DShowcaseDeck() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [zoomKey, setZoomKey] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [isAnimatingText, setIsAnimatingText] = useState(false);
 
-  // Swipe tracking
+  // Swipe / Drag tracking
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const touchEndXRef = useRef<number | null>(null);
@@ -119,11 +119,8 @@ export default function Service3DShowcaseDeck() {
   const total = SERVICES.length;
 
   const triggerChange = useCallback((nextIdx: number) => {
-    setIsAnimatingText(true);
     setActiveIndex(nextIdx);
-    setTimeout(() => {
-      setIsAnimatingText(false);
-    }, 280);
+    setZoomKey((prev) => prev + 1);
   }, []);
 
   const handleNext = useCallback(() => {
@@ -134,7 +131,7 @@ export default function Service3DShowcaseDeck() {
     triggerChange((activeIndex - 1 + total) % total);
   }, [activeIndex, total, triggerChange]);
 
-  // Gentle auto-rotation
+  // Gentle auto-rotation (pauses when hovered or reduced motion)
   useEffect(() => {
     if (isHovered || prefersReducedMotion) return;
 
@@ -214,11 +211,11 @@ export default function Service3DShowcaseDeck() {
   const currentService = SERVICES[activeIndex];
 
   /**
-   * Conflict-Free Trio Calculation:
-   * To prevent any polygonal intersection clipping or overlapping during animation:
-   * 1. No preserve-3d on parent (elements are rendered in clean discrete Z-stacking layers).
-   * 2. Clear horizontal separation (sm: 210px between centers; element width is <= 160px, so at least 50px clearance at all times).
-   * 3. Offstage items don't animate across the screen when modulo wraps.
+   * 3D Trio Queue Geometry:
+   * "un rang et les autres sont derrière comme un trio"
+   * The active item zooms forward to the front rank (scale 1.18, translateZ 90px).
+   * Flanking items wait behind in line (scale 0.72, translateZ -70px, angled inward).
+   * When switching, the queued product zooms forward into view while the outgoing one leaves.
    */
   const getPositionData = (index: number) => {
     let diff = (index - activeIndex) % total;
@@ -226,77 +223,73 @@ export default function Service3DShowcaseDeck() {
     if (diff < -total / 2) diff += total;
 
     if (diff === 0) {
-      // CENTER ACTIVE: Zoomed forward in the foreground, 100% clarity
+      // CENTER FOREGROUND (RANG 1 - ZOOMED FORWARD)
       return {
-        transform: 'translateX(0px) scale(1) rotateY(0deg)',
+        transform: 'translate3d(0, 0, 90px) scale(1.18) rotateY(0deg)',
         opacity: 1,
-        zIndex: 30,
+        zIndex: 35,
         pointer: 'cursor-default',
         isClickable: false,
-        visible: true,
-      };
-    } else if (diff === -1) {
-      // LEFT FLANK: In the depth background, cleanly separated on the left
-      return {
-        transform: 'translateX(-135px) sm:translateX(-195px) scale(0.68) rotateY(16deg)',
-        opacity: 0.5,
-        zIndex: 15,
-        pointer: 'cursor-pointer hover:opacity-85',
-        isClickable: true,
-        action: handlePrev,
+        filter: 'brightness(1.08) drop-shadow(0 26px 50px rgba(0,0,0,0.8)) drop-shadow(0 0 35px rgba(124,58,237,0.38))',
         visible: true,
       };
     } else if (diff === 1) {
-      // RIGHT FLANK: In the depth background, cleanly separated on the right
+      // RIGHT FLANK: Queued directly behind in the trio rank, angled towards center
       return {
-        transform: 'translateX(135px) sm:translateX(195px) scale(0.68) rotateY(-16deg)',
-        opacity: 0.55,
-        zIndex: 15,
-        pointer: 'cursor-pointer hover:opacity-85',
+        transform: 'translate3d(calc(var(--card-gap, 180px)), 16px, -70px) scale(0.72) rotateY(-18deg)',
+        opacity: 0.65,
+        zIndex: 20,
+        pointer: 'cursor-pointer hover:opacity-90',
         isClickable: true,
         action: handleNext,
+        filter: 'brightness(0.85) drop-shadow(0 14px 28px rgba(0,0,0,0.55))',
+        visible: true,
+      };
+    } else if (diff === -1) {
+      // LEFT FLANK: Previous item sitting behind on the left
+      return {
+        transform: 'translate3d(calc(-1 * var(--card-gap, 180px)), 16px, -70px) scale(0.72) rotateY(18deg)',
+        opacity: 0.65,
+        zIndex: 20,
+        pointer: 'cursor-pointer hover:opacity-90',
+        isClickable: true,
+        action: handlePrev,
+        filter: 'brightness(0.85) drop-shadow(0 14px 28px rgba(0,0,0,0.55))',
         visible: true,
       };
     } else if (diff === 2) {
-      // VISIBLE IN THE DISTANCE: The upcoming product queued up in line (seen from afar)
+      // DEEP QUEUE RIGHT: 2nd product waiting in line in the distance
       return {
-        transform: 'translateX(225px) sm:translateX(320px) scale(0.44) rotateY(-24deg)',
+        transform: 'translate3d(calc(1.72 * var(--card-gap, 180px)), 28px, -170px) scale(0.48) rotateY(-28deg)',
         opacity: 0.28,
-        zIndex: 6,
+        zIndex: 10,
         pointer: 'cursor-pointer hover:opacity-50',
         isClickable: true,
         action: handleNext,
+        filter: 'brightness(0.7) blur(0.5px)',
         visible: true,
       };
     } else if (diff === -2) {
-      // In the distance on the left (retreating product)
+      // DEEP QUEUE LEFT: Retreating product in distance
       return {
-        transform: 'translateX(-225px) sm:translateX(-320px) scale(0.44) rotateY(24deg)',
-        opacity: 0.18,
-        zIndex: 6,
+        transform: 'translate3d(calc(-1.72 * var(--card-gap, 180px)), 28px, -170px) scale(0.48) rotateY(28deg)',
+        opacity: 0.22,
+        zIndex: 10,
         pointer: 'cursor-pointer hover:opacity-40',
         isClickable: true,
         action: handlePrev,
+        filter: 'brightness(0.7) blur(0.5px)',
         visible: true,
       };
-    } else if (diff === 3) {
-      // Entering offstage
-      return {
-        transform: 'translateX(300px) sm:translateX(420px) scale(0.25) rotateY(-30deg)',
-        opacity: 0,
-        zIndex: 1,
-        pointer: 'pointer-events-none',
-        isClickable: false,
-        visible: false,
-      };
     } else {
-      // Offstage left or hidden
+      // Offstage hidden
       return {
-        transform: 'translateX(-300px) sm:translateX(-420px) scale(0.25) rotateY(30deg)',
+        transform: 'translate3d(0, 0, -260px) scale(0.2)',
         opacity: 0,
         zIndex: 1,
         pointer: 'pointer-events-none',
         isClickable: false,
+        filter: 'none',
         visible: false,
       };
     }
@@ -319,15 +312,52 @@ export default function Service3DShowcaseDeck() {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      className="relative w-full max-w-[560px] sm:max-w-[620px] mx-auto select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-[#7C3AED]"
+      className="relative w-full max-w-[620px] sm:max-w-[700px] mx-auto select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED]/70 rounded-3xl"
     >
-      {/* 3D Queue Stage: Clean layered depth so items never collide or intersect, with upcoming product visible in the distance */}
+      {/* 3D Depth Stage with perspective */}
       <div
-        className="relative h-[250px] sm:h-[290px] w-full flex items-center justify-center overflow-visible touch-pan-y"
-        style={{ perspective: '1100px' }}
+        className="relative h-[320px] sm:h-[390px] md:h-[420px] w-full flex items-center justify-center overflow-visible touch-pan-y"
+        style={
+          {
+            perspective: '1200px',
+            '--card-gap': 'clamp(145px, 24vw, 220px)',
+          } as React.CSSProperties
+        }
       >
+        {/* Subtle radial aura behind the front active item */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 sm:w-80 sm:h-80 bg-[#7C3AED]/22 rounded-full blur-[60px] pointer-events-none -z-10"
+          aria-hidden="true"
+        />
+
+        {/* Previous button */}
+        <button
+          type="button"
+          onClick={handlePrev}
+          aria-label="Previous product"
+          className="absolute left-1 sm:-left-3 top-1/2 -translate-y-1/2 z-40 p-2 sm:p-2.5 rounded-full bg-[#14141F]/80 hover:bg-[#7C3AED] border border-white/10 hover:border-[#7C3AED] text-white/70 hover:text-white backdrop-blur-md transition-all shadow-xl hover:scale-110 active:scale-95 cursor-pointer"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* Next button */}
+        <button
+          type="button"
+          onClick={handleNext}
+          aria-label="Next product"
+          className="absolute right-1 sm:-right-3 top-1/2 -translate-y-1/2 z-40 p-2 sm:p-2.5 rounded-full bg-[#14141F]/80 hover:bg-[#7C3AED] border border-white/10 hover:border-[#7C3AED] text-white/70 hover:text-white backdrop-blur-md transition-all shadow-xl hover:scale-110 active:scale-95 cursor-pointer"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+        {/* Products rendered in rank queue */}
         {SERVICES.map((item, idx) => {
           const pos = getPositionData(idx);
+          const isFront = idx === activeIndex;
 
           return (
             <div
@@ -337,60 +367,69 @@ export default function Service3DShowcaseDeck() {
                   pos.action();
                 }
               }}
-              title={pos.isClickable ? `View ${item.title}` : item.title}
-              className={`absolute flex items-center justify-center will-change-[transform,opacity] transition-all duration-600 ease-[cubic-bezier(0.2,0.85,0.25,1)] ${pos.pointer}`}
+              title={pos.isClickable ? `Zoom to ${item.title}` : item.title}
+              className={`absolute flex items-center justify-center will-change-[transform,opacity,filter] transition-all duration-700 ease-[cubic-bezier(0.2,0.9,0.25,1.05)] ${pos.pointer}`}
               style={{
                 transform: pos.transform,
                 opacity: pos.opacity,
                 zIndex: pos.zIndex,
+                filter: pos.filter,
                 visibility: pos.visible || pos.opacity > 0 ? 'visible' : 'hidden',
               }}
             >
-              {/* Authentic crystal-clear 3D image */}
-              <div className="w-32 h-32 sm:w-44 sm:h-44 relative flex items-center justify-center select-none pointer-events-none">
+              {/* Enlarged 3D product visual container */}
+              <div className="w-48 h-48 sm:w-60 sm:h-60 md:w-68 md:h-68 lg:w-72 lg:h-72 relative flex items-center justify-center select-none pointer-events-none">
                 <picture className="w-full h-full flex items-center justify-center">
                   <source srcSet={`/assets/img/icons/${item.iconName}.avif`} type="image/avif" />
                   <source srcSet={`/assets/img/icons/${item.iconName}.webp`} type="image/webp" />
                   <img
                     src={`/assets/img/icons/${item.iconName}.png`}
                     alt={item.alt}
-                    width="192"
-                    height="192"
+                    width="288"
+                    height="288"
                     loading="eager"
                     decoding="async"
-                    className="w-full h-full object-contain filter drop-shadow-[0_16px_30px_rgba(0,0,0,0.55)]"
+                    className="w-full h-full object-contain"
                   />
                 </picture>
+
+                {/* Subtle highlight sheen for active front product */}
+                {isFront && (
+                  <div
+                    className="absolute -bottom-3 w-3/4 h-4 bg-[#7C3AED]/35 rounded-full blur-[14px] pointer-events-none"
+                    aria-hidden="true"
+                  />
+                )}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Product Details Section: Clean typography right below the front item */}
+      {/* Product Details Section: Zooms forward in sync with the product */}
       <div
-        className={`pt-2 text-center space-y-2 max-w-md mx-auto transition-opacity duration-300 ${
-          isAnimatingText ? 'opacity-40' : 'opacity-100'
-        }`}
+        key={zoomKey}
+        className="pt-2 text-center space-y-2.5 max-w-lg mx-auto animate-product-zoom"
       >
-        {/* Category tag & highlight */}
+        {/* Category tag & highlight badge */}
         <div className="flex items-center justify-center gap-2">
-          <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-[#A78BFA]">
+          <span className="px-2.5 py-0.5 rounded-full bg-[#7C3AED]/20 border border-[#7C3AED]/30 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-[#C4B5FD]">
             {currentService.tag}
           </span>
           <span className="text-white/20">•</span>
-          <span className="text-[11px] text-[#10B981] font-semibold">
+          <span className="text-xs text-[#10B981] font-semibold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] inline-block animate-pulse" />
             {currentService.highlight}
           </span>
         </div>
 
         {/* Title */}
-        <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight leading-tight">
+        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
           {currentService.title}
         </h3>
 
         {/* Description */}
-        <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed max-w-sm mx-auto min-h-[44px]">
+        <p className="text-xs sm:text-sm md:text-base text-[#A1A1B5] leading-relaxed max-w-md mx-auto min-h-[44px]">
           {currentService.desc}
         </p>
 
@@ -398,11 +437,31 @@ export default function Service3DShowcaseDeck() {
         <div className="pt-1">
           <Link
             to={currentService.link}
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#A78BFA] hover:text-white transition-colors group cursor-pointer"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#A78BFA] hover:text-white transition-colors group cursor-pointer"
           >
             <span>Explore {currentService.title}</span>
-            <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
+            <span className="transition-transform duration-200 group-hover:translate-x-1.5">→</span>
           </Link>
+        </div>
+
+        {/* Navigation indicator dots */}
+        <div className="pt-3 flex items-center justify-center gap-2" aria-label="Showcase items navigation">
+          {SERVICES.map((item, idx) => {
+            const isActive = idx === activeIndex;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => triggerChange(idx)}
+                aria-label={`Show ${item.title}`}
+                className={`transition-all duration-300 rounded-full cursor-pointer ${
+                  isActive
+                    ? 'w-7 h-2 bg-[#7C3AED] shadow-[0_0_12px_rgba(124,58,237,0.7)]'
+                    : 'w-2 h-2 bg-white/20 hover:bg-white/40'
+                }`}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
