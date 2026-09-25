@@ -330,26 +330,26 @@ export default function Service3DShowcaseDeck() {
           aria-hidden="true"
         />
 
-        {/* Previous button (hidden on mobile, reveals on desktop hover) */}
+        {/* Previous button (hidden on mobile, reveals on desktop hover - no bubble, pure violet arrow) */}
         <button
           type="button"
           onClick={handlePrev}
           aria-label="Previous product"
-          className="hidden sm:flex items-center justify-center absolute left-1 sm:-left-4 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-[#14141F]/80 hover:bg-[#7C3AED] border border-white/10 hover:border-[#7C3AED] text-white/70 hover:text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-xl hover:scale-110 active:scale-95 cursor-pointer"
+          className="hidden sm:flex items-center justify-center absolute left-0 sm:-left-6 top-1/2 -translate-y-1/2 z-40 p-2 bg-transparent border-0 text-[#8B5CF6] hover:text-[#C4B5FD] opacity-0 group-hover:opacity-100 transition-all duration-300 drop-shadow-[0_0_12px_rgba(124,58,237,0.7)] hover:scale-125 active:scale-95 cursor-pointer"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
-        {/* Next button (hidden on mobile, reveals on desktop hover) */}
+        {/* Next button (hidden on mobile, reveals on desktop hover - no bubble, pure violet arrow) */}
         <button
           type="button"
           onClick={handleNext}
           aria-label="Next product"
-          className="hidden sm:flex items-center justify-center absolute right-1 sm:-right-4 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-[#14141F]/80 hover:bg-[#7C3AED] border border-white/10 hover:border-[#7C3AED] text-white/70 hover:text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-xl hover:scale-110 active:scale-95 cursor-pointer"
+          className="hidden sm:flex items-center justify-center absolute right-0 sm:-right-6 top-1/2 -translate-y-1/2 z-40 p-2 bg-transparent border-0 text-[#8B5CF6] hover:text-[#C4B5FD] opacity-0 group-hover:opacity-100 transition-all duration-300 drop-shadow-[0_0_12px_rgba(124,58,237,0.7)] hover:scale-125 active:scale-95 cursor-pointer"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
           </svg>
         </button>

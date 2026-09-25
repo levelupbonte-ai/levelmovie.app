@@ -195,98 +195,47 @@ export default function Home() {
       <WhoItsForSection />
 
       {/* ------------------------------------------------------------- */}
-      {/* 3-STEP PROCESS PREVIEW                                        */}
+      {/* WORKFLOW SECTION (Clean White Background per design specification) */}
       {/* ------------------------------------------------------------- */}
-      <section className="py-20 sm:py-24 px-4 sm:px-8 bg-[#0B0B14] border-b border-white/[0.08] relative overflow-hidden">
-        <div className="max-w-6xl mx-auto space-y-12 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4" data-reveal>
-            <div className="space-y-2 text-left">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
-                Simple Workflow
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                From idea to live site in 3 steps
-              </h2>
-            </div>
-            <div>
-              <Link
-                to="/process"
-                className="text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
-              >
-                Learn how we build with security checks →
-              </Link>
+      <section className="py-16 sm:py-24 px-4 sm:px-8 bg-white border-b border-gray-200 relative overflow-hidden select-none">
+        <div className="max-w-6xl mx-auto space-y-8 sm:space-y-12 relative z-10 text-center">
+          <div className="space-y-3" data-reveal>
+            <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#7C3AED]">
+              Simple Workflow
+            </span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0B0B14] tracking-tight">
+              From idea to live site in 3 steps
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
+              Our clear, transparent process built for momentum, bank-grade security, and zero guesswork.
+            </p>
+          </div>
+
+          {/* Workflow Diagram Image (Generous footprint for PC & Tablet, fully responsive for Mobile) */}
+          <div className="w-full flex items-center justify-center" data-reveal>
+            <div className="w-full max-w-5xl rounded-2xl overflow-hidden select-none pointer-events-none shadow-sm">
+              <img
+                src="/assets/img/workflow.png"
+                alt="LevelUp Ecosystem Build Workflow"
+                width="1536"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+                className="w-full h-auto object-contain select-none pointer-events-none block"
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left" data-reveal-group>
-            <div
-              onMouseMove={handleCardMouseMove}
-              className="group relative p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-white/[0.16] transition-all space-y-4 overflow-hidden"
-              data-reveal
+          <div className="pt-2 text-center" data-reveal>
+            <Link
+              to="/process"
+              className="inline-flex items-center gap-2 text-sm sm:text-base font-semibold text-[#7C3AED] hover:text-[#5B21B6] transition-colors"
             >
-              <div
-                className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  background:
-                    'radial-gradient(300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(124, 58, 237, 0.07), transparent 80%)',
-                }}
-              />
-              <div className="text-xs font-mono font-bold text-[#A78BFA]">
-                STEP 01
-              </div>
-              <h3 className="text-lg font-bold text-white">
-                Discovery &amp; Free Preview
-              </h3>
-              <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                Tell us about your business goals and style preferences. Within 24 to 48 hours, we assemble a functional mobile preview so you can experience how your site will look and feel before spending a dollar.
-              </p>
-            </div>
-
-            <div
-              onMouseMove={handleCardMouseMove}
-              className="group relative p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-white/[0.16] transition-all space-y-4 overflow-hidden"
-              data-reveal
-            >
-              <div
-                className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  background:
-                    'radial-gradient(300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(124, 58, 237, 0.07), transparent 80%)',
-                }}
-              />
-              <div className="text-xs font-mono font-bold text-[#A78BFA]">
-                STEP 02
-              </div>
-              <h3 className="text-lg font-bold text-white">
-                Build &amp; Security Check
-              </h3>
-              <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                Once approved, we build your complete site with fast loading speeds, seamless booking, and technical hardening: SSL certificates, 2FA on admin logins, and spam honeypot filters.
-              </p>
-            </div>
-
-            <div
-              onMouseMove={handleCardMouseMove}
-              className="group relative p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-white/[0.16] transition-all space-y-4 overflow-hidden"
-              data-reveal
-            >
-              <div
-                className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  background:
-                    'radial-gradient(300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(124, 58, 237, 0.07), transparent 80%)',
-                }}
-              />
-              <div className="text-xs font-mono font-bold text-[#A78BFA]">
-                STEP 03
-              </div>
-              <h3 className="text-lg font-bold text-white">
-                Launch &amp; Care
-              </h3>
-              <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                We go live on your custom domain, connect your Google Maps profile, and set up daily backups. Our optional monthly care plan ensures your software remains updated and safe.
-              </p>
-            </div>
+              <span>Learn how we build with security checks</span>
+              <span>→</span>
+            </Link>
           </div>
         </div>
       </section>

@@ -54,6 +54,18 @@
     }
   }
 
+  /* Universal image protection: No image on the site can be copied, dragged, saved, or long-pressed */
+  img, picture, svg:not([role="button"]):not(button svg) {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+    user-drag: none !important;
+    -webkit-touch-callout: none !important; /* Disables iOS long-press save menu */
+    pointer-events: none; /* Image is not directly clickable/copiable; click events pass to parent links */
+  }
+
   input,
   textarea,
   select {
