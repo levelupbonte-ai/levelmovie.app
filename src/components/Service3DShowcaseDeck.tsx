@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from './Link';
 
 interface ServiceItem {
@@ -99,7 +99,12 @@ export default function Service3DShowcaseDeck() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Swipe gesture tracking (touch & mouse)
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+  const touchEndXRef = useRef<number | null>(null);
+  const isDraggingRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -110,74 +115,221 @@ export default function Service3DShowcaseDeck() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  // Cycle forward automatically
+  const total = SERVICES.length;
+
+  const handleNext = useCallback(() => {
+    setActiveIndex((prev) => (prev + 1) % total);
+  }, [total]);
+
+  const handlePrev = useCallback(() => {
+    setActiveIndex((prev) => (prev - 1 + total) % total);
+  }, [total]);
+
+  // Gentle auto-rotation (pauses when user hovers or interacts)
   useEffect(() => {
     if (isHovered || prefersReducedMotion) return;
 
     const timer = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % SERVICES.length);
-    }, 3200);
+      handleNext();
+    }, 3800);
 
     return () => clearInterval(timer);
-  }, [isHovered, prefersReducedMotion]);
+  }, [isHovered, prefersReducedMotion, handleNext]);
+
+  // Touch Swipe for mobile (swiping with fingers)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsHovered(true);
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+    touchEndXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current !== null && touchEndXRef.current !== null && touchStartYRef.current !== null) {
+      const diffX = touchStartXRef.current - touchEndXRef.current;
+      const diffY = touchStartYRef.current - (e.changedTouches[0]?.clientY ?? touchStartYRef.current);
+
+      // Only register horizontal swipe if movement is predominantly horizontal
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
+        if (diffX > 0) {
+          handleNext(); // Finger swiped left -> next product zooms in
+        } else {
+          handlePrev(); // Finger swiped right -> previous product zooms in
+        }
+      }
+    }
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+    touchEndXRef.current = null;
+    setTimeout(() => setIsHovered(false), 2200);
+  };
+
+  // Mouse Drag Swipe for PC
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDraggingRef.current = true;
+    touchStartXRef.current = e.clientX;
+    touchEndXRef.current = e.clientX;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current) return;
+    touchEndXRef.current = e.clientX;
+  };
+
+  const handleMouseUp = () => {
+    if (isDraggingRef.current && touchStartXRef.current !== null && touchEndXRef.current !== null) {
+      const diff = touchStartXRef.current - touchEndXRef.current;
+      if (diff > 40) {
+        handleNext();
+      } else if (diff < -40) {
+        handlePrev();
+      }
+    }
+    isDraggingRef.current = false;
+    touchStartXRef.current = null;
+    touchEndXRef.current = null;
+  };
+
+  // Keyboard accessibility
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowRight') {
+      handleNext();
+    } else if (e.key === 'ArrowLeft') {
+      handlePrev();
+    }
+  };
 
   const currentService = SERVICES[activeIndex];
 
+  // Calculate circular distance to render full continuous trio carousel
+  const getPositionData = (index: number) => {
+    let diff = (index - activeIndex) % total;
+    if (diff > total / 2) diff -= total;
+    if (diff < -total / 2) diff += total;
+
+    if (diff === 0) {
+      // CENTER: Zoomed forward towards the user, 100% opacity, front-stage
+      return {
+        style: 'translateX(0px) scale(1.24) translateZ(80px) rotateY(0deg)',
+        opacity: 1,
+        zIndex: 30,
+        pointer: 'cursor-grab',
+        isClickable: false,
+      };
+    } else if (diff === -1) {
+      // LEFT FLANK: Angled inwards, pushed back into perspective, preparing to leave or be pulled
+      return {
+        style: 'translateX(-125px) sm:translateX(-175px) scale(0.72) translateZ(-80px) rotateY(26deg)',
+        opacity: 0.42,
+        zIndex: 15,
+        pointer: 'cursor-pointer hover:opacity-75',
+        isClickable: true,
+        action: handlePrev,
+      };
+    } else if (diff === 1) {
+      // RIGHT FLANK: Angled inwards, pushed back into perspective, next in line
+      return {
+        style: 'translateX(125px) sm:translateX(175px) scale(0.72) translateZ(-80px) rotateY(-26deg)',
+        opacity: 0.42,
+        zIndex: 15,
+        pointer: 'cursor-pointer hover:opacity-75',
+        isClickable: true,
+        action: handleNext,
+      };
+    } else if (diff < -1) {
+      // Far left in hidden queue
+      return {
+        style: 'translateX(-260px) scale(0.38) translateZ(-160px) rotateY(35deg)',
+        opacity: 0,
+        zIndex: 5,
+        pointer: 'pointer-events-none',
+        isClickable: false,
+      };
+    } else {
+      // Far right in hidden queue
+      return {
+        style: 'translateX(260px) scale(0.38) translateZ(-160px) rotateY(-35deg)',
+        opacity: 0,
+        zIndex: 5,
+        pointer: 'pointer-events-none',
+        isClickable: false,
+      };
+    }
+  };
+
   return (
     <div
-      ref={containerRef}
       tabIndex={0}
       role="region"
-      aria-label="3D Interactive Service Showcase"
+      aria-label="3D Trio Product Carousel"
+      onKeyDown={handleKeyDown}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="relative w-full max-w-[460px] mx-auto select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-[#7C3AED]"
+      onMouseLeave={() => {
+        setIsHovered(false);
+        isDraggingRef.current = false;
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      className="relative w-full max-w-[520px] mx-auto select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-[#7C3AED]"
     >
-      {/* Soft ambient purple glow behind the big 3D asset */}
-      <div className="absolute top-28 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[320px] bg-[#7C3AED]/20 rounded-full blur-[110px] pointer-events-none" />
-
-      {/* Grand 3D Product Stage: ONLY the big 3D asset zooming forward, pure and uncovered */}
+      {/* 3D Trio Stage: One steps aside, next zooms forward */}
       <div
-        className="relative h-[250px] sm:h-[290px] w-full flex items-center justify-center"
-        style={{ perspective: '1000px' }}
+        className="relative h-[250px] sm:h-[290px] w-full flex items-center justify-center overflow-visible touch-pan-y"
+        style={{ perspective: '1100px', transformStyle: 'preserve-3d' }}
       >
         {SERVICES.map((item, idx) => {
-          const isCurrent = idx === activeIndex;
+          const pos = getPositionData(idx);
 
           return (
             <div
               key={item.id}
-              className="absolute inset-0 flex items-center justify-center transition-all duration-700 ease-out will-change-[transform,opacity]"
+              onClick={() => {
+                if (pos.isClickable && pos.action) {
+                  pos.action();
+                }
+              }}
+              title={pos.isClickable ? `View ${item.title}` : item.title}
+              className={`absolute flex items-center justify-center will-change-[transform,opacity] transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${pos.pointer}`}
               style={{
-                opacity: isCurrent ? 1 : 0,
-                transform: isCurrent
-                  ? 'scale(1.18) translateZ(60px) rotateY(0deg)'
-                  : 'scale(0.85) translateZ(-80px) rotateY(12deg)',
-                pointerEvents: isCurrent ? 'auto' : 'none',
+                transform: pos.style,
+                opacity: pos.opacity,
+                zIndex: pos.zIndex,
               }}
             >
-              {/* Grand 3D Product Asset: Large, borderless, no background box */}
-              <picture className="w-44 h-44 sm:w-56 sm:h-56 flex items-center justify-center relative select-none float-gentle">
-                <source srcSet={`/assets/img/icons/${item.iconName}.avif`} type="image/avif" />
-                <source srcSet={`/assets/img/icons/${item.iconName}.webp`} type="image/webp" />
-                <img
-                  src={`/assets/img/icons/${item.iconName}.png`}
-                  alt={item.alt}
-                  width="224"
-                  height="224"
-                  className="w-full h-full object-contain filter drop-shadow-[0_20px_35px_rgba(124,58,237,0.55)]"
-                />
-              </picture>
+              {/* Clean, professional 3D product icon without artificial halos */}
+              <div className="w-36 h-36 sm:w-48 sm:h-48 relative flex items-center justify-center select-none pointer-events-none">
+                <picture className="w-full h-full flex items-center justify-center">
+                  <source srcSet={`/assets/img/icons/${item.iconName}.avif`} type="image/avif" />
+                  <source srcSet={`/assets/img/icons/${item.iconName}.webp`} type="image/webp" />
+                  <img
+                    src={`/assets/img/icons/${item.iconName}.png`}
+                    alt={item.alt}
+                    width="192"
+                    height="192"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-contain filter drop-shadow-[0_16px_28px_rgba(0,0,0,0.65)]"
+                  />
+                </picture>
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Product Details Section: Clean typography directly on dark canvas */}
-      <div className="pt-2 text-center space-y-2.5 max-w-md mx-auto">
+      {/* Product Details Section: Dynamic title, tag & description matching the front item */}
+      <div className="pt-2 text-center space-y-2 max-w-md mx-auto">
         {/* Category tag & highlight */}
         <div className="flex items-center justify-center gap-2">
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#A78BFA]">
+          <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-[#A78BFA]">
             {currentService.tag}
           </span>
           <span className="text-white/20">•</span>
@@ -187,17 +339,17 @@ export default function Service3DShowcaseDeck() {
         </div>
 
         {/* Title */}
-        <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
+        <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight leading-tight">
           {currentService.title}
         </h3>
 
         {/* Description */}
-        <p className="text-sm text-[#A1A1B5] leading-relaxed max-w-sm mx-auto">
+        <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed max-w-sm mx-auto min-h-[44px]">
           {currentService.desc}
         </p>
 
         {/* Link to service */}
-        <div className="pt-1.5">
+        <div className="pt-1">
           <Link
             to={currentService.link}
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#A78BFA] hover:text-white transition-colors group cursor-pointer"
@@ -205,6 +357,23 @@ export default function Service3DShowcaseDeck() {
             <span>Explore {currentService.title}</span>
             <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
           </Link>
+        </div>
+
+        {/* Subtle dot indicators */}
+        <div className="flex items-center justify-center gap-1.5 pt-3">
+          {SERVICES.map((s, idx) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => setActiveIndex(idx)}
+              aria-label={`Go to ${s.title}`}
+              className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                idx === activeIndex
+                  ? 'w-6 bg-[#7C3AED]'
+                  : 'w-1.5 bg-white/20 hover:bg-white/40'
+              }`}
+            />
+          ))}
         </div>
       </div>
     </div>

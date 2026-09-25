@@ -298,315 +298,175 @@ export default function Home() {
       </section>
 
       {/* ------------------------------------------------------------- */}
-      {/* 6 SPECIALIZED SERVICES GRID (BORDERLESS 3D ICONS)             */}
+      {/* SERVICES DIRECTORY (WIX-STYLE CLEAN TABLE LAYOUT)             */}
       {/* ------------------------------------------------------------- */}
       <section className="py-20 sm:py-28 px-4 sm:px-8 bg-[#0B0B14] border-b border-white/[0.08] relative overflow-hidden">
         <div className="max-w-6xl mx-auto space-y-12 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 text-left" data-reveal>
             <div className="space-y-2">
               <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
-                What We Build
+                Catalogue des Solutions &amp; Services
               </span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                Specialized web solutions
+                All Services &amp; Specialties
               </h2>
+              <p className="text-sm sm:text-base text-[#A1A1B5] max-w-xl leading-relaxed">
+                Simple, transparent, without useless bloat or hidden fees. Choose your category to explore features.
+              </p>
             </div>
             <div>
               <Link
                 to="/services"
-                className="text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
+                className="text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors inline-flex items-center gap-1.5"
               >
-                Explore all services →
+                <span>View complete services directory</span>
+                <span>→</span>
               </Link>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left" data-reveal-group>
-            {/* Service 1 */}
-            <div
-              onMouseMove={handleCardMouseMove}
-              className="group relative p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all flex flex-col justify-between space-y-6 overflow-hidden"
-              data-reveal
-            >
-              <div
-                className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  background:
-                    'radial-gradient(350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(124, 58, 237, 0.08), transparent 80%)',
-                }}
-              />
-              <div className="space-y-4 relative z-10">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-[#A78BFA]">01</span>
-                  {/* Clean 3D icon without bubble border */}
-                  <div className="w-12 h-12 relative flex items-center justify-center select-none">
-                    <div className="absolute inset-1 bg-[#7C3AED]/15 rounded-full blur-md pointer-events-none" />
-                    <picture className="w-full h-full">
-                      <source srcSet="/assets/img/icons/barbershop.avif" type="image/avif" />
-                      <source srcSet="/assets/img/icons/barbershop.webp" type="image/webp" />
-                      <img
-                        src="/assets/img/icons/barbershop.png"
-                        alt="Barbershop icon"
-                        width="44"
-                        height="44"
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-contain filter drop-shadow-[0_4px_10px_rgba(124,58,237,0.35)]"
-                      />
-                    </picture>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-white">Barbershop Websites</h3>
-                <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                  Tailored for chairs and multi-barber shops. Features 24/7 online appointment booking, individual barber rosters, and Google Maps local rankings.
-                </p>
+          {/* Wix-Style Clean Directory Table (Zero bloated borders, pure clean typography) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-14 text-left" data-reveal>
+            {/* Column 1: LOCAL BUSINESS & COMMERCE */}
+            <div className="space-y-6">
+              <div className="text-xs font-bold uppercase tracking-wider text-[#A1A1B5] pb-3 border-b border-white/[0.12]">
+                Local Business &amp; Commerce
               </div>
-              <div className="pt-2 border-t border-white/[0.06] relative z-10">
-                <Link
-                  to="/websites-for/barbershops"
-                  className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors inline-flex items-center gap-1"
-                >
-                  Barbershop websites with booking →
+              <div className="space-y-6">
+                <Link to="/websites-for/barbershops" className="group block">
+                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                    <span>Barbershop Websites</span>
+                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
+                    24/7 online chair booking, barber rosters &amp; Google Maps ranking with zero interruptions.
+                  </p>
+                </Link>
+
+                <Link to="/websites-for/salons" className="group block">
+                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                    <span>Salon &amp; Beauty Websites</span>
+                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
+                    Stylist portfolio showcases, clear pricing tiers, and automated multi-service scheduling.
+                  </p>
+                </Link>
+
+                <Link to="/services/online-stores" className="group block">
+                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                    <span>Small Online Stores</span>
+                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
+                    Frictionless checkout for merchandise, physical goods, and digital downloads without high fees.
+                  </p>
+                </Link>
+
+                <Link to="/services/local-business-websites" className="group block">
+                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                    <span>Local Business Sites</span>
+                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
+                    Google Business Profile sync, neighborhood map rankings, and click-to-navigate GPS directions.
+                  </p>
                 </Link>
               </div>
             </div>
 
-            {/* Service 2 */}
-            <div
-              onMouseMove={handleCardMouseMove}
-              className="group relative p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all flex flex-col justify-between space-y-6 overflow-hidden"
-              data-reveal
-            >
-              <div
-                className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  background:
-                    'radial-gradient(350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(124, 58, 237, 0.08), transparent 80%)',
-                }}
-              />
-              <div className="space-y-4 relative z-10">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-[#A78BFA]">02</span>
-                  <div className="w-12 h-12 relative flex items-center justify-center select-none">
-                    <div className="absolute inset-1 bg-[#7C3AED]/15 rounded-full blur-md pointer-events-none" />
-                    <picture className="w-full h-full">
-                      <source srcSet="/assets/img/icons/salon.avif" type="image/avif" />
-                      <source srcSet="/assets/img/icons/salon.webp" type="image/webp" />
-                      <img
-                        src="/assets/img/icons/salon.png"
-                        alt="Salon icon"
-                        width="44"
-                        height="44"
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-contain filter drop-shadow-[0_4px_10px_rgba(124,58,237,0.35)]"
-                      />
-                    </picture>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-white">Salon &amp; Beauty Websites</h3>
-                <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                  Designed for hair salons, nail lounges, and spas. Stylist portfolio showcases, tiered service menus, and synchronized calendar booking.
-                </p>
+            {/* Column 2: CREATORS & PORTFOLIOS */}
+            <div className="space-y-6">
+              <div className="text-xs font-bold uppercase tracking-wider text-[#A1A1B5] pb-3 border-b border-white/[0.12]">
+                Creators &amp; Showcases
               </div>
-              <div className="pt-2 border-t border-white/[0.06] relative z-10">
-                <Link
-                  to="/websites-for/salons"
-                  className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors inline-flex items-center gap-1"
-                >
-                  Salon &amp; beauty websites →
+              <div className="space-y-6">
+                <Link to="/services/creator-websites" className="group block">
+                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                    <span>Creator Websites</span>
+                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
+                    Custom link-in-bio hub on your own domain, media kit for brand deals, and direct newsletter capture.
+                  </p>
+                </Link>
+
+                <Link to="/services/portfolio-websites" className="group block">
+                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                    <span>Portfolio Websites</span>
+                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
+                    Clean, high-resolution project showcases with sub-second page loads for designers, artists &amp; pros.
+                  </p>
+                </Link>
+
+                <Link to="/preview" className="group block">
+                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                    <span>Landing Pages</span>
+                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
+                    Single-page websites engineered for product launches, event promotions, and lead conversion.
+                  </p>
+                </Link>
+
+                <Link to="/preview" className="group block">
+                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                    <span>Events &amp; Gatherings</span>
+                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
+                    Interactive digital RSVP coordination, venue directions, schedule itinerary, and photo galleries.
+                  </p>
                 </Link>
               </div>
             </div>
 
-            {/* Service 3 */}
-            <div
-              onMouseMove={handleCardMouseMove}
-              className="group relative p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all flex flex-col justify-between space-y-6 overflow-hidden"
-              data-reveal
-            >
-              <div
-                className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  background:
-                    'radial-gradient(350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(124, 58, 237, 0.08), transparent 80%)',
-                }}
-              />
-              <div className="space-y-4 relative z-10">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-[#A78BFA]">03</span>
-                  <div className="w-12 h-12 relative flex items-center justify-center select-none">
-                    <div className="absolute inset-1 bg-[#7C3AED]/15 rounded-full blur-md pointer-events-none" />
-                    <picture className="w-full h-full">
-                      <source srcSet="/assets/img/icons/creators.avif" type="image/avif" />
-                      <source srcSet="/assets/img/icons/creators.webp" type="image/webp" />
-                      <img
-                        src="/assets/img/icons/creators.png"
-                        alt="Creators icon"
-                        width="44"
-                        height="44"
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-contain filter drop-shadow-[0_4px_10px_rgba(124,58,237,0.35)]"
-                      />
-                    </picture>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-white">Creator &amp; Influencer Hubs</h3>
-                <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                  Replace fragile link-in-bio trees with an independent digital home. Centralize your links, interactive media kit for brand deals, and direct email list signup.
-                </p>
+            {/* Column 3: SECURITY & ESSENTIALS */}
+            <div className="space-y-6">
+              <div className="text-xs font-bold uppercase tracking-wider text-[#A1A1B5] pb-3 border-b border-white/[0.12]">
+                Security &amp; Essentials
               </div>
-              <div className="pt-2 border-t border-white/[0.06] relative z-10">
-                <Link
-                  to="/services/creator-websites"
-                  className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors inline-flex items-center gap-1"
-                >
-                  Website for creators &amp; influencers →
+              <div className="space-y-6">
+                <Link to="/services/security-check" className="group block">
+                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                    <span>Website Security Check</span>
+                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
+                    Plain-English review of database rules, HTTPS, exposed API keys, backups and account protection.
+                  </p>
                 </Link>
-              </div>
-            </div>
 
-            {/* Service 4 */}
-            <div
-              onMouseMove={handleCardMouseMove}
-              className="group relative p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all flex flex-col justify-between space-y-6 overflow-hidden"
-              data-reveal
-            >
-              <div
-                className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  background:
-                    'radial-gradient(350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(124, 58, 237, 0.08), transparent 80%)',
-                }}
-              />
-              <div className="space-y-4 relative z-10">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-[#A78BFA]">04</span>
-                  <div className="w-12 h-12 relative flex items-center justify-center select-none">
-                    <div className="absolute inset-1 bg-[#7C3AED]/15 rounded-full blur-md pointer-events-none" />
-                    <picture className="w-full h-full">
-                      <source srcSet="/assets/img/icons/portfolio.avif" type="image/avif" />
-                      <source srcSet="/assets/img/icons/portfolio.webp" type="image/webp" />
-                      <img
-                        src="/assets/img/icons/portfolio.png"
-                        alt="Portfolio icon"
-                        width="44"
-                        height="44"
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-contain filter drop-shadow-[0_4px_10px_rgba(124,58,237,0.35)]"
-                      />
-                    </picture>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-white">Portfolios</h3>
-                <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                  Clean, fast portfolio websites for students, designers, photographers, developers and artists. Showcase your work with fast image loading and downloadable resumes.
-                </p>
-              </div>
-              <div className="pt-2 border-t border-white/[0.06] relative z-10">
-                <Link
-                  to="/services/portfolio-websites"
-                  className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors inline-flex items-center gap-1"
-                >
-                  Portfolio website design →
+                <Link to="/services/care-plans" className="group block">
+                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                    <span>Website Care Plans</span>
+                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
+                    Fast cloud hosting, daily automated backups, security monitoring, and on-demand content edits.
+                  </p>
                 </Link>
-              </div>
-            </div>
 
-            {/* Service 5 */}
-            <div
-              onMouseMove={handleCardMouseMove}
-              className="group relative p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all flex flex-col justify-between space-y-6 overflow-hidden"
-              data-reveal
-            >
-              <div
-                className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  background:
-                    'radial-gradient(350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(124, 58, 237, 0.08), transparent 80%)',
-                }}
-              />
-              <div className="space-y-4 relative z-10">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-[#A78BFA]">05</span>
-                  <div className="w-12 h-12 relative flex items-center justify-center select-none">
-                    <div className="absolute inset-1 bg-[#7C3AED]/15 rounded-full blur-md pointer-events-none" />
-                    <picture className="w-full h-full">
-                      <source srcSet="/assets/img/icons/store.avif" type="image/avif" />
-                      <source srcSet="/assets/img/icons/store.webp" type="image/webp" />
-                      <img
-                        src="/assets/img/icons/store.png"
-                        alt="Store icon"
-                        width="44"
-                        height="44"
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-contain filter drop-shadow-[0_4px_10px_rgba(124,58,237,0.35)]"
-                      />
-                    </picture>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-white">Small Online Stores</h3>
-                <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                  Simple, secure online stores for products, merch and digital downloads, with checkout handled by trusted payment providers like Stripe and Apple Pay.
-                </p>
-              </div>
-              <div className="pt-2 border-t border-white/[0.06] relative z-10">
-                <Link
-                  to="/services/online-stores"
-                  className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors inline-flex items-center gap-1"
-                >
-                  Small online store setup →
+                <Link to="/services/local-business-websites" className="group block">
+                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                    <span>Online Booking System</span>
+                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
+                    Calendar sync, automated SMS/email reminders, and customer self-scheduling around the clock.
+                  </p>
                 </Link>
-              </div>
-            </div>
 
-            {/* Service 6 */}
-            <div
-              onMouseMove={handleCardMouseMove}
-              className="group relative p-7 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all flex flex-col justify-between space-y-6 overflow-hidden"
-              data-reveal
-            >
-              <div
-                className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  background:
-                    'radial-gradient(350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(124, 58, 237, 0.08), transparent 80%)',
-                }}
-              />
-              <div className="space-y-4 relative z-10">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-[#A78BFA]">06</span>
-                  <div className="w-12 h-12 relative flex items-center justify-center select-none">
-                    <div className="absolute inset-1 bg-[#7C3AED]/15 rounded-full blur-md pointer-events-none" />
-                    <picture className="w-full h-full">
-                      <source srcSet="/assets/img/icons/security.avif" type="image/avif" />
-                      <source srcSet="/assets/img/icons/security.webp" type="image/webp" />
-                      <img
-                        src="/assets/img/icons/security.png"
-                        alt="Security icon"
-                        width="44"
-                        height="44"
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-contain filter drop-shadow-[0_4px_10px_rgba(124,58,237,0.35)]"
-                      />
-                    </picture>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-white">Security Check</h3>
-                <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                  A plain-English review of your website&apos;s security basics: database rules, HTTPS, exposed keys, backups and account protection to prevent breaches.
-                </p>
-              </div>
-              <div className="pt-2 border-t border-white/[0.06] relative z-10">
-                <Link
-                  to="/services/security-check"
-                  className="text-xs font-semibold text-[#A78BFA] hover:text-white transition-colors inline-flex items-center gap-1"
-                >
-                  Website security check →
+                <Link to="/security" className="group block">
+                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
+                    <span>Engineering Hardening</span>
+                    <span className="text-xs text-[#71717A] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed mt-1">
+                    Strict CSP headers, deny-by-default rules, honeypot anti-spam, and zero browser secrets.
+                  </p>
                 </Link>
               </div>
             </div>

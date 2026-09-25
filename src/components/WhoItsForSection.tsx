@@ -124,10 +124,8 @@ export default function WhoItsForSection() {
               />
 
               <div className="space-y-6 relative z-10">
-                {/* 3D Icon: Clean, borderless, floating directly on card without enclosing box bubble */}
+                {/* 3D Icon: Clean, borderless, floating directly on card without enclosing box bubble or artificial backlights */}
                 <div className="w-16 h-16 sm:w-20 sm:h-20 relative flex items-center justify-center select-none">
-                  {/* Subtle purple aura underneath the icon */}
-                  <div className="absolute inset-2 bg-[#7C3AED]/15 rounded-full blur-lg pointer-events-none" />
                   <picture className="w-full h-full flex items-center justify-center float-gentle who-card-icon transition-transform duration-300 will-change-transform">
                     <source srcSet={`/assets/img/icons/${card.iconName}.avif`} type="image/avif" />
                     <source srcSet={`/assets/img/icons/${card.iconName}.webp`} type="image/webp" />
@@ -138,7 +136,7 @@ export default function WhoItsForSection() {
                       height="64"
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full object-contain filter drop-shadow-[0_8px_18px_rgba(124,58,237,0.4)]"
+                      className="w-full h-full object-contain filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.55)]"
                     />
                   </picture>
                 </div>
