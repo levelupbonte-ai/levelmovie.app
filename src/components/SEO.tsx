@@ -98,12 +98,21 @@ export default function SEO({
       '@type': 'Organization',
       name: 'LevelUp Ecosystem',
       url: 'https://levelup-ecosystem.com',
-      logo: 'https://levelup-ecosystem.com/icon-512.png',
+      logo: 'https://levelup-ecosystem.com/assets/img/logo.png',
+      description: 'Web design and development studio building secure, AI-assisted websites for local businesses, creators, and portfolios.',
+      founder: {
+        '@type': 'Person',
+        name: 'Richelieu Bonte',
+      },
+      areaServed: 'Worldwide',
+      knowsAbout: [
+        'Web design',
+        'Web development',
+        'Website security',
+        'Local SEO',
+        'AI-assisted development',
+      ],
       email: 'contact@levelup-ecosystem.com',
-      sameAs: [
-        'https://instagram.com',
-        'https://linkedin.com'
-      ]
     });
 
     schemas.push({

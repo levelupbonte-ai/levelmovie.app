@@ -53,11 +53,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
           setIsScrolled(currentY > 20);
 
           if (window.innerWidth < 1024) {
-            if (currentY > 70 && currentY > lastScrollY.current + 5) {
-              setIsVisible(false);
-            } else if (currentY < lastScrollY.current - 5 || currentY <= 50) {
-              setIsVisible(true);
-            }
+            setIsVisible(true);
           } else {
             setIsVisible(true);
           }
@@ -175,11 +171,11 @@ export default function Navbar({ currentPath }: NavbarProps) {
   return (
     <header
       ref={headerRef}
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ease-out border-b border-white/[0.08] ${
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ease-out border-b border-white/[0.08] translate-y-0 ${
         isScrolled
           ? 'bg-[#0B0B14]/95 backdrop-blur-md shadow-lg shadow-black/20'
           : 'bg-[#0B0B14]/90 backdrop-blur-sm'
-      } ${isVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}`}
+      }`}
       style={{
         paddingTop: 'max(0.6rem, env(safe-area-inset-top, 0px))',
         viewTransitionName: 'nav',
@@ -313,7 +309,7 @@ export default function Navbar({ currentPath }: NavbarProps) {
         </div>
       </div>
 
-      {/* ATTACHED SERVICES MEGA-MENU (STYLE WIX PRO : COLONNES TYPOGRAPHIQUES ÉPURÉES, SANS CARTES LOURDES) */}
+      {/* ATTACHED SERVICES MEGA-MENU: CLEAN TYPOGRAPHIC COLUMNS, ZERO CARD OVERHEAD */}
       {servicesDropdownOpen && (
         <div
           role="menu"

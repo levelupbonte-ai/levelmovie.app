@@ -169,6 +169,24 @@ export default function Services() {
     }
   ];
 
+  const servicesSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'LevelUp Ecosystem Website Design Services',
+    itemListElement: serviceCategories.map((cat, idx) => ({
+      '@type': 'Service',
+      position: idx + 1,
+      name: cat.title,
+      description: cat.description,
+      provider: {
+        '@type': 'Organization',
+        name: 'LevelUp Ecosystem',
+        url: 'https://levelup-ecosystem.com',
+      },
+      url: `https://levelup-ecosystem.com${cat.pageUrl}`,
+    })),
+  };
+
   return (
     <div>
       <SEO
@@ -178,6 +196,7 @@ export default function Services() {
         breadcrumbs={[
           { name: 'Services', url: '/services' }
         ]}
+        jsonLd={servicesSchema}
       />
 
       <Breadcrumbs

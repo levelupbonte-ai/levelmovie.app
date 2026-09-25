@@ -38,6 +38,19 @@ export default function WebsitesForBarbershops() {
     description: 'High-performance websites for barbershops with 24/7 online booking, Google Calendar sync, mobile barber profiles, and zero monthly software bloat.'
   };
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.a,
+      },
+    })),
+  };
+
   const whatsIncluded = [
     {
       title: '24/7 Online Booking Integration',
@@ -75,7 +88,7 @@ export default function WebsitesForBarbershops() {
           { name: 'Services', url: '/services' },
           { name: 'Barbershop Websites', url: '/websites-for/barbershops' }
         ]}
-        jsonLd={serviceSchema}
+        jsonLd={[serviceSchema, faqSchema]}
       />
 
       <Breadcrumbs

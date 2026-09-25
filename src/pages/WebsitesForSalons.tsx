@@ -38,6 +38,19 @@ export default function WebsitesForSalons() {
     description: 'Elegant, fast websites for salons and beauty studios with online booking, stylist portfolios, service menus, Google Maps integration, and client reviews.'
   };
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.a,
+      },
+    })),
+  };
+
   const whatsIncluded = [
     {
       title: 'Stylist & Colorist Rosters',
@@ -75,7 +88,7 @@ export default function WebsitesForSalons() {
           { name: 'Services', url: '/services' },
           { name: 'Salon Websites', url: '/websites-for/salons' }
         ]}
-        jsonLd={serviceSchema}
+        jsonLd={[serviceSchema, faqSchema]}
       />
 
       <Breadcrumbs

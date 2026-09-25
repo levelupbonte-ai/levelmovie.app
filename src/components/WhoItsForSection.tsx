@@ -86,10 +86,7 @@ export default function WhoItsForSection() {
   };
 
   return (
-    <section className="py-20 sm:py-28 px-4 sm:px-8 bg-[#0B0B14] border-b border-white/[0.08] relative overflow-hidden">
-      {/* Subtle purple ambient depth */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#7C3AED]/06 rounded-full blur-[140px] pointer-events-none" />
-
+    <section className="py-20 sm:py-28 px-4 sm:px-8 bg-black border-b border-white/[0.08] relative overflow-hidden">
       <div className="max-w-7xl mx-auto space-y-14 relative z-10">
         {/* Section Header */}
         <div className="max-w-3xl space-y-3 text-left" data-reveal>
@@ -104,17 +101,17 @@ export default function WhoItsForSection() {
           </p>
         </div>
 
-        {/* Grid of 6 Cards */}
+        {/* Grid of 6 Cards - Full black, sharp square framing (rounded-none) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8" data-reveal-group>
           {cards.map((card) => (
             <Link
               key={card.id}
               to={card.link}
               onMouseMove={handleMouseMove}
-              className="group relative p-7 sm:p-8 rounded-3xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all duration-300 flex flex-col justify-between text-left cursor-pointer overflow-hidden who-card will-change-transform shadow-lg shadow-black/20"
+              className="group relative p-7 sm:p-8 rounded-none bg-black border border-white/15 hover:border-[#7C3AED]/70 transition-all duration-300 flex flex-col justify-between text-left cursor-pointer overflow-hidden who-card will-change-transform shadow-2xl shadow-black/80"
               data-reveal
             >
-              {/* Subtle cursor follow radial highlight (very low opacity) */}
+              {/* Subtle cursor follow radial highlight on hover */}
               <div
                 className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 style={{
@@ -124,19 +121,19 @@ export default function WhoItsForSection() {
               />
 
               <div className="space-y-6 relative z-10">
-                {/* 3D Icon: Clean, borderless, floating directly on card without enclosing box bubble or artificial backlights */}
-                <div className="w-16 h-16 sm:w-20 sm:h-20 relative flex items-center justify-center select-none">
+                {/* 3D Icon: Clean, borderless, floating directly on pure black background */}
+                <div className="w-20 h-20 sm:w-24 sm:h-24 relative flex items-center justify-center select-none">
                   <picture className="w-full h-full flex items-center justify-center float-gentle who-card-icon transition-transform duration-300 will-change-transform">
                     <source srcSet={`/assets/img/icons/${card.iconName}.avif`} type="image/avif" />
                     <source srcSet={`/assets/img/icons/${card.iconName}.webp`} type="image/webp" />
                     <img
                       src={`/assets/img/icons/${card.iconName}.png`}
                       alt={card.alt}
-                      width="64"
-                      height="64"
+                      width="96"
+                      height="96"
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full object-contain filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.55)]"
+                      className="w-full h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.8)]"
                     />
                   </picture>
                 </div>
@@ -154,7 +151,7 @@ export default function WhoItsForSection() {
                 </div>
               </div>
 
-              <div className="pt-6 mt-6 border-t border-white/[0.06] flex items-center justify-between text-xs sm:text-sm font-semibold text-[#A78BFA] group-hover:text-white transition-colors relative z-10">
+              <div className="pt-6 mt-6 border-t border-white/[0.08] flex items-center justify-between text-xs sm:text-sm font-semibold text-[#A78BFA] group-hover:text-white transition-colors relative z-10">
                 <span>{card.linkText}</span>
                 <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
               </div>

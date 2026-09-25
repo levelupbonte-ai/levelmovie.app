@@ -31,6 +31,19 @@ export default function Pricing() {
     }
   ];
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <div>
       <SEO
@@ -40,6 +53,7 @@ export default function Pricing() {
         breadcrumbs={[
           { name: 'Pricing', url: '/pricing' }
         ]}
+        jsonLd={faqSchema}
       />
 
       <Breadcrumbs

@@ -137,29 +137,21 @@ export default function NotFound() {
         }
       `}</style>
 
-      {/* Main Glassmorphic Card Container */}
-      <div className="relative z-10 w-full max-w-xl mx-auto rounded-3xl bg-[#14141F]/80 backdrop-blur-2xl border border-white/[0.1] p-8 sm:p-12 text-center space-y-8 shadow-2xl shadow-black/80">
-        
-        {/* Top Status Pill */}
-        <div className="flex items-center justify-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono text-[#A78BFA] uppercase tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span>HTTP 404 • Route Not Found</span>
-          </div>
-        </div>
+      {/* Open, chill, classy layout without bubble container */}
+      <div className="relative z-10 w-full max-w-2xl mx-auto text-center space-y-7 py-6">
 
-        {/* BROKEN STAR ANIMATION SCENE (Exact geometry: C = 50, 54.4) */}
+        {/* BROKEN STAR ANIMATION SCENE (Exact geometry: C = 50, 54.4) with Chill Sunglasses */}
         <div className="relative inline-flex items-center justify-center my-2">
           {/* Dim glow where center was */}
           <div
-            className={`absolute w-44 h-44 rounded-full blur-2xl pointer-events-none transition-all duration-700 ${
-              isReassembling ? 'bg-[#7C3AED]/50 scale-125' : 'bg-[#7C3AED]/20'
+            className={`absolute w-52 h-52 rounded-full blur-3xl pointer-events-none transition-all duration-700 ${
+              isReassembling ? 'bg-[#7C3AED]/50 scale-125' : 'bg-[#7C3AED]/25'
             }`}
             style={{ animation: isReassembling ? 'none' : 'centerGlow 4s ease-in-out infinite' }}
           />
 
           <svg
-            className="w-44 h-44 sm:w-52 sm:h-52 relative z-10 overflow-visible select-none star-shattered-scene"
+            className="w-48 h-48 sm:w-56 sm:h-56 relative z-10 overflow-visible select-none star-shattered-scene"
             viewBox="0 0 100 100"
             fill="none"
             aria-hidden="true"
@@ -271,6 +263,20 @@ export default function NotFound() {
               className={`broken-facet float-alt ${isReassembling ? 'is-reassembled' : 'is-broken'}`}
               style={{ '--dx': '-30px', '--dy': '-8px', '--rot': '-12deg' } as React.CSSProperties}
             />
+
+            {/* Chill Sunglasses for the Star mascot */}
+            <g className="star-sunglasses pointer-events-none select-none" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.85))' }}>
+              {/* Frame & bridge */}
+              <path d="M 33,48 Q 50,44.5 67,48" stroke="#10101A" strokeWidth="2.8" strokeLinecap="round" fill="none" />
+              <line x1="47" y1="47" x2="53" y2="47" stroke="#0B0B14" strokeWidth="3.2" strokeLinecap="round" />
+              {/* Left Lens */}
+              <path d="M 34,49 C 34,49 33.5,58 39,59 C 45,59.5 47.5,56 47.5,49 Z" fill="#0B0B14" stroke="#4C1D95" strokeWidth="1.2" />
+              {/* Right Lens */}
+              <path d="M 52.5,49 C 52.5,49 55,56 61,59.5 C 66.5,58 66,49 66,49 Z" fill="#0B0B14" stroke="#4C1D95" strokeWidth="1.2" />
+              {/* Specular sheen reflections */}
+              <path d="M 36.5,51 L 43,51 L 39.5,56.5 Z" fill="#C4B5FD" opacity="0.4" />
+              <path d="M 55,51 L 61.5,51 L 58,56.5 Z" fill="#C4B5FD" opacity="0.4" />
+            </g>
           </svg>
         </div>
 

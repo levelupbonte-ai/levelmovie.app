@@ -38,6 +38,19 @@ export default function SecurityCheck() {
     description: "A plain-English review of your website's security basics: database rules, HTTPS, exposed keys, backups and account protection."
   };
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <div>
       <SEO
@@ -48,7 +61,7 @@ export default function SecurityCheck() {
           { name: 'Services', url: '/services' },
           { name: 'Website Security Check', url: '/services/security-check' }
         ]}
-        jsonLd={serviceSchema}
+        jsonLd={[serviceSchema, faqSchema]}
       />
 
       <Breadcrumbs

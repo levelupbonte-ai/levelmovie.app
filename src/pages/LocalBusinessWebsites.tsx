@@ -75,6 +75,19 @@ export default function LocalBusinessWebsites() {
     description: 'Modern, mobile-friendly websites with online booking, Google Business setup and security basics for barbershops, salons, gyms and more.'
   };
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <div>
       <SEO
@@ -85,7 +98,7 @@ export default function LocalBusinessWebsites() {
           { name: 'Services', url: '/services' },
           { name: 'Local Business Websites', url: '/services/local-business-websites' }
         ]}
-        jsonLd={serviceSchema}
+        jsonLd={[serviceSchema, faqSchema]}
       />
 
       <Breadcrumbs

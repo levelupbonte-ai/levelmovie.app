@@ -38,6 +38,19 @@ export default function CreatorWebsites() {
     description: 'A professional link-in-bio page and creator website on your own domain, with a media kit page for brand collaborations.'
   };
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <div>
       <SEO
@@ -48,7 +61,7 @@ export default function CreatorWebsites() {
           { name: 'Services', url: '/services' },
           { name: 'Creator Websites', url: '/services/creator-websites' }
         ]}
-        jsonLd={serviceSchema}
+        jsonLd={[serviceSchema, faqSchema]}
       />
 
       <Breadcrumbs

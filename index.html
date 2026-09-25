@@ -43,24 +43,46 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Schema.org JSON-LD LocalBusiness Structured Data -->
+    <!-- Schema.org JSON-LD Structured Data: Organization & ProfessionalService -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "ProfessionalService",
-      "name": "LevelUp Ecosystem",
-      "image": "https://levelup-ecosystem.com/icon.svg",
-      "description": "Secure, fast, modern websites with online booking for businesses, creators, and local services.",
-      "url": "https://levelup-ecosystem.com",
-      "priceRange": "$500 - $900",
-      "knowsAbout": [
-        "Web Design",
-        "Online Booking Systems",
-        "Website Security Best Practices",
-        "SEO",
-        "Google Business Profile Setup"
-      ]
-    }
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "LevelUp Ecosystem",
+        "url": "https://levelup-ecosystem.com",
+        "logo": "https://levelup-ecosystem.com/assets/img/logo.png",
+        "description": "Web design and development studio building secure, AI-assisted websites for local businesses, creators, and portfolios.",
+        "founder": {
+          "@type": "Person",
+          "name": "Richelieu Bonte"
+        },
+        "areaServed": "Worldwide",
+        "knowsAbout": [
+          "Web design",
+          "Web development",
+          "Website security",
+          "Local SEO",
+          "AI-assisted development"
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        "name": "LevelUp Ecosystem",
+        "image": "https://levelup-ecosystem.com/icon.svg",
+        "description": "Secure, fast, modern websites with online booking for businesses, creators, and local services.",
+        "url": "https://levelup-ecosystem.com",
+        "priceRange": "$500 - $900",
+        "knowsAbout": [
+          "Web Design",
+          "Online Booking Systems",
+          "Website Security Best Practices",
+          "SEO",
+          "Google Business Profile Setup"
+        ]
+      }
+    ]
     </script>
     <!-- Critical Inline Styles for Branded Loader (First-load only) -->
     <style id="branded-loader-css">

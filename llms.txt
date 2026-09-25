@@ -1,0 +1,25 @@
+# LevelUp Ecosystem
+
+> LevelUp Ecosystem is a web design and development studio that builds fast, secure websites for local businesses, creators, and portfolios. Founded by Richelieu Bonte, a cybersecurity student, the studio uses AI-assisted development with human review on every project, and offers website security checks and ongoing care plans.
+
+## Services
+- Local business websites with online booking: /services/local-business-websites
+- Creator and influencer websites: /services/creator-websites
+- Portfolio websites: /services/portfolio-websites
+- Online store setup: /services/online-stores
+- Website security checks: /services/security-check
+- Website care and maintenance plans: /services/care-plans
+
+## Key pages
+- Free website preview tool: /preview
+- Pricing: /pricing
+- How websites are built: /process
+- About: /about
+- Recent work: /projects
+- Contact: /contact
+
+## Facts
+- Based in San Diego, California, serving clients across the United States and internationally.
+- Founded by Richelieu Bonte.
+- Uses AI tools for design and development, with human review before launch.
+- Offers a free instant AI-generated preview and a custom preview built within 24 to 48 hours.

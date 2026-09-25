@@ -42,6 +42,19 @@ export default function WebDesignSanDiego() {
     ]
   };
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <div>
       <SEO
@@ -51,7 +64,7 @@ export default function WebDesignSanDiego() {
         breadcrumbs={[
           { name: 'Web Design in San Diego', url: '/web-design-san-diego' }
         ]}
-        jsonLd={professionalServiceSchema}
+        jsonLd={[professionalServiceSchema, faqSchema]}
       />
 
       <Breadcrumbs

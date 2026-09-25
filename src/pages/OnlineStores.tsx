@@ -38,6 +38,19 @@ export default function OnlineStores() {
     description: 'Simple, secure online stores for products, merch and digital downloads, with checkout handled by trusted payment providers.'
   };
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <div>
       <SEO
@@ -48,7 +61,7 @@ export default function OnlineStores() {
           { name: 'Services', url: '/services' },
           { name: 'Small Online Stores', url: '/services/online-stores' }
         ]}
-        jsonLd={serviceSchema}
+        jsonLd={[serviceSchema, faqSchema]}
       />
 
       <Breadcrumbs

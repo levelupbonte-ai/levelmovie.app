@@ -38,6 +38,19 @@ export default function PortfolioWebsites() {
     description: 'Clean, fast portfolio websites for students, designers, photographers, developers and artists, on your own domain.'
   };
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.a,
+      },
+    })),
+  };
+
   return (
     <div>
       <SEO
@@ -48,7 +61,7 @@ export default function PortfolioWebsites() {
           { name: 'Services', url: '/services' },
           { name: 'Portfolio Websites', url: '/services/portfolio-websites' }
         ]}
-        jsonLd={serviceSchema}
+        jsonLd={[serviceSchema, faqSchema]}
       />
 
       <Breadcrumbs

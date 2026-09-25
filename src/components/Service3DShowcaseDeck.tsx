@@ -312,7 +312,7 @@ export default function Service3DShowcaseDeck() {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      className="relative w-full max-w-[620px] sm:max-w-[700px] mx-auto select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED]/70 rounded-3xl"
+      className="group relative w-full max-w-[620px] sm:max-w-[700px] mx-auto select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED]/70 rounded-3xl"
     >
       {/* 3D Depth Stage with perspective */}
       <div
@@ -330,24 +330,24 @@ export default function Service3DShowcaseDeck() {
           aria-hidden="true"
         />
 
-        {/* Previous button */}
+        {/* Previous button (hidden on mobile, reveals on desktop hover) */}
         <button
           type="button"
           onClick={handlePrev}
           aria-label="Previous product"
-          className="absolute left-1 sm:-left-3 top-1/2 -translate-y-1/2 z-40 p-2 sm:p-2.5 rounded-full bg-[#14141F]/80 hover:bg-[#7C3AED] border border-white/10 hover:border-[#7C3AED] text-white/70 hover:text-white backdrop-blur-md transition-all shadow-xl hover:scale-110 active:scale-95 cursor-pointer"
+          className="hidden sm:flex items-center justify-center absolute left-1 sm:-left-4 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-[#14141F]/80 hover:bg-[#7C3AED] border border-white/10 hover:border-[#7C3AED] text-white/70 hover:text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-xl hover:scale-110 active:scale-95 cursor-pointer"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
-        {/* Next button */}
+        {/* Next button (hidden on mobile, reveals on desktop hover) */}
         <button
           type="button"
           onClick={handleNext}
           aria-label="Next product"
-          className="absolute right-1 sm:-right-3 top-1/2 -translate-y-1/2 z-40 p-2 sm:p-2.5 rounded-full bg-[#14141F]/80 hover:bg-[#7C3AED] border border-white/10 hover:border-[#7C3AED] text-white/70 hover:text-white backdrop-blur-md transition-all shadow-xl hover:scale-110 active:scale-95 cursor-pointer"
+          className="hidden sm:flex items-center justify-center absolute right-1 sm:-right-4 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-[#14141F]/80 hover:bg-[#7C3AED] border border-white/10 hover:border-[#7C3AED] text-white/70 hover:text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-xl hover:scale-110 active:scale-95 cursor-pointer"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -377,7 +377,7 @@ export default function Service3DShowcaseDeck() {
                 visibility: pos.visible || pos.opacity > 0 ? 'visible' : 'hidden',
               }}
             >
-              {/* Enlarged 3D product visual container */}
+              {/* Borderless 3D product visual container */}
               <div className="w-48 h-48 sm:w-60 sm:h-60 md:w-68 md:h-68 lg:w-72 lg:h-72 relative flex items-center justify-center select-none pointer-events-none">
                 <picture className="w-full h-full flex items-center justify-center">
                   <source srcSet={`/assets/img/icons/${item.iconName}.avif`} type="image/avif" />
@@ -406,21 +406,16 @@ export default function Service3DShowcaseDeck() {
         })}
       </div>
 
-      {/* Product Details Section: Zooms forward in sync with the product */}
+      {/* Product Details Section: Clean, chic typography without bubble badges, zooming forward in sync with the product */}
       <div
         key={zoomKey}
-        className="pt-2 text-center space-y-2.5 max-w-lg mx-auto animate-product-zoom"
+        className="pt-3 text-center space-y-2 max-w-lg mx-auto animate-product-zoom"
       >
-        {/* Category tag & highlight badge */}
-        <div className="flex items-center justify-center gap-2">
-          <span className="px-2.5 py-0.5 rounded-full bg-[#7C3AED]/20 border border-[#7C3AED]/30 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-[#C4B5FD]">
-            {currentService.tag}
-          </span>
-          <span className="text-white/20">•</span>
-          <span className="text-xs text-[#10B981] font-semibold flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] inline-block animate-pulse" />
-            {currentService.highlight}
-          </span>
+        {/* Category tag & highlight: Clean, professional line without pill bubble containers */}
+        <div className="flex items-center justify-center gap-2.5 text-xs sm:text-sm font-mono tracking-wider uppercase text-[#A78BFA]">
+          <span>{currentService.tag}</span>
+          <span className="text-white/25">•</span>
+          <span className="text-[#10B981] font-semibold">{currentService.highlight}</span>
         </div>
 
         {/* Title */}
@@ -442,26 +437,6 @@ export default function Service3DShowcaseDeck() {
             <span>Explore {currentService.title}</span>
             <span className="transition-transform duration-200 group-hover:translate-x-1.5">→</span>
           </Link>
-        </div>
-
-        {/* Navigation indicator dots */}
-        <div className="pt-3 flex items-center justify-center gap-2" aria-label="Showcase items navigation">
-          {SERVICES.map((item, idx) => {
-            const isActive = idx === activeIndex;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => triggerChange(idx)}
-                aria-label={`Show ${item.title}`}
-                className={`transition-all duration-300 rounded-full cursor-pointer ${
-                  isActive
-                    ? 'w-7 h-2 bg-[#7C3AED] shadow-[0_0_12px_rgba(124,58,237,0.7)]'
-                    : 'w-2 h-2 bg-white/20 hover:bg-white/40'
-                }`}
-              />
-            );
-          })}
         </div>
       </div>
     </div>
