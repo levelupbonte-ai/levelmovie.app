@@ -182,27 +182,21 @@
         try {
           sessionStorage.setItem('levelup_session_active', 'true');
         } catch(e) {}
-        var start = Date.now();
-        var minTime = 600;
-        var maxTime = 1500;
         var finished = false;
         function hide() {
           if (finished) return;
           finished = true;
-          var elapsed = Date.now() - start;
-          var delay = Math.max(0, minTime - elapsed);
+          loader.classList.add('loader-hidden');
           setTimeout(function() {
-            loader.classList.add('loader-hidden');
-            setTimeout(function() {
-              if (loader.parentNode) loader.parentNode.removeChild(loader);
-            }, 360);
-          }, delay);
+            if (loader.parentNode) loader.parentNode.removeChild(loader);
+          }, 200);
         }
-        if (document.readyState === 'complete') {
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
           hide();
         } else {
+          document.addEventListener('DOMContentLoaded', hide, { once: true });
           window.addEventListener('load', hide, { once: true });
-          setTimeout(hide, maxTime);
+          setTimeout(hide, 350);
         }
       })();
     </script>

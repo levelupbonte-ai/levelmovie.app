@@ -255,7 +255,7 @@ export default function Privacy() {
               </p>
 
               <p>
-                The Site is operated by {LEGAL_CONFIG.LEGAL_NAME}, doing business as LevelUp Ecosystem, based in San Diego, California.
+                The Site is operated by LevelUp Ecosystem (&quot;LevelUp,&quot; &quot;we,&quot; &quot;us&quot; or &quot;our&quot;), an independent web architecture and digital security studio based in San Diego, California.
               </p>
 
               <p>
@@ -376,16 +376,16 @@ export default function Privacy() {
                 </button>
               </div>
               <p>
-                3.1 Some features of the Site, such as the Instant Preview, send the information you enter (for example, your business name, services and style choices) to a third-party AI provider, such as Google Cloud Gemini and OpenAI, so that it can generate draft text or content for your preview. The provider processes this information on our behalf and returns the result to us.
+                3.1 <strong>Free AI Test Tools &amp; Google AI Integration:</strong> When you use our free preview tools, instant AI test generator, or automated drafts, the Site utilizes free-tier Google AI technologies (such as Google Cloud and Gemini AI APIs) to process your submitted inputs and generate layout suggestions and copy. 
               </p>
               <p>
-                3.2 We use enterprise API agreements and configuration settings under which your submissions are not used to train the providers&apos; foundation models without explicit authorization.
+                3.2 <strong>Third-Party Data Collection Disclaimer:</strong> Google operates independently and maintains its own terms of service, technical logging, and privacy practices for its free AI services. <strong>LevelUp Ecosystem (&quot;LevelUp,&quot; &quot;we,&quot; &quot;us&quot; or &quot;our&quot;) is NOT responsible or liable for any data, prompts, or content collected, logged, retained, or processed by Google in connection with your use of free Google AI tools.</strong> By initiating a free AI test, you agree that your submission is subject to Google&apos;s applicable terms and data handling policies.
               </p>
               <p>
-                3.3 AI-generated content can be wrong or incomplete. We do not use AI features to make decisions about you that have legal or similarly significant effects.
+                3.3 <strong>Strict Prohibition on Sensitive Data:</strong> You must not enter sensitive, confidential, or proprietary information into the free AI test, including but not limited to passwords, financial or payment credentials, health records, personal government identification numbers, client confidential records, or proprietary trade secrets.
               </p>
               <p>
-                3.4 Please do not enter sensitive or confidential information into AI features.
+                3.4 <strong>No Guaranteed Accuracy or Legal Effects:</strong> AI-generated content can be erroneous, incomplete, or outdated. Output from AI features is for visual exploration only and is never used by us to make decisions about you that have legal or significant effects.
               </p>
             </section>
 
@@ -780,7 +780,7 @@ export default function Privacy() {
                   {LEGAL_CONFIG.CONTACT_EMAIL}
                 </a>
                 <br />
-                LevelUp Ecosystem, serving San Diego, California
+                {LEGAL_CONFIG.LEGAL_NAME}, serving San Diego, California
               </p>
             </section>
 

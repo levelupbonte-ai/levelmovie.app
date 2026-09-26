@@ -188,7 +188,7 @@ export default function PreviewInstant() {
                 The instant AI generator is currently in early preview
               </h2>
               <p className="text-sm text-[#A1A1B5] max-w-lg mx-auto leading-relaxed">
-                The automated pipeline requires secure API rate limits and template sandboxing. In the meantime, I can build and review your custom preview personally!
+                The automated pipeline requires secure API rate limits and template sandboxing. In the meantime, we can build and review your custom preview personally!
               </p>
             </div>
 
@@ -196,7 +196,7 @@ export default function PreviewInstant() {
               <div className="font-semibold text-white">How the instant generator works:</div>
               <ul className="list-disc pl-4 space-y-1">
                 <li>Input data is sanitized and strictly validated.</li>
-                <li>An LLM generates strict JSON (no raw HTML injection).</li>
+                <li>Free Google AI services generate structured layout drafts.</li>
                 <li>Content is injected into pre-designed responsive templates.</li>
                 <li>Output is protected with rate limits and an automatic 7-day expiration.</li>
               </ul>
@@ -207,7 +207,7 @@ export default function PreviewInstant() {
                 href="/preview/custom"
                 className="py-3 px-6 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white text-xs font-semibold transition-all"
               >
-                Request my custom preview (24-48h)
+                Request our custom preview (24-48h)
               </a>
               <button
                 type="button"
@@ -227,8 +227,13 @@ export default function PreviewInstant() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </span>
-              <div>
-                <strong className="text-white">Quick Draft:</strong> This will generate a basic layout structure. For a complete, personalized website with custom booking integrations, choose the <a href="/preview/custom" className="text-[#A78BFA] underline">Custom preview</a>.
+              <div className="space-y-1">
+                <div>
+                  <strong className="text-white">Quick Draft:</strong> This will generate a basic layout structure. For a complete, personalized website with custom booking integrations, choose the <a href="/preview/custom" className="text-[#A78BFA] underline">Custom preview</a>.
+                </div>
+                <div className="text-[11px] text-[#A1A1B5]/80 pt-1 border-t border-white/[0.06]">
+                  <strong className="text-amber-300">Third-Party Google AI Notice:</strong> Free preview tests utilize free-tier Google AI services. LevelUp is not responsible for data collected, stored, or processed by Google under its independent policies. Please do not submit confidential, sensitive, or personal data.
+                </div>
               </div>
             </div>
 

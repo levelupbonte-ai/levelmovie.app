@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useInRouterContext, BrowserRouter } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
@@ -7,7 +8,7 @@ interface PageLayoutProps {
   children: React.ReactNode;
 }
 
-export default function PageLayout({ currentPath, children }: PageLayoutProps) {
+function PageLayoutContent({ currentPath, children }: PageLayoutProps) {
   useEffect(() => {
     if (!window.LevelUpLoader && !document.getElementById('levelup-loader-script')) {
       const s = document.createElement('script');
@@ -19,6 +20,28 @@ export default function PageLayout({ currentPath, children }: PageLayoutProps) {
   }, []);
 
   useEffect(() => {
+    // Dismiss any loader overlay immediately on route change
+    if (typeof window !== 'undefined') {
+      if (window.LevelUpLoader) {
+        window.LevelUpLoader.hideNavigationOverlay();
+      }
+      const navOverlay = document.getElementById('levelup-nav-overlay');
+      if (navOverlay) {
+        navOverlay.classList.remove('overlay-active');
+        navOverlay.style.display = 'none';
+        if (navOverlay.parentNode) {
+          navOverlay.parentNode.removeChild(navOverlay);
+        }
+      }
+      const brandedLoader = document.getElementById('branded-loader');
+      if (brandedLoader) {
+        brandedLoader.classList.add('loader-hidden');
+        if (brandedLoader.parentNode) {
+          brandedLoader.parentNode.removeChild(brandedLoader);
+        }
+      }
+    }
+
     // Complete progress bar on mount
     const bar = document.getElementById('page-progress-bar');
     if (bar) {
@@ -81,13 +104,31 @@ export default function PageLayout({ currentPath, children }: PageLayoutProps) {
     };
   }, []);
 
-  // IntersectionObserver for scroll-reveal animations
+  // IntersectionObserver for scroll-reveal animations & immediate above-fold visibility
   useEffect(() => {
+    // Immediately remove any stuck branded loader once React mounts
+    const brandedLoader = document.getElementById('branded-loader');
+    if (brandedLoader) {
+      brandedLoader.classList.add('loader-hidden');
+      setTimeout(() => {
+        if (brandedLoader.parentNode) {
+          brandedLoader.parentNode.removeChild(brandedLoader);
+        }
+      }, 150);
+    }
+
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const elements = document.querySelectorAll<HTMLElement>('[data-reveal]');
 
+    // Reveal anything in or near the viewport immediately so no top blank void ever occurs
+    elements.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (prefersReducedMotion || !('IntersectionObserver' in window) || rect.top < (window.innerHeight || 800) + 120) {
+        el.classList.add('is-revealed');
+      }
+    });
+
     if (prefersReducedMotion || !('IntersectionObserver' in window)) {
-      elements.forEach((el) => el.classList.add('is-revealed'));
       return;
     }
 
@@ -101,23 +142,36 @@ export default function PageLayout({ currentPath, children }: PageLayoutProps) {
         });
       },
       {
-        threshold: 0.08,
-        rootMargin: '0px 0px -30px 0px',
+        threshold: 0.01,
+        rootMargin: '120px 0px 80px 0px',
       }
     );
 
-    elements.forEach((el) => observer.observe(el));
+    elements.forEach((el) => {
+      if (!el.classList.contains('is-revealed')) {
+        observer.observe(el);
+      }
+    });
 
     return () => {
-      elements.forEach((el) => observer.unobserve(el));
       observer.disconnect();
     };
   }, [currentPath, children]);
 
   return (
     <div className="min-h-screen bg-[#0B0B14] text-[#A1A1B5] font-sans selection:bg-[#7C3AED] selection:text-white flex flex-col relative">
-      {/* Top thin purple progress bar (3px gradient #7C3AED to #A78BFA) */}
-      <div id="page-progress-bar" aria-hidden="true" />
+      {/* Top thin purple progress bar (hidden by default) */}
+      <div id="page-progress-bar" className="hidden" aria-hidden="true" />
+
+      {/* Subtle stylish top blurred gradient fade: gently softens content as it scrolls up under the header */}
+      <div
+        className="pointer-events-none fixed top-0 left-0 right-0 h-20 sm:h-28 z-30 bg-gradient-to-b from-[#0B0B14] via-[#0B0B14]/85 to-transparent backdrop-blur-md"
+        style={{
+          WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0) 100%)',
+          maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0) 100%)',
+        }}
+        aria-hidden="true"
+      />
 
       <Navbar currentPath={currentPath} />
 
@@ -127,5 +181,25 @@ export default function PageLayout({ currentPath, children }: PageLayoutProps) {
 
       <Footer />
     </div>
+  );
+}
+
+export default function PageLayout({ currentPath, children }: PageLayoutProps) {
+  const inRouter = useInRouterContext();
+
+  if (!inRouter) {
+    return (
+      <BrowserRouter>
+        <PageLayoutContent currentPath={currentPath}>
+          {children}
+        </PageLayoutContent>
+      </BrowserRouter>
+    );
+  }
+
+  return (
+    <PageLayoutContent currentPath={currentPath}>
+      {children}
+    </PageLayoutContent>
   );
 }

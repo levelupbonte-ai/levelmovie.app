@@ -12,7 +12,7 @@ export const LEGAL_CONFIG = {
   LAST_UPDATED_TERMS: 'August 28, 2026',
   EFFECTIVE_DATE_PRIVACY: 'January 1, 2026',
   LAST_UPDATED_PRIVACY: 'August 28, 2026',
-  LEGAL_NAME: 'Richelieu Bonte',
+  LEGAL_NAME: 'LevelUp Ecosystem',
   DBA_NAME: 'LevelUp Ecosystem',
   CONTACT_EMAIL: 'contact@levelup-ecosystem.com',
   LEGAL_EMAIL: 'legal@levelup-ecosystem.com',

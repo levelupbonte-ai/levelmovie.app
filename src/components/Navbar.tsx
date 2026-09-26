@@ -1,16 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from './Link';
+import ServicesMegaMenu from './ServicesMegaMenu';
+import MobileServicesMenu from './MobileServicesMenu';
 
 interface NavbarProps {
   currentPath?: string;
-}
-
-interface ServiceSubmenuItem {
-  label: string;
-  desc: string;
-  path: string;
-  tag: string;
-  iconName: string;
 }
 
 export default function Navbar({ currentPath }: NavbarProps) {
@@ -128,65 +122,6 @@ export default function Navbar({ currentPath }: NavbarProps) {
     };
   }, []);
 
-  const serviceItems: ServiceSubmenuItem[] = [
-    {
-      label: 'Barbershop Websites',
-      desc: '24/7 chair booking, barber rosters & Google Maps local ranking.',
-      path: '/websites-for/barbershops',
-      tag: 'Chairs & Grooming',
-      iconName: 'barbershop',
-    },
-    {
-      label: 'Salon & Beauty Websites',
-      desc: 'Stylist portfolios, tiered service menus & multi-service booking.',
-      path: '/websites-for/salons',
-      tag: 'Hair & Esthetics',
-      iconName: 'salon',
-    },
-    {
-      label: 'Creator Websites',
-      desc: 'Independent link-in-bio hub, live collaboration media kit & newsletter.',
-      path: '/services/creator-websites',
-      tag: 'Creator Economy',
-      iconName: 'creators',
-    },
-    {
-      label: 'Small Online Stores',
-      desc: 'Fast checkout for merch, products & digital downloads without platform fees.',
-      path: '/services/online-stores',
-      tag: 'Lean E-Commerce',
-      iconName: 'store',
-    },
-    {
-      label: 'Portfolio Websites',
-      desc: 'High-resolution showcases with sub-second page loads on your domain.',
-      path: '/services/portfolio-websites',
-      tag: 'Visual Showcases',
-      iconName: 'portfolio',
-    },
-    {
-      label: 'Website Security Check',
-      desc: 'Plain-English technical audit of database rules, HTTPS & exposed keys.',
-      path: '/services/security-check',
-      tag: 'Vulnerability Audit',
-      iconName: 'security',
-    },
-    {
-      label: 'Local Business Sites',
-      desc: 'Google Business Profile sync, neighborhood rankings & online booking.',
-      path: '/services/local-business-websites',
-      tag: 'Local Operations',
-      iconName: 'booking',
-    },
-    {
-      label: 'Website Care Plans',
-      desc: 'Fast cloud hosting, daily backups & on-demand monthly updates.',
-      path: '/services/care-plans',
-      tag: 'Maintenance & Care',
-      iconName: 'care',
-    },
-  ];
-
   const standardNavLinks = [
     { label: 'Projects', path: '/projects' },
     { label: 'Pricing', path: '/pricing' },
@@ -254,26 +189,40 @@ export default function Navbar({ currentPath }: NavbarProps) {
             {/* DESKTOP & TABLET NAV (Standard, clean, generous on >= 768px) */}
             <div className="hidden md:flex items-center gap-3.5 lg:gap-5 xl:gap-8 shrink-0">
               <nav className="flex items-center gap-3.5 lg:gap-5 xl:gap-7 text-xs lg:text-sm font-medium">
-                {/* Services Trigger */}
+                {/* Services Trigger with direct link to /services + mega-menu toggle/hover */}
                 <div
-                  className="relative"
+                  className="relative flex items-center"
                   onMouseEnter={handleServicesMouseEnter}
                   onMouseLeave={handleServicesMouseLeave}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setServicesDropdownOpen((prev) => !prev)}
-                    aria-expanded={servicesDropdownOpen}
-                    aria-haspopup="true"
-                    className={`flex items-center gap-1.5 py-1 transition-colors whitespace-nowrap cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] rounded-md ${
-                      isServicesActive() || servicesDropdownOpen
+                  <Link
+                    to="/services"
+                    onClick={() => setServicesDropdownOpen(false)}
+                    className={`flex items-center gap-1 py-1 transition-colors whitespace-nowrap ${
+                      isServicesActive()
                         ? 'text-white font-semibold'
                         : 'text-[#A1A1B5] hover:text-white'
                     }`}
                   >
                     <span>Services</span>
+                    {isServicesActive() && (
+                      <span className="absolute bottom-0 left-0 right-5 h-0.5 bg-[#7C3AED] rounded-full" />
+                    )}
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setServicesDropdownOpen((prev) => !prev);
+                    }}
+                    aria-label="Toggle services menu"
+                    aria-expanded={servicesDropdownOpen}
+                    aria-haspopup="true"
+                    className="p-1 text-[#A78BFA] hover:text-white transition-colors cursor-pointer rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-[#7C3AED]"
+                  >
                     <svg
-                      className={`w-3.5 h-3.5 text-[#A78BFA] transition-transform duration-300 ${
+                      className={`w-3.5 h-3.5 transition-transform duration-300 ${
                         servicesDropdownOpen ? 'rotate-180' : ''
                       }`}
                       viewBox="0 0 24 24"
@@ -285,9 +234,6 @@ export default function Navbar({ currentPath }: NavbarProps) {
                     >
                       <polyline points="6 9 12 15 18 9" />
                     </svg>
-                    {isServicesActive() && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#7C3AED] rounded-full" />
-                    )}
                   </button>
                 </div>
 
@@ -361,81 +307,26 @@ export default function Navbar({ currentPath }: NavbarProps) {
 
         {/*
           MOBILE & TABLET LIQUID GLASS MENU:
-          - Ultra clean frosted glass panel with subtle hairline border
+          - Positioned absolute outside flow so it never creates an empty void below the navbar
           - Responsive width: phone (<640px) and tablet/iPad (640-1024px)
         */}
         <div
-          className={`md:hidden pointer-events-auto transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top ${
+          className={`md:hidden absolute top-full left-0 right-0 z-50 pointer-events-auto transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top ${
             mobileMenuOpen
-              ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
-              : 'opacity-0 -translate-y-2.5 scale-95 pointer-events-none select-none'
-          } w-[calc(100%-1.25rem)] sm:w-[calc(100%-2rem)] md:w-[calc(100%-2.5rem)] max-w-md sm:max-w-xl md:max-w-3xl mx-auto mt-2 rounded-2xl sm:rounded-3xl bg-[#0E0E1A]/95 backdrop-blur-2xl border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.85)] overflow-hidden`}
+              ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto visible'
+              : 'opacity-0 -translate-y-2.5 scale-95 pointer-events-none select-none invisible'
+          } w-[calc(100%-1.25rem)] sm:w-[calc(100%-2rem)] md:w-[calc(100%-2.5rem)] max-w-md sm:max-w-xl md:max-w-3xl mx-auto mt-2 rounded-2xl sm:rounded-3xl bg-[#0E0E1A]/95 backdrop-blur-2xl border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.85)] max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain touch-pan-y`}
         >
-          <div className="p-4 sm:p-6 space-y-4">
+          <div className="p-4 sm:p-6 pb-6 space-y-4">
             <div className="flex flex-col space-y-1 text-sm font-semibold text-slate-200">
-              {/* Services Accordion on Mobile / Tablet */}
-              <div className="border-b border-white/[0.08] pb-2 mb-1">
-                <button
-                  type="button"
-                  onClick={() => setMobileServicesOpen((prev) => !prev)}
-                  aria-expanded={mobileServicesOpen}
-                  className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-[#A1A1B5] hover:bg-white/[0.05] hover:text-white transition-colors"
-                >
-                  <span className={isServicesActive() ? 'text-white font-bold' : ''}>Services</span>
-                  <svg
-                    className={`w-4 h-4 text-[#A78BFA] transition-transform duration-250 ease-out ${
-                      mobileServicesOpen ? 'rotate-180' : ''
-                    }`}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-
-                {/* Submenu Accordion Container */}
-                {mobileServicesOpen && (
-                  <div className="pl-3 pr-1 py-1 space-y-1 animate-in fade-in duration-200">
-                    <Link
-                      to="/services"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block py-2 px-3 text-xs font-bold text-[#A78BFA] hover:text-white"
-                    >
-                      All Services Overview →
-                    </Link>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-                      {serviceItems.map((item) => (
-                        <Link
-                          key={item.path}
-                          to={item.path}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={`flex items-center gap-2.5 py-2 px-2.5 rounded-xl text-xs transition-colors ${
-                            isActive(item.path)
-                              ? 'bg-white/[0.08] text-white font-bold'
-                              : 'text-[#A1A1B5] hover:bg-white/[0.04] hover:text-white'
-                          }`}
-                        >
-                          <div className="w-5 h-5 shrink-0 rounded-md bg-[#14141F] border border-white/[0.08] p-0.5 flex items-center justify-center">
-                            <img
-                              src={`/assets/img/icons/${item.iconName}.png`}
-                              alt=""
-                              width="16"
-                              height="16"
-                              className="w-full h-full object-contain"
-                              loading="lazy"
-                            />
-                          </div>
-                          <span className="truncate">{item.label}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Dedicated Mobile Services Interface with its own direct link and code */}
+              <MobileServicesMenu
+                isOpen={mobileServicesOpen}
+                onToggle={() => setMobileServicesOpen((prev) => !prev)}
+                onClose={() => setMobileMenuOpen(false)}
+                isServicesActive={isServicesActive()}
+                currentPath={path}
+              />
 
               {/* Standard Nav Links in mobile/tablet drawer */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 pt-1">
@@ -469,196 +360,13 @@ export default function Navbar({ currentPath }: NavbarProps) {
           </div>
         </div>
 
-        {/* DESKTOP SERVICES MEGA-MENU: ALWAYS CLEAN & STANDARD UNDER THE DESKTOP HEADER */}
-        {servicesDropdownOpen && (
-          <div
-            role="menu"
-            aria-orientation="vertical"
-            onMouseEnter={() => {
-              if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
-            }}
-            onMouseLeave={handleServicesMouseLeave}
-            className="pointer-events-auto hidden md:block w-full bg-[#0B0B14]/98 backdrop-blur-2xl border-t border-b border-white/[0.08] shadow-[0_24px_60px_rgba(0,0,0,0.95)] animate-in fade-in slide-in-from-top-1 duration-200 text-left"
-          >
-            <div className="max-w-7xl mx-auto px-6 sm:px-10 py-8 space-y-8">
-              {/* 3 Clean Typographic Columns */}
-              <div className="grid grid-cols-3 gap-10 xl:gap-14">
-                {/* Column 1: CRÉATION */}
-                <div className="space-y-5">
-                  <div className="text-xs font-bold uppercase tracking-widest text-[#DDD6FE] pb-2 border-b border-white/[0.12] flex items-center justify-between">
-                    <span>CRÉATION &amp; SHOWCASE</span>
-                    <span className="text-[10px] text-[#71717A] font-mono">01</span>
-                  </div>
-                  <div className="space-y-5">
-                    <Link
-                      to="/services/portfolio-websites"
-                      onClick={() => setServicesDropdownOpen(false)}
-                      className="group block space-y-1"
-                    >
-                      <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                        <span>Portfolio Websites</span>
-                        <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                      </h4>
-                      <p className="text-xs text-[#A1A1B5] leading-relaxed">
-                        Clean, high-resolution visual showcases with sub-second load times on your domain.
-                      </p>
-                    </Link>
-
-                    <Link
-                      to="/services/creator-websites"
-                      onClick={() => setServicesDropdownOpen(false)}
-                      className="group block space-y-1"
-                    >
-                      <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                        <span>Creator Websites</span>
-                        <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                      </h4>
-                      <p className="text-xs text-[#A1A1B5] leading-relaxed">
-                        Independent link-in-bio hub, brand collaboration media kit, and direct fan contact.
-                      </p>
-                    </Link>
-
-                    <Link
-                      to="/projects"
-                      onClick={() => setServicesDropdownOpen(false)}
-                      className="group block space-y-1"
-                    >
-                      <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                        <span>Work &amp; Examples Showcase</span>
-                        <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                      </h4>
-                      <p className="text-xs text-[#A1A1B5] leading-relaxed">
-                        Explore live client deployments and concept prototypes built with speed and security.
-                      </p>
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Column 2: BUSINESS */}
-                <div className="space-y-5">
-                  <div className="text-xs font-bold uppercase tracking-widest text-[#DDD6FE] pb-2 border-b border-white/[0.12] flex items-center justify-between">
-                    <span>BUSINESS &amp; BOOKING</span>
-                    <span className="text-[10px] text-[#71717A] font-mono">02</span>
-                  </div>
-                  <div className="space-y-5">
-                    <Link
-                      to="/websites-for/barbershops"
-                      onClick={() => setServicesDropdownOpen(false)}
-                      className="group block space-y-1"
-                    >
-                      <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                        <span>Barbershop Websites</span>
-                        <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                      </h4>
-                      <p className="text-xs text-[#A1A1B5] leading-relaxed">
-                        24/7 chair booking, barber profiles, and Google Calendar real-time sync.
-                      </p>
-                    </Link>
-
-                    <Link
-                      to="/websites-for/salons"
-                      onClick={() => setServicesDropdownOpen(false)}
-                      className="group block space-y-1"
-                    >
-                      <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                        <span>Salon &amp; Beauty Websites</span>
-                        <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                      </h4>
-                      <p className="text-xs text-[#A1A1B5] leading-relaxed">
-                        Stylist portfolios, tiered service menus, and multi-service appointment scheduling.
-                      </p>
-                    </Link>
-
-                    <Link
-                      to="/services/online-stores"
-                      onClick={() => setServicesDropdownOpen(false)}
-                      className="group block space-y-1"
-                    >
-                      <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                        <span>Small Online Stores</span>
-                        <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                      </h4>
-                      <p className="text-xs text-[#A1A1B5] leading-relaxed">
-                        Fast, lightweight checkout for products, merch, and digital downloads without platform lock-in.
-                      </p>
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Column 3: OPERATIONS & MAINTENANCE */}
-                <div className="space-y-5">
-                  <div className="text-xs font-bold uppercase tracking-widest text-[#DDD6FE] pb-2 border-b border-white/[0.12] flex items-center justify-between">
-                    <span>CARE &amp; PROTECTION</span>
-                    <span className="text-[10px] text-[#71717A] font-mono">03</span>
-                  </div>
-                  <div className="space-y-5">
-                    <Link
-                      to="/services/care-plans"
-                      onClick={() => setServicesDropdownOpen(false)}
-                      className="group block space-y-1"
-                    >
-                      <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                        <span>Website Care Plans</span>
-                        <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                      </h4>
-                      <p className="text-xs text-[#A1A1B5] leading-relaxed">
-                        Cloud hosting, daily automated backups, uptime monitoring, and fast on-demand edits.
-                      </p>
-                    </Link>
-
-                    <Link
-                      to="/services/security-check"
-                      onClick={() => setServicesDropdownOpen(false)}
-                      className="group block space-y-1"
-                    >
-                      <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                        <span>Website Security Check</span>
-                        <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                      </h4>
-                      <p className="text-xs text-[#A1A1B5] leading-relaxed">
-                        Plain-English audit of database rules, CSP headers, exposed keys, and account hygiene.
-                      </p>
-                    </Link>
-
-                    <Link
-                      to="/services"
-                      onClick={() => setServicesDropdownOpen(false)}
-                      className="group block space-y-1"
-                    >
-                      <h4 className="text-sm font-bold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                        <span>All Services Overview</span>
-                        <span className="text-xs text-[#A78BFA] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">→</span>
-                      </h4>
-                      <p className="text-xs text-[#A1A1B5] leading-relaxed">
-                        Compare website packages, pricing tiers, and launch timelines for your project.
-                      </p>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Strip: ESSENTIALS */}
-              <div className="pt-5 border-t border-white/[0.1] flex flex-wrap items-center justify-between gap-4 text-xs text-[#A1A1B5]">
-                <div className="flex items-center gap-6">
-                  <span className="font-semibold text-white">Security-First:</span>
-                  <span>Strict CSP Headers</span>
-                  <span>•</span>
-                  <span>Deny-by-default rules</span>
-                  <span>•</span>
-                  <span>Zero client secrets</span>
-                </div>
-                <Link
-                  to="/security"
-                  onClick={() => setServicesDropdownOpen(false)}
-                  className="text-[#A78BFA] hover:text-white font-medium transition-colors flex items-center gap-1"
-                >
-                  <span>Read our security architecture</span>
-                  <span>→</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* DESKTOP SERVICES MEGA-MENU: DEDICATED COMPONENT & CLEAN ARCHITECTURE */}
+        <ServicesMegaMenu
+          isOpen={servicesDropdownOpen}
+          onClose={() => setServicesDropdownOpen(false)}
+          onMouseEnter={handleServicesMouseEnter}
+          onMouseLeave={handleServicesMouseLeave}
+        />
       </header>
     </>
   );

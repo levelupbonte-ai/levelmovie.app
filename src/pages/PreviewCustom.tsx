@@ -148,7 +148,7 @@ export default function PreviewCustom() {
     <div className="py-16 sm:py-24 px-4 sm:px-8">
       <SEO
         title="Request a Custom Preview | LevelUp Ecosystem"
-        description="Request a custom website preview designed and reviewed by me. Delivered to your email within 24 to 48 business hours."
+        description="Request a custom website preview engineered by LevelUp. Delivered to your inbox within 24 to 48 business hours."
         noindex={true}
       />
 

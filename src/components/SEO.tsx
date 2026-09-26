@@ -100,10 +100,6 @@ export default function SEO({
       url: 'https://levelup-ecosystem.com',
       logo: 'https://levelup-ecosystem.com/assets/img/logo.png',
       description: 'Web design and development studio building secure, AI-assisted websites for local businesses, creators, and portfolios.',
-      founder: {
-        '@type': 'Person',
-        name: 'Richelieu Bonte',
-      },
       areaServed: 'Worldwide',
       knowsAbout: [
         'Web design',

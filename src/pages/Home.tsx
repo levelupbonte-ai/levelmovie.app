@@ -34,7 +34,7 @@ export default function Home() {
       {/* ------------------------------------------------------------- */}
       {/* HERO SECTION                                                  */}
       {/* ------------------------------------------------------------- */}
-      <section className="relative pt-10 sm:pt-16 pb-20 sm:pb-28 px-4 sm:px-8 border-b border-white/[0.08] overflow-hidden bg-[#0B0B14]">
+      <section className="relative pt-4 sm:pt-8 lg:pt-10 pb-16 sm:pb-24 px-4 sm:px-8 border-b border-white/[0.08] overflow-hidden bg-[#0B0B14]">
         {/* Clean, deep studio radial glow */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[400px] bg-[#7C3AED]/12 rounded-full blur-[140px] pointer-events-none" />
 
@@ -121,9 +121,9 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center relative z-10">
-          {/* Left Column */}
-          <div className="lg:col-span-6 space-y-6 sm:space-y-7 text-left" data-reveal>
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10">
+          {/* Left Column (Always visible immediately above fold) */}
+          <div className="lg:col-span-6 space-y-6 sm:space-y-7 text-left">
             {/* Signature 3D Star insignia alongside header metadata */}
             <div className="flex items-center gap-4">
               <Star3DHero />
@@ -181,8 +181,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Column: 3D Product Zoom Trio Card Deck replacing the old big card */}
-          <div className="lg:col-span-6 flex justify-center py-2" data-reveal>
+          {/* Right Column: 3D Product Zoom Trio Card Deck (Always visible immediately above fold) */}
+          <div className="lg:col-span-6 flex justify-center py-2">
             <Service3DShowcaseDeck />
           </div>
         </div>

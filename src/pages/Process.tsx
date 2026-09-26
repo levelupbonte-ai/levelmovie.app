@@ -49,8 +49,8 @@ export default function Process() {
       />
 
       {/* Header */}
-      <section className="py-16 sm:py-24 px-4 sm:px-8 border-b border-white/[0.08] bg-[#0B0B14]">
-        <div className="max-w-4xl mx-auto text-center space-y-6" data-reveal>
+      <section className="py-12 sm:py-20 px-4 sm:px-8 border-b border-white/[0.08] bg-[#0B0B14]">
+        <div className="max-w-4xl mx-auto text-center space-y-6">
           <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
             Our Engineering Philosophy
           </span>

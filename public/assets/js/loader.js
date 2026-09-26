@@ -286,66 +286,28 @@
     const overlay = document.getElementById('levelup-nav-overlay');
     if (overlay) {
       overlay.classList.remove('overlay-active');
+      overlay.style.opacity = '0';
+      overlay.style.pointerEvents = 'none';
+      overlay.style.display = 'none';
+      if (overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
     }
   }
 
-  // Setup Global Link Click Listener for 700ms Slow Navigation Timer
+  // Setup Navigation Listeners
   function initNavigationListener() {
-    document.addEventListener('click', (e) => {
-      const link = (e.target).closest('a');
-      if (!link) return;
-
-      const href = link.getAttribute('href');
-      const target = link.getAttribute('target');
-
-      // Ignore external, hash anchors, mailto, tel, downloads, or new tabs
-      if (
-        !href ||
-        href.startsWith('#') ||
-        href.startsWith('mailto:') ||
-        href.startsWith('tel:') ||
-        href.startsWith('javascript:') ||
-        target === '_blank' ||
-        e.metaKey ||
-        e.ctrlKey ||
-        e.shiftKey ||
-        e.altKey ||
-        e.button !== 0
-      ) {
-        return;
-      }
-
-      // Check if external domain
-      try {
-        const url = new URL(href, window.location.href);
-        if (url.origin !== window.location.origin) return;
-      } catch {
-        return;
-      }
-
-      // Check online status
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        showOfflineToast();
-        return;
-      }
-
-      // Start 700ms slow navigation timer
-      if (navOverlayTimer) clearTimeout(navOverlayTimer);
-      navOverlayTimer = setTimeout(() => {
-        const overlay = ensureNavOverlay();
-        overlay.classList.add('overlay-active');
-      }, 700);
-    });
+    // In this React SPA, all routing is client-side and instant.
+    // We ensure any pending overlay or stuck state is cleared on page change, history change, or bfcaches.
+    window.addEventListener('popstate', hideNavigationOverlay);
 
     // Handle Back / Forward Cache (pageshow event with persisted === true)
     window.addEventListener('pageshow', (event) => {
-      if (event.persisted) {
-        hideNavigationOverlay();
-        const bar = document.getElementById('page-progress-bar');
-        if (bar) {
-          bar.classList.remove('active', 'loading', 'finish');
-          bar.style.width = '0%';
-        }
+      hideNavigationOverlay();
+      const bar = document.getElementById('page-progress-bar');
+      if (bar) {
+        bar.classList.remove('active', 'loading', 'finish');
+        bar.style.width = '0%';
       }
     });
 

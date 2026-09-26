@@ -7,7 +7,7 @@ export default function PreviewHub() {
     <div className="py-16 sm:py-24 px-4 sm:px-8">
       <SEO
         title="Get a Free Preview | LevelUp Ecosystem"
-        description="See your new website before you decide. Choose between an instant AI draft or a custom preview designed and reviewed by me."
+        description="See your new website before you decide. Choose between an instant AI draft powered by Google AI or a custom preview designed by LevelUp."
         noindex={true}
       />
 
@@ -36,7 +36,7 @@ export default function PreviewHub() {
                 className="text-xs font-semibold px-3 py-1 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-[#A1A1B5] hover:text-white transition-colors inline-flex items-center gap-1.5"
                 title="AI-generated draft - Read Terms of Service"
               >
-                <span>AI-generated draft</span>
+                <span>Free Google AI draft</span>
                 <span className="text-[10px] text-[#A78BFA]">↗</span>
               </Link>
               <span className="text-xs text-[#71717A] font-mono">5–10 min</span>
@@ -45,7 +45,7 @@ export default function PreviewHub() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-2">Instant preview</h2>
               <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                An automated draft structured in 5 to 10 minutes. Great for getting an initial feel for layout, colors, and features.
+                An automated draft generated via free Google AI in 5 to 10 minutes. Great for getting an initial feel for layout, colors, and features.
               </p>
             </div>
 
@@ -56,11 +56,11 @@ export default function PreviewHub() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-[#A78BFA] font-bold">✓</span>
-                <span>Based on your business info</span>
+                <span>Automated layout based on your business info</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-[#A78BFA] font-bold">✓</span>
-                <span>Basic draft, not final design</span>
+                <span className="text-xs text-[#71717A]">Uses free Google AI (LevelUp is not responsible for data collected by Google)</span>
               </li>
             </ul>
           </div>
@@ -70,7 +70,7 @@ export default function PreviewHub() {
               to="/preview/instant"
               className="w-full inline-flex items-center justify-center py-3.5 px-6 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-white font-semibold text-sm transition-all duration-200 cursor-pointer"
             >
-              Generate my preview
+              Generate instant preview
             </Link>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function PreviewHub() {
                 className="text-xs font-semibold px-3 py-1 rounded-full bg-[#7C3AED]/20 hover:bg-[#7C3AED]/30 text-[#DDD6FE] border border-[#7C3AED]/30 transition-colors inline-flex items-center gap-1.5"
                 title="Designed with AI tools - Read Terms of Service"
               >
-                <span>Designed by me, with AI</span>
+                <span>Engineered by LevelUp</span>
                 <span className="text-[10px] text-[#A78BFA]">↗</span>
               </Link>
               <span className="text-xs text-[#A78BFA] font-mono">24–48h</span>
@@ -100,7 +100,7 @@ export default function PreviewHub() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-2">Custom preview</h2>
               <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                I design and review a preview for your business and send it to your email.
+                We design and review a tailored preview for your business and send it to your inbox.
               </p>
             </div>
 
@@ -111,7 +111,7 @@ export default function PreviewHub() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-[#7C3AED] font-bold">✓</span>
-                <span>Reviewed and tested by me</span>
+                <span>Reviewed and tested by our engineering studio</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-[#7C3AED] font-bold">✓</span>
@@ -125,7 +125,7 @@ export default function PreviewHub() {
               to="/preview/custom"
               className="w-full inline-flex items-center justify-center py-3.5 px-6 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-semibold text-sm transition-all duration-200 shadow-md shadow-[#7C3AED]/25 cursor-pointer"
             >
-              Request my custom preview
+              Request our custom preview
             </Link>
           </div>
         </div>
@@ -135,9 +135,13 @@ export default function PreviewHub() {
       {/* Small Note Under the Cards */}
       <div className="max-w-xl mx-auto text-center mt-12">
         <p className="text-xs text-[#71717A] leading-relaxed">
-          AI tools help me build faster. Every custom preview is directed and reviewed by me. Previews are AI-assisted drafts governed by our{' '}
+          AI tools help us build faster. Every custom preview is directed and reviewed by LevelUp. Previews are AI-assisted drafts governed by our{' '}
           <Link to="/terms" className="text-[#A78BFA] underline hover:text-white">
             Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link to="/privacy" className="text-[#A78BFA] underline hover:text-white">
+            Privacy Policy
           </Link>.
         </p>
       </div>

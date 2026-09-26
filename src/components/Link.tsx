@@ -7,13 +7,14 @@ export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement>
 }
 
 /**
- * Plain HTML link supporting full browser document navigation.
- * Pure anchor element without client-side interception.
+ * Universal Link component triggering standard native document navigation
+ * for optimal MPA multi-page caching, full page reload markers, and zero client router traps.
  */
-export const Link: React.FC<LinkProps> = ({ to, href, children, ...props }) => {
+export const Link: React.FC<LinkProps> = ({ to, href, children, onClick, ...props }) => {
   const target = to || href || '';
+
   return (
-    <a href={target} {...props}>
+    <a href={target} onClick={onClick} {...props}>
       {children}
     </a>
   );

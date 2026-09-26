@@ -270,7 +270,7 @@ export default function Terms() {
               </p>
 
               <p>
-                The Site is operated by {LEGAL_CONFIG.LEGAL_NAME}, doing business as LevelUp Ecosystem (&quot;LevelUp,&quot; &quot;we,&quot; &quot;us&quot; or &quot;our&quot;), based in San Diego, California.
+                The Site is operated by LevelUp Ecosystem (&quot;LevelUp,&quot; &quot;we,&quot; &quot;us&quot; or &quot;our&quot;), an independent web architecture and digital security studio based in San Diego, California.
               </p>
 
               {/* IMPORTANT CALLOUT: Bold Capitalized Intro Warning */}
@@ -442,26 +442,26 @@ export default function Terms() {
                 </button>
               </div>
               <p>
-                5.1 <strong>How AI is used.</strong> We use artificial intelligence tools to help create some previews, text, layouts and other content, and some features of the Site (for example, the Instant Preview) generate output automatically. Some of this processing is performed by third-party AI providers. Content labeled &quot;AI-generated&quot; or &quot;AI-generated draft&quot; was produced with AI assistance and has not been reviewed by a person unless we say so. Custom Previews and paid work are directed and reviewed by us, using AI tools among others.
+                5.1 <strong>How AI is used &amp; Free Google AI Disclaimer.</strong> We use artificial intelligence technologies to help create preliminary preview drafts, text, layouts, and exploratory content. The free instant preview and automated testing tools utilize free-tier Google AI services (including Google Cloud / Gemini AI). LevelUp Ecosystem (&quot;LevelUp,&quot; &quot;we,&quot; &quot;us&quot; or &quot;our&quot;) is not responsible or liable for any data, prompts, or content collected, retained, logged, or processed by Google or its affiliates. By using the free AI test, you acknowledge that your submitted prompts are processed under Google&apos;s independent policies and terms.
               </p>
               <p>
-                5.2 <strong>Output may be wrong.</strong> AI-generated content can be inaccurate, incomplete, outdated, misleading, offensive, similar to other content, or unsuitable for your purpose. It may include errors of fact, grammar, design or code. You are responsible for reviewing all AI-generated content before you rely on it or publish it.
+                5.2 <strong>No Sensitive Submissions.</strong> You agree never to submit sensitive, confidential, or protected personal data into any free AI testing feature, including credit cards, passwords, trade secrets, health data, or personal identification records.
               </p>
               <p>
-                5.3 <strong>No professional advice.</strong> AI-generated content and previews are not legal, medical, financial, tax, security or other professional advice. In particular, they are not reviewed for compliance with laws or rules that apply to your business or industry, such as advertising rules, licensing requirements, health or medical claims, accessibility standards, privacy laws or payment-card requirements. You are responsible for making sure your website and its content comply with the rules that apply to you.
+                5.3 <strong>Output may be wrong.</strong> AI-generated content can be inaccurate, incomplete, outdated, misleading, offensive, similar to other content, or unsuitable for your purpose. It may include errors of fact, grammar, design or code. You are responsible for reviewing all AI-generated content before you rely on it or publish it.
               </p>
               <p>
-                5.4 <strong>Ownership and originality.</strong> We do not promise that AI-generated content is unique, or that it can be protected by copyright or other rights. The legal status of AI-generated content is unsettled and may differ by jurisdiction.
+                5.4 <strong>No professional advice.</strong> AI-generated content and previews are not legal, medical, financial, tax, security or other professional advice. In particular, they are not reviewed for compliance with laws or rules that apply to your business or industry, such as advertising rules, licensing requirements, health or medical claims, accessibility standards, privacy laws or payment-card requirements. You are responsible for making sure your website and its content comply with the rules that apply to you.
               </p>
               <p>
-                5.5 <strong>What not to enter.</strong> Do not enter passwords, API keys or other credentials, payment card numbers, Social Security or government ID numbers, health information, your customers&apos; personal information, or any confidential or regulated information into the Site, including the Studio. If you do, you do so at your own risk.
+                5.5 <strong>Ownership and originality.</strong> We do not promise that AI-generated content is unique, or that it can be protected by copyright or other rights. The legal status of AI-generated content is unsettled and may differ by jurisdiction.
               </p>
               <p>
-                5.6 <strong>Third-party AI providers.</strong> Information you submit to AI features may be processed by third-party AI providers on our behalf. Our{' '}
+                5.6 <strong>Third-party AI providers.</strong> Information you submit to AI features is processed by third-party AI providers (including Google AI). Please refer to our{' '}
                 <Link to="/privacy" className="text-[#A78BFA] underline hover:text-white transition-colors">
                   Privacy Policy
                 </Link>{' '}
-                explains how information is handled.
+                for details on third-party AI handling.
               </p>
             </section>
 
