@@ -80,10 +80,9 @@ export default function PreviewHub() {
           <div className="pt-8">
             <Link
               to="/preview/instant"
-              className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white font-semibold text-sm border border-white/[0.1] transition-all duration-200 cursor-pointer active:scale-[0.99]"
+              className="w-full inline-flex items-center justify-center py-3.5 px-6 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white font-semibold text-sm border border-white/[0.1] transition-all duration-200 cursor-pointer active:scale-[0.99]"
             >
-              <span>Launch Instant Prototype</span>
-              <span className="text-xs font-mono text-[#A78BFA]">→</span>
+              Launch Instant Prototype
             </Link>
           </div>
         </div>
@@ -135,10 +134,9 @@ export default function PreviewHub() {
           <div className="pt-8">
             <Link
               to="/preview/custom"
-              className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#7C3AED] hover:from-[#8B5CF6] hover:to-[#A78BFA] text-white font-bold text-sm transition-all duration-300 shadow-lg shadow-[#7C3AED]/30 hover:shadow-[#7C3AED]/50 cursor-pointer active:scale-[0.99]"
+              className="w-full inline-flex items-center justify-center py-3.5 px-6 rounded-full bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#7C3AED] hover:from-[#8B5CF6] hover:to-[#A78BFA] text-white font-bold text-sm transition-all duration-300 shadow-lg shadow-[#7C3AED]/30 hover:shadow-[#7C3AED]/50 cursor-pointer active:scale-[0.99]"
             >
-              <span>Request Custom Preview</span>
-              <span className="text-xs font-mono bg-white/20 px-2 py-0.5 rounded-full">→</span>
+              Request Custom Preview
             </Link>
           </div>
         </div>
