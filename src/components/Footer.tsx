@@ -43,6 +43,8 @@ export default function Footer() {
       links: [
         { label: 'Free preview', href: '/preview' },
         { label: 'Studio', href: '/preview/instant' },
+        { label: 'Custom preview mockup', href: '/preview/custom' },
+        { label: 'Website security check', href: '/services/security-check' },
       ],
     },
     {
@@ -59,10 +61,9 @@ export default function Footer() {
 
   return (
     <footer
-      className="bg-[#0B0B14] pt-14 pb-12 px-4 sm:px-8 border-t border-white/[0.08] mt-auto text-left"
-      style={{ paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom, 0px))' }}
+      className="bg-[#0B0B14] pt-14 border-t border-white/[0.08] mt-auto text-left"
     >
-      <div className="max-w-7xl mx-auto space-y-12">
+      <div className="max-w-7xl mx-auto space-y-12 px-4 sm:px-8 pb-12">
         {/* Top Brand Block */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-white/[0.08]">
           <div className="space-y-3 max-w-lg">
@@ -76,7 +77,7 @@ export default function Footer() {
               />
             </Link>
             <p className="text-sm text-[#A1A1B5] leading-relaxed">
-              Fast, professional websites with online booking and built-in protection. Built in San Diego, CA • Serving clients nationwide.
+              Fast, professional websites with online booking and built-in protection. Serving clients nationwide.
             </p>
           </div>
 
@@ -121,7 +122,7 @@ export default function Footer() {
               </h4>
               <ul className="space-y-2.5 text-sm text-[#A1A1B5]">
                 {col.links.map((link) => (
-                  <li key={link.href}>
+                  <li key={`${col.id}-${link.label}-${link.href}`}>
                     <Link
                       to={link.href}
                       className="hover:text-white transition-colors block py-0.5"
@@ -175,7 +176,7 @@ export default function Footer() {
                 >
                   <ul className="space-y-2 text-sm text-[#A1A1B5] pt-1 pl-1">
                     {col.links.map((link) => (
-                      <li key={link.href}>
+                      <li key={`mob-${col.id}-${link.label}-${link.href}`}>
                         <Link
                           to={link.href}
                           className="hover:text-white transition-colors block py-1"
@@ -190,27 +191,20 @@ export default function Footer() {
             );
           })}
         </div>
+      </div>
 
-        {/* Bottom Bar: Copyright, Legal Links, Built in San Diego */}
-        <div className="pt-4 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#A1A1B5]">
-          <div>
+      {/* Le bas du site en blanc épuré */}
+      <div
+        className="w-full bg-white text-zinc-900 border-t border-zinc-200 py-4 px-4 sm:px-8 text-xs font-medium"
+        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
+      >
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-zinc-600">
             © 2026 LevelUp Ecosystem. All rights reserved.
           </div>
 
-          <div className="flex items-center gap-6">
-            <Link to="/privacy" className="hover:text-white transition-colors underline underline-offset-4">
-              Privacy Policy
-            </Link>
-            <Link to="/terms" className="hover:text-white transition-colors underline underline-offset-4">
-              Terms of Service
-            </Link>
-            <Link to="/sitemap" className="hover:text-white transition-colors underline underline-offset-4">
-              Sitemap
-            </Link>
-          </div>
-
-          <div className="text-slate-400 font-medium">
-            Built in San Diego, CA
+          <div className="text-zinc-500 font-medium">
+            Designed &amp; Built in San Diego, CA
           </div>
         </div>
       </div>

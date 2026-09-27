@@ -115,8 +115,79 @@ export default function SEO({
       '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'LevelUp Ecosystem',
-      alternateName: 'LevelUp',
-      url: 'https://levelup-ecosystem.com'
+      alternateName: ['LevelUp Studio', 'LevelUp'],
+      url: 'https://levelup-ecosystem.com',
+      hasPart: [
+        {
+          '@type': 'WebPage',
+          name: 'Studio',
+          url: 'https://levelup-ecosystem.com/preview/instant',
+          description: 'LevelUp Studio AI website generation'
+        },
+        {
+          '@type': 'WebPage',
+          name: 'Services',
+          url: 'https://levelup-ecosystem.com/services'
+        },
+        {
+          '@type': 'WebPage',
+          name: 'Pricing',
+          url: 'https://levelup-ecosystem.com/pricing'
+        },
+        {
+          '@type': 'WebPage',
+          name: 'Projects',
+          url: 'https://levelup-ecosystem.com/projects'
+        },
+        {
+          '@type': 'WebPage',
+          name: 'Contact',
+          url: 'https://levelup-ecosystem.com/contact'
+        }
+      ]
+    });
+
+    schemas.push({
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'Site Navigation Sitelinks',
+      itemListElement: [
+        {
+          '@type': 'SiteNavigationElement',
+          position: 1,
+          name: 'Studio',
+          description: 'LevelUp Studio - Espace de création et générateur de site IA',
+          url: 'https://levelup-ecosystem.com/preview/instant'
+        },
+        {
+          '@type': 'SiteNavigationElement',
+          position: 2,
+          name: 'Services',
+          description: 'Web design, booking systems, and care plans',
+          url: 'https://levelup-ecosystem.com/services'
+        },
+        {
+          '@type': 'SiteNavigationElement',
+          position: 3,
+          name: 'Pricing',
+          description: 'Transparent upfront web design pricing',
+          url: 'https://levelup-ecosystem.com/pricing'
+        },
+        {
+          '@type': 'SiteNavigationElement',
+          position: 4,
+          name: 'Projects',
+          description: 'Selected client websites and case studies',
+          url: 'https://levelup-ecosystem.com/projects'
+        },
+        {
+          '@type': 'SiteNavigationElement',
+          position: 5,
+          name: 'Contact',
+          description: 'Get in touch with LevelUp Ecosystem',
+          url: 'https://levelup-ecosystem.com/contact'
+        }
+      ]
     });
 
     // Optional BreadcrumbList schema

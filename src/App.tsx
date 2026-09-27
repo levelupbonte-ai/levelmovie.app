@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import PageLayout from './components/PageLayout';
 
 // Pages
@@ -60,6 +60,8 @@ export default function App() {
           <Route path="/preview" element={<PreviewHub />} />
           <Route path="/preview/instant" element={<PreviewInstant />} />
           <Route path="/preview/custom" element={<PreviewCustom />} />
+          <Route path="/studio" element={<Navigate to="/preview/instant" replace />} />
+          <Route path="/studio/*" element={<Navigate to="/preview/instant" replace />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/pricing" element={<Pricing />} />

@@ -131,9 +131,6 @@ export default function Home() {
                 <div className="text-xs sm:text-sm font-bold tracking-wider text-[#A78BFA] uppercase">
                   Independent Web Studio &amp; Security
                 </div>
-                <div className="text-xs text-[#A1A1B5] font-mono mt-0.5">
-                  Built in San Diego, CA
-                </div>
               </div>
             </div>
 

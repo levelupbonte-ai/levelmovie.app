@@ -33,6 +33,15 @@ export default function Sitemap() {
       ],
     },
     {
+      category: 'Tools & Studio',
+      description: 'Interactive previews, AI generators, and dedicated web studio platform',
+      links: [
+        { title: 'Studio (AI Generation)', href: '/preview/instant', desc: 'Create a website prototype in seconds before human handoff' },
+        { title: 'Free Website Preview Hub', href: '/preview', desc: 'Choose between instant AI draft or custom developer-crafted mockup' },
+        { title: 'Custom Preview Request', href: '/preview/custom', desc: 'Handcrafted website mockup delivered within 24-48 business hours' },
+      ],
+    },
+    {
       category: 'Local Presence',
       description: 'Focused service areas and regional spotlight',
       links: [
@@ -52,7 +61,7 @@ export default function Sitemap() {
   ];
 
   return (
-    <div>
+    <div className="bg-[#0B0B14] min-h-screen text-white">
       <SEO
         title="Sitemap | LevelUp Ecosystem"
         description="Explore all pages, services, and resources on LevelUp Ecosystem: web design, online booking, care plans, and security audits."
@@ -68,58 +77,61 @@ export default function Sitemap() {
         ]}
       />
 
-      {/* Header */}
-      <section className="py-16 sm:py-20 px-4 sm:px-8 border-b border-white/[0.08] bg-[#0B0B14]">
-        <div className="max-w-4xl mx-auto space-y-4 text-left" data-reveal>
+      {/* Header épuré intégré au site */}
+      <section className="pt-12 sm:pt-16 pb-10 px-4 sm:px-8 border-b border-white/[0.08]">
+        <div className="max-w-5xl mx-auto space-y-3 text-left">
           <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
             Site Directory
           </span>
           <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
             LevelUp Ecosystem Sitemap
           </h1>
-          <p className="text-base sm:text-lg text-[#A1A1B5] leading-relaxed">
-            A complete human-readable directory of every section, keyword service page, and resource across our website.
+          <p className="text-sm sm:text-base text-[#A1A1B5] max-w-2xl leading-relaxed">
+            Index complet de toutes les pages, services, outils et documentations de LevelUp Ecosystem.
           </p>
         </div>
       </section>
 
-      {/* Directory Grid */}
-      <section className="py-16 sm:py-24 px-4 sm:px-8 bg-[#0B0B14]">
-        <div className="max-w-5xl mx-auto space-y-12">
+      {/* Directory sans cartes bulles - structure fluide collée dans la page */}
+      <section className="py-12 sm:py-16 px-4 sm:px-8">
+        <div className="max-w-5xl mx-auto divide-y divide-white/[0.08]">
           {sitemapGroups.map((group, groupIdx) => (
-            <div
-              key={groupIdx}
-              className="p-8 sm:p-10 rounded-3xl bg-[#14141F] border border-white/[0.08] space-y-6"
-              data-reveal
-            >
-              <div className="space-y-1">
-                <h2 className="text-2xl font-bold text-white">
-                  {group.category}
+            <div key={groupIdx} className="py-10 first:pt-0 last:pb-0 space-y-6">
+              
+              {/* Entête de catégorie */}
+              <div className="space-y-1 text-left">
+                <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#7C3AED]" />
+                  <span>{group.category}</span>
                 </h2>
-                <p className="text-sm text-[#A1A1B5]">
+                <p className="text-xs sm:text-sm text-[#A1A1B5]">
                   {group.description}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              {/* Liste de liens fluide et aérée sans boîtes à bulles */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4 pt-2">
                 {group.links.map((link, idx) => (
                   <Link
                     key={idx}
                     to={link.href}
-                    className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-[#7C3AED]/50 hover:bg-white/[0.06] transition-all group block text-left"
+                    className="group py-2.5 border-b border-white/[0.04] hover:border-[#7C3AED]/60 transition-all flex flex-col text-left"
                   >
-                    <div className="text-sm font-semibold text-white group-hover:text-[#A78BFA] transition-colors flex items-center justify-between">
-                      <span>{link.title}</span>
-                      <span className="text-white/30 group-hover:text-[#A78BFA] transition-transform group-hover:translate-x-1">
+                    <div className="flex items-center justify-between text-sm sm:text-base font-medium text-[#E4E4E7] group-hover:text-white transition-colors">
+                      <span className="group-hover:translate-x-1 transition-transform">
+                        {link.title}
+                      </span>
+                      <span className="text-[#A78BFA] opacity-0 group-hover:opacity-100 transition-opacity text-xs">
                         →
                       </span>
                     </div>
-                    <p className="text-xs text-[#A1A1B5] mt-1 leading-normal">
+                    <p className="text-xs text-[#71717A] group-hover:text-[#A1A1B5] transition-colors mt-0.5 leading-relaxed">
                       {link.desc}
                     </p>
                   </Link>
                 ))}
               </div>
+
             </div>
           ))}
         </div>

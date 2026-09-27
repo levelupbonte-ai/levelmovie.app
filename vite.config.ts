@@ -57,6 +57,7 @@ export default defineConfig({
         preview: resolve(__dirname, 'preview/index.html'),
         previewCustom: resolve(__dirname, 'preview/custom/index.html'),
         previewInstant: resolve(__dirname, 'preview/instant/index.html'),
+        studio: resolve(__dirname, 'studio/index.html'),
         sitemap: resolve(__dirname, 'sitemap/index.html'),
         privacy: resolve(__dirname, 'privacy/index.html'),
         terms: resolve(__dirname, 'terms/index.html'),

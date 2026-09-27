@@ -45,7 +45,7 @@ export default function Pricing() {
   };
 
   return (
-    <div>
+    <div className="bg-[#0B0B14] min-h-screen text-white relative overflow-hidden">
       <SEO
         title="Website Pricing & Packages | LevelUp Ecosystem"
         description="Transparent, upfront pricing for web design, online booking, and security checks. Free preview before you commit."
@@ -56,6 +56,12 @@ export default function Pricing() {
         jsonLd={faqSchema}
       />
 
+      {/* Subtle ambient lighting */}
+      <div
+        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#7C3AED]/10 blur-[150px] rounded-full pointer-events-none -z-10"
+        aria-hidden="true"
+      />
+
       <Breadcrumbs
         items={[
           { name: 'Pricing', url: '/pricing' }
@@ -63,7 +69,7 @@ export default function Pricing() {
       />
 
       {/* Header */}
-      <section className="py-12 sm:py-20 px-4 sm:px-8 border-b border-white/[0.08] bg-[#0B0B14]">
+      <section className="py-12 sm:py-20 px-4 sm:px-8 border-b border-white/[0.08]">
         <div className="max-w-4xl mx-auto text-center space-y-4">
           <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
             Clear Investment
@@ -72,154 +78,244 @@ export default function Pricing() {
             Transparent Pricing & Packages
           </h1>
           <p className="text-base sm:text-lg text-[#A1A1B5] max-w-2xl mx-auto leading-relaxed">
-            Simple packages tailored to your scale. Every plan includes a free interactive preview before any payment is due.
+            Engineered packages tailored to your scale. Every plan includes a free interactive preview before any payment is due.
           </p>
         </div>
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-16 sm:py-24 px-4 sm:px-8 bg-[#0B0B14] border-b border-white/[0.08]">
+      <section className="py-16 sm:py-24 px-4 sm:px-8 border-b border-white/[0.08]">
         <div className="max-w-6xl mx-auto space-y-12">
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch" data-reveal-group>
             
-            {/* Starter */}
-            <div className="bg-[#14141F] border border-white/[0.08] rounded-3xl p-8 flex flex-col justify-between space-y-8" data-reveal>
+            {/* Starter Tier */}
+            <div
+              className="rounded-3xl bg-gradient-to-b from-[#151526] via-[#10101C] to-[#0A0A12] border border-white/[0.08] hover:border-white/[0.16] p-8 sm:p-9 flex flex-col justify-between space-y-8 transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] group"
+              data-reveal
+            >
               <div className="space-y-6">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Starter</h3>
-                  <p className="text-xs text-[#A1A1B5] mt-1">For simple presence and direct contact</p>
+                <div className="space-y-1.5 pb-4 border-b border-white/[0.06]">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-[#A1A1B5] flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA]" />
+                    Essential Foundation
+                  </span>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">Starter</h3>
+                  <p className="text-xs text-[#A1A1B5]">For fast mobile presence and direct client contact</p>
                 </div>
 
                 <div>
-                  <div className="text-4xl font-extrabold text-white">$500</div>
-                  <span className="text-xs text-[#A78BFA]">one-time setup fee</span>
+                  <div className="text-4xl font-black text-white tracking-tight">$500</div>
+                  <span className="text-xs text-[#A78BFA] font-medium">One-time setup · No platform lock-in</span>
                 </div>
 
-                <ul className="space-y-3 text-xs sm:text-sm text-[#A1A1B5] border-t border-white/[0.06] pt-6">
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Fast mobile-responsive one-page site
+                <ul className="space-y-3.5 text-xs sm:text-sm text-[#D1D1DF] pt-2">
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>Fast mobile-responsive one-page site</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Direct contact &amp; click-to-call action
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>Direct contact &amp; click-to-call action</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> SSL Certificate (HTTPS) included
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>SSL Certificate (HTTPS) included</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Clean typography &amp; brand colors
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>Clean typography &amp; custom brand palette</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Basic local SEO meta tags
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>Local SEO meta tags &amp; OpenGraph</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Anti-bot spam defense on forms
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>Anti-bot honeypot spam protection</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Zero monthly platform subscription fees
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>Zero monthly website builder subscriptions</span>
                   </li>
                 </ul>
               </div>
 
               <Link
                 to="/preview"
-                className="w-full py-3.5 px-4 rounded-full bg-white/[0.08] hover:bg-white/[0.12] text-white font-semibold text-xs sm:text-sm border border-white/[0.1] text-center transition-all cursor-pointer"
+                className="w-full py-3.5 px-4 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white font-semibold text-xs sm:text-sm border border-white/[0.1] hover:border-white/[0.2] text-center transition-all duration-200 cursor-pointer active:scale-[0.99]"
               >
                 Get a free preview
               </Link>
             </div>
 
-            {/* Secure (Most Popular) */}
-            <div className="bg-[#14141F] border-2 border-[#7C3AED] rounded-3xl p-8 flex flex-col justify-between space-y-8 relative shadow-2xl shadow-[#7C3AED]/20 md:-translate-y-3" data-reveal>
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#7C3AED] text-white text-[11px] font-bold uppercase tracking-wider px-4 py-1 rounded-full shadow">
-                Most Popular
-              </div>
+            {/* Secure Tier (Flagship / Most Popular) */}
+            <div
+              className="rounded-3xl bg-gradient-to-b from-[#1C1738] via-[#131126] to-[#0D0C1A] border-2 border-[#7C3AED] ring-1 ring-[#A78BFA]/30 p-8 sm:p-9 flex flex-col justify-between space-y-8 relative shadow-[0_25px_60px_-15px_rgba(124,58,237,0.35)] md:-translate-y-3 transition-all duration-300"
+              data-reveal
+            >
+              {/* Radiant light beam on top border */}
+              <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#C4B5FD] to-transparent pointer-events-none" />
 
               <div className="space-y-6">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Secure</h3>
-                  <p className="text-xs text-[#A1A1B5] mt-1">For businesses requiring booking & protection</p>
+                <div className="space-y-2 pb-4 border-b border-[#7C3AED]/30">
+                  <div className="flex items-center justify-between">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase text-white bg-gradient-to-r from-[#7C3AED] to-[#9333EA] shadow-[0_0_15px_rgba(124,58,237,0.45)]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      <span>Most Popular</span>
+                    </div>
+                    <span className="text-xs font-mono text-[#DDD6FE] bg-[#7C3AED]/20 px-2.5 py-0.5 rounded-full border border-[#7C3AED]/40">
+                      Studio Pick
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">Secure</h3>
+                  <p className="text-xs text-[#DDD6FE]/80">Complete solution for businesses needing 24/7 booking & protection</p>
                 </div>
 
                 <div>
-                  <div className="text-4xl font-extrabold text-white">$900</div>
-                  <span className="text-xs text-[#A78BFA]">one-time setup fee</span>
+                  <div className="text-4xl font-black text-white tracking-tight">$900</div>
+                  <span className="text-xs text-[#A78BFA] font-medium">One-time setup · Full turn-key launch</span>
                 </div>
 
-                <ul className="space-y-3 text-xs sm:text-sm text-slate-200 border-t border-white/[0.06] pt-6">
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Everything in Starter
+                <ul className="space-y-3.5 text-xs sm:text-sm text-slate-100 pt-2">
+                  <li className="flex items-start gap-2.5 font-medium">
+                    <span className="w-4 h-4 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5 shadow-[0_0_8px_rgba(124,58,237,0.6)]">
+                      ✓
+                    </span>
+                    <span>Everything included in Starter</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> <strong>24/7 online appointment booking</strong>
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5 shadow-[0_0_8px_rgba(124,58,237,0.6)]">
+                      ✓
+                    </span>
+                    <span><strong className="text-white">24/7 online appointment booking system</strong></span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Secure customer database configuration
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5 shadow-[0_0_8px_rgba(124,58,237,0.6)]">
+                      ✓
+                    </span>
+                    <span>Secure client database &amp; lead management</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Automated offsite backup routine
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5 shadow-[0_0_8px_rgba(124,58,237,0.6)]">
+                      ✓
+                    </span>
+                    <span>Automated offsite backup routine</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Anti-bot spam defense on forms
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5 shadow-[0_0_8px_rgba(124,58,237,0.6)]">
+                      ✓
+                    </span>
+                    <span>Anti-bot spam defense on forms</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> 2FA setup on domain & email accounts
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5 shadow-[0_0_8px_rgba(124,58,237,0.6)]">
+                      ✓
+                    </span>
+                    <span>2FA setup on domain &amp; admin accounts</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Google Business Profile & Maps setup
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5 shadow-[0_0_8px_rgba(124,58,237,0.6)]">
+                      ✓
+                    </span>
+                    <span>Google Business Profile &amp; Maps synchronization</span>
                   </li>
                 </ul>
               </div>
 
               <Link
                 to="/preview"
-                className="w-full py-3.5 px-4 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] text-center transition-all cursor-pointer"
+                className="w-full py-4 px-6 rounded-full bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#7C3AED] hover:from-[#8B5CF6] hover:to-[#A78BFA] text-white font-bold text-xs sm:text-sm shadow-xl shadow-[#7C3AED]/35 hover:shadow-[#7C3AED]/55 text-center transition-all duration-300 cursor-pointer active:scale-[0.99]"
               >
                 Get a free preview
               </Link>
             </div>
 
-            {/* Secure + Care */}
-            <div className="bg-[#14141F] border border-white/[0.08] rounded-3xl p-8 flex flex-col justify-between space-y-8" data-reveal>
+            {/* Secure + Care Tier */}
+            <div
+              className="rounded-3xl bg-gradient-to-b from-[#151526] via-[#10101C] to-[#0A0A12] border border-white/[0.08] hover:border-white/[0.16] p-8 sm:p-9 flex flex-col justify-between space-y-8 transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] group"
+              data-reveal
+            >
               <div className="space-y-6">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Secure + Care</h3>
-                  <p className="text-xs text-[#A1A1B5] mt-1">Full build plus ongoing hands-off peace of mind</p>
+                <div className="space-y-1.5 pb-4 border-b border-white/[0.06]">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-[#A1A1B5] flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA]" />
+                    Hands-Off Maintenance
+                  </span>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">Secure + Care</h3>
+                  <p className="text-xs text-[#A1A1B5]">Full build plus continuous managed support</p>
                 </div>
 
                 <div>
-                  <div className="text-3xl sm:text-4xl font-extrabold text-white">$900</div>
-                  <span className="text-xs text-[#A78BFA]">+ $75/mo (cancel anytime)</span>
+                  <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                    $900 <span className="text-base font-normal text-[#A1A1B5]">+ $75/mo</span>
+                  </div>
+                  <span className="text-xs text-[#A78BFA] font-medium">Cancel anytime · Dedicated engineering</span>
                 </div>
 
-                <ul className="space-y-3 text-xs sm:text-sm text-[#A1A1B5] border-t border-white/[0.06] pt-6">
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Everything in Secure tier
+                <ul className="space-y-3.5 text-xs sm:text-sm text-[#D1D1DF] pt-2">
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>Everything in Secure tier</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> High-speed cloud hosting included
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>High-speed cloud hosting included</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Routine monthly security updates
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>Routine monthly security &amp; library updates</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Daily automated snapshots &amp; backups
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>Daily automated snapshots &amp; recovery</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> On-demand content updates (hours, prices)
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>On-demand content edits (hours, prices, menus)</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Ongoing uptime &amp; SSL monitoring
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>24/7 uptime &amp; SSL certificate monitoring</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#7C3AED] font-bold">✓</span> Priority direct developer support
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-white/[0.06] text-[#A78BFA] flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span>Direct priority developer support</span>
                   </li>
                 </ul>
               </div>
 
               <Link
                 to="/preview"
-                className="w-full py-3.5 px-4 rounded-full bg-white/[0.08] hover:bg-white/[0.12] text-white font-semibold text-xs sm:text-sm border border-white/[0.1] text-center transition-all cursor-pointer"
+                className="w-full py-3.5 px-4 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white font-semibold text-xs sm:text-sm border border-white/[0.1] hover:border-white/[0.2] text-center transition-all duration-200 cursor-pointer active:scale-[0.99]"
               >
                 Get a free preview
               </Link>
@@ -228,19 +324,27 @@ export default function Pricing() {
           </div>
 
           {/* Standalone Security Check Box */}
-          <div className="p-8 rounded-3xl bg-[#14141F] border border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-6" data-reveal>
+          <div
+            className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-[#151526] to-[#10101E] border border-white/[0.08] hover:border-[#7C3AED]/40 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all duration-300"
+            data-reveal
+          >
             <div className="space-y-2 text-left">
-              <div className="text-xs font-mono font-bold text-[#A78BFA]">STANDALONE AUDIT</div>
-              <h3 className="text-xl font-bold text-white">Website Security Check</h3>
-              <p className="text-sm text-[#A1A1B5] max-w-xl">
+              <div className="inline-flex items-center gap-2 text-xs font-mono font-bold text-[#A78BFA]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#7C3AED]" />
+                STANDALONE SECURITY AUDIT
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold text-white">Website Security Check</h3>
+              <p className="text-sm text-[#A1A1B5] max-w-xl leading-relaxed">
                 Have an existing website? We audit your domain registrar, hosting, database rules, SSL, and admin accounts to fix vulnerabilities before they cause problems.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
-              <div className="text-2xl font-bold text-white">$150 <span className="text-xs font-normal text-[#A1A1B5]">flat fee</span></div>
+              <div className="text-2xl sm:text-3xl font-black text-white">
+                $150 <span className="text-xs font-normal text-[#A1A1B5]">flat fee</span>
+              </div>
               <Link
                 to="/services/security-check"
-                className="px-6 py-3 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white text-xs font-bold transition-all shadow-md shadow-[#7C3AED]/20"
+                className="px-6 py-3.5 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white text-xs font-bold transition-all shadow-md shadow-[#7C3AED]/25 hover:shadow-[#7C3AED]/40 active:scale-95"
               >
                 Learn more
               </Link>
@@ -267,10 +371,10 @@ export default function Pricing() {
             {faqs.map((faq, idx) => (
               <div
                 key={idx}
-                className="p-6 rounded-2xl bg-[#14141F] border border-white/[0.08] space-y-2 text-left"
+                className="p-6 sm:p-7 rounded-2xl bg-gradient-to-b from-[#141424] to-[#0E0E18] border border-white/[0.08] space-y-2.5 text-left transition-all hover:border-white/[0.16]"
                 data-reveal
               >
-                <h3 className="text-base font-bold text-white">
+                <h3 className="text-base font-bold text-white tracking-tight">
                   {faq.q}
                 </h3>
                 <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed">

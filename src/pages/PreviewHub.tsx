@@ -4,63 +4,75 @@ import { Link } from '../components/Link';
 
 export default function PreviewHub() {
   return (
-    <div className="py-16 sm:py-24 px-4 sm:px-8">
+    <div className="py-16 sm:py-24 px-4 sm:px-8 relative overflow-hidden">
       <SEO
         title="Get a Free Preview | LevelUp Ecosystem"
-        description="See your new website before you decide. Choose between an instant AI draft powered by Google AI or a custom preview designed by LevelUp."
+        description="See your new website before you decide. Choose between an instant interactive prototype or a bespoke custom preview designed by LevelUp."
         noindex={true}
+      />
+
+      {/* Subtle ambient lighting */}
+      <div
+        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[650px] h-[350px] bg-[#7C3AED]/12 blur-[140px] rounded-full pointer-events-none -z-10"
+        aria-hidden="true"
       />
 
       {/* Hero Header */}
       <div className="max-w-3xl mx-auto text-center space-y-4 mb-14 sm:mb-20">
         <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
-          Free Website Preview
+          Risk-Free Discovery
         </span>
         <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-          Get a free preview of your website
+          Preview your website before you commit
         </h1>
         <p className="text-base sm:text-lg text-[#A1A1B5] max-w-xl mx-auto leading-relaxed">
-          See your new site before you decide. No obligation.
+          Experience your new site's layout, flow, and features before spending a single dollar.
         </p>
       </div>
 
-      {/* Two Choice Cards */}
+      {/* Two Choice Cards - Premium Finishes */}
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
         
-        {/* Card 1: Instant Preview */}
-        <div className="rounded-3xl bg-[#14141F] border border-white/[0.08] p-8 sm:p-10 flex flex-col justify-between relative transition-all duration-200 hover:border-white/[0.16]">
+        {/* Card 1: Instant Prototype */}
+        <div className="rounded-3xl bg-gradient-to-b from-[#151524] to-[#0D0D18] border border-white/[0.08] hover:border-white/[0.18] p-8 sm:p-10 flex flex-col justify-between relative transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] group">
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <Link
-                to="/terms"
-                className="text-xs font-semibold px-3 py-1 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-[#A1A1B5] hover:text-white transition-colors inline-flex items-center gap-1.5"
-                title="AI-generated draft - Read Terms of Service"
-              >
-                <span>Free Google AI draft</span>
-                <span className="text-[10px] text-[#A78BFA]">↗</span>
-              </Link>
-              <span className="text-xs text-[#71717A] font-mono">5–10 min</span>
+            <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[#A1A1B5] flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA]" />
+                Automated Prototype
+              </span>
+              <span className="text-xs text-[#71717A] font-mono bg-white/[0.04] px-2.5 py-1 rounded-full border border-white/[0.05]">
+                5–10 min
+              </span>
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">Instant preview</h2>
+              <h2 className="text-2xl font-bold text-white mb-2.5 tracking-tight group-hover:text-white transition-colors">
+                Instant Preview
+              </h2>
               <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                An automated draft generated via free Google AI in 5 to 10 minutes. Great for getting an initial feel for layout, colors, and features.
+                An automated interactive prototype generated in minutes. Perfect for exploring initial structures, colors, and layout rhythm.
               </p>
             </div>
 
-            <ul className="space-y-3 pt-2 text-sm text-[#A1A1B5]">
+            <ul className="space-y-3.5 pt-2 text-sm text-[#D1D1DF]">
               <li className="flex items-start gap-3">
-                <span className="text-[#A78BFA] font-bold">✓</span>
-                <span>Ready in 5 to 10 minutes</span>
+                <span className="w-5 h-5 rounded-full bg-[#7C3AED]/20 text-[#A78BFA] flex items-center justify-center text-xs shrink-0 mt-0.5 font-bold">
+                  ✓
+                </span>
+                <span>Immediate interactive draft generated in minutes</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-[#A78BFA] font-bold">✓</span>
-                <span>Automated layout based on your business info</span>
+                <span className="w-5 h-5 rounded-full bg-[#7C3AED]/20 text-[#A78BFA] flex items-center justify-center text-xs shrink-0 mt-0.5 font-bold">
+                  ✓
+                </span>
+                <span>Mobile-responsive layout structured from your business profile</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-[#A78BFA] font-bold">✓</span>
-                <span className="text-xs text-[#71717A]">Uses free Google AI (LevelUp is not responsible for data collected by Google)</span>
+                <span className="w-5 h-5 rounded-full bg-[#7C3AED]/20 text-[#A78BFA] flex items-center justify-center text-xs shrink-0 mt-0.5 font-bold">
+                  ✓
+                </span>
+                <span>Seamless handoff to senior human engineers for final delivery</span>
               </li>
             </ul>
           </div>
@@ -68,54 +80,54 @@ export default function PreviewHub() {
           <div className="pt-8">
             <Link
               to="/preview/instant"
-              className="w-full inline-flex items-center justify-center py-3.5 px-6 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-white font-semibold text-sm transition-all duration-200 cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white font-semibold text-sm border border-white/[0.1] transition-all duration-200 cursor-pointer active:scale-[0.99]"
             >
-              Generate instant preview
+              <span>Launch Instant Prototype</span>
+              <span className="text-xs font-mono text-[#A78BFA]">→</span>
             </Link>
           </div>
         </div>
 
-        {/* Card 2: Custom Preview (Highlighted / Most Popular) */}
-        <div className="rounded-3xl bg-[#14141F] border-2 border-[#7C3AED] p-8 sm:p-10 flex flex-col justify-between relative shadow-[0_0_35px_rgba(124,58,237,0.18)]">
-          {/* Most Popular Badge */}
-          <div className="absolute -top-3.5 right-8">
-            <span className="bg-[#7C3AED] text-white text-xs font-bold px-3.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
-              Most popular
-            </span>
-          </div>
-
+        {/* Card 2: Custom Preview (Studio Flagship / Handcrafted) */}
+        <div className="rounded-3xl bg-gradient-to-b from-[#191630] via-[#121124] to-[#0E0D1B] border-2 border-[#7C3AED] ring-1 ring-[#A78BFA]/30 p-8 sm:p-10 flex flex-col justify-between relative shadow-[0_20px_50px_-12px_rgba(124,58,237,0.35)] transition-all duration-300">
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <Link
-                to="/terms"
-                className="text-xs font-semibold px-3 py-1 rounded-full bg-[#7C3AED]/20 hover:bg-[#7C3AED]/30 text-[#DDD6FE] border border-[#7C3AED]/30 transition-colors inline-flex items-center gap-1.5"
-                title="Designed with AI tools - Read Terms of Service"
-              >
-                <span>Engineered by LevelUp</span>
-                <span className="text-[10px] text-[#A78BFA]">↗</span>
-              </Link>
-              <span className="text-xs text-[#A78BFA] font-mono">24–48h</span>
+            <div className="flex items-center justify-between pb-2 border-b border-[#7C3AED]/30">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase text-white bg-gradient-to-r from-[#7C3AED] to-[#9333EA] shadow-[0_0_15px_rgba(124,58,237,0.4)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                <span>Studio Crafted</span>
+              </div>
+              <span className="text-xs text-[#DDD6FE] font-mono bg-[#7C3AED]/20 px-2.5 py-1 rounded-full border border-[#7C3AED]/40">
+                24–48h
+              </span>
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">Custom preview</h2>
-              <p className="text-sm text-[#A1A1B5] leading-relaxed">
-                We design and review a tailored preview for your business and send it to your inbox.
+              <h2 className="text-2xl font-bold text-white mb-2.5 tracking-tight">
+                Custom Preview
+              </h2>
+              <p className="text-sm text-[#DDD6FE]/80 leading-relaxed">
+                Handcrafted specifically for your business by our engineering studio. Delivered directly to your private email.
               </p>
             </div>
 
-            <ul className="space-y-3 pt-2 text-sm text-[#A1A1B5]">
+            <ul className="space-y-3.5 pt-2 text-sm text-[#F4F4F5]">
               <li className="flex items-start gap-3">
-                <span className="text-[#7C3AED] font-bold">✓</span>
-                <span className="text-white font-medium">Ready in 24 to 48 business hours</span>
+                <span className="w-5 h-5 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-xs shrink-0 mt-0.5 font-bold shadow-[0_0_10px_rgba(124,58,237,0.5)]">
+                  ✓
+                </span>
+                <span className="font-medium text-white">Delivered in 24 to 48 business hours</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-[#7C3AED] font-bold">✓</span>
-                <span>Reviewed and tested by our engineering studio</span>
+                <span className="w-5 h-5 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-xs shrink-0 mt-0.5 font-bold shadow-[0_0_10px_rgba(124,58,237,0.5)]">
+                  ✓
+                </span>
+                <span>Custom appointment booking &amp; conversion architecture</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-[#7C3AED] font-bold">✓</span>
-                <span>Sent to your email as a private link</span>
+                <span className="w-5 h-5 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-xs shrink-0 mt-0.5 font-bold shadow-[0_0_10px_rgba(124,58,237,0.5)]">
+                  ✓
+                </span>
+                <span>Tailored branding, typography, and interactive walkthrough</span>
               </li>
             </ul>
           </div>
@@ -123,19 +135,20 @@ export default function PreviewHub() {
           <div className="pt-8">
             <Link
               to="/preview/custom"
-              className="w-full inline-flex items-center justify-center py-3.5 px-6 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-semibold text-sm transition-all duration-200 shadow-md shadow-[#7C3AED]/25 cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#7C3AED] hover:from-[#8B5CF6] hover:to-[#A78BFA] text-white font-bold text-sm transition-all duration-300 shadow-lg shadow-[#7C3AED]/30 hover:shadow-[#7C3AED]/50 cursor-pointer active:scale-[0.99]"
             >
-              Request our custom preview
+              <span>Request Custom Preview</span>
+              <span className="text-xs font-mono bg-white/20 px-2 py-0.5 rounded-full">→</span>
             </Link>
           </div>
         </div>
 
       </div>
 
-      {/* Small Note Under the Cards */}
+      {/* Reassurance Note */}
       <div className="max-w-xl mx-auto text-center mt-12">
         <p className="text-xs text-[#71717A] leading-relaxed">
-          AI tools help us build faster. Every custom preview is directed and reviewed by LevelUp. Previews are AI-assisted drafts governed by our{' '}
+          Zero commitment or card required. Custom mockups are reviewed by LevelUp engineers and governed by our{' '}
           <Link to="/terms" className="text-[#A78BFA] underline hover:text-white">
             Terms of Service
           </Link>{' '}
