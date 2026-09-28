@@ -145,6 +145,12 @@ export default function Process() {
               </div>
             </div>
           </div>
+
+          {/* Technology Infrastructure Note */}
+          <div className="p-4 sm:p-5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-[#A1A1B5] leading-relaxed" data-reveal>
+            <strong className="text-white block mb-1">Infrastructure &amp; Delivery</strong>
+            Domains and DNS are managed and protected through Cloudflare. Our AI previews use Google AI models. Websites are deployed on Vercel.
+          </div>
         </div>
       </section>
 

@@ -134,7 +134,7 @@ export default function LocalBusinessWebsites() {
               to="/projects/final-stop"
               className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
             >
-              See our barbershop case study →
+              See our barbershop case study
             </Link>
           </div>
         </div>
@@ -288,14 +288,14 @@ export default function LocalBusinessWebsites() {
                     to={tradeStats[selectedTrade].demoLink}
                     className="w-full inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-[#7C3AED] hover:bg-[#8B5CF6] text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-[#7C3AED]/25"
                   >
-                    <span>{tradeStats[selectedTrade].demoTitle} →</span>
+                    <span>{tradeStats[selectedTrade].demoTitle}</span>
                   </Link>
                   <div className="text-center">
                     <Link
                       to="/projects/final-stop"
                       className="text-xs text-[#A78BFA] hover:text-white underline transition-colors"
                     >
-                      Inspect real client metrics in Final Stop case study →
+                      Inspect real client metrics in Final Stop case study
                     </Link>
                   </div>
                 </div>
@@ -358,14 +358,14 @@ export default function LocalBusinessWebsites() {
                     to="/services/security-check"
                     className="w-full inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white text-xs sm:text-sm font-semibold border border-white/[0.12] transition-all"
                   >
-                    <span>Run free 60-second site & speed audit →</span>
+                    <span>Run free 60-second site & speed audit</span>
                   </Link>
                   <div className="text-center">
                     <Link
                       to="/security"
                       className="text-xs text-[#A78BFA] hover:text-white underline transition-colors"
                     >
-                      Review verified technical security practices →
+                      Review verified technical security practices
                     </Link>
                   </div>
                 </div>
@@ -400,7 +400,7 @@ export default function LocalBusinessWebsites() {
                 to="/services/care-plans"
                 className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
               >
-                Explore ongoing care plans →
+                Explore ongoing care plans
               </Link>
             </div>
           </div>

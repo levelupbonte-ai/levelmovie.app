@@ -6,15 +6,15 @@
  */
 
 export const LEGAL_CONFIG = {
-  TERMS_VERSION: '1.0',
-  PRIVACY_VERSION: '1.0',
+  TERMS_VERSION: '1.1',
+  PRIVACY_VERSION: '1.1',
   EFFECTIVE_DATE_TERMS: 'March 12, 2024',
-  LAST_UPDATED_TERMS: 'August 28, 2026',
+  LAST_UPDATED_TERMS: 'September 27, 2026',
   EFFECTIVE_DATE_PRIVACY: 'January 1, 2026',
-  LAST_UPDATED_PRIVACY: 'August 28, 2026',
+  LAST_UPDATED_PRIVACY: 'September 27, 2026',
   LEGAL_NAME: 'LevelUp Ecosystem',
   DBA_NAME: 'LevelUp Ecosystem',
-  CONTACT_EMAIL: 'contact@levelup-ecosystem.com',
+  CONTACT_EMAIL: 'hello@levelup-ecosystem.com',
   LEGAL_EMAIL: 'legal@levelup-ecosystem.com',
   SECURITY_EMAIL: 'security@levelup-ecosystem.com',
   BILLING_EMAIL: 'billing@levelup-ecosystem.com',

@@ -97,7 +97,7 @@ export default function OnlineStores() {
               to="/services/care-plans"
               className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
             >
-              See monthly store care plans →
+              See monthly store care plans
             </Link>
           </div>
         </div>
@@ -161,13 +161,13 @@ export default function OnlineStores() {
                 to="/services/creator-websites"
                 className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
               >
-                Website for creators & influencers →
+                Website for creators & influencers
               </Link>
               <Link
                 to="/services/security-check"
                 className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
               >
-                Website security check →
+                Website security check
               </Link>
             </div>
           </div>

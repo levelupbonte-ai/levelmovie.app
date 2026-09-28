@@ -457,11 +457,11 @@ export default function Terms() {
                 5.5 <strong>Ownership and originality.</strong> We do not promise that AI-generated content is unique, or that it can be protected by copyright or other rights. The legal status of AI-generated content is unsettled and may differ by jurisdiction.
               </p>
               <p>
-                5.6 <strong>Third-party AI providers.</strong> Information you submit to AI features is processed by third-party AI providers (including Google AI). Please refer to our{' '}
+                5.6 <strong>Third-party AI providers.</strong> Information you submit to AI preview features is processed by Google (Google AI / Gemini API) as a third-party service provider. Please refer to our{' '}
                 <Link to="/privacy" className="text-[#A78BFA] underline hover:text-white transition-colors">
                   Privacy Policy
                 </Link>{' '}
-                for details on third-party AI handling.
+                for details on third-party AI processing.
               </p>
             </section>
 
@@ -659,7 +659,7 @@ export default function Terms() {
                 </button>
               </div>
               <p>
-                The Site relies on and may link to third-party services, including hosting and database providers (such as Google Firebase), payment processors, email and analytics providers and AI providers. We do not control these services and are not responsible for their availability, content, practices or policies. Your use of them is at your own risk and is subject to their terms and privacy policies.
+                The Site relies on and may link to third-party services, including hosting and infrastructure providers (such as Vercel), network security and DNS management (such as Cloudflare), database and backend authentication services (such as Google Firebase and Google Cloud), payment processors (such as Stripe), and AI technology providers: Google (Google AI / Gemini API) processing preview inputs. We do not control these third-party platforms and are not responsible for their availability, content, practices or policies. Your use of them is subject to their independent terms and privacy policies.
               </p>
             </section>
 

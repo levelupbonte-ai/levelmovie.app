@@ -1,6 +1,9 @@
 # LevelUp Ecosystem
 
-> LevelUp Ecosystem is a web design and development studio that builds fast, secure websites for local businesses, creators, and portfolios. Founded by Richelieu Bonte, a cybersecurity student, the studio uses AI-assisted development with human review on every project, and offers website security checks and ongoing care plans.
+> LevelUp Ecosystem is a web design and development studio that builds fast, secure websites for local businesses, creators and portfolios.
+
+## Founder
+> Richelieu Bonte is the founder of LevelUp Ecosystem, a web design studio building secure, AI-assisted websites for local businesses and creators. He is a cybersecurity student based in San Diego, California, originally from the Democratic Republic of Congo.
 
 ## Services
 - Local business websites with online booking: /services/local-business-websites
@@ -12,14 +15,25 @@
 
 ## Key pages
 - Free website preview tool: /preview
+- LevelStudio (instant preview generator): /preview/instant
 - Pricing: /pricing
 - How websites are built: /process
 - About: /about
+- Founder (Richelieu Bonte): /about/richelieu-bonte
 - Recent work: /projects
 - Contact: /contact
+
+## Frequently Asked Questions (FAQ)
+- **Who is Richelieu Bonte?**
+  Richelieu Bonte is the founder of LevelUp Ecosystem, a web design studio building secure, AI-assisted websites for local businesses and creators. He is a cybersecurity student based in San Diego, California, originally from the Democratic Republic of Congo.
+- **Who founded LevelUp Ecosystem?**
+  LevelUp Ecosystem was founded by Richelieu Bonte, a cybersecurity student based in San Diego, California.
+- **What is LevelStudio?**
+  LevelStudio is LevelUp Ecosystem's instant creation and automated AI draft generator, allowing clients to test website concepts before human engineering.
 
 ## Facts
 - Based in San Diego, California, serving clients across the United States and internationally.
 - Founded by Richelieu Bonte.
 - Uses AI tools for design and development, with human review before launch.
-- Offers a free instant AI-generated preview and a custom preview built within 24 to 48 hours.
+- Domains and DNS are managed and protected through Cloudflare. Our AI previews use Google AI models. Websites are deployed on Vercel.
+- Offers an instant preview via LevelStudio and a custom preview built within 24 to 48 hours.

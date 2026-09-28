@@ -42,7 +42,7 @@ export default function Footer() {
       title: 'Tools',
       links: [
         { label: 'Free preview', href: '/preview' },
-        { label: 'Studio', href: '/preview/instant' },
+        { label: 'LevelStudio', href: '/preview/instant' },
         { label: 'Custom preview mockup', href: '/preview/custom' },
         { label: 'Website security check', href: '/services/security-check' },
       ],

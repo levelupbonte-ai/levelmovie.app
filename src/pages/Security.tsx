@@ -110,6 +110,12 @@ export default function Security() {
           ))}
         </div>
 
+        {/* Technology Transparency Note */}
+        <div className="p-6 rounded-2xl bg-[#14141F] border border-white/[0.06] text-xs sm:text-sm text-[#A1A1B5] leading-relaxed">
+          <strong className="text-white block mb-1 text-sm sm:text-base">Infrastructure &amp; Delivery</strong>
+          Domains and DNS are managed and protected through Cloudflare. Our AI previews use Google AI models. Websites are deployed on Vercel.
+        </div>
+
         {/* Vulnerability Disclosure & security.txt Section */}
         <div className="p-6 sm:p-8 rounded-3xl bg-[#14141F] border border-[#7C3AED]/30 space-y-4">
           <h2 className="text-xl font-bold text-white">Vulnerability Disclosure & Contact</h2>

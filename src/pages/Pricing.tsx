@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from '../components/Link';
 import SEO from '../components/SEO';
 import Breadcrumbs from '../components/Breadcrumbs';
 
 export default function Pricing() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const faqs = [
     {
       q: 'How does the free preview work?',
@@ -367,21 +368,47 @@ export default function Pricing() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-reveal-group>
-            {faqs.map((faq, idx) => (
-              <div
-                key={idx}
-                className="p-6 sm:p-7 rounded-2xl bg-gradient-to-b from-[#141424] to-[#0E0E18] border border-white/[0.08] space-y-2.5 text-left transition-all hover:border-white/[0.16]"
-                data-reveal
-              >
-                <h3 className="text-base font-bold text-white tracking-tight">
-                  {faq.q}
-                </h3>
-                <p className="text-xs sm:text-sm text-[#A1A1B5] leading-relaxed">
-                  {faq.a}
-                </p>
-              </div>
-            ))}
+          <div className="space-y-4 max-w-3xl mx-auto" data-reveal>
+            {faqs.map((faq, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+                    isOpen
+                      ? 'bg-[#141424] border-[#7C3AED]/40 shadow-lg shadow-[#7C3AED]/10'
+                      : 'bg-[#11111B] border-white/[0.08] hover:border-white/[0.16]'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    aria-expanded={isOpen}
+                    className="w-full flex items-center justify-between gap-4 p-5 sm:p-6 text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED]/60"
+                  >
+                    <span className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
+                      {faq.q}
+                    </span>
+                    <span
+                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xl font-light transition-all duration-300 ${
+                        isOpen
+                          ? 'bg-[#7C3AED] text-white rotate-90 shadow-md shadow-[#7C3AED]/30'
+                          : 'bg-white/[0.06] text-[#A78BFA] hover:bg-white/[0.12] hover:text-white'
+                      }`}
+                      aria-hidden="true"
+                    >
+                      {isOpen ? '−' : '+'}
+                    </span>
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-5 pb-5 sm:px-6 sm:pb-6 pt-1 text-sm sm:text-base text-[#B3B3C8] leading-relaxed border-t border-white/[0.05] animate-fade-in">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
         </div>

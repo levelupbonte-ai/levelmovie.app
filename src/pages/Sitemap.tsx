@@ -29,6 +29,7 @@ export default function Sitemap() {
         { title: 'Pricing & Packages', href: '/pricing', desc: 'Transparent upfront pricing and monthly care plans' },
         { title: 'How We Build (Process)', href: '/process', desc: '4-step workflow from discovery preview to launch' },
         { title: 'About LevelUp', href: '/about', desc: 'Our studio background, mission, and craftsmanship' },
+        { title: 'Richelieu Bonte (Founder)', href: '/about/richelieu-bonte', desc: 'Background, focus areas, and verified profiles of the studio founder' },
         { title: 'Contact', href: '/contact', desc: 'Get in touch for questions, audits, or collaborations' },
       ],
     },
@@ -36,7 +37,7 @@ export default function Sitemap() {
       category: 'Tools & Studio',
       description: 'Interactive previews, AI generators, and dedicated web studio platform',
       links: [
-        { title: 'Studio (AI Generation)', href: '/preview/instant', desc: 'Create a website prototype in seconds before human handoff' },
+        { title: 'LevelStudio (Instant AI Generation)', href: '/preview/instant', desc: 'Create a website prototype in seconds before human handoff' },
         { title: 'Free Website Preview Hub', href: '/preview', desc: 'Choose between instant AI draft or custom developer-crafted mockup' },
         { title: 'Custom Preview Request', href: '/preview/custom', desc: 'Handcrafted website mockup delivered within 24-48 business hours' },
       ],

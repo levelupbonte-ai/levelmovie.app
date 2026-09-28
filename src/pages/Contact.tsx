@@ -18,7 +18,7 @@ export default function Contact() {
   const [errorMessage, setErrorMessage] = useState('');
 
   const copyEmail = () => {
-    navigator.clipboard.writeText('contact@levelup-ecosystem.com');
+    navigator.clipboard.writeText('hello@levelup-ecosystem.com');
     setCopiedEmail(true);
     setTimeout(() => setCopiedEmail(false), 2000);
   };
@@ -51,7 +51,7 @@ export default function Contact() {
         `Hi LevelUp Ecosystem,\n\nName: ${name}\nBusiness: ${businessName || 'N/A'}\nService: ${serviceType}\nEmail: ${email}\n\nProject details:\n${message}\n\nLooking forward to hearing from you!`
       );
 
-      const mailtoLink = `mailto:contact@levelup-ecosystem.com?subject=${subject}&body=${body}`;
+      const mailtoLink = `mailto:hello@levelup-ecosystem.com?subject=${subject}&body=${body}`;
       
       const hiddenLink = document.createElement('a');
       hiddenLink.href = mailtoLink;
@@ -83,7 +83,7 @@ export default function Contact() {
       setSubmitStatus('success');
     } catch {
       setSubmitStatus('error');
-      setErrorMessage('Something went wrong sending your request. Please email directly at contact@levelup-ecosystem.com.');
+      setErrorMessage('Something went wrong sending your request. Please email directly at hello@levelup-ecosystem.com.');
     } finally {
       setIsSubmitting(false);
     }
@@ -96,7 +96,7 @@ export default function Contact() {
     url: 'https://levelup-ecosystem.com/contact',
     areaServed: 'San Diego, CA',
     priceRange: '$$',
-    email: 'contact@levelup-ecosystem.com',
+    email: 'hello@levelup-ecosystem.com',
     serviceType: [
       'Web Design',
       'Local Business Websites with Booking',
@@ -143,7 +143,7 @@ export default function Contact() {
               href="/preview"
               className="inline-flex items-center gap-1 text-xs font-semibold text-[#A78BFA] hover:text-white underline underline-offset-4 transition-colors"
             >
-              Want an instant draft or tailored custom preview? Choose your preview option →
+              Want an instant draft or tailored custom preview? Choose your preview option
             </a>
           </div>
         </div>
@@ -174,10 +174,10 @@ export default function Contact() {
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <a
-                  href="mailto:contact@levelup-ecosystem.com"
+                  href="mailto:hello@levelup-ecosystem.com"
                   className="text-base font-bold text-white hover:text-[#A78BFA] transition-colors break-all"
                 >
-                  contact@levelup-ecosystem.com
+                  hello@levelup-ecosystem.com
                 </a>
                 <button
                   type="button"

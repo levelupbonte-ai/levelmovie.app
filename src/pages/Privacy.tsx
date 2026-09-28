@@ -376,10 +376,10 @@ export default function Privacy() {
                 </button>
               </div>
               <p>
-                3.1 <strong>Free AI Test Tools &amp; Google AI Integration:</strong> When you use our free preview tools, instant AI test generator, or automated drafts, the Site utilizes free-tier Google AI technologies (such as Google Cloud and Gemini AI APIs) to process your submitted inputs and generate layout suggestions and copy. 
+                3.1 <strong>Free AI Test Tools &amp; Google AI Integration:</strong> When you use our free preview tools, instant AI test generator, or automated drafts, the Site utilizes Google (Google AI / Gemini API) as a service provider to process your submitted inputs and generate layout suggestions and copy.
               </p>
               <p>
-                3.2 <strong>Third-Party Data Collection Disclaimer:</strong> Google operates independently and maintains its own terms of service, technical logging, and privacy practices for its free AI services. <strong>LevelUp Ecosystem (&quot;LevelUp,&quot; &quot;we,&quot; &quot;us&quot; or &quot;our&quot;) is NOT responsible or liable for any data, prompts, or content collected, logged, retained, or processed by Google in connection with your use of free Google AI tools.</strong> By initiating a free AI test, you agree that your submission is subject to Google&apos;s applicable terms and data handling policies.
+                3.2 <strong>Third-Party Data Collection &amp; Model Training:</strong> Google operates independently as a service provider processing preview inputs. [PLACEHOLDER — verify against Google&apos;s current terms for our plan regarding whether submitted preview data is used for model training]. <strong>LevelUp Ecosystem (&quot;LevelUp,&quot; &quot;we,&quot; &quot;us&quot; or &quot;our&quot;) is NOT responsible or liable for any data, prompts, or content collected, logged, retained, or processed by Google in connection with your use of free Google AI tools.</strong> By initiating a free AI test, you agree that your submission is subject to Google&apos;s applicable terms and data handling policies.
               </p>
               <p>
                 3.3 <strong>Strict Prohibition on Sensitive Data:</strong> You must not enter sensitive, confidential, or proprietary information into the free AI test, including but not limited to passwords, financial or payment credentials, health records, personal government identification numbers, client confidential records, or proprietary trade secrets.
@@ -416,12 +416,17 @@ export default function Privacy() {
                 Service providers that help us run the Site and our business, under agreements or terms that limit how they may use it:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>hosting, database, authentication, cloud functions and anti-abuse services (Google Firebase and Google Cloud, including App Check and reCAPTCHA);</li>
-                <li>AI providers (Google Cloud Gemini and OpenAI for automated drafting);</li>
+                <li>hosting and deployment infrastructure (Vercel);</li>
+                <li>DNS management, network security, and CDN proxy services (Cloudflare);</li>
+                <li>database, authentication, cloud functions and anti-abuse services (Google Firebase and Google Cloud, including App Check and reCAPTCHA);</li>
+                <li>AI providers: Google (Google AI / Gemini API) as a service provider processing preview inputs. [PLACEHOLDER — verify against Google&apos;s current terms for our plan regarding whether submitted preview data is used for model training];</li>
                 <li>payment processing (Stripe);</li>
                 <li>email delivery and transactional communication tools (Resend or SendGrid);</li>
                 <li>privacy-focused, anonymous server performance monitoring.</li>
               </ul>
+              <p className="text-xs text-[#A1A1B5] italic">
+                Domains and DNS are managed and protected through Cloudflare. Our AI previews use Google AI models. Websites are deployed on Vercel.
+              </p>
               <p>
                 <strong>Legal and safety reasons:</strong> if we believe disclosure is required by law, subpoena or legal process, or is needed to protect the rights, property or safety of us, our users or others, or to detect and prevent fraud or security incidents.
               </p>

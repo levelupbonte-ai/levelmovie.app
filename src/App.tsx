@@ -19,6 +19,7 @@ import PreviewHub from './pages/PreviewHub';
 import PreviewInstant from './pages/PreviewInstant';
 import PreviewCustom from './pages/PreviewCustom';
 import About from './pages/About';
+import FounderRichelieuBonte from './pages/FounderRichelieuBonte';
 import Contact from './pages/Contact';
 import Pricing from './pages/Pricing';
 import Process from './pages/Process';
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="/studio" element={<Navigate to="/preview/instant" replace />} />
           <Route path="/studio/*" element={<Navigate to="/preview/instant" replace />} />
           <Route path="/about" element={<About />} />
+          <Route path="/about/richelieu-bonte" element={<FounderRichelieuBonte />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/process" element={<Process />} />

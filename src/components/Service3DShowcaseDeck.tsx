@@ -312,44 +312,44 @@ export default function Service3DShowcaseDeck() {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      className="group relative w-full max-w-[620px] sm:max-w-[700px] mx-auto select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED]/70 rounded-3xl"
+      className="group relative w-full max-w-7xl mx-auto select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED]/70 rounded-3xl"
     >
       {/* 3D Depth Stage with perspective */}
       <div
-        className="relative h-[320px] sm:h-[390px] md:h-[420px] w-full flex items-center justify-center overflow-visible touch-pan-y"
+        className="relative h-[340px] sm:h-[410px] md:h-[460px] lg:h-[520px] w-full flex items-center justify-center overflow-visible touch-pan-y"
         style={
           {
-            perspective: '1200px',
-            '--card-gap': 'clamp(145px, 24vw, 220px)',
+            perspective: '1300px',
+            '--card-gap': 'clamp(170px, 24vw, 350px)',
           } as React.CSSProperties
         }
       >
         {/* Subtle radial aura behind the front active item */}
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 sm:w-80 sm:h-80 bg-[#7C3AED]/22 rounded-full blur-[60px] pointer-events-none -z-10"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 sm:w-96 sm:h-96 bg-[#7C3AED]/20 rounded-full blur-[80px] pointer-events-none -z-10"
           aria-hidden="true"
         />
 
-        {/* Previous button (hidden on mobile, reveals on desktop hover - no bubble, pure violet arrow) */}
+        {/* Previous button */}
         <button
           type="button"
           onClick={handlePrev}
           aria-label="Previous product"
-          className="hidden sm:flex items-center justify-center absolute left-0 sm:-left-6 top-1/2 -translate-y-1/2 z-40 p-2 bg-transparent border-0 text-[#8B5CF6] hover:text-[#C4B5FD] opacity-0 group-hover:opacity-100 transition-all duration-300 drop-shadow-[0_0_12px_rgba(124,58,237,0.7)] hover:scale-125 active:scale-95 cursor-pointer"
+          className="hidden sm:flex items-center justify-center absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 z-40 p-3 bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.1] rounded-full text-[#A78BFA] hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-300 drop-shadow-[0_0_12px_rgba(124,58,237,0.4)] hover:scale-110 active:scale-95 cursor-pointer"
         >
-          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
-        {/* Next button (hidden on mobile, reveals on desktop hover - no bubble, pure violet arrow) */}
+        {/* Next button */}
         <button
           type="button"
           onClick={handleNext}
           aria-label="Next product"
-          className="hidden sm:flex items-center justify-center absolute right-0 sm:-right-6 top-1/2 -translate-y-1/2 z-40 p-2 bg-transparent border-0 text-[#8B5CF6] hover:text-[#C4B5FD] opacity-0 group-hover:opacity-100 transition-all duration-300 drop-shadow-[0_0_12px_rgba(124,58,237,0.7)] hover:scale-125 active:scale-95 cursor-pointer"
+          className="hidden sm:flex items-center justify-center absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 z-40 p-3 bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.1] rounded-full text-[#A78BFA] hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-300 drop-shadow-[0_0_12px_rgba(124,58,237,0.4)] hover:scale-110 active:scale-95 cursor-pointer"
         >
-          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
           </svg>
         </button>
@@ -378,7 +378,7 @@ export default function Service3DShowcaseDeck() {
               }}
             >
               {/* Borderless 3D product visual container */}
-              <div className="w-48 h-48 sm:w-60 sm:h-60 md:w-68 md:h-68 lg:w-72 lg:h-72 relative flex items-center justify-center select-none pointer-events-none">
+              <div className="w-48 h-48 sm:w-60 sm:h-60 md:w-68 md:h-68 lg:w-76 lg:h-76 relative flex items-center justify-center select-none pointer-events-none">
                 <picture className="w-full h-full flex items-center justify-center">
                   <source srcSet={`/assets/img/icons/${item.iconName}.avif`} type="image/avif" />
                   <source srcSet={`/assets/img/icons/${item.iconName}.webp`} type="image/webp" />
@@ -406,10 +406,10 @@ export default function Service3DShowcaseDeck() {
         })}
       </div>
 
-      {/* Product Details Section: Clean, chic typography without bubble badges, zooming forward in sync with the product */}
+      {/* Product Details Section: Clean, chic typography with generous breathing space */}
       <div
         key={zoomKey}
-        className="pt-3 text-center space-y-2 max-w-lg mx-auto animate-product-zoom"
+        className="pt-6 pb-2 text-center space-y-4 max-w-3xl sm:max-w-4xl mx-auto animate-product-zoom px-4"
       >
         {/* Category tag & highlight: Clean, professional line without pill bubble containers */}
         <div className="flex items-center justify-center gap-2.5 text-xs sm:text-sm font-mono tracking-wider uppercase text-[#A78BFA]">
@@ -419,23 +419,22 @@ export default function Service3DShowcaseDeck() {
         </div>
 
         {/* Title */}
-        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+        <h3 className="text-2xl sm:text-3xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
           {currentService.title}
         </h3>
 
         {/* Description */}
-        <p className="text-xs sm:text-sm md:text-base text-[#A1A1B5] leading-relaxed max-w-md mx-auto min-h-[44px]">
+        <p className="text-sm sm:text-base lg:text-lg text-[#B5B5CA] leading-relaxed max-w-2xl mx-auto">
           {currentService.desc}
         </p>
 
         {/* Link to service */}
-        <div className="pt-1">
+        <div className="pt-2">
           <Link
             to={currentService.link}
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#A78BFA] hover:text-white transition-colors group cursor-pointer"
+            className="inline-flex items-center px-6 py-3 rounded-full bg-white/[0.06] hover:bg-[#7C3AED]/25 border border-white/[0.12] hover:border-[#7C3AED]/50 text-xs sm:text-sm font-bold text-white transition-all cursor-pointer hover:shadow-[0_0_15px_rgba(124,58,237,0.3)]"
           >
-            <span>Explore {currentService.title}</span>
-            <span className="transition-transform duration-200 group-hover:translate-x-1.5">→</span>
+            Explore {currentService.title}
           </Link>
         </div>
       </div>

@@ -9,7 +9,7 @@
     <meta name="title" content="LevelUp Ecosystem | Websites for Businesses & Creators" />
     <meta name="description" content="Fast, professional websites with online booking and security built in, for local businesses, creators and portfolios. Get a free preview." />
     <meta name="keywords" content="web design, secure websites, online booking, local business websites, creator websites, portfolio website, security check" />
-    <meta name="author" content="LevelUp Ecosystem" />
+    <meta name="author" content="Richelieu Bonte" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#0B0B14" />
     <meta name="color-scheme" content="dark" />
@@ -43,20 +43,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Schema.org JSON-LD Structured Data: Organization & ProfessionalService -->
+    <!-- Schema.org JSON-LD Structured Data: Organization, SoftwareApplication, FAQPage & WebSite -->
     <script type="application/ld+json">
     [
       {
         "@context": "https://schema.org",
         "@type": "Organization",
+        "@id": "https://levelup-ecosystem.com/#org",
         "name": "LevelUp Ecosystem",
         "url": "https://levelup-ecosystem.com",
         "logo": "https://levelup-ecosystem.com/assets/img/logo.png",
-        "description": "Web design and development studio building secure, AI-assisted websites for local businesses, creators, and portfolios.",
+        "description": "LevelUp Ecosystem is a web design and development studio that builds fast, secure websites for local businesses, creators and portfolios.",
         "founder": {
-          "@type": "Person",
-          "name": "Richelieu Bonte"
+          "@id": "https://levelup-ecosystem.com/about/richelieu-bonte#person"
         },
+        "email": "hello@levelup-ecosystem.com",
         "areaServed": "Worldwide",
         "knowsAbout": [
           "Web design",
@@ -64,6 +65,52 @@
           "Website security",
           "Local SEO",
           "AI-assisted development"
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "@id": "https://levelup-ecosystem.com/#levelstudio",
+        "name": "LevelStudio",
+        "url": "https://levelup-ecosystem.com/preview/instant",
+        "applicationCategory": "WebApplication",
+        "operatingSystem": "All",
+        "description": "LevelStudio is LevelUp Ecosystem's instant creation and automated AI draft generator, allowing clients to test website concepts before human engineering.",
+        "creator": {
+          "@id": "https://levelup-ecosystem.com/#org"
+        },
+        "isPartOf": {
+          "@id": "https://levelup-ecosystem.com/#org"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Who is Richelieu Bonte?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Richelieu Bonte is the founder of LevelUp Ecosystem, a web design studio building secure, AI-assisted websites for local businesses and creators. He is a cybersecurity student based in San Diego, California, originally from the Democratic Republic of Congo."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Who founded LevelUp Ecosystem?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "LevelUp Ecosystem was founded by Richelieu Bonte, a cybersecurity student based in San Diego, California."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is LevelStudio?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "LevelStudio is LevelUp Ecosystem's instant creation and automated AI draft generator, allowing clients to test website concepts before human engineering."
+            }
+          }
         ]
       },
       {
@@ -86,15 +133,15 @@
         "@context": "https://schema.org",
         "@type": "WebSite",
         "name": "LevelUp Ecosystem",
-        "alternateName": ["LevelUp Studio", "LevelUp Ecosystem Web Design", "LevelUp"],
+        "alternateName": ["LevelStudio", "LevelUp Ecosystem Web Design", "LevelUp"],
         "url": "https://levelup-ecosystem.com",
         "description": "Fast, professional websites with online booking and built-in protection for businesses and creators.",
         "hasPart": [
           {
             "@type": "WebPage",
-            "name": "Studio",
+            "name": "LevelStudio",
             "url": "https://levelup-ecosystem.com/preview/instant",
-            "description": "LevelUp Studio - Espace de création et prototype de site web instantané"
+            "description": "LevelStudio - Espace de création et prototype de site web instantané"
           },
           {
             "@type": "WebPage",
@@ -113,6 +160,18 @@
             "name": "Projects",
             "url": "https://levelup-ecosystem.com/projects",
             "description": "Case studies and portfolio websites"
+          },
+          {
+            "@type": "WebPage",
+            "name": "About",
+            "url": "https://levelup-ecosystem.com/about",
+            "description": "About LevelUp Ecosystem"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Richelieu Bonte",
+            "url": "https://levelup-ecosystem.com/about/richelieu-bonte",
+            "description": "Richelieu Bonte — Founder of LevelUp Ecosystem"
           },
           {
             "@type": "WebPage",
@@ -136,8 +195,8 @@
           {
             "@type": "SiteNavigationElement",
             "position": 1,
-            "name": "Studio",
-            "description": "LevelUp Studio - Espace de création et générateur de site IA",
+            "name": "LevelStudio",
+            "description": "LevelStudio - Espace de création et générateur de site IA",
             "url": "https://levelup-ecosystem.com/preview/instant"
           },
           {
@@ -164,13 +223,20 @@
           {
             "@type": "SiteNavigationElement",
             "position": 5,
+            "name": "Richelieu Bonte",
+            "description": "Founder of LevelUp Ecosystem",
+            "url": "https://levelup-ecosystem.com/about/richelieu-bonte"
+          },
+          {
+            "@type": "SiteNavigationElement",
+            "position": 6,
             "name": "Free Preview",
             "description": "Get a free preview mockup of your website",
             "url": "https://levelup-ecosystem.com/preview"
           },
           {
             "@type": "SiteNavigationElement",
-            "position": 6,
+            "position": 7,
             "name": "Contact",
             "description": "Get in touch with LevelUp Ecosystem",
             "url": "https://levelup-ecosystem.com/contact"

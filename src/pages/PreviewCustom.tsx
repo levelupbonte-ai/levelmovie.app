@@ -138,7 +138,7 @@ export default function PreviewCustom() {
       }
       setSubmitted(true);
     } catch {
-      setErrorMessage('Could not send your request. Please email contact@levelup-ecosystem.com directly.');
+      setErrorMessage('Could not send your request. Please email hello@levelup-ecosystem.com directly.');
     } finally {
       setIsSubmitting(false);
     }

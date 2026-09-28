@@ -33,7 +33,7 @@ export default function WebDesignSanDiego() {
     url: 'https://levelup-ecosystem.com/web-design-san-diego',
     areaServed: 'San Diego, CA',
     priceRange: '$$',
-    email: 'contact@levelup-ecosystem.com',
+    email: 'hello@levelup-ecosystem.com',
     serviceType: [
       'Web Design',
       'Local Business Websites',

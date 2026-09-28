@@ -137,9 +137,6 @@ export default function PreviewInstant() {
               }`}
             >
               <span>Créer mon site</span>
-              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-mono">
-                →
-              </span>
             </button>
             {!consent && (
               <p className="text-[11px] text-center text-[#71717A] mt-2">
@@ -155,19 +152,22 @@ export default function PreviewInstant() {
       {/* OVERLAY DE CHARGEMENT OFFICIEL LEVELUP AVEC L'ÉTOILE FACETTÉE */}
       {isPreparing && (
         <div
-          className="fixed inset-0 z-50 bg-[#0B0B14] flex flex-col items-center justify-center p-6 text-center animate-fade-in"
+          className="fixed inset-0 z-50 bg-[#0B0B14]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fade-in"
           role="dialog"
           aria-modal="true"
           aria-label="Chargement de votre espace"
         >
+          {/* Halo lumineux violet centré */}
+          <div className="absolute w-80 h-80 bg-[#7C3AED]/25 rounded-full blur-[100px] pointer-events-none" />
+
           {/* L'Étoile Officielle LevelUp avec les 10 facettes géométriques exactes */}
-          <div className="relative w-24 h-24 mb-6 flex items-center justify-center">
+          <div className="relative w-28 h-28 mb-6 flex items-center justify-center z-10">
             <svg
-              className="w-20 h-20 overflow-visible"
+              className="w-24 h-24 overflow-visible filter drop-shadow-[0_0_25px_rgba(124,58,237,0.6)]"
               viewBox="0 0 100 100"
               fill="none"
               style={{
-                animation: 'starBreathe 2.4s ease-in-out infinite',
+                animation: 'starBreathe 2s ease-in-out infinite',
                 transformOrigin: '50px 50px',
               }}
             >
@@ -184,14 +184,11 @@ export default function PreviewInstant() {
             </svg>
           </div>
 
-          {/* Texte de chargement en bas de l'étoile */}
-          <div className="space-y-2">
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-wide">
+          {/* Une seule phrase d'animation épurée et vivante */}
+          <div className="relative z-10">
+            <h2 className="text-lg sm:text-xl font-bold text-white tracking-wide animate-pulse">
               {loadingText}
             </h2>
-            <p className="text-xs text-[#A1A1B5] font-mono">
-              Redirection vers le Studio...
-            </p>
           </div>
         </div>
       )}

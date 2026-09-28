@@ -128,7 +128,7 @@ export default function WebsitesForBarbershops() {
               to="/projects/final-stop"
               className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
             >
-              See our Final Stop barbershop case study (+40% bookings) →
+              See our Final Stop barbershop case study (+40% bookings)
             </Link>
           </div>
         </div>
@@ -211,7 +211,7 @@ export default function WebsitesForBarbershops() {
                 to="/projects/final-stop"
                 className="px-5 py-2.5 rounded-full bg-[#7C3AED]/20 border border-[#7C3AED]/40 hover:bg-[#7C3AED] text-white text-xs font-semibold transition-all shrink-0 text-center"
               >
-                Read Case Study →
+                Read Case Study
               </Link>
             </div>
             <p className="text-sm text-[#A1A1B5] leading-relaxed">

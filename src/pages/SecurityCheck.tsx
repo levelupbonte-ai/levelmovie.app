@@ -97,7 +97,7 @@ export default function SecurityCheck() {
               to="/services/care-plans"
               className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
             >
-              Learn about ongoing care plans →
+              Learn about ongoing care plans
             </Link>
           </div>
         </div>
@@ -161,13 +161,13 @@ export default function SecurityCheck() {
                 to="/services/care-plans"
                 className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
               >
-                Website care plans with monthly monitoring →
+                Website care plans with monthly monitoring
               </Link>
               <Link
                 to="/process"
                 className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
               >
-                Learn our 4-step build and review workflow →
+                Learn our 4-step build and review workflow
               </Link>
             </div>
           </div>

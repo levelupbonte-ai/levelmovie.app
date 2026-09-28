@@ -11,7 +11,7 @@ export default function Services() {
       title: 'Local Business Sites',
       subtitle: 'Barbers, salons, med spas, gyms, restaurants, local pros',
       pageUrl: '/services/local-business-websites',
-      pageAnchor: 'Explore local business websites with booking →',
+      pageAnchor: 'Explore local business websites with booking',
       description: 'Lightning-fast mobile websites designed to convert local searchers into paying clients. We set up 24/7 direct online appointment booking, digital service menus with clear pricing, and Google Maps integration so customers can find and visit you without friction.',
       includes: [
         'Mobile-first responsive design',
@@ -28,7 +28,7 @@ export default function Services() {
       title: 'Creator & Influencer Sites',
       subtitle: 'Link in bio, creator hubs, media kits, newsletters',
       pageUrl: '/services/creator-websites',
-      pageAnchor: 'Explore creator websites with media kit →',
+      pageAnchor: 'Explore creator websites with media kit',
       description: 'Stop relying solely on rented social platforms or clumsy multi-link trees. We create a centralized, custom-branded hub that organizes your content, showcases your follower analytics for brand sponsors, and captures fan emails into a list you own.',
       includes: [
         'Custom link-in-bio hub with fast mobile load',
@@ -45,7 +45,7 @@ export default function Services() {
       title: 'Portfolios',
       subtitle: 'Students, emerging pros, artists, photographers, musicians',
       pageUrl: '/services/portfolio-websites',
-      pageAnchor: 'Explore portfolio website design →',
+      pageAnchor: 'Explore portfolio website design',
       description: 'A clean, high-impact portfolio that lets your work speak for itself. Designed specifically for job interviews, freelance inquiries, and gallery submissions with crisp media presentations and easy contact pathways.',
       includes: [
         'Curated case study & project galleries',
@@ -62,7 +62,7 @@ export default function Services() {
       title: 'Online Stores',
       subtitle: 'Mini boutiques, branded merch, digital products',
       pageUrl: '/services/online-stores',
-      pageAnchor: 'Explore small online store setup →',
+      pageAnchor: 'Explore small online store setup',
       description: 'Simple, frictionless e-commerce without the bloated monthly overhead of enterprise platforms. Sell physical items, artist merch, or downloadable digital goods with secure payment gateways and automatic confirmation receipts.',
       includes: [
         'Streamlined product catalog & checkout',
@@ -79,7 +79,7 @@ export default function Services() {
       title: 'Landing Pages',
       subtitle: 'Product launches, upcoming events, seasonal promotions',
       pageUrl: '/preview',
-      pageAnchor: 'Request a custom landing page preview →',
+      pageAnchor: 'Request a custom landing page preview',
       description: 'Single-page websites engineered for one single purpose: conversion. Whether you are validating a new business concept, promoting a workshop, or driving ad traffic, we craft a focused visual journey that turns visitors into leads.',
       includes: [
         'Laser-focused conversion-oriented architecture',
@@ -96,7 +96,7 @@ export default function Services() {
       title: 'Community & Non-Profits',
       subtitle: 'Clubs, faith communities, student organizations, charities',
       pageUrl: '/preview',
-      pageAnchor: 'Request a community website preview →',
+      pageAnchor: 'Request a community website preview',
       description: 'Keep your members informed, welcome newcomers, and accept donations online. We build dependable websites with community event calendars, donation integrations, and resources that are simple to navigate.',
       includes: [
         'Upcoming event schedule & announcements',
@@ -113,7 +113,7 @@ export default function Services() {
       title: 'Events & Gatherings',
       subtitle: 'Milestones, celebrations, RSVP coordination',
       pageUrl: '/preview',
-      pageAnchor: 'Request an event website preview →',
+      pageAnchor: 'Request an event website preview',
       description: 'Interactive, memorable websites for personal or professional events. Replace paper chaos with live digital RSVP tracking, interactive venue directions, dietary preference forms, and photo gallery sharing.',
       includes: [
         'Live RSVP management with automated spreadsheet syncing',
@@ -130,7 +130,7 @@ export default function Services() {
       title: 'Security Check',
       subtitle: 'Security audit, 2FA implementation, anti-phishing hygiene',
       pageUrl: '/services/security-check',
-      pageAnchor: 'Explore website security check service →',
+      pageAnchor: 'Explore website security check service',
       description: 'A practical cybersecurity service for business owners. We audit your domain registrar, DNS records, website hosting, and staff logins to eliminate vulnerabilities, implement robust two-factor authentication, and educate you on current phishing tactics.',
       includes: [
         'Comprehensive audit of domain registrar & DNS configuration',
@@ -147,7 +147,7 @@ export default function Services() {
       title: 'Maintenance & Care Plans',
       subtitle: 'High-speed hosting, monthly updates, backups, local SEO',
       pageUrl: '/services/care-plans',
-      pageAnchor: 'Explore monthly website care plans →',
+      pageAnchor: 'Explore monthly website care plans',
       description: 'A hands-off ongoing service for clients who want their site running smoothly without lifting a finger. Includes ultra-fast cloud hosting, automated offsite backups, routine security audits, and on-demand content edits.',
       includes: [
         'High-speed global cloud hosting included',
@@ -213,7 +213,7 @@ export default function Services() {
 
       {/* Services List */}
       <section className="py-16 sm:py-24 px-4 sm:px-8 bg-[#0B0B14]">
-        <div className="max-w-6xl mx-auto space-y-12">
+        <div className="max-w-7xl mx-auto space-y-12">
           {serviceCategories.map((service) => (
             <div
               key={service.id}
@@ -250,7 +250,7 @@ export default function Services() {
                     to="/preview"
                     className="inline-flex items-center text-xs font-semibold text-[#A1A1B5] hover:text-white transition-colors"
                   >
-                    Request a free preview →
+                    Request a free preview
                   </Link>
                 </div>
               </div>
@@ -291,7 +291,7 @@ export default function Services() {
               to="/web-design-san-diego"
               className="inline-flex items-center text-sm font-bold text-[#A78BFA] hover:text-white transition-colors"
             >
-              Learn about our San Diego web design services →
+              Learn about our San Diego web design services
             </Link>
           </div>
         </div>

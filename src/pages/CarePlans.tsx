@@ -97,7 +97,7 @@ export default function CarePlans() {
               to="/pricing"
               className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
             >
-              View care plan pricing ($49/mo) →
+              View care plan pricing ($49/mo)
             </Link>
           </div>
         </div>
@@ -161,13 +161,13 @@ export default function CarePlans() {
                 to="/services/security-check"
                 className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
               >
-                Website security check for existing sites →
+                Website security check for existing sites
               </Link>
               <Link
                 to="/pricing"
                 className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
               >
-                Explore all pricing options →
+                Explore all pricing options
               </Link>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import IDENTITY from '../config/identity';
 
 interface BreadcrumbItem {
   name: string;
@@ -55,6 +56,7 @@ export default function SEO({
     // 2. Standard Meta
     setMetaTag('name', 'description', description);
     setMetaTag('name', 'robots', noindex ? 'noindex, nofollow' : 'index, follow');
+    setMetaTag('name', 'author', IDENTITY.personName);
 
     // 3. Canonical
     const currentOrigin = 'https://levelup-ecosystem.com';
@@ -68,7 +70,7 @@ export default function SEO({
     setMetaTag('property', 'og:description', description);
     setMetaTag('property', 'og:type', ogType);
     setMetaTag('property', 'og:url', resolvedCanonical);
-    setMetaTag('property', 'og:site_name', 'LevelUp Ecosystem');
+    setMetaTag('property', 'og:site_name', IDENTITY.orgName);
     const fullOgImage = ogImage.startsWith('http') ? ogImage : `${currentOrigin}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`;
     setMetaTag('property', 'og:image', fullOgImage);
     setMetaTag('property', 'og:image:width', '1200');
@@ -92,14 +94,19 @@ export default function SEO({
 
     const schemas: any[] = [];
 
-    // Always include Organization & WebSite baseline on root or all pages
+    // Organization (Single Source of Truth with persistent @id)
     schemas.push({
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      name: 'LevelUp Ecosystem',
+      '@id': 'https://levelup-ecosystem.com/#org',
+      name: IDENTITY.orgName,
       url: 'https://levelup-ecosystem.com',
       logo: 'https://levelup-ecosystem.com/assets/img/logo.png',
-      description: 'Web design and development studio building secure, AI-assisted websites for local businesses, creators, and portfolios.',
+      description: IDENTITY.orgOneLiner,
+      founder: {
+        '@id': 'https://levelup-ecosystem.com/about/richelieu-bonte#person',
+      },
+      email: IDENTITY.contactEmail,
       areaServed: 'Worldwide',
       knowsAbout: [
         'Web design',
@@ -108,43 +115,71 @@ export default function SEO({
         'Local SEO',
         'AI-assisted development',
       ],
-      email: 'contact@levelup-ecosystem.com',
+      ...(IDENTITY.sameAs && IDENTITY.sameAs.length > 0 ? { sameAs: IDENTITY.sameAs } : {}),
+    });
+
+    // LevelStudio SoftwareApplication
+    schemas.push({
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      '@id': 'https://levelup-ecosystem.com/#levelstudio',
+      name: IDENTITY.studioName,
+      url: 'https://levelup-ecosystem.com/preview/instant',
+      applicationCategory: 'WebApplication',
+      operatingSystem: 'All',
+      description: "LevelStudio is LevelUp Ecosystem's instant creation and automated AI draft generator, allowing clients to test website concepts before human engineering.",
+      creator: {
+        '@id': 'https://levelup-ecosystem.com/#org',
+      },
+      isPartOf: {
+        '@id': 'https://levelup-ecosystem.com/#org',
+      },
     });
 
     schemas.push({
       '@context': 'https://schema.org',
       '@type': 'WebSite',
-      name: 'LevelUp Ecosystem',
-      alternateName: ['LevelUp Studio', 'LevelUp'],
+      name: IDENTITY.orgName,
+      alternateName: [IDENTITY.studioName, 'LevelUp Ecosystem Web Design', 'LevelUp'],
       url: 'https://levelup-ecosystem.com',
       hasPart: [
         {
           '@type': 'WebPage',
-          name: 'Studio',
+          name: IDENTITY.studioName,
           url: 'https://levelup-ecosystem.com/preview/instant',
-          description: 'LevelUp Studio AI website generation'
+          description: "LevelStudio - Espace de création et prototype de site web instantané",
         },
         {
           '@type': 'WebPage',
           name: 'Services',
-          url: 'https://levelup-ecosystem.com/services'
+          url: 'https://levelup-ecosystem.com/services',
         },
         {
           '@type': 'WebPage',
           name: 'Pricing',
-          url: 'https://levelup-ecosystem.com/pricing'
+          url: 'https://levelup-ecosystem.com/pricing',
         },
         {
           '@type': 'WebPage',
           name: 'Projects',
-          url: 'https://levelup-ecosystem.com/projects'
+          url: 'https://levelup-ecosystem.com/projects',
+        },
+        {
+          '@type': 'WebPage',
+          name: 'About',
+          url: 'https://levelup-ecosystem.com/about',
+        },
+        {
+          '@type': 'WebPage',
+          name: IDENTITY.personName,
+          url: 'https://levelup-ecosystem.com/about/richelieu-bonte',
         },
         {
           '@type': 'WebPage',
           name: 'Contact',
-          url: 'https://levelup-ecosystem.com/contact'
-        }
-      ]
+          url: 'https://levelup-ecosystem.com/contact',
+        },
+      ],
     });
 
     schemas.push({

@@ -31,7 +31,7 @@ export default function About() {
             About LevelUp Ecosystem
           </h1>
           <p className="text-base sm:text-lg text-[#A1A1B5] max-w-2xl mx-auto leading-relaxed">
-            We are an independent web architecture and digital security studio. We engineer ultra-fast, mobile-first websites with integrated 24/7 online booking, e-commerce, and built-in security.
+            LevelUp Ecosystem is a web design and development studio that builds fast, secure websites for local businesses, creators and portfolios.
           </p>
         </div>
       </section>
@@ -61,6 +61,35 @@ export default function About() {
             </div>
             <p className="text-base text-[#A1A1B5] leading-relaxed">
               LevelUp was founded to deliver a better alternative: clean, bespoke, lightweight code engineered for real-world conversion, frictionless customer scheduling, and robust security from day one.
+            </p>
+          </div>
+
+          {/* Prominent Meet the Founder Section */}
+          <div className="p-6 sm:p-8 rounded-2xl bg-[#14141F] border border-white/[0.08] hover:border-[#7C3AED]/40 transition-all space-y-4" data-reveal>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#A78BFA]">
+                  Studio Leadership
+                </span>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-white">
+                  Meet the Founder
+                </h3>
+              </div>
+              <Link
+                to="/about/richelieu-bonte"
+                className="px-5 py-2.5 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-[#7C3AED]/20 whitespace-nowrap"
+              >
+                Meet Richelieu Bonte
+              </Link>
+            </div>
+            <p className="text-sm text-[#A1A1B5] leading-relaxed">
+              <Link
+                to="/about/richelieu-bonte"
+                className="text-white hover:text-[#A78BFA] font-semibold underline underline-offset-4 decoration-[#7C3AED]/60 transition-colors"
+              >
+                Richelieu Bonte
+              </Link>{' '}
+              is the founder of LevelUp Ecosystem, a web design studio building secure, AI-assisted websites for local businesses and creators. He is a cybersecurity student based in San Diego, California, originally from the Democratic Republic of Congo.
             </p>
           </div>
 
@@ -120,13 +149,13 @@ export default function About() {
               to="/services"
               className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
             >
-              Explore Website Services →
+              Explore Website Services
             </Link>
             <Link
               to="/preview"
               className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
             >
-              Request a Free Preview →
+              Request a Free Preview
             </Link>
           </div>
         </div>

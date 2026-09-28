@@ -53,6 +53,7 @@ export default defineConfig({
         pricing: resolve(__dirname, 'pricing/index.html'),
         process: resolve(__dirname, 'process/index.html'),
         about: resolve(__dirname, 'about/index.html'),
+        founderRichelieuBonte: resolve(__dirname, 'about/richelieu-bonte/index.html'),
         contact: resolve(__dirname, 'contact/index.html'),
         preview: resolve(__dirname, 'preview/index.html'),
         previewCustom: resolve(__dirname, 'preview/custom/index.html'),

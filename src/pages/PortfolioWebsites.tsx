@@ -97,7 +97,7 @@ export default function PortfolioWebsites() {
               to="/projects"
               className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
             >
-              View our portfolio work →
+              View our portfolio work
             </Link>
           </div>
         </div>
@@ -161,13 +161,13 @@ export default function PortfolioWebsites() {
                 to="/services/creator-websites"
                 className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
               >
-                Website for creators & influencers →
+                Website for creators & influencers
               </Link>
               <Link
                 to="/pricing"
                 className="text-xs sm:text-sm font-semibold text-[#A78BFA] hover:text-white transition-colors"
               >
-                See transparent package pricing →
+                See transparent package pricing
               </Link>
             </div>
           </div>

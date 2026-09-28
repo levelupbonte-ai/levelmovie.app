@@ -10,7 +10,7 @@ export default function Home() {
   const [copiedEmail, setCopiedEmail] = useState(false);
 
   const copyEmail = () => {
-    navigator.clipboard.writeText('contact@levelup-ecosystem.com');
+    navigator.clipboard.writeText('hello@levelup-ecosystem.com');
     setCopiedEmail(true);
     setTimeout(() => setCopiedEmail(false), 2000);
   };
@@ -121,11 +121,11 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10">
-          {/* Left Column (Always visible immediately above fold) */}
-          <div className="lg:col-span-6 space-y-6 sm:space-y-7 text-left">
+        <div className="max-w-7xl mx-auto space-y-10 sm:space-y-14 relative z-10">
+          {/* Hero Top: Headline, Rotator, Subtitle, CTA and Quick Stats */}
+          <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-7">
             {/* Signature 3D Star insignia alongside header metadata */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center gap-3">
               <Star3DHero />
               <div>
                 <div className="text-xs sm:text-sm font-bold tracking-wider text-[#A78BFA] uppercase">
@@ -134,27 +134,27 @@ export default function Home() {
               </div>
             </div>
 
-            {/* H1 (Unchanged) */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.12]">
+            {/* H1 */}
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12]">
               Websites that look professional and are built secure.
             </h1>
 
             {/* Icon Rotator: "Made for <rotating word>" next to borderless 3D icon */}
-            <HeroIconRotator />
+            <div className="flex justify-center">
+              <HeroIconRotator />
+            </div>
 
-            <p className="text-base sm:text-lg text-[#A1A1B5] leading-relaxed font-normal max-w-xl">
+            <p className="text-base sm:text-xl text-[#A1A1B5] leading-relaxed font-normal max-w-2xl mx-auto">
               For local businesses, creators and portfolios. Preview your new site before you decide.
             </p>
 
-            <div className="pt-2 space-y-3">
-              <div>
-                <Link
-                  to="/preview"
-                  className="inline-flex items-center px-7 py-3.5 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold text-sm sm:text-base transition-all duration-200 hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] active:scale-95 cursor-pointer"
-                >
-                  Get a free preview
-                </Link>
-              </div>
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                to="/preview"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 rounded-full bg-[#7C3AED] hover:bg-[#8B5CF6] text-white font-bold text-sm sm:text-base transition-all duration-200 hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] active:scale-95 cursor-pointer"
+              >
+                Get a free preview
+              </Link>
 
               <div className="text-xs sm:text-sm text-[#A1A1B5] font-medium">
                 Free preview. No obligation to purchase.
@@ -162,24 +162,26 @@ export default function Home() {
             </div>
 
             {/* Quick stats */}
-            <div className="pt-4 grid grid-cols-3 gap-4 border-t border-white/[0.08] max-w-md">
+            <div className="pt-4 flex items-center justify-center gap-8 sm:gap-12 border-t border-white/[0.08] max-w-xl mx-auto">
               <div>
-                <div className="text-xl font-bold text-white">&lt; 2s</div>
-                <div className="text-[11px] text-[#A78BFA]">Mobile load speed</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">&lt; 2s</div>
+                <div className="text-[11px] sm:text-xs text-[#A78BFA]">Mobile load speed</div>
               </div>
+              <div className="w-px h-8 bg-white/[0.08]" />
               <div>
-                <div className="text-xl font-bold text-white">24/7</div>
-                <div className="text-[11px] text-[#A78BFA]">Online booking</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">24/7</div>
+                <div className="text-[11px] sm:text-xs text-[#A78BFA]">Online booking</div>
               </div>
+              <div className="w-px h-8 bg-white/[0.08]" />
               <div>
-                <div className="text-xl font-bold text-white">Protected</div>
-                <div className="text-[11px] text-[#A78BFA]">From day one</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">Protected</div>
+                <div className="text-[11px] sm:text-xs text-[#A78BFA]">From day one</div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: 3D Product Zoom Trio Card Deck (Always visible immediately above fold) */}
-          <div className="lg:col-span-6 flex justify-center py-2">
+          {/* 3D Product Zoom Trio Card Deck (Spanning full width at bottom) */}
+          <div className="w-full pt-2">
             <Service3DShowcaseDeck />
           </div>
         </div>
@@ -235,7 +237,6 @@ export default function Home() {
               className="inline-flex items-center gap-2 text-sm sm:text-base font-semibold text-[#7C3AED] hover:text-[#5B21B6] transition-colors"
             >
               <span>Learn how we build with security checks</span>
-              <span>→</span>
             </Link>
           </div>
         </div>
